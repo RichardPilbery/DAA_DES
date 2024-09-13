@@ -3,6 +3,8 @@ import pandas as pd
 
 class Utils:
 
+    ALL_RESULTS_CSV = 'data/all_results.csv'
+
     TRIAGE_CODE_DISTR = pd.DataFrame({
         "ampds_code" : ["07C03", "09E01", "12D01", "17D02P", "17D06", "17D06P", "29D06", "29D06V", "29D07V"],
         "category" : ["Burns", "Cardiac/respiratory", "Convulsions/fitting", "Falls", "Falls", "Falls", "RTC", "RTC", "RTC"],
@@ -29,7 +31,7 @@ class Utils:
     })
     HEMS_ROTA.set_index("callsign", inplace=True)
 
-
+    TIME_TYPES = ["mobile", "at scene", "leaving scene", "at hospital", "clear", "stand down"]
 
     def current_time():
         now = datetime.now()

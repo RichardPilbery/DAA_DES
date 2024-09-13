@@ -47,3 +47,6 @@ class Patient:
         # Despatched by EOC outside of criteria
         # 0 = no, 1 = P1, 2 = P2, 3 = P3 maybe?
         self.dispatcher_intervention = 0
+
+        # Flag to indicate whether incident has completed
+        self.incident_completed = 0
