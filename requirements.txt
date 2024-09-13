@@ -1,5 +1,9 @@
+Jinja2==3.1.4
+MarkupSafe==2.1.5
 numpy==2.1.1
 pandas==2.2.2
+pdoc==14.7.0
+Pygments==2.18.0
 python-dateutil==2.9.0.post0
 pytz==2024.1
 simpy==4.1.1
