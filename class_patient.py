@@ -10,16 +10,31 @@ class Patient:
         # Unique ID for patient
         self.id = p_id 
 
+        # Demographic data
+
         # Age selection based on distribution (although might need to take account of incident type)
         self.age = floor(betavariate(0.733, 2.82)*100) # Just an example will need updating
 
         # Patient sex based on 60% male
         self.sex =  "male" if uniform(0, 1) < 0.6 else "female"
 
+
+        # Incident specific data
+
         # Allocate triage code to patient
         # This might vary by time of day/year etc. so lookup table might be more complicated
         # or could use a simple regression?
         self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"])[0]
+
+        # Likely to be postcode sector i.e. BS1 9 of BS1 9HJ
+        self.postcode = "" 
+
+        # incident location - latitude (2 decimal places)
+        self.lat = ""
+        self.long = ""
+
+        # ? Include incident times here ?
+
 
         # Keep track of cumulatative time
         self.time_in_sim = 0
@@ -31,22 +46,21 @@ class Patient:
         self.month = 1
         self.weekday = "weekday"
 
-        self.time_to_first_respone = 0
+        # HEMS/critical care specific items
         self.time_to_cc = 0
-
         self.cc_conveyed = 0
         self.cc_flown = 0
         self.cc_travelled_with = 0
-
         # Binary flag to indicate whether patient cared for by HEMS or not
         self.hems = 1
-
         # Critical care desk staffed
         self.cc_desk = 0
 
         # Despatched by EOC outside of criteria
         # 0 = no, 1 = P1, 2 = P2, 3 = P3 maybe?
         self.dispatcher_intervention = 0
+
+        self.time_to_first_respone = 0
 
         # Flag to indicate whether incident has completed
         self.incident_completed = 0
