@@ -19,11 +19,11 @@ class Utils:
         "callsign"      : ["H70", "CC70", "H71", "CC71", "CC72"],
         "category"      : ["CC", "CC", "EC", "EC", "CC"],
         "type"          : ["helicopter", "car", "helicopter", "car", "car"],
-        "summer_start1" : ["07:00", "07:00", "09:00", "09:00", "08:00"],
-        "winter_start1" : ["07:00", "07:00", "07:00", "07:00", "08:00"],
-        "summer_end1"   : ["17:00", "17:00", "19:00", "19:00", "18:00"],
-        "winter_end1"   : ["17:00", "17:00", "17:00", "17:00", "18:00"],
-        "summer_start2" : ["16:00", "16:00", "", "", ""],
+        "summer_start1" : [7, 7, 7, 9, 8],
+        "winter_start1" : [7, 7, 7, 7, 8],
+        "summer_end1"   : [17, 17, 19, 19, 18],
+        "winter_end1"   : [17, 17, 17, 17, 18],
+        "summer_start2" : ["16:00", "16:00", "", "", ""], # Need to clarify these as the times appear to crossover
         "winter_start2" : ["16:00", "16:00", "", "", ""],
         "summer_end2"   : ["02:00", "02:00", "", "", ""],
         "winter_end2"   : ["02:00", "02:00", "", "", ""],
@@ -32,13 +32,13 @@ class Utils:
     })
     HEMS_ROTA.set_index("callsign", inplace=True)
 
-    TIME_TYPES = ["mobile", "at scene", "leaving scene", "at hospital", "clear", "stand down"]
+    TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
     def current_time():
         now = datetime.now()
         return now.strftime("%H:%M:%S")
 
-    def date_time_of_call(start_dt: str, elapsed_time: int) -> list[int, int, str, int, pd.Timestamp]:
+    def date_time_of_call(start_dt: str, elapsed_time: int) -> list[int, int, str, int, int, pd.Timestamp]:
         """
         Calculate a range of time-based parameters given a specific date-time
 
@@ -47,6 +47,7 @@ class Utils:
                 `dow`             : int  
                 `current_hour`    : int  
                 `weekday`         : str   
+                `current_month`   : int
                 `current_quarter` : int  
                 `current_dt`      : datetime  
             )
@@ -65,5 +66,7 @@ class Utils:
         current_hour = current_dt.hour
 
         current_month = current_dt.month
+
+        current_quarter = current_dt.quarter
         
-        return [dow, current_hour, weekday, current_month, current_dt]
+        return [dow, current_hour, weekday, current_month, current_quarter, current_dt]

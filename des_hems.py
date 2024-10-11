@@ -49,6 +49,8 @@ class DES_HEMS:
         self.results_df["day"]                      = []
         self.results_df["hour"]                     = []
         self.results_df["weekday"]                  = []
+        self.results_df["month"]                    = []
+        self.results_df["qtr"]                      = []
         self.results_df["callsign"]                 = []
         self.results_df["triage_code"]              = []
         self.results_df["age"]                      = []
@@ -79,18 +81,19 @@ class DES_HEMS:
                     
                     # Create a new caller/patient
                     pt = Patient(self.patient_counter)
-                                        
-                    # Set caller/patient off on their HEMS healthcare journey
-                    self.env.process(self.patient_journey(pt))
                     
                     # Get current day of week and hour of day
-                    [dow, hod, weekday, month, current_dt] = Utils.date_time_of_call(self.sim_start_date, self.env.now)
+                    [dow, hod, weekday, month, qtr, current_dt] = Utils.date_time_of_call(self.sim_start_date, self.env.now)
 
                     # Update patient instance with time-based values so the current time is known
                     pt.day = dow
                     pt.hour = hod 
                     pt.weekday = weekday
                     pt.month = month
+                    pt.qtr = qtr
+
+                    # Set caller/patient off on their HEMS healthcare journey
+                    self.env.process(self.patient_journey(pt))
 
                     # Convery weekday/weekend into boolean value
                     weekday_bool = 1 if weekday == 'weekday' else 0
@@ -119,7 +122,7 @@ class DES_HEMS:
 
         patient_enters_sim = self.env.now
 
-        hems = yield self.hems_resources.get()
+        hems = yield self.hems_resources.get(patient.hour, patient.qtr)
 
         while patient.incident_completed == 0:
 
@@ -128,7 +131,7 @@ class DES_HEMS:
             not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
             if not_in_warm_up_period:
-                self.add_patient_result_row(patient, hems)
+                self.add_patient_result_row(patient, hems, "call start")
     
             # We might actually yield to a process
             # So based on various characteristics, we'll want to know the job cycle times
@@ -136,12 +139,20 @@ class DES_HEMS:
             yield self.env.timeout(3600)
 
             patient.time_in_sim = self.env.now - patient_enters_sim
+            patient.incident_completed = 1
+            self.add_patient_result_row(patient, hems, "handover")
 
+
+            # TODO: Add turnaround time calculation here
+
+            yield self.env.timeout(1000)
+            self.add_patient_result_row(patient, hems, "clear")
             self.hems_resources.put(hems)
+            
 
 
 
-    def add_patient_result_row(self, patient: Patient, hems: HEMS, **kwargs) -> None :
+    def add_patient_result_row(self, patient: Patient, hems: HEMS, time_type: str, **kwargs) -> None :
         """
             Convenience function to create a row of data for the results table
         
@@ -150,11 +161,13 @@ class DES_HEMS:
         results = {
             "P_ID"        : patient.id,
             "run_number"  : self.run_number,
-            "time_type"   : "",
+            "time_type"   : time_type,
             "timestamp"   : self.env.now,         
             "day"         : patient.day,
             "hour"        : patient.hour,
             "weekday"     : patient.weekday,
+            "month"       : patient.month,
+            "qtr"         : patient.qtr,
             "callsign"    : hems.callsign,
             "triage_code" : patient.triage_code,
             "age"         : patient.age,

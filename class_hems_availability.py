@@ -1,13 +1,13 @@
 from utils import Utils
 import pandas as pd
 from class_hems import HEMS
-from simpy import Store
+from simpy import FilterStore
 
 class HEMSAvailability():
     """
         # The HEMS Availability class
 
-        This class is a store which can provide HEMS resources
+        This class is a filter store which can provide HEMS resources
         based on the time of day and servicing schedule
 
     
@@ -23,7 +23,7 @@ class HEMSAvailability():
         self.hems_callsigns = Utils.HEMS_ROTA.index
 
         # Create a store for HEMS resources
-        self.hems = Store(env)
+        self.hems = FilterStore(env)
 
         # Populate the store with HEMS resources
         self.hems_list = []
@@ -40,14 +40,40 @@ class HEMSAvailability():
         """
         pass
 
-    def get(self):
+    def hems_resource_on_shift(self, callsign: str, hour: int, season: int):
+
+        #print(f"on shift callsign {callsign}, hour {hour}, season {season}")
+        
+        df = Utils.HEMS_ROTA
+        df = df[df.index == callsign]
+
+        #print(df)
+
+        start = df.summer_start1.iloc[0] if season == 3 else df.winter_start1.iloc[0]
+        end = df.summer_end1.iloc[0] if season == 3 else df.winter_end1.iloc[0]
+
+        #print(f"Start is {start} and end is {end}")
+
+        if start >= hour and hour <= end:
+            return True
+        
+        return False
+
+
+    def available_hems_resources(self, item: HEMS, hour: int, season: str):
+        #print(f"Inside resource with {item.callsign} and hours {hour} and season {season}")
+
+        return (item.being_serviced == 0 and self.hems_resource_on_shift(item.callsign, hour, season))
+
+
+    def get(self, hour: int, season: str):
         """
             Get a HEMS resource
 
             returns a get request that can be yield to
         """
 
-        hems_res = self.hems.get()
+        hems_res = self.hems.get(lambda item : self.available_hems_resources(item, hour, season))
 
         return hems_res
 

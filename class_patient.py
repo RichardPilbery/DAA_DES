@@ -46,6 +46,7 @@ class Patient:
         self.hour = 0
         self.day = "Mon"
         self.month = 1
+        self.qtr = 1
         self.weekday = "weekday"
 
         # HEMS/critical care specific items
