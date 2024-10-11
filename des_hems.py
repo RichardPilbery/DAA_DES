@@ -1,8 +1,10 @@
 import os, simpy
+import pandas as pd
 from random import expovariate
 from utils import Utils
 from class_patient import Patient
-import pandas as pd
+from class_hems_availability import HEMSAvailability
+from class_hems import HEMS
 
 class DES_HEMS:
     """
@@ -29,6 +31,8 @@ class DES_HEMS:
         # We need to create the resrouces, probably using the store function once I work
         # out how it does its thing! Allows for dynamically adjusting availability
         # in addition to usual resource in use style stuff.
+
+        self.hems_resources = HEMSAvailability(self.env, sim_start_date)
 
         # Set up data frame to capture time points etc. during the simulation
         # We might not need all of these, but simpler to capture them all for now.
@@ -115,6 +119,8 @@ class DES_HEMS:
 
         patient_enters_sim = self.env.now
 
+        hems = yield self.hems_resources.get()
+
         while patient.incident_completed == 0:
 
             # Add boolean to determine whether the patient is still within the simulation warm-up
@@ -122,7 +128,7 @@ class DES_HEMS:
             not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
             if not_in_warm_up_period:
-                self.add_patient_result_row(patient)
+                self.add_patient_result_row(patient, hems)
     
             # We might actually yield to a process
             # So based on various characteristics, we'll want to know the job cycle times
@@ -131,13 +137,16 @@ class DES_HEMS:
 
             patient.time_in_sim = self.env.now - patient_enters_sim
 
+            self.hems_resources.put(hems)
 
 
-    def add_patient_result_row(self, patient: Patient, **kwargs) -> None :
+
+    def add_patient_result_row(self, patient: Patient, hems: HEMS, **kwargs) -> None :
         """
             Convenience function to create a row of data for the results table
         
         """
+
         results = {
             "P_ID"        : patient.id,
             "run_number"  : self.run_number,
@@ -146,7 +155,7 @@ class DES_HEMS:
             "day"         : patient.day,
             "hour"        : patient.hour,
             "weekday"     : patient.weekday,
-            "callsign"    : "",
+            "callsign"    : hems.callsign,
             "triage_code" : patient.triage_code,
             "age"         : patient.age,
             "sex"         : patient.sex,

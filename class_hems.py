@@ -14,7 +14,7 @@ class HEMS(Ambulance):
 
     def __init__(self, callsign: str, current_date: str):
         # Inherit all parent class functions
-        super().__init__(current_date, ambulance_type = "HEMS")
+        super().__init__(ambulance_type = "HEMS")
 
         self.callsign = callsign
         self.available = 1

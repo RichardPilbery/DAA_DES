@@ -19,4 +19,4 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_
     logging.debug(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
 
 
-runSim(0, 1, 1440, 0, "2021-01-01 00:00:00")
+runSim(0, 1, 7200, 0, "2021-01-01 00:00:00")

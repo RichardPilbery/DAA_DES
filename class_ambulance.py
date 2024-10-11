@@ -12,9 +12,8 @@ class Ambulance:
 
     
     """
-    def __init__(self, current_date: str, ambulance_type = "ambulance"):
+    def __init__(self, ambulance_type = "ambulance"):
 
-        self.current_date = current_date
         self.mobile = ""
         self.as_scene = ""
         self.leaving_scene = ""
