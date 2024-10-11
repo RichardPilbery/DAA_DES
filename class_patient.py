@@ -10,21 +10,12 @@ class Patient:
         # Unique ID for patient
         self.id = p_id 
 
-        # Demographic data
-
-        # Age selection based on distribution (although might need to take account of incident type)
-        self.age = floor(betavariate(0.733, 2.82)*100) # Just an example will need updating
-
-        # Patient sex based on 60% male
-        self.sex =  "male" if uniform(0, 1) < 0.6 else "female"
-
-
         # Incident specific data
 
         # Allocate triage code to patient
         # This might vary by time of day/year etc. so lookup table might be more complicated
         # or could use a simple regression?
-        self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"])[0]
+        self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"]).iloc[0]
 
         # Likely to be postcode sector i.e. BS1 9 of BS1 9HJ
         self.postcode = "" 
@@ -35,6 +26,17 @@ class Patient:
 
         # ? Include incident times here ?
 
+
+        # Demographic data
+
+        # Age selection based on distribution (although might need to take account of incident type)
+        self.age = floor(betavariate(0.733, 2.82)*100) # Just an example will need updating
+
+        # Calculate patient sex based on AMPDS code
+        prop_female = Utils.TRIAGE_CODE_DISTR.sex_female[Utils.TRIAGE_CODE_DISTR.index == self.triage_code].iloc[0]
+        self.sex =  "female" if uniform(0, 1) < prop_female else "male"
+
+        #print(f"AMPDS code is {self.triage_code} and prop_female is {prop_female} and sex is {self.sex}")
 
         # Keep track of cumulatative time
         self.time_in_sim = 0

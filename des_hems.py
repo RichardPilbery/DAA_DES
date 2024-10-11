@@ -32,6 +32,11 @@ class DES_HEMS:
 
         # Set up data frame to capture time points etc. during the simulation
         # We might not need all of these, but simpler to capture them all for now.
+
+        # This might be better as a separate 'data collection' class of some sort.
+        # I am thinking that each resource will need its own entry for any given
+        # patient to account for dual response (ambulance service and HEMS)
+        # stand downs etc.
         self.results_df                             = pd.DataFrame()
         self.results_df["P_ID"]                     = []
         self.results_df["run_number"]               = []

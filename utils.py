@@ -8,7 +8,8 @@ class Utils:
     TRIAGE_CODE_DISTR = pd.DataFrame({
         "ampds_code" : ["07C03", "09E01", "12D01", "17D02P", "17D06", "17D06P", "29D06", "29D06V", "29D07V"],
         "category" : ["Burns", "Cardiac/respiratory", "Convulsions/fitting", "Falls", "Falls", "Falls", "RTC", "RTC", "RTC"],
-        "prob" : [0.01, 0.2, 0.09, 0.10, 0.10, 0.10, 0.1, 0.2, 0.1] # Completely made up!
+        "prob" : [0.01, 0.2, 0.09, 0.10, 0.10, 0.10, 0.1, 0.2, 0.1], # Completely made up!
+        "sex_female": [0.50, 0.27, 0.51, 0.33, 0.33, 0.33, 0.28, 0.28, 0.28] # Still need confirmation for burns proportion
     })
     TRIAGE_CODE_DISTR.set_index("ampds_code", inplace = True)
 
