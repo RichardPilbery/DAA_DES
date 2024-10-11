@@ -15,7 +15,7 @@ class Patient:
         # Allocate triage code to patient
         # This might vary by time of day/year etc. so lookup table might be more complicated
         # or could use a simple regression?
-        self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"]).iloc[0]
+        self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"])[0]
 
         # Likely to be postcode sector i.e. BS1 9 of BS1 9HJ
         self.postcode = "" 
