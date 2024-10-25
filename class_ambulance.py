@@ -12,7 +12,7 @@ class Ambulance:
 
     
     """
-    def __init__(self, ambulance_type = "ambulance"):
+    def __init__(self, ambulance_type = "ambulance", callsign = "AMBULANCE"):
 
         self.mobile = ""
         self.as_scene = ""
@@ -22,6 +22,7 @@ class Ambulance:
         self.stood_down = ""
 
         self.ambulance_type = ambulance_type
+        self.callsign = callsign
         
 
     def what_am_i(self):

@@ -63,6 +63,11 @@ class HEMSAvailability():
     def available_hems_resources(self, item: HEMS, hour: int, season: str):
         #print(f"Inside resource with {item.callsign} and hours {hour} and season {season}")
 
+        # For now, check if HEMS resource has completed it's servicing schedule and is therefor ready to come
+        # back into service. Not sure if there is a better place to check this
+        
+        item.operational_after_service(self.env.now)
+
         return (item.being_serviced == 0 and self.hems_resource_on_shift(item.callsign, hour, season))
 
 
@@ -84,5 +89,7 @@ class HEMSAvailability():
 
         self.hems.put(hems_res)
         #print(f'{self.env.now:0.2f} HEMS returned')
+
+
         
 

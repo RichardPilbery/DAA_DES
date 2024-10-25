@@ -1,275 +1,189 @@
 ,run_number,time_type,timestamp,day,hour,weekday,month,qtr,callsign,triage_code,age,sex,time_to_first_respone,time_to_cc,cc_conveyed,cc_flown,cc_travelled_with,hems,cc_desk,dispatcher_intervention,P_ID
-0,1.0,call start,59.0,Sun,7.0,weekend,8.0,3.0,CC70,29D06V,13.0,female,,,,,,,,,2.0
-1,1.0,call start,118.0,Sun,8.0,weekend,8.0,3.0,CC71,07C03,4.0,female,,,,,,,,,3.0
-2,1.0,call start,1062.0,Mon,0.0,weekday,8.0,3.0,H71,17D06,3.0,male,,,,,,,,,19.0
-3,1.0,call start,1121.0,Mon,1.0,weekday,8.0,3.0,CC72,09E01,36.0,male,,,,,,,,,20.0
-4,1.0,handover,3600.0,Sun,7.0,weekend,8.0,3.0,H70,29D06,7.0,male,,,,,,,,,1.0
-5,1.0,handover,3659.0,Sun,7.0,weekend,8.0,3.0,CC70,29D06V,13.0,female,,,,,,,,,2.0
-6,1.0,handover,3718.0,Sun,8.0,weekend,8.0,3.0,CC71,07C03,4.0,female,,,,,,,,,3.0
-7,1.0,clear,4600.0,Sun,7.0,weekend,8.0,3.0,H70,29D06,7.0,male,,,,,,,,,1.0
-8,1.0,call start,4600.0,Mon,2.0,weekday,8.0,3.0,H70,29D06,17.0,female,,,,,,,,,21.0
-9,1.0,clear,4659.0,Sun,7.0,weekend,8.0,3.0,CC70,29D06V,13.0,female,,,,,,,,,2.0
-10,1.0,call start,4659.0,Mon,3.0,weekday,8.0,3.0,CC70,17D02P,21.0,male,,,,,,,,,22.0
-11,1.0,handover,4662.0,Mon,0.0,weekday,8.0,3.0,H71,17D06,3.0,male,,,,,,,,,19.0
-12,1.0,clear,4718.0,Sun,8.0,weekend,8.0,3.0,CC71,07C03,4.0,female,,,,,,,,,3.0
-13,1.0,call start,4718.0,Sun,9.0,weekend,8.0,3.0,CC71,07C03,21.0,female,,,,,,,,,4.0
-14,1.0,handover,4721.0,Mon,1.0,weekday,8.0,3.0,CC72,09E01,36.0,male,,,,,,,,,20.0
-15,1.0,clear,5662.0,Mon,0.0,weekday,8.0,3.0,H71,17D06,3.0,male,,,,,,,,,19.0
-16,1.0,call start,5662.0,Mon,4.0,weekday,8.0,3.0,H71,29D06V,6.0,female,,,,,,,,,23.0
-17,1.0,clear,5721.0,Mon,1.0,weekday,8.0,3.0,CC72,09E01,36.0,male,,,,,,,,,20.0
-18,1.0,call start,5721.0,Mon,5.0,weekday,8.0,3.0,CC72,17D06,36.0,female,,,,,,,,,24.0
-19,1.0,handover,8200.0,Mon,2.0,weekday,8.0,3.0,H70,29D06,17.0,female,,,,,,,,,21.0
-20,1.0,handover,8259.0,Mon,3.0,weekday,8.0,3.0,CC70,17D02P,21.0,male,,,,,,,,,22.0
-21,1.0,handover,8318.0,Sun,9.0,weekend,8.0,3.0,CC71,07C03,21.0,female,,,,,,,,,4.0
-22,1.0,clear,9200.0,Mon,2.0,weekday,8.0,3.0,H70,29D06,17.0,female,,,,,,,,,21.0
-23,1.0,call start,9200.0,Mon,6.0,weekday,8.0,3.0,H70,17D06P,3.0,male,,,,,,,,,25.0
-24,1.0,clear,9259.0,Mon,3.0,weekday,8.0,3.0,CC70,17D02P,21.0,male,,,,,,,,,22.0
-25,1.0,call start,9259.0,Mon,7.0,weekday,8.0,3.0,CC70,17D06P,8.0,female,,,,,,,,,26.0
-26,1.0,handover,9262.0,Mon,4.0,weekday,8.0,3.0,H71,29D06V,6.0,female,,,,,,,,,23.0
-27,1.0,clear,9318.0,Sun,9.0,weekend,8.0,3.0,CC71,07C03,21.0,female,,,,,,,,,4.0
-28,1.0,call start,9318.0,Mon,8.0,weekday,8.0,3.0,CC71,17D06,10.0,female,,,,,,,,,27.0
-29,1.0,handover,9321.0,Mon,5.0,weekday,8.0,3.0,CC72,17D06,36.0,female,,,,,,,,,24.0
-30,1.0,clear,10262.0,Mon,4.0,weekday,8.0,3.0,H71,29D06V,6.0,female,,,,,,,,,23.0
-31,1.0,call start,10262.0,Tue,0.0,weekday,8.0,3.0,H71,29D06,44.0,female,,,,,,,,,43.0
-32,1.0,clear,10321.0,Mon,5.0,weekday,8.0,3.0,CC72,17D06,36.0,female,,,,,,,,,24.0
-33,1.0,call start,10321.0,Tue,1.0,weekday,8.0,3.0,CC72,29D07V,35.0,male,,,,,,,,,44.0
-34,1.0,handover,12800.0,Mon,6.0,weekday,8.0,3.0,H70,17D06P,3.0,male,,,,,,,,,25.0
-35,1.0,handover,12859.0,Mon,7.0,weekday,8.0,3.0,CC70,17D06P,8.0,female,,,,,,,,,26.0
-36,1.0,handover,12918.0,Mon,8.0,weekday,8.0,3.0,CC71,17D06,10.0,female,,,,,,,,,27.0
-37,1.0,clear,13800.0,Mon,6.0,weekday,8.0,3.0,H70,17D06P,3.0,male,,,,,,,,,25.0
-38,1.0,call start,13800.0,Tue,2.0,weekday,8.0,3.0,H70,09E01,50.0,male,,,,,,,,,45.0
-39,1.0,clear,13859.0,Mon,7.0,weekday,8.0,3.0,CC70,17D06P,8.0,female,,,,,,,,,26.0
-40,1.0,call start,13859.0,Tue,3.0,weekday,8.0,3.0,CC70,17D02P,1.0,female,,,,,,,,,46.0
-41,1.0,handover,13862.0,Tue,0.0,weekday,8.0,3.0,H71,29D06,44.0,female,,,,,,,,,43.0
-42,1.0,clear,13918.0,Mon,8.0,weekday,8.0,3.0,CC71,17D06,10.0,female,,,,,,,,,27.0
-43,1.0,call start,13918.0,Mon,9.0,weekday,8.0,3.0,CC71,09E01,15.0,female,,,,,,,,,28.0
-44,1.0,handover,13921.0,Tue,1.0,weekday,8.0,3.0,CC72,29D07V,35.0,male,,,,,,,,,44.0
-45,1.0,clear,14862.0,Tue,0.0,weekday,8.0,3.0,H71,29D06,44.0,female,,,,,,,,,43.0
-46,1.0,call start,14862.0,Tue,4.0,weekday,8.0,3.0,H71,17D02P,14.0,male,,,,,,,,,47.0
-47,1.0,clear,14921.0,Tue,1.0,weekday,8.0,3.0,CC72,29D07V,35.0,male,,,,,,,,,44.0
-48,1.0,call start,14921.0,Tue,4.0,weekday,8.0,3.0,CC72,29D06,16.0,male,,,,,,,,,48.0
-49,1.0,handover,17400.0,Tue,2.0,weekday,8.0,3.0,H70,09E01,50.0,male,,,,,,,,,45.0
-50,1.0,handover,17459.0,Tue,3.0,weekday,8.0,3.0,CC70,17D02P,1.0,female,,,,,,,,,46.0
-51,1.0,handover,17518.0,Mon,9.0,weekday,8.0,3.0,CC71,09E01,15.0,female,,,,,,,,,28.0
-52,1.0,clear,18400.0,Tue,2.0,weekday,8.0,3.0,H70,09E01,50.0,male,,,,,,,,,45.0
-53,1.0,call start,18400.0,Tue,5.0,weekday,8.0,3.0,H70,12D01,10.0,female,,,,,,,,,49.0
-54,1.0,clear,18459.0,Tue,3.0,weekday,8.0,3.0,CC70,17D02P,1.0,female,,,,,,,,,46.0
-55,1.0,call start,18459.0,Tue,6.0,weekday,8.0,3.0,CC70,29D07V,25.0,male,,,,,,,,,50.0
-56,1.0,handover,18462.0,Tue,4.0,weekday,8.0,3.0,H71,17D02P,14.0,male,,,,,,,,,47.0
-57,1.0,clear,18518.0,Mon,9.0,weekday,8.0,3.0,CC71,09E01,15.0,female,,,,,,,,,28.0
-58,1.0,call start,18518.0,Tue,7.0,weekday,8.0,3.0,CC71,29D06V,11.0,male,,,,,,,,,51.0
-59,1.0,handover,18521.0,Tue,4.0,weekday,8.0,3.0,CC72,29D06,16.0,male,,,,,,,,,48.0
-60,1.0,clear,19462.0,Tue,4.0,weekday,8.0,3.0,H71,17D02P,14.0,male,,,,,,,,,47.0
-61,1.0,call start,19462.0,Wed,0.0,weekday,8.0,3.0,H71,17D06P,20.0,male,,,,,,,,,69.0
-62,1.0,clear,19521.0,Tue,4.0,weekday,8.0,3.0,CC72,29D06,16.0,male,,,,,,,,,48.0
-63,1.0,call start,19521.0,Tue,8.0,weekday,8.0,3.0,CC72,09E01,31.0,male,,,,,,,,,52.0
-64,1.0,handover,22000.0,Tue,5.0,weekday,8.0,3.0,H70,12D01,10.0,female,,,,,,,,,49.0
-65,1.0,handover,22059.0,Tue,6.0,weekday,8.0,3.0,CC70,29D07V,25.0,male,,,,,,,,,50.0
-66,1.0,handover,22118.0,Tue,7.0,weekday,8.0,3.0,CC71,29D06V,11.0,male,,,,,,,,,51.0
-67,1.0,clear,23000.0,Tue,5.0,weekday,8.0,3.0,H70,12D01,10.0,female,,,,,,,,,49.0
-68,1.0,call start,23000.0,Wed,1.0,weekday,8.0,3.0,H70,09E01,21.0,male,,,,,,,,,70.0
-69,1.0,clear,23059.0,Tue,6.0,weekday,8.0,3.0,CC70,29D07V,25.0,male,,,,,,,,,50.0
-70,1.0,call start,23059.0,Wed,2.0,weekday,8.0,3.0,CC70,29D06V,43.0,male,,,,,,,,,71.0
-71,1.0,handover,23062.0,Wed,0.0,weekday,8.0,3.0,H71,17D06P,20.0,male,,,,,,,,,69.0
-72,1.0,clear,23118.0,Tue,7.0,weekday,8.0,3.0,CC71,29D06V,11.0,male,,,,,,,,,51.0
-73,1.0,call start,23118.0,Tue,9.0,weekday,8.0,3.0,CC71,09E01,7.0,male,,,,,,,,,53.0
-74,1.0,handover,23121.0,Tue,8.0,weekday,8.0,3.0,CC72,09E01,31.0,male,,,,,,,,,52.0
-75,1.0,clear,24062.0,Wed,0.0,weekday,8.0,3.0,H71,17D06P,20.0,male,,,,,,,,,69.0
-76,1.0,call start,24062.0,Wed,3.0,weekday,8.0,3.0,H71,29D07V,24.0,male,,,,,,,,,72.0
-77,1.0,clear,24121.0,Tue,8.0,weekday,8.0,3.0,CC72,09E01,31.0,male,,,,,,,,,52.0
-78,1.0,call start,24121.0,Wed,4.0,weekday,8.0,3.0,CC72,29D06V,0.0,female,,,,,,,,,73.0
-79,1.0,handover,26600.0,Wed,1.0,weekday,8.0,3.0,H70,09E01,21.0,male,,,,,,,,,70.0
-80,1.0,handover,26659.0,Wed,2.0,weekday,8.0,3.0,CC70,29D06V,43.0,male,,,,,,,,,71.0
-81,1.0,handover,26718.0,Tue,9.0,weekday,8.0,3.0,CC71,09E01,7.0,male,,,,,,,,,53.0
-82,1.0,clear,27600.0,Wed,1.0,weekday,8.0,3.0,H70,09E01,21.0,male,,,,,,,,,70.0
-83,1.0,call start,27600.0,Wed,5.0,weekday,8.0,3.0,H70,09E01,6.0,male,,,,,,,,,74.0
-84,1.0,clear,27659.0,Wed,2.0,weekday,8.0,3.0,CC70,29D06V,43.0,male,,,,,,,,,71.0
-85,1.0,call start,27659.0,Wed,5.0,weekday,8.0,3.0,CC70,17D06,9.0,female,,,,,,,,,75.0
-86,1.0,handover,27662.0,Wed,3.0,weekday,8.0,3.0,H71,29D07V,24.0,male,,,,,,,,,72.0
-87,1.0,clear,27718.0,Tue,9.0,weekday,8.0,3.0,CC71,09E01,7.0,male,,,,,,,,,53.0
-88,1.0,call start,27718.0,Wed,6.0,weekday,8.0,3.0,CC71,29D07V,62.0,male,,,,,,,,,76.0
-89,1.0,handover,27721.0,Wed,4.0,weekday,8.0,3.0,CC72,29D06V,0.0,female,,,,,,,,,73.0
-90,1.0,clear,28662.0,Wed,3.0,weekday,8.0,3.0,H71,29D07V,24.0,male,,,,,,,,,72.0
-91,1.0,call start,28662.0,Wed,7.0,weekday,8.0,3.0,H71,17D06P,13.0,male,,,,,,,,,77.0
-92,1.0,clear,28721.0,Wed,4.0,weekday,8.0,3.0,CC72,29D06V,0.0,female,,,,,,,,,73.0
-93,1.0,call start,28721.0,Wed,8.0,weekday,8.0,3.0,CC72,17D06,20.0,male,,,,,,,,,78.0
-94,1.0,handover,31200.0,Wed,5.0,weekday,8.0,3.0,H70,09E01,6.0,male,,,,,,,,,74.0
-95,1.0,handover,31259.0,Wed,5.0,weekday,8.0,3.0,CC70,17D06,9.0,female,,,,,,,,,75.0
-96,1.0,handover,31318.0,Wed,6.0,weekday,8.0,3.0,CC71,29D07V,62.0,male,,,,,,,,,76.0
-97,1.0,clear,32200.0,Wed,5.0,weekday,8.0,3.0,H70,09E01,6.0,male,,,,,,,,,74.0
-98,1.0,call start,32200.0,Thu,0.0,weekday,8.0,3.0,H70,09E01,7.0,female,,,,,,,,,96.0
-99,1.0,clear,32259.0,Wed,5.0,weekday,8.0,3.0,CC70,17D06,9.0,female,,,,,,,,,75.0
-100,1.0,call start,32259.0,Thu,1.0,weekday,8.0,3.0,CC70,17D06P,8.0,female,,,,,,,,,97.0
-101,1.0,handover,32262.0,Wed,7.0,weekday,8.0,3.0,H71,17D06P,13.0,male,,,,,,,,,77.0
-102,1.0,clear,32318.0,Wed,6.0,weekday,8.0,3.0,CC71,29D07V,62.0,male,,,,,,,,,76.0
-103,1.0,call start,32318.0,Wed,9.0,weekday,8.0,3.0,CC71,09E01,45.0,female,,,,,,,,,79.0
-104,1.0,handover,32321.0,Wed,8.0,weekday,8.0,3.0,CC72,17D06,20.0,male,,,,,,,,,78.0
-105,1.0,clear,33262.0,Wed,7.0,weekday,8.0,3.0,H71,17D06P,13.0,male,,,,,,,,,77.0
-106,1.0,call start,33262.0,Thu,2.0,weekday,8.0,3.0,H71,12D01,4.0,female,,,,,,,,,98.0
-107,1.0,clear,33321.0,Wed,8.0,weekday,8.0,3.0,CC72,17D06,20.0,male,,,,,,,,,78.0
-108,1.0,call start,33321.0,Thu,3.0,weekday,8.0,3.0,CC72,17D06P,17.0,male,,,,,,,,,99.0
-109,1.0,handover,35800.0,Thu,0.0,weekday,8.0,3.0,H70,09E01,7.0,female,,,,,,,,,96.0
-110,1.0,handover,35859.0,Thu,1.0,weekday,8.0,3.0,CC70,17D06P,8.0,female,,,,,,,,,97.0
-111,1.0,handover,35918.0,Wed,9.0,weekday,8.0,3.0,CC71,09E01,45.0,female,,,,,,,,,79.0
-112,1.0,clear,36800.0,Thu,0.0,weekday,8.0,3.0,H70,09E01,7.0,female,,,,,,,,,96.0
-113,1.0,call start,36800.0,Thu,4.0,weekday,8.0,3.0,H70,29D06,1.0,male,,,,,,,,,100.0
-114,1.0,clear,36859.0,Thu,1.0,weekday,8.0,3.0,CC70,17D06P,8.0,female,,,,,,,,,97.0
-115,1.0,call start,36859.0,Thu,5.0,weekday,8.0,3.0,CC70,09E01,21.0,male,,,,,,,,,101.0
-116,1.0,handover,36862.0,Thu,2.0,weekday,8.0,3.0,H71,12D01,4.0,female,,,,,,,,,98.0
-117,1.0,clear,36918.0,Wed,9.0,weekday,8.0,3.0,CC71,09E01,45.0,female,,,,,,,,,79.0
-118,1.0,call start,36918.0,Thu,6.0,weekday,8.0,3.0,CC71,17D06,0.0,male,,,,,,,,,102.0
-119,1.0,handover,36921.0,Thu,3.0,weekday,8.0,3.0,CC72,17D06P,17.0,male,,,,,,,,,99.0
-120,1.0,clear,37862.0,Thu,2.0,weekday,8.0,3.0,H71,12D01,4.0,female,,,,,,,,,98.0
-121,1.0,call start,37862.0,Thu,7.0,weekday,8.0,3.0,H71,17D06P,9.0,male,,,,,,,,,103.0
-122,1.0,clear,37921.0,Thu,3.0,weekday,8.0,3.0,CC72,17D06P,17.0,male,,,,,,,,,99.0
-123,1.0,call start,37921.0,Thu,8.0,weekday,8.0,3.0,CC72,29D07V,3.0,male,,,,,,,,,104.0
-124,1.0,handover,40400.0,Thu,4.0,weekday,8.0,3.0,H70,29D06,1.0,male,,,,,,,,,100.0
-125,1.0,handover,40459.0,Thu,5.0,weekday,8.0,3.0,CC70,09E01,21.0,male,,,,,,,,,101.0
-126,1.0,handover,40518.0,Thu,6.0,weekday,8.0,3.0,CC71,17D06,0.0,male,,,,,,,,,102.0
-127,1.0,clear,41400.0,Thu,4.0,weekday,8.0,3.0,H70,29D06,1.0,male,,,,,,,,,100.0
-128,1.0,call start,41400.0,Fri,0.0,weekday,8.0,3.0,H70,12D01,11.0,male,,,,,,,,,121.0
-129,1.0,clear,41459.0,Thu,5.0,weekday,8.0,3.0,CC70,09E01,21.0,male,,,,,,,,,101.0
-130,1.0,call start,41459.0,Fri,1.0,weekday,8.0,3.0,CC70,29D06,48.0,male,,,,,,,,,122.0
-131,1.0,handover,41462.0,Thu,7.0,weekday,8.0,3.0,H71,17D06P,9.0,male,,,,,,,,,103.0
-132,1.0,clear,41518.0,Thu,6.0,weekday,8.0,3.0,CC71,17D06,0.0,male,,,,,,,,,102.0
-133,1.0,call start,41518.0,Thu,9.0,weekday,8.0,3.0,CC71,29D07V,16.0,male,,,,,,,,,105.0
-134,1.0,handover,41521.0,Thu,8.0,weekday,8.0,3.0,CC72,29D07V,3.0,male,,,,,,,,,104.0
-135,1.0,clear,42462.0,Thu,7.0,weekday,8.0,3.0,H71,17D06P,9.0,male,,,,,,,,,103.0
-136,1.0,call start,42462.0,Fri,2.0,weekday,8.0,3.0,H71,29D06V,33.0,male,,,,,,,,,123.0
-137,1.0,clear,42521.0,Thu,8.0,weekday,8.0,3.0,CC72,29D07V,3.0,male,,,,,,,,,104.0
-138,1.0,call start,42521.0,Fri,3.0,weekday,8.0,3.0,CC72,17D06,18.0,male,,,,,,,,,124.0
-139,1.0,handover,45000.0,Fri,0.0,weekday,8.0,3.0,H70,12D01,11.0,male,,,,,,,,,121.0
-140,1.0,handover,45059.0,Fri,1.0,weekday,8.0,3.0,CC70,29D06,48.0,male,,,,,,,,,122.0
-141,1.0,handover,45118.0,Thu,9.0,weekday,8.0,3.0,CC71,29D07V,16.0,male,,,,,,,,,105.0
-142,1.0,clear,46000.0,Fri,0.0,weekday,8.0,3.0,H70,12D01,11.0,male,,,,,,,,,121.0
-143,1.0,call start,46000.0,Fri,4.0,weekday,8.0,3.0,H70,29D06,29.0,male,,,,,,,,,125.0
-144,1.0,clear,46059.0,Fri,1.0,weekday,8.0,3.0,CC70,29D06,48.0,male,,,,,,,,,122.0
-145,1.0,call start,46059.0,Fri,5.0,weekday,8.0,3.0,CC70,17D06P,2.0,female,,,,,,,,,126.0
-146,1.0,handover,46062.0,Fri,2.0,weekday,8.0,3.0,H71,29D06V,33.0,male,,,,,,,,,123.0
-147,1.0,clear,46118.0,Thu,9.0,weekday,8.0,3.0,CC71,29D07V,16.0,male,,,,,,,,,105.0
-148,1.0,call start,46118.0,Fri,6.0,weekday,8.0,3.0,CC71,09E01,0.0,male,,,,,,,,,127.0
-149,1.0,handover,46121.0,Fri,3.0,weekday,8.0,3.0,CC72,17D06,18.0,male,,,,,,,,,124.0
-150,1.0,clear,47062.0,Fri,2.0,weekday,8.0,3.0,H71,29D06V,33.0,male,,,,,,,,,123.0
-151,1.0,call start,47062.0,Fri,7.0,weekday,8.0,3.0,H71,12D01,3.0,male,,,,,,,,,128.0
-152,1.0,clear,47121.0,Fri,3.0,weekday,8.0,3.0,CC72,17D06,18.0,male,,,,,,,,,124.0
-153,1.0,call start,47121.0,Fri,8.0,weekday,8.0,3.0,CC72,17D06P,59.0,female,,,,,,,,,129.0
-154,1.0,handover,49600.0,Fri,4.0,weekday,8.0,3.0,H70,29D06,29.0,male,,,,,,,,,125.0
-155,1.0,handover,49659.0,Fri,5.0,weekday,8.0,3.0,CC70,17D06P,2.0,female,,,,,,,,,126.0
-156,1.0,handover,49718.0,Fri,6.0,weekday,8.0,3.0,CC71,09E01,0.0,male,,,,,,,,,127.0
-157,1.0,clear,50600.0,Fri,4.0,weekday,8.0,3.0,H70,29D06,29.0,male,,,,,,,,,125.0
-158,1.0,call start,50600.0,Sat,0.0,weekend,8.0,3.0,H70,29D06,10.0,male,,,,,,,,,145.0
-159,1.0,clear,50659.0,Fri,5.0,weekday,8.0,3.0,CC70,17D06P,2.0,female,,,,,,,,,126.0
-160,1.0,call start,50659.0,Sat,0.0,weekend,8.0,3.0,CC70,09E01,31.0,female,,,,,,,,,146.0
-161,1.0,handover,50662.0,Fri,7.0,weekday,8.0,3.0,H71,12D01,3.0,male,,,,,,,,,128.0
-162,1.0,clear,50718.0,Fri,6.0,weekday,8.0,3.0,CC71,09E01,0.0,male,,,,,,,,,127.0
-163,1.0,call start,50718.0,Fri,9.0,weekday,8.0,3.0,CC71,12D01,0.0,male,,,,,,,,,130.0
-164,1.0,handover,50721.0,Fri,8.0,weekday,8.0,3.0,CC72,17D06P,59.0,female,,,,,,,,,129.0
-165,1.0,clear,51662.0,Fri,7.0,weekday,8.0,3.0,H71,12D01,3.0,male,,,,,,,,,128.0
-166,1.0,call start,51662.0,Sat,1.0,weekend,8.0,3.0,H71,12D01,12.0,male,,,,,,,,,147.0
-167,1.0,clear,51721.0,Fri,8.0,weekday,8.0,3.0,CC72,17D06P,59.0,female,,,,,,,,,129.0
-168,1.0,call start,51721.0,Sat,2.0,weekend,8.0,3.0,CC72,09E01,29.0,male,,,,,,,,,148.0
-169,1.0,handover,54200.0,Sat,0.0,weekend,8.0,3.0,H70,29D06,10.0,male,,,,,,,,,145.0
-170,1.0,handover,54259.0,Sat,0.0,weekend,8.0,3.0,CC70,09E01,31.0,female,,,,,,,,,146.0
-171,1.0,handover,54318.0,Fri,9.0,weekday,8.0,3.0,CC71,12D01,0.0,male,,,,,,,,,130.0
-172,1.0,clear,55200.0,Sat,0.0,weekend,8.0,3.0,H70,29D06,10.0,male,,,,,,,,,145.0
-173,1.0,call start,55200.0,Sat,3.0,weekend,8.0,3.0,H70,12D01,34.0,male,,,,,,,,,149.0
-174,1.0,clear,55259.0,Sat,0.0,weekend,8.0,3.0,CC70,09E01,31.0,female,,,,,,,,,146.0
-175,1.0,call start,55259.0,Sat,4.0,weekend,8.0,3.0,CC70,17D06P,9.0,female,,,,,,,,,150.0
-176,1.0,handover,55262.0,Sat,1.0,weekend,8.0,3.0,H71,12D01,12.0,male,,,,,,,,,147.0
-177,1.0,clear,55318.0,Fri,9.0,weekday,8.0,3.0,CC71,12D01,0.0,male,,,,,,,,,130.0
-178,1.0,call start,55318.0,Sat,5.0,weekend,8.0,3.0,CC71,12D01,3.0,male,,,,,,,,,151.0
-179,1.0,handover,55321.0,Sat,2.0,weekend,8.0,3.0,CC72,09E01,29.0,male,,,,,,,,,148.0
-180,1.0,clear,56262.0,Sat,1.0,weekend,8.0,3.0,H71,12D01,12.0,male,,,,,,,,,147.0
-181,1.0,call start,56262.0,Sat,6.0,weekend,8.0,3.0,H71,29D06V,1.0,male,,,,,,,,,152.0
-182,1.0,clear,56321.0,Sat,2.0,weekend,8.0,3.0,CC72,09E01,29.0,male,,,,,,,,,148.0
-183,1.0,call start,56321.0,Sat,7.0,weekend,8.0,3.0,CC72,09E01,36.0,male,,,,,,,,,153.0
-184,1.0,handover,58800.0,Sat,3.0,weekend,8.0,3.0,H70,12D01,34.0,male,,,,,,,,,149.0
-185,1.0,handover,58859.0,Sat,4.0,weekend,8.0,3.0,CC70,17D06P,9.0,female,,,,,,,,,150.0
-186,1.0,handover,58918.0,Sat,5.0,weekend,8.0,3.0,CC71,12D01,3.0,male,,,,,,,,,151.0
-187,1.0,clear,59800.0,Sat,3.0,weekend,8.0,3.0,H70,12D01,34.0,male,,,,,,,,,149.0
-188,1.0,call start,59800.0,Sun,0.0,weekend,8.0,3.0,H70,29D06V,36.0,male,,,,,,,,,170.0
-189,1.0,clear,59859.0,Sat,4.0,weekend,8.0,3.0,CC70,17D06P,9.0,female,,,,,,,,,150.0
-190,1.0,call start,59859.0,Sun,1.0,weekend,8.0,3.0,CC70,12D01,42.0,female,,,,,,,,,171.0
-191,1.0,handover,59862.0,Sat,6.0,weekend,8.0,3.0,H71,29D06V,1.0,male,,,,,,,,,152.0
-192,1.0,clear,59918.0,Sat,5.0,weekend,8.0,3.0,CC71,12D01,3.0,male,,,,,,,,,151.0
-193,1.0,call start,59918.0,Sat,8.0,weekend,8.0,3.0,CC71,29D06V,0.0,female,,,,,,,,,154.0
-194,1.0,handover,59921.0,Sat,7.0,weekend,8.0,3.0,CC72,09E01,36.0,male,,,,,,,,,153.0
-195,1.0,clear,60862.0,Sat,6.0,weekend,8.0,3.0,H71,29D06V,1.0,male,,,,,,,,,152.0
-196,1.0,call start,60862.0,Sun,2.0,weekend,8.0,3.0,H71,29D07V,74.0,male,,,,,,,,,172.0
-197,1.0,clear,60921.0,Sat,7.0,weekend,8.0,3.0,CC72,09E01,36.0,male,,,,,,,,,153.0
-198,1.0,call start,60921.0,Sun,3.0,weekend,8.0,3.0,CC72,09E01,40.0,male,,,,,,,,,173.0
-199,1.0,handover,63400.0,Sun,0.0,weekend,8.0,3.0,H70,29D06V,36.0,male,,,,,,,,,170.0
-200,1.0,handover,63459.0,Sun,1.0,weekend,8.0,3.0,CC70,12D01,42.0,female,,,,,,,,,171.0
-201,1.0,handover,63518.0,Sat,8.0,weekend,8.0,3.0,CC71,29D06V,0.0,female,,,,,,,,,154.0
-202,1.0,clear,64400.0,Sun,0.0,weekend,8.0,3.0,H70,29D06V,36.0,male,,,,,,,,,170.0
-203,1.0,call start,64400.0,Sun,4.0,weekend,8.0,3.0,H70,17D02P,14.0,male,,,,,,,,,174.0
-204,1.0,clear,64459.0,Sun,1.0,weekend,8.0,3.0,CC70,12D01,42.0,female,,,,,,,,,171.0
-205,1.0,call start,64459.0,Sun,5.0,weekend,8.0,3.0,CC70,29D06V,7.0,male,,,,,,,,,175.0
-206,1.0,handover,64462.0,Sun,2.0,weekend,8.0,3.0,H71,29D07V,74.0,male,,,,,,,,,172.0
-207,1.0,clear,64518.0,Sat,8.0,weekend,8.0,3.0,CC71,29D06V,0.0,female,,,,,,,,,154.0
-208,1.0,call start,64518.0,Sat,9.0,weekend,8.0,3.0,CC71,17D06,18.0,male,,,,,,,,,155.0
-209,1.0,handover,64521.0,Sun,3.0,weekend,8.0,3.0,CC72,09E01,40.0,male,,,,,,,,,173.0
-210,1.0,clear,65462.0,Sun,2.0,weekend,8.0,3.0,H71,29D07V,74.0,male,,,,,,,,,172.0
-211,1.0,call start,65462.0,Sun,6.0,weekend,8.0,3.0,H71,09E01,41.0,male,,,,,,,,,176.0
-212,1.0,clear,65521.0,Sun,3.0,weekend,8.0,3.0,CC72,09E01,40.0,male,,,,,,,,,173.0
-213,1.0,call start,65521.0,Sun,7.0,weekend,8.0,3.0,CC72,29D06V,59.0,female,,,,,,,,,177.0
-214,1.0,handover,68000.0,Sun,4.0,weekend,8.0,3.0,H70,17D02P,14.0,male,,,,,,,,,174.0
-215,1.0,handover,68059.0,Sun,5.0,weekend,8.0,3.0,CC70,29D06V,7.0,male,,,,,,,,,175.0
-216,1.0,handover,68118.0,Sat,9.0,weekend,8.0,3.0,CC71,17D06,18.0,male,,,,,,,,,155.0
-217,1.0,clear,69000.0,Sun,4.0,weekend,8.0,3.0,H70,17D02P,14.0,male,,,,,,,,,174.0
-218,1.0,call start,69000.0,Mon,0.0,weekday,8.0,3.0,H70,09E01,15.0,male,,,,,,,,,195.0
-219,1.0,clear,69059.0,Sun,5.0,weekend,8.0,3.0,CC70,29D06V,7.0,male,,,,,,,,,175.0
-220,1.0,call start,69059.0,Mon,1.0,weekday,8.0,3.0,CC70,17D02P,5.0,male,,,,,,,,,196.0
-221,1.0,handover,69062.0,Sun,6.0,weekend,8.0,3.0,H71,09E01,41.0,male,,,,,,,,,176.0
-222,1.0,clear,69118.0,Sat,9.0,weekend,8.0,3.0,CC71,17D06,18.0,male,,,,,,,,,155.0
-223,1.0,call start,69118.0,Sun,8.0,weekend,8.0,3.0,CC71,09E01,16.0,female,,,,,,,,,178.0
-224,1.0,handover,69121.0,Sun,7.0,weekend,8.0,3.0,CC72,29D06V,59.0,female,,,,,,,,,177.0
-225,1.0,clear,70062.0,Sun,6.0,weekend,8.0,3.0,H71,09E01,41.0,male,,,,,,,,,176.0
-226,1.0,call start,70062.0,Mon,2.0,weekday,8.0,3.0,H71,09E01,68.0,male,,,,,,,,,197.0
-227,1.0,clear,70121.0,Sun,7.0,weekend,8.0,3.0,CC72,29D06V,59.0,female,,,,,,,,,177.0
-228,1.0,call start,70121.0,Mon,3.0,weekday,8.0,3.0,CC72,29D06,18.0,male,,,,,,,,,198.0
-229,1.0,handover,72600.0,Mon,0.0,weekday,8.0,3.0,H70,09E01,15.0,male,,,,,,,,,195.0
-230,1.0,handover,72659.0,Mon,1.0,weekday,8.0,3.0,CC70,17D02P,5.0,male,,,,,,,,,196.0
-231,1.0,handover,72718.0,Sun,8.0,weekend,8.0,3.0,CC71,09E01,16.0,female,,,,,,,,,178.0
-232,1.0,clear,73600.0,Mon,0.0,weekday,8.0,3.0,H70,09E01,15.0,male,,,,,,,,,195.0
-233,1.0,call start,73600.0,Mon,4.0,weekday,8.0,3.0,H70,17D06,35.0,male,,,,,,,,,199.0
-234,1.0,clear,73659.0,Mon,1.0,weekday,8.0,3.0,CC70,17D02P,5.0,male,,,,,,,,,196.0
-235,1.0,call start,73659.0,Mon,5.0,weekday,8.0,3.0,CC70,17D06,0.0,male,,,,,,,,,200.0
-236,1.0,handover,73662.0,Mon,2.0,weekday,8.0,3.0,H71,09E01,68.0,male,,,,,,,,,197.0
-237,1.0,clear,73718.0,Sun,8.0,weekend,8.0,3.0,CC71,09E01,16.0,female,,,,,,,,,178.0
-238,1.0,call start,73718.0,Sun,9.0,weekend,8.0,3.0,CC71,17D06,1.0,male,,,,,,,,,179.0
-239,1.0,handover,73721.0,Mon,3.0,weekday,8.0,3.0,CC72,29D06,18.0,male,,,,,,,,,198.0
-240,1.0,clear,74662.0,Mon,2.0,weekday,8.0,3.0,H71,09E01,68.0,male,,,,,,,,,197.0
-241,1.0,call start,74662.0,Mon,6.0,weekday,8.0,3.0,H71,09E01,23.0,male,,,,,,,,,201.0
-242,1.0,clear,74721.0,Mon,3.0,weekday,8.0,3.0,CC72,29D06,18.0,male,,,,,,,,,198.0
-243,1.0,call start,74721.0,Mon,7.0,weekday,8.0,3.0,CC72,09E01,17.0,male,,,,,,,,,202.0
-244,1.0,handover,77200.0,Mon,4.0,weekday,8.0,3.0,H70,17D06,35.0,male,,,,,,,,,199.0
-245,1.0,handover,77259.0,Mon,5.0,weekday,8.0,3.0,CC70,17D06,0.0,male,,,,,,,,,200.0
-246,1.0,handover,77318.0,Sun,9.0,weekend,8.0,3.0,CC71,17D06,1.0,male,,,,,,,,,179.0
-247,1.0,clear,78200.0,Mon,4.0,weekday,8.0,3.0,H70,17D06,35.0,male,,,,,,,,,199.0
-248,1.0,call start,78200.0,Tue,0.0,weekday,8.0,3.0,H70,17D06P,1.0,male,,,,,,,,,220.0
-249,1.0,clear,78259.0,Mon,5.0,weekday,8.0,3.0,CC70,17D06,0.0,male,,,,,,,,,200.0
-250,1.0,call start,78259.0,Tue,1.0,weekday,8.0,3.0,CC70,17D02P,71.0,male,,,,,,,,,221.0
-251,1.0,handover,78262.0,Mon,6.0,weekday,8.0,3.0,H71,09E01,23.0,male,,,,,,,,,201.0
-252,1.0,clear,78318.0,Sun,9.0,weekend,8.0,3.0,CC71,17D06,1.0,male,,,,,,,,,179.0
-253,1.0,call start,78318.0,Mon,8.0,weekday,8.0,3.0,CC71,09E01,10.0,female,,,,,,,,,203.0
-254,1.0,handover,78321.0,Mon,7.0,weekday,8.0,3.0,CC72,09E01,17.0,male,,,,,,,,,202.0
-255,1.0,clear,79262.0,Mon,6.0,weekday,8.0,3.0,H71,09E01,23.0,male,,,,,,,,,201.0
-256,1.0,call start,79262.0,Tue,2.0,weekday,8.0,3.0,H71,29D06,4.0,male,,,,,,,,,222.0
-257,1.0,clear,79321.0,Mon,7.0,weekday,8.0,3.0,CC72,09E01,17.0,male,,,,,,,,,202.0
-258,1.0,call start,79321.0,Tue,3.0,weekday,8.0,3.0,CC72,09E01,14.0,male,,,,,,,,,223.0
-259,1.0,handover,81800.0,Tue,0.0,weekday,8.0,3.0,H70,17D06P,1.0,male,,,,,,,,,220.0
-260,1.0,handover,81859.0,Tue,1.0,weekday,8.0,3.0,CC70,17D02P,71.0,male,,,,,,,,,221.0
-261,1.0,handover,81918.0,Mon,8.0,weekday,8.0,3.0,CC71,09E01,10.0,female,,,,,,,,,203.0
-262,1.0,clear,82800.0,Tue,0.0,weekday,8.0,3.0,H70,17D06P,1.0,male,,,,,,,,,220.0
-263,1.0,call start,82800.0,Tue,4.0,weekday,8.0,3.0,H70,29D06V,47.0,female,,,,,,,,,224.0
-264,1.0,clear,82859.0,Tue,1.0,weekday,8.0,3.0,CC70,17D02P,71.0,male,,,,,,,,,221.0
-265,1.0,call start,82859.0,Tue,5.0,weekday,8.0,3.0,CC70,29D06V,61.0,female,,,,,,,,,225.0
-266,1.0,handover,82862.0,Tue,2.0,weekday,8.0,3.0,H71,29D06,4.0,male,,,,,,,,,222.0
-267,1.0,clear,82918.0,Mon,8.0,weekday,8.0,3.0,CC71,09E01,10.0,female,,,,,,,,,203.0
-268,1.0,call start,82918.0,Mon,9.0,weekday,8.0,3.0,CC71,29D07V,36.0,male,,,,,,,,,204.0
-269,1.0,handover,82921.0,Tue,3.0,weekday,8.0,3.0,CC72,09E01,14.0,male,,,,,,,,,223.0
-270,1.0,clear,83862.0,Tue,2.0,weekday,8.0,3.0,H71,29D06,4.0,male,,,,,,,,,222.0
-271,1.0,call start,83862.0,Tue,6.0,weekday,8.0,3.0,H71,17D06,61.0,male,,,,,,,,,226.0
-272,1.0,clear,83921.0,Tue,3.0,weekday,8.0,3.0,CC72,09E01,14.0,male,,,,,,,,,223.0
-273,1.0,call start,83921.0,Tue,7.0,weekday,8.0,3.0,CC72,09E01,15.0,female,,,,,,,,,227.0
+0,1.0,HEMS call start,19.920143184334286,Thu,7.0,weekday,8.0,3.0,CC70,17D02P,33.0,female,,,,,,,,,2.0
+1,1.0,AMB call start,19.920143184334286,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,female,,,,,,,,,2.0
+2,1.0,HEMS call start,22.005050139271308,Thu,7.0,weekday,8.0,3.0,H71,12D01,0.0,male,,,,,,,,,3.0
+3,1.0,AMB call start,22.005050139271308,Thu,7.0,weekday,8.0,3.0,AMBULANCE,12D01,0.0,male,,,,,,,,,3.0
+4,1.0,HEMS call start,24.564998585110686,Thu,7.0,weekday,8.0,3.0,CC71,09E01,30.0,male,,,,,,,,,4.0
+5,1.0,AMB call start,24.564998585110686,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,30.0,male,,,,,,,,,4.0
+6,1.0,HEMS arrival at hospital,30.0,Thu,7.0,weekday,8.0,3.0,H70,29D06V,34.0,female,,,,,,,,,1.0
+7,1.0,AMB arrival at hospital,30.0,Thu,7.0,weekday,8.0,3.0,AMBULANCE,29D06V,34.0,female,,,,,,,,,1.0
+8,1.0,AMB call start,39.60311611503418,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D06,41.0,male,,,,,,,,,5.0
+9,1.0,AMB call start,43.6275606873979,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,15.0,male,,,,,,,,,6.0
+10,1.0,HEMS arrival at hospital,49.920143184334286,Thu,7.0,weekday,8.0,3.0,CC70,17D02P,33.0,female,,,,,,,,,2.0
+11,1.0,AMB arrival at hospital,49.920143184334286,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,female,,,,,,,,,2.0
+12,1.0,HEMS arrival at hospital,52.005050139271304,Thu,7.0,weekday,8.0,3.0,H71,12D01,0.0,male,,,,,,,,,3.0
+13,1.0,AMB arrival at hospital,52.005050139271304,Thu,7.0,weekday,8.0,3.0,AMBULANCE,12D01,0.0,male,,,,,,,,,3.0
+14,1.0,HEMS arrival at hospital,54.564998585110686,Thu,7.0,weekday,8.0,3.0,CC71,09E01,30.0,male,,,,,,,,,4.0
+15,1.0,AMB arrival at hospital,54.564998585110686,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,30.0,male,,,,,,,,,4.0
+16,1.0,AMB arrival at hospital,69.60311611503418,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D06,41.0,male,,,,,,,,,5.0
+17,1.0,HEMS call start,70.56984695027138,Thu,8.0,weekday,8.0,3.0,CC72,17D02P,49.0,male,,,,,,,,,7.0
+18,1.0,AMB call start,70.56984695027138,Thu,8.0,weekday,8.0,3.0,AMBULANCE,17D02P,49.0,male,,,,,,,,,7.0
+19,1.0,AMB arrival at hospital,73.6275606873979,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,15.0,male,,,,,,,,,6.0
+20,1.0,AMB handover,90.0,Thu,7.0,weekday,8.0,3.0,H70,29D06V,34.0,female,,,,,,,,,1.0
+21,1.0,AMB arrival at hospital,90.0,Thu,7.0,weekday,8.0,3.0,AMBULANCE,29D06V,34.0,female,,,,,,,,,1.0
+22,1.0,HEMS arrival at hospital,100.56984695027138,Thu,8.0,weekday,8.0,3.0,CC72,17D02P,49.0,male,,,,,,,,,7.0
+23,1.0,AMB arrival at hospital,100.56984695027138,Thu,8.0,weekday,8.0,3.0,AMBULANCE,17D02P,49.0,male,,,,,,,,,7.0
+24,1.0,AMB handover,109.92014318433428,Thu,7.0,weekday,8.0,3.0,CC70,17D02P,33.0,female,,,,,,,,,2.0
+25,1.0,AMB arrival at hospital,109.92014318433428,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,female,,,,,,,,,2.0
+26,1.0,AMB handover,112.0050501392713,Thu,7.0,weekday,8.0,3.0,H71,12D01,0.0,male,,,,,,,,,3.0
+27,1.0,AMB arrival at hospital,112.0050501392713,Thu,7.0,weekday,8.0,3.0,AMBULANCE,12D01,0.0,male,,,,,,,,,3.0
+28,1.0,AMB handover,114.56499858511069,Thu,7.0,weekday,8.0,3.0,CC71,09E01,30.0,male,,,,,,,,,4.0
+29,1.0,AMB arrival at hospital,114.56499858511069,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,30.0,male,,,,,,,,,4.0
+30,1.0,HEMS clear,120.0,Thu,7.0,weekday,8.0,3.0,H70,29D06V,34.0,female,,,,,,,,,1.0
+31,1.0,AMB clear,120.0,Thu,7.0,weekday,8.0,3.0,AMBULANCE,29D06V,34.0,female,,,,,,,,,1.0
+32,1.0,AMB arrival at hospital,129.6031161150342,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D06,41.0,male,,,,,,,,,5.0
+33,1.0,AMB arrival at hospital,133.6275606873979,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,15.0,male,,,,,,,,,6.0
+34,1.0,HEMS clear,139.92014318433428,Thu,7.0,weekday,8.0,3.0,CC70,17D02P,33.0,female,,,,,,,,,2.0
+35,1.0,AMB clear,139.92014318433428,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,female,,,,,,,,,2.0
+36,1.0,HEMS clear,142.0050501392713,Thu,7.0,weekday,8.0,3.0,H71,12D01,0.0,male,,,,,,,,,3.0
+37,1.0,AMB clear,142.0050501392713,Thu,7.0,weekday,8.0,3.0,AMBULANCE,12D01,0.0,male,,,,,,,,,3.0
+38,1.0,HEMS clear,144.5649985851107,Thu,7.0,weekday,8.0,3.0,CC71,09E01,30.0,male,,,,,,,,,4.0
+39,1.0,AMB clear,144.5649985851107,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,30.0,male,,,,,,,,,4.0
+40,1.0,HEMS call start,144.5649985851107,Thu,8.0,weekday,8.0,3.0,CC71,12D01,2.0,female,,,,,,,,,8.0
+41,1.0,AMB call start,144.5649985851107,Thu,8.0,weekday,8.0,3.0,AMBULANCE,12D01,2.0,female,,,,,,,,,8.0
+42,1.0,AMB clear,159.6031161150342,Thu,7.0,weekday,8.0,3.0,AMBULANCE,17D06,41.0,male,,,,,,,,,5.0
+43,1.0,AMB handover,160.56984695027137,Thu,8.0,weekday,8.0,3.0,CC72,17D02P,49.0,male,,,,,,,,,7.0
+44,1.0,AMB arrival at hospital,160.56984695027137,Thu,8.0,weekday,8.0,3.0,AMBULANCE,17D02P,49.0,male,,,,,,,,,7.0
+45,1.0,AMB clear,163.6275606873979,Thu,7.0,weekday,8.0,3.0,AMBULANCE,09E01,15.0,male,,,,,,,,,6.0
+46,1.0,HEMS arrival at hospital,174.5649985851107,Thu,8.0,weekday,8.0,3.0,CC71,12D01,2.0,female,,,,,,,,,8.0
+47,1.0,AMB arrival at hospital,174.5649985851107,Thu,8.0,weekday,8.0,3.0,AMBULANCE,12D01,2.0,female,,,,,,,,,8.0
+48,1.0,HEMS clear,190.56984695027137,Thu,8.0,weekday,8.0,3.0,CC72,17D02P,49.0,male,,,,,,,,,7.0
+49,1.0,AMB clear,190.56984695027137,Thu,8.0,weekday,8.0,3.0,AMBULANCE,17D02P,49.0,male,,,,,,,,,7.0
+50,1.0,HEMS call start,190.56984695027137,Thu,8.0,weekday,8.0,3.0,CC72,29D06,38.0,male,,,,,,,,,9.0
+51,1.0,AMB call start,190.56984695027137,Thu,8.0,weekday,8.0,3.0,AMBULANCE,29D06,38.0,male,,,,,,,,,9.0
+52,1.0,HEMS arrival at hospital,220.56984695027137,Thu,8.0,weekday,8.0,3.0,CC72,29D06,38.0,male,,,,,,,,,9.0
+53,1.0,AMB arrival at hospital,220.56984695027137,Thu,8.0,weekday,8.0,3.0,AMBULANCE,29D06,38.0,male,,,,,,,,,9.0
+54,1.0,AMB handover,234.5649985851107,Thu,8.0,weekday,8.0,3.0,CC71,12D01,2.0,female,,,,,,,,,8.0
+55,1.0,AMB arrival at hospital,234.5649985851107,Thu,8.0,weekday,8.0,3.0,AMBULANCE,12D01,2.0,female,,,,,,,,,8.0
+56,1.0,AMB call start,234.7376381435253,Thu,10.0,weekday,8.0,3.0,AMBULANCE,17D02P,18.0,female,,,,,,,,,15.0
+57,1.0,HEMS clear,264.5649985851107,Thu,8.0,weekday,8.0,3.0,CC71,12D01,2.0,female,,,,,,,,,8.0
+58,1.0,AMB clear,264.5649985851107,Thu,8.0,weekday,8.0,3.0,AMBULANCE,12D01,2.0,female,,,,,,,,,8.0
+59,1.0,HEMS call start,264.5649985851107,Thu,9.0,weekday,8.0,3.0,CC71,17D02P,33.0,male,,,,,,,,,10.0
+60,1.0,AMB call start,264.5649985851107,Thu,9.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,male,,,,,,,,,10.0
+61,1.0,AMB arrival at hospital,264.73763814352526,Thu,10.0,weekday,8.0,3.0,AMBULANCE,17D02P,18.0,female,,,,,,,,,15.0
+62,1.0,AMB handover,280.56984695027137,Thu,8.0,weekday,8.0,3.0,CC72,29D06,38.0,male,,,,,,,,,9.0
+63,1.0,AMB arrival at hospital,280.56984695027137,Thu,8.0,weekday,8.0,3.0,AMBULANCE,29D06,38.0,male,,,,,,,,,9.0
+64,1.0,HEMS arrival at hospital,294.5649985851107,Thu,9.0,weekday,8.0,3.0,CC71,17D02P,33.0,male,,,,,,,,,10.0
+65,1.0,AMB arrival at hospital,294.5649985851107,Thu,9.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,male,,,,,,,,,10.0
+66,1.0,AMB call start,301.6022946158464,Thu,12.0,weekday,8.0,3.0,AMBULANCE,17D06P,7.0,male,,,,,,,,,17.0
+67,1.0,HEMS clear,310.56984695027137,Thu,8.0,weekday,8.0,3.0,CC72,29D06,38.0,male,,,,,,,,,9.0
+68,1.0,AMB clear,310.56984695027137,Thu,8.0,weekday,8.0,3.0,AMBULANCE,29D06,38.0,male,,,,,,,,,9.0
+69,1.0,AMB arrival at hospital,324.73763814352526,Thu,10.0,weekday,8.0,3.0,AMBULANCE,17D02P,18.0,female,,,,,,,,,15.0
+70,1.0,AMB arrival at hospital,331.6022946158464,Thu,12.0,weekday,8.0,3.0,AMBULANCE,17D06P,7.0,male,,,,,,,,,17.0
+71,1.0,AMB handover,354.5649985851107,Thu,9.0,weekday,8.0,3.0,CC71,17D02P,33.0,male,,,,,,,,,10.0
+72,1.0,AMB arrival at hospital,354.5649985851107,Thu,9.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,male,,,,,,,,,10.0
+73,1.0,AMB clear,354.73763814352526,Thu,10.0,weekday,8.0,3.0,AMBULANCE,17D02P,18.0,female,,,,,,,,,15.0
+74,1.0,AMB call start,361.72212991838984,Thu,13.0,weekday,8.0,3.0,AMBULANCE,17D06,32.0,female,,,,,,,,,19.0
+75,1.0,HEMS clear,384.5649985851107,Thu,9.0,weekday,8.0,3.0,CC71,17D02P,33.0,male,,,,,,,,,10.0
+76,1.0,AMB clear,384.5649985851107,Thu,9.0,weekday,8.0,3.0,AMBULANCE,17D02P,33.0,male,,,,,,,,,10.0
+77,1.0,AMB arrival at hospital,391.6022946158464,Thu,12.0,weekday,8.0,3.0,AMBULANCE,17D06P,7.0,male,,,,,,,,,17.0
+78,1.0,AMB arrival at hospital,391.72212991838984,Thu,13.0,weekday,8.0,3.0,AMBULANCE,17D06,32.0,female,,,,,,,,,19.0
+79,1.0,AMB clear,421.6022946158464,Thu,12.0,weekday,8.0,3.0,AMBULANCE,17D06P,7.0,male,,,,,,,,,17.0
+80,1.0,AMB arrival at hospital,451.72212991838984,Thu,13.0,weekday,8.0,3.0,AMBULANCE,17D06,32.0,female,,,,,,,,,19.0
+81,1.0,AMB call start,457.29568255813933,Thu,14.0,weekday,8.0,3.0,AMBULANCE,29D07V,1.0,male,,,,,,,,,22.0
+82,1.0,AMB clear,481.72212991838984,Thu,13.0,weekday,8.0,3.0,AMBULANCE,17D06,32.0,female,,,,,,,,,19.0
+83,1.0,AMB arrival at hospital,487.29568255813933,Thu,14.0,weekday,8.0,3.0,AMBULANCE,29D07V,1.0,male,,,,,,,,,22.0
+84,1.0,AMB call start,502.1538028265201,Thu,15.0,weekday,8.0,3.0,AMBULANCE,17D02P,15.0,male,,,,,,,,,24.0
+85,1.0,AMB arrival at hospital,532.1538028265202,Thu,15.0,weekday,8.0,3.0,AMBULANCE,17D02P,15.0,male,,,,,,,,,24.0
+86,1.0,AMB arrival at hospital,547.2956825581393,Thu,14.0,weekday,8.0,3.0,AMBULANCE,29D07V,1.0,male,,,,,,,,,22.0
+87,1.0,AMB clear,577.2956825581393,Thu,14.0,weekday,8.0,3.0,AMBULANCE,29D07V,1.0,male,,,,,,,,,22.0
+88,1.0,AMB arrival at hospital,592.1538028265202,Thu,15.0,weekday,8.0,3.0,AMBULANCE,17D02P,15.0,male,,,,,,,,,24.0
+89,1.0,AMB call start,596.2802934488388,Thu,16.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,26.0
+90,1.0,AMB call start,608.6271017259617,Thu,17.0,weekday,8.0,3.0,AMBULANCE,29D06V,1.0,male,,,,,,,,,27.0
+91,1.0,AMB clear,622.1538028265202,Thu,15.0,weekday,8.0,3.0,AMBULANCE,17D02P,15.0,male,,,,,,,,,24.0
+92,1.0,AMB arrival at hospital,626.2802934488388,Thu,16.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,26.0
+93,1.0,AMB arrival at hospital,638.6271017259617,Thu,17.0,weekday,8.0,3.0,AMBULANCE,29D06V,1.0,male,,,,,,,,,27.0
+94,1.0,AMB arrival at hospital,686.2802934488388,Thu,16.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,26.0
+95,1.0,AMB call start,687.7156583709851,Thu,18.0,weekday,8.0,3.0,AMBULANCE,09E01,41.0,male,,,,,,,,,29.0
+96,1.0,AMB arrival at hospital,698.6271017259617,Thu,17.0,weekday,8.0,3.0,AMBULANCE,29D06V,1.0,male,,,,,,,,,27.0
+97,1.0,AMB clear,716.2802934488388,Thu,16.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,26.0
+98,1.0,AMB arrival at hospital,717.7156583709851,Thu,18.0,weekday,8.0,3.0,AMBULANCE,09E01,41.0,male,,,,,,,,,29.0
+99,1.0,AMB clear,728.6271017259617,Thu,17.0,weekday,8.0,3.0,AMBULANCE,29D06V,1.0,male,,,,,,,,,27.0
+100,1.0,AMB call start,765.5957155152033,Thu,19.0,weekday,8.0,3.0,AMBULANCE,12D01,17.0,female,,,,,,,,,32.0
+101,1.0,AMB arrival at hospital,777.7156583709851,Thu,18.0,weekday,8.0,3.0,AMBULANCE,09E01,41.0,male,,,,,,,,,29.0
+102,1.0,AMB arrival at hospital,795.5957155152033,Thu,19.0,weekday,8.0,3.0,AMBULANCE,12D01,17.0,female,,,,,,,,,32.0
+103,1.0,AMB clear,807.7156583709851,Thu,18.0,weekday,8.0,3.0,AMBULANCE,09E01,41.0,male,,,,,,,,,29.0
+104,1.0,AMB call start,813.1543575677043,Thu,20.0,weekday,8.0,3.0,AMBULANCE,29D06V,54.0,male,,,,,,,,,33.0
+105,1.0,AMB arrival at hospital,843.1543575677043,Thu,20.0,weekday,8.0,3.0,AMBULANCE,29D06V,54.0,male,,,,,,,,,33.0
+106,1.0,AMB arrival at hospital,855.5957155152033,Thu,19.0,weekday,8.0,3.0,AMBULANCE,12D01,17.0,female,,,,,,,,,32.0
+107,1.0,AMB call start,874.294271511834,Thu,21.0,weekday,8.0,3.0,AMBULANCE,09E01,2.0,male,,,,,,,,,35.0
+108,1.0,AMB clear,885.5957155152033,Thu,19.0,weekday,8.0,3.0,AMBULANCE,12D01,17.0,female,,,,,,,,,32.0
+109,1.0,AMB call start,900.9646917251305,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,0.0,male,,,,,,,,,38.0
+110,1.0,AMB arrival at hospital,903.1543575677043,Thu,20.0,weekday,8.0,3.0,AMBULANCE,29D06V,54.0,male,,,,,,,,,33.0
+111,1.0,AMB arrival at hospital,904.294271511834,Thu,21.0,weekday,8.0,3.0,AMBULANCE,09E01,2.0,male,,,,,,,,,35.0
+112,1.0,AMB call start,914.593986297023,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,25.0,female,,,,,,,,,39.0
+113,1.0,AMB arrival at hospital,930.9646917251305,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,0.0,male,,,,,,,,,38.0
+114,1.0,AMB clear,933.1543575677043,Thu,20.0,weekday,8.0,3.0,AMBULANCE,29D06V,54.0,male,,,,,,,,,33.0
+115,1.0,AMB arrival at hospital,944.593986297023,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,25.0,female,,,,,,,,,39.0
+116,1.0,AMB arrival at hospital,964.294271511834,Thu,21.0,weekday,8.0,3.0,AMBULANCE,09E01,2.0,male,,,,,,,,,35.0
+117,1.0,AMB arrival at hospital,990.9646917251305,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,0.0,male,,,,,,,,,38.0
+118,1.0,AMB clear,994.294271511834,Thu,21.0,weekday,8.0,3.0,AMBULANCE,09E01,2.0,male,,,,,,,,,35.0
+119,1.0,AMB arrival at hospital,1004.593986297023,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,25.0,female,,,,,,,,,39.0
+120,1.0,AMB clear,1020.9646917251305,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,0.0,male,,,,,,,,,38.0
+121,1.0,AMB clear,1034.593986297023,Thu,22.0,weekday,8.0,3.0,AMBULANCE,29D06V,25.0,female,,,,,,,,,39.0
+122,1.0,AMB call start,1067.1849500800336,Fri,0.0,weekday,8.0,3.0,AMBULANCE,12D01,10.0,female,,,,,,,,,43.0
+123,1.0,HEMS call start,1074.2163848407822,Fri,0.0,weekday,8.0,3.0,H70,29D07V,18.0,female,,,,,,,,,44.0
+124,1.0,AMB call start,1074.2163848407822,Fri,0.0,weekday,8.0,3.0,AMBULANCE,29D07V,18.0,female,,,,,,,,,44.0
+125,1.0,AMB arrival at hospital,1097.1849500800336,Fri,0.0,weekday,8.0,3.0,AMBULANCE,12D01,10.0,female,,,,,,,,,43.0
+126,1.0,AMB call start,1099.2764422727812,Fri,1.0,weekday,8.0,3.0,AMBULANCE,09E01,43.0,male,,,,,,,,,45.0
+127,1.0,HEMS arrival at hospital,1104.2163848407822,Fri,0.0,weekday,8.0,3.0,H70,29D07V,18.0,female,,,,,,,,,44.0
+128,1.0,AMB arrival at hospital,1104.2163848407822,Fri,0.0,weekday,8.0,3.0,AMBULANCE,29D07V,18.0,female,,,,,,,,,44.0
+129,1.0,AMB arrival at hospital,1129.2764422727812,Fri,1.0,weekday,8.0,3.0,AMBULANCE,09E01,43.0,male,,,,,,,,,45.0
+130,1.0,AMB arrival at hospital,1157.1849500800336,Fri,0.0,weekday,8.0,3.0,AMBULANCE,12D01,10.0,female,,,,,,,,,43.0
+131,1.0,AMB call start,1158.2764422727812,Fri,2.0,weekday,8.0,3.0,AMBULANCE,29D07V,19.0,male,,,,,,,,,46.0
+132,1.0,HEMS call start,1161.767753850189,Fri,2.0,weekday,8.0,3.0,CC70,17D02P,3.0,female,,,,,,,,,47.0
+133,1.0,AMB call start,1161.767753850189,Fri,2.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,47.0
+134,1.0,AMB handover,1164.2163848407822,Fri,0.0,weekday,8.0,3.0,H70,29D07V,18.0,female,,,,,,,,,44.0
+135,1.0,AMB arrival at hospital,1164.2163848407822,Fri,0.0,weekday,8.0,3.0,AMBULANCE,29D07V,18.0,female,,,,,,,,,44.0
+136,1.0,AMB clear,1187.1849500800336,Fri,0.0,weekday,8.0,3.0,AMBULANCE,12D01,10.0,female,,,,,,,,,43.0
+137,1.0,AMB arrival at hospital,1188.2764422727812,Fri,2.0,weekday,8.0,3.0,AMBULANCE,29D07V,19.0,male,,,,,,,,,46.0
+138,1.0,AMB arrival at hospital,1189.2764422727812,Fri,1.0,weekday,8.0,3.0,AMBULANCE,09E01,43.0,male,,,,,,,,,45.0
+139,1.0,HEMS arrival at hospital,1191.767753850189,Fri,2.0,weekday,8.0,3.0,CC70,17D02P,3.0,female,,,,,,,,,47.0
+140,1.0,AMB arrival at hospital,1191.767753850189,Fri,2.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,47.0
+141,1.0,HEMS clear,1194.2163848407822,Fri,0.0,weekday,8.0,3.0,H70,29D07V,18.0,female,,,,,,,,,44.0
+142,1.0,AMB clear,1194.2163848407822,Fri,0.0,weekday,8.0,3.0,AMBULANCE,29D07V,18.0,female,,,,,,,,,44.0
+143,1.0,AMB call start,1210.9572260377058,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,29.0,male,,,,,,,,,48.0
+144,1.0,AMB call start,1219.046539628916,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,23.0,female,,,,,,,,,49.0
+145,1.0,AMB clear,1219.2764422727812,Fri,1.0,weekday,8.0,3.0,AMBULANCE,09E01,43.0,male,,,,,,,,,45.0
+146,1.0,AMB call start,1233.0854176035853,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,20.0,male,,,,,,,,,50.0
+147,1.0,AMB call start,1240.2501061799758,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,11.0,female,,,,,,,,,51.0
+148,1.0,AMB arrival at hospital,1240.9572260377058,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,29.0,male,,,,,,,,,48.0
+149,1.0,AMB arrival at hospital,1248.2764422727812,Fri,2.0,weekday,8.0,3.0,AMBULANCE,29D07V,19.0,male,,,,,,,,,46.0
+150,1.0,AMB arrival at hospital,1249.046539628916,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,23.0,female,,,,,,,,,49.0
+151,1.0,AMB handover,1251.767753850189,Fri,2.0,weekday,8.0,3.0,CC70,17D02P,3.0,female,,,,,,,,,47.0
+152,1.0,AMB arrival at hospital,1251.767753850189,Fri,2.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,47.0
+153,1.0,AMB arrival at hospital,1263.0854176035853,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,20.0,male,,,,,,,,,50.0
+154,1.0,AMB arrival at hospital,1270.2501061799758,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,11.0,female,,,,,,,,,51.0
+155,1.0,AMB clear,1278.2764422727812,Fri,2.0,weekday,8.0,3.0,AMBULANCE,29D07V,19.0,male,,,,,,,,,46.0
+156,1.0,HEMS clear,1281.767753850189,Fri,2.0,weekday,8.0,3.0,CC70,17D02P,3.0,female,,,,,,,,,47.0
+157,1.0,AMB clear,1281.767753850189,Fri,2.0,weekday,8.0,3.0,AMBULANCE,17D02P,3.0,female,,,,,,,,,47.0
+158,1.0,AMB call start,1289.1154491094512,Fri,4.0,weekday,8.0,3.0,AMBULANCE,29D06V,22.0,female,,,,,,,,,52.0
+159,1.0,AMB arrival at hospital,1300.9572260377058,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,29.0,male,,,,,,,,,48.0
+160,1.0,AMB arrival at hospital,1309.046539628916,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,23.0,female,,,,,,,,,49.0
+161,1.0,AMB arrival at hospital,1319.1154491094512,Fri,4.0,weekday,8.0,3.0,AMBULANCE,29D06V,22.0,female,,,,,,,,,52.0
+162,1.0,AMB arrival at hospital,1323.0854176035853,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,20.0,male,,,,,,,,,50.0
+163,1.0,AMB arrival at hospital,1330.2501061799758,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,11.0,female,,,,,,,,,51.0
+164,1.0,AMB clear,1330.9572260377058,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,29.0,male,,,,,,,,,48.0
+165,1.0,HEMS call start,1331.1950493813213,Fri,5.0,weekday,8.0,3.0,H71,09E01,11.0,male,,,,,,,,,53.0
+166,1.0,AMB call start,1331.1950493813213,Fri,5.0,weekday,8.0,3.0,AMBULANCE,09E01,11.0,male,,,,,,,,,53.0
+167,1.0,AMB clear,1339.046539628916,Fri,3.0,weekday,8.0,3.0,AMBULANCE,09E01,23.0,female,,,,,,,,,49.0
+168,1.0,AMB clear,1353.0854176035853,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,20.0,male,,,,,,,,,50.0
+169,1.0,AMB clear,1360.2501061799758,Fri,3.0,weekday,8.0,3.0,AMBULANCE,29D06,11.0,female,,,,,,,,,51.0
+170,1.0,HEMS arrival at hospital,1361.1950493813213,Fri,5.0,weekday,8.0,3.0,H71,09E01,11.0,male,,,,,,,,,53.0
+171,1.0,AMB arrival at hospital,1361.1950493813213,Fri,5.0,weekday,8.0,3.0,AMBULANCE,09E01,11.0,male,,,,,,,,,53.0
+172,1.0,HEMS call start,1366.7903666001419,Fri,5.0,weekday,8.0,3.0,CC72,29D06V,6.0,female,,,,,,,,,54.0
+173,1.0,AMB call start,1366.7903666001419,Fri,5.0,weekday,8.0,3.0,AMBULANCE,29D06V,6.0,female,,,,,,,,,54.0
+174,1.0,AMB arrival at hospital,1379.1154491094512,Fri,4.0,weekday,8.0,3.0,AMBULANCE,29D06V,22.0,female,,,,,,,,,52.0
+175,1.0,HEMS call start,1381.0631772470667,Fri,6.0,weekday,8.0,3.0,CC71,17D06,3.0,female,,,,,,,,,55.0
+176,1.0,AMB call start,1381.0631772470667,Fri,6.0,weekday,8.0,3.0,AMBULANCE,17D06,3.0,female,,,,,,,,,55.0
+177,1.0,HEMS arrival at hospital,1396.7903666001419,Fri,5.0,weekday,8.0,3.0,CC72,29D06V,6.0,female,,,,,,,,,54.0
+178,1.0,AMB arrival at hospital,1396.7903666001419,Fri,5.0,weekday,8.0,3.0,AMBULANCE,29D06V,6.0,female,,,,,,,,,54.0
+179,1.0,AMB clear,1409.1154491094512,Fri,4.0,weekday,8.0,3.0,AMBULANCE,29D06V,22.0,female,,,,,,,,,52.0
+180,1.0,HEMS arrival at hospital,1411.0631772470667,Fri,6.0,weekday,8.0,3.0,CC71,17D06,3.0,female,,,,,,,,,55.0
+181,1.0,AMB arrival at hospital,1411.0631772470667,Fri,6.0,weekday,8.0,3.0,AMBULANCE,17D06,3.0,female,,,,,,,,,55.0
+182,1.0,HEMS call start,1412.4513383713374,Fri,6.0,weekday,8.0,3.0,H70,17D02P,0.0,male,,,,,,,,,56.0
+183,1.0,AMB call start,1412.4513383713374,Fri,6.0,weekday,8.0,3.0,AMBULANCE,17D02P,0.0,male,,,,,,,,,56.0
+184,1.0,AMB call start,1419.710725807901,Fri,6.0,weekday,8.0,3.0,AMBULANCE,12D01,88.0,female,,,,,,,,,57.0
+185,1.0,AMB handover,1421.1950493813213,Fri,5.0,weekday,8.0,3.0,H71,09E01,11.0,male,,,,,,,,,53.0
+186,1.0,AMB arrival at hospital,1421.1950493813213,Fri,5.0,weekday,8.0,3.0,AMBULANCE,09E01,11.0,male,,,,,,,,,53.0
+187,1.0,AMB call start,1426.6881629240684,Fri,6.0,weekday,8.0,3.0,AMBULANCE,17D06P,5.0,male,,,,,,,,,58.0
