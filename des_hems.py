@@ -17,7 +17,7 @@ class DES_HEMS:
 
     def __init__(self, run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str):
 
-        self.run_number = run_number
+        self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
         self.sim_duration = sim_duration
         self.warm_up_duration = warm_up_duration
         self.sim_start_date = sim_start_date
