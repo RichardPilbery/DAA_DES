@@ -19,6 +19,7 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_
     print(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
     logging.debug(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
 
+    return daa_model.results_df
 
 def parallelProcess(nprocess = mp.cpu_count() - 1):
     logging.debug('Model called')
