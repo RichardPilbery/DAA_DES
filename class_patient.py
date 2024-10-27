@@ -48,6 +48,7 @@ class Patient:
         self.month = 1
         self.qtr = 1
         self.weekday = "weekday"
+        self.current_dt = None # TODO: Initialise as a dt?
 
         # HEMS/critical care specific items
         self.time_to_cc = 0
