@@ -53,19 +53,74 @@ if button_run_pressed:
 
         results_all_runs = pd.concat(results)
 
-        tab1, tab2, tab3 = st.tabs(
-            ["Simple Exploration", "Full Dataset", "Temp"]
+        tab1, tab2, tab3, tab4 = st.tabs(
+            ["Summary Visualisations", "Animation",
+             "Full Event Dataset", "Debugging Visualisations"]
         )
 
         with tab1:
+            t1_col1, t1_col2 = st.columns(2)
+            with t1_col1:
+                st.subheader("Unmet Demand")
+                st.write("Placeholder")
+
+            with t1_col2:
+                st.subheader("Helicopter Utilisation")
+                st.write("Placeholder")
+
+        with tab2:
+            st.write("Placeholder")
+
+        with tab3:
+            st.subheader("Observed Event Types")
+
+            st.write(
+                pd.DataFrame(
+                    results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
+                    .pivot(index="run_number", columns="time_type", values="count")
+                    )
+
+            st.subheader("Observed Callsigns")
+
+            st.write(
+                pd.DataFrame(
+                    results_all_runs[["run_number", "callsign"]].value_counts()).reset_index()
+                    .pivot(index="run_number", columns="callsign", values="count")
+                    )
+
+
+            st.subheader("Full Event Log")
+
+            st.write(results_all_runs)
+
+        with tab4:
+            st.subheader("Event Overview")
+
             st.plotly_chart(
                 px.scatter(
                     results_all_runs,
-                    x="timestamp",
+                    x="timestamp_dt",
                     y="run_number",
-                    color="time_type")
+                    facet_row="time_type",
+                    color="time_type"),
+                    use_container_width=True
             )
 
-        with tab2:
+            @st.fragment
+            def patient_viz():
+                st.subheader("Per-patient journey exploration")
 
-            st.write(results_all_runs)
+                patient_filter = st.selectbox("Select a patient", results_all_runs.index.unique())
+
+                st.plotly_chart(
+                    px.scatter(
+                        results_all_runs[results_all_runs.index==patient_filter],
+                        x="timestamp_dt",
+                        y="run_number",
+                        color="time_type"),
+                        use_container_width=True
+                )
+
+
+
+            patient_viz()
