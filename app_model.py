@@ -39,8 +39,8 @@ if button_run_pressed:
             run_results = runSim(
                     run = run,
                     total_runs = number_of_runs_input,
-                    sim_duration =sim_duration_input * 24 * 60 * 60,
-                    warm_up_time = warm_up_duration * 60 * 60,
+                    sim_duration =sim_duration_input * 24 * 60 ,
+                    warm_up_time = warm_up_duration * 60,
                     sim_start_date = sim_start_date_input
                 )
 
