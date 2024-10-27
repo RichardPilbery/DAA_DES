@@ -69,6 +69,7 @@ class DES_HEMS:
                     pt.weekday = weekday
                     pt.month = month
                     pt.qtr = qtr
+                    pt.current_dt = current_dt
 
                     # Set caller/patient off on their HEMS healthcare journey
                     self.env.process(self.patient_journey(pt))
@@ -174,6 +175,7 @@ class DES_HEMS:
             "run_number"  : self.run_number,
             "time_type"   : time_type,   # e.g. mobile, at scene, leaving scene etc.
             "timestamp"   : self.env.now,
+            "timestamp_dt": patient.current_dt,
             "day"         : patient.day,
             "hour"        : patient.hour,
             "weekday"     : patient.weekday,
@@ -203,7 +205,6 @@ class DES_HEMS:
     def convert_results_to_df(self, results: dict) -> None:
         self.results_df = pd.DataFrame(results)
         self.results_df.set_index("P_ID", inplace=True)
-
 
     def write_all_results(self) -> None:
         """
