@@ -48,7 +48,8 @@ if button_run_pressed:
                 run_results
                 )
 
-            my_bar.progress(run*10, text=progress_text)
+            my_bar.progress((run+1)/number_of_runs_input, text=progress_text)
+
 
         results_all_runs = pd.concat(results)
 
