@@ -35,7 +35,7 @@ if button_run_pressed:
 
         results = []
 
-        for run in range(number_of_runs_input+1):
+        for run in range(number_of_runs_input):
             run_results = runSim(
                     run = run,
                     total_runs = number_of_runs_input,
@@ -57,7 +57,13 @@ if button_run_pressed:
         )
 
         with tab1:
-            px.scatter(results_all_runs, x="timestamp",y="run_number", color="time_type")
+            st.plotly_chart(
+                px.scatter(
+                    results_all_runs,
+                    x="timestamp",
+                    y="run_number",
+                    color="time_type")
+            )
 
         with tab2:
 
