@@ -5,6 +5,9 @@ class Utils:
 
     ALL_RESULTS_CSV = 'data/all_results.csv'
 
+    # We are going to turn this on its head and start with AMPDS call category (chief complaint) 
+    # From there we can calculate age and sex, and desired response (HEMS might be dependent on availability, perhaps)?
+
     TRIAGE_CODE_DISTR = pd.DataFrame({
         "ampds_code" : ["07C03", "09E01", "12D01", "17D02P", "17D06", "17D06P", "29D06", "29D06V", "29D07V"],
         "category" : ["Burns", "Cardiac/respiratory", "Convulsions/fitting", "Falls", "Falls", "Falls", "RTC", "RTC", "RTC"],
@@ -15,20 +18,22 @@ class Utils:
 
 
     # Based on summer Apr-Sept and winter Oct-Mar
+    # This rota is going to be split into vehicle (car/helicopter) and personnel
+    # Each row will only have two sets of start/end times (one pair for summer and one for winter)
     HEMS_ROTA = pd.DataFrame({
-        "callsign"      : ["H70", "CC70", "H71", "CC71", "CC72"],
-        "category"      : ["CC", "CC", "EC", "EC", "CC"],
-        "type"          : ["helicopter", "car", "helicopter", "car", "car"],
-        "summer_start1" : [7, 7, 7, 9, 8],
-        "winter_start1" : [7, 7, 7, 7, 8],
-        "summer_end1"   : [17, 17, 19, 19, 18],
-        "winter_end1"   : [17, 17, 17, 17, 18],
-        "summer_start2" : ["16:00", "16:00", "", "", ""], # Need to clarify these as the times appear to crossover
-        "winter_start2" : ["16:00", "16:00", "", "", ""],
-        "summer_end2"   : ["02:00", "02:00", "", "", ""],
-        "winter_end2"   : ["02:00", "02:00", "", "", ""],
-        "service_freq"  : [12, 24, 12, 24, 24],                         # weeks
-        "service_dur"   : [3, 1, 3, 1, 1]                               # weeks
+        "callsign"              : ["H70", "CC70", "H71", "CC71", "CC72"],
+        "category"              : ["CC", "CC", "EC", "EC", "CC"],
+        "type"                  : ["helicopter", "car", "helicopter", "car", "car"],
+        "summer_start1"         : [7, 7, 7, 9, 8],
+        "winter_start1"         : [7, 7, 7, 7, 8],
+        "summer_end1"           : [17, 17, 19, 19, 18],
+        "winter_end1"           : [17, 17, 17, 17, 18],
+        "summer_start2"         : ["16:00", "16:00", "", "", ""], # Need to clarify these as the times appear to crossover
+        "winter_start2"         : ["16:00", "16:00", "", "", ""],
+        "summer_end2"           : ["02:00", "02:00", "", "", ""],
+        "winter_end2"           : ["02:00", "02:00", "", "", ""],
+        "service_freq"          : [40, 0, 40, 0, 0],                         # Not applicable for cars, since always available, Service intervals for helicopters based on flying hours, which will tot up as the resource is (re)used on jobs
+        "service_dur"           : [3, 1, 3, 1, 1]                               # weeks
     })
     HEMS_ROTA.set_index("callsign", inplace=True)
 

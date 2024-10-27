@@ -25,9 +25,9 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
     logging.debug('Model called')
 
     number_of_runs = 1
-    sim_duration = 1 * 24 * 60 * 60
+    sim_duration = 1 * 24 * 60
     warm_up_time = 0
-    sim_start_date =  "2021-08-01 07:00:00"
+    sim_start_date =  "2024-08-01 07:00:00"
 
     pool = mp.Pool(processes = nprocess)
     pool.starmap(runSim, zip(
@@ -43,7 +43,7 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
     logging.shutdown()
 
 
-#runSim(0, 2, 1 * 24 * 60 * 60, 0, "2021-08-01 07:00:00")
+#runSim(0, 2, 1 * 24 * 60, 0, "2021-08-01 07:00:00")
 
 
 if __name__ == "__main__":

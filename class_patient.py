@@ -54,6 +54,8 @@ class Patient:
         self.cc_conveyed = 0
         self.cc_flown = 0
         self.cc_travelled_with = 0
+        # Bindary flag to indicate whether it is a 'HEMS job' whether they attend or not
+        self.hems_case = 0 if uniform(0, 1) < 0.5 else 1
         # Binary flag to indicate whether patient cared for by HEMS or not
         self.hems = 1
         # Critical care desk staffed
