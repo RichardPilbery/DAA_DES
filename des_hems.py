@@ -27,12 +27,14 @@ class DES_HEMS:
 
         self.all_results_location = Utils.ALL_RESULTS_CSV
 
-
         self.env = simpy.Environment()
         self.patient_counter = 0
 
         # Going to need to work out how we can keep track of flying hours
         self.hems_resources = HEMSAvailability(self.env, sim_start_date)
+
+        # Set up empty list to store results prior to conversion to dataframe
+        self.results_list = []
 
         # Set up data frame to capture time points etc. during the simulation
         # We might not need all of these, but simpler to capture them all for now.
@@ -41,53 +43,29 @@ class DES_HEMS:
         # I am thinking that each resource will need its own entry for any given
         # patient to account for dual response (ambulance service and HEMS)
         # stand downs etc.
-        self.results_df                             = pd.DataFrame()
-        self.results_df["P_ID"]                     = []
-        self.results_df["run_number"]               = []
-        self.results_df["time_type"]                = [] # e.g. mobile, at scene, leaving scene etc.
-        self.results_df["timestamp"]                = []
-        self.results_df["day"]                      = []
-        self.results_df["hour"]                     = []
-        self.results_df["weekday"]                  = []
-        self.results_df["month"]                    = []
-        self.results_df["qtr"]                      = []
-        self.results_df["callsign"]                 = []
-        self.results_df["triage_code"]              = []
-        self.results_df["age"]                      = []
-        self.results_df["sex"]                      = []
-        self.results_df["time_to_first_respone"]    = []
-        self.results_df["time_to_cc"]               = []
-        self.results_df["cc_conveyed"]              = []
-        self.results_df["cc_flown"]                 = []
-        self.results_df["cc_travelled_with"]        = []
-        self.results_df["hems"]                     = []
-        self.results_df["cc_desk"]                  = []
-        self.results_df["dispatcher_intervention"]  = []   
-        self.results_df.set_index("P_ID", inplace=True)
-
-
+        self.results_df = None
 
     def generate_calls(self):
             """
             **Patient generator**
-            
+
             Keeps creating new patients until current time equals sim_duration + warm_up_duration
-            
+
             """
-            
+
             if self.env.now < self.sim_duration + self.warm_up_duration :
                 while True:
                     self.patient_counter += 1
-                    
+
                     # Create a new caller/patient
                     pt = Patient(self.patient_counter)
-                    
+
                     # Get current day of week and hour of day
                     [dow, hod, weekday, month, qtr, current_dt] = Utils.date_time_of_call(self.sim_start_date, self.env.now)
 
                     # Update patient instance with time-based values so the current time is known
                     pt.day = dow
-                    pt.hour = hod 
+                    pt.hour = hod
                     pt.weekday = weekday
                     pt.month = month
                     pt.qtr = qtr
@@ -97,13 +75,13 @@ class DES_HEMS:
 
                     # Convery weekday/weekend into boolean value
                     weekday_bool = 1 if weekday == 'weekday' else 0
-                    
+
                     # Determine the interarrival time for the next patient by sampling from the exponential distrubution
 
                     # We need a lookup table for mean inter arrival times. A tabulated version of Figure 1 from
                     # the UoR report would be a good starter for 10...
                     inter_time = 30
-                    sampled_interarrival = expovariate(1.0 / inter_time) 
+                    sampled_interarrival = expovariate(1.0 / inter_time)
 
                     # Use sampled interarrival time with a check to ensure it does not go over 60 minutes
                     # as this would technically be in the 'next' hour
@@ -111,7 +89,7 @@ class DES_HEMS:
 
                     # Freeze function until interarrival time has elapsed
                     yield self.env.timeout(sampled_interarrival)
-    
+
 
 
     def patient_journey(self, patient: Patient):
@@ -153,11 +131,11 @@ class DES_HEMS:
                 if patient.hems_case == 1:
                     self.add_patient_result_row(patient, hems, "HEMS arrival at hospital")
                 self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital")
-                
+
             if patient.hems_case == 1:
                 hems.flying_time += self.env.now - patient_enters_sim
                 hems.update_flying_time(self.env.now)
-    
+
             # We might actually yield to a process
             # So based on various characteristics, we'll want to know the job cycle times
             # etc.
@@ -181,21 +159,21 @@ class DES_HEMS:
                     self.add_patient_result_row(patient, hems, "HEMS clear")
                     self.hems_resources.put(hems)
                 self.add_patient_result_row(patient, ambulance, "AMB clear")
-            
+
 
 
 
     def add_patient_result_row(self, patient: Patient, resource: HEMS|Ambulance, time_type: str, **kwargs) -> None :
         """
             Convenience function to create a row of data for the results table
-        
+
         """
 
         results = {
             "P_ID"        : patient.id,
             "run_number"  : self.run_number,
-            "time_type"   : time_type,
-            "timestamp"   : self.env.now,         
+            "time_type"   : time_type,   # e.g. mobile, at scene, leaving scene etc.
+            "timestamp"   : self.env.now,
             "day"         : patient.day,
             "hour"        : patient.hour,
             "weekday"     : patient.weekday,
@@ -215,27 +193,30 @@ class DES_HEMS:
             self.store_patient_results(results)
 
 
-    def store_patient_results(self, results: dict) -> None:      
+    def store_patient_results(self, results: dict) -> None:
         """
             Adds a row of data to the Class' `result_df` dataframe
         """
 
-        df_dictionary = pd.DataFrame([results])
-        
-        self.results_df = pd.concat([self.results_df, df_dictionary], ignore_index=True)   
+        self.results_list.append(results)
+
+    def convert_results_to_df(self, results: dict) -> None:
+        self.results_df = pd.DataFrame(results)
+        self.results_df.set_index("P_ID", inplace=True)
+
 
     def write_all_results(self) -> None:
         """
             Writes the content of `result_df` to a csv file
         """
         # https://stackoverflow.com/a/30991707/3650230
-        
+
         # Check if file exists...if it does, append data, otherwise create a new file with headers matching
         # the column names of `results_df`
         if not os.path.isfile(self.all_results_location):
            self.results_df.to_csv(self.all_results_location, header='column_names')
         else: # else it exists so append without writing the header
-            self.results_df.to_csv(self.all_results_location, mode='a', header=False) 
+            self.results_df.to_csv(self.all_results_location, mode='a', header=False)
 
 
     def run(self) -> None:
@@ -247,9 +228,12 @@ class DES_HEMS:
 
         # Start entity generators
         self.env.process(self.generate_calls())
-        
+
         # Run simulation
         self.env.run(until=(self.sim_duration + self.warm_up_duration))
-        
+
+        # Convert results to a dataframe
+        self.convert_results_to_df(results=self.results_list)
+
         # Write run results to file
-        self.write_all_results() 
+        self.write_all_results()
