@@ -16,12 +16,12 @@ with st.sidebar:
     st.subheader("Model Inputs")
 
     st.markdown("#### Simulation Run Settings")
-    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 20, 3)
+    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 365, 30)
 
-    warm_up_duration =  st.slider("Warm-up Duration (hours)", 1, 24*10, 36)
+    warm_up_duration =  st.slider("Warm-up Duration (hours)", 1, 24*10, 72)
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
 
-    number_of_runs_input = st.slider("Number of Runs", 1, 20, 3)
+    number_of_runs_input = st.slider("Number of Runs", 1, 100, 5)
 
     sim_start_date_input = st.date_input("Enter the Simulation Start Date")
 
