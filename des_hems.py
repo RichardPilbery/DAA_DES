@@ -154,10 +154,12 @@ class DES_HEMS:
 
             yield self.env.timeout(30)
 
+            if patient.hems_case == 1:
+                self.hems_resources.put(hems)
+
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
                     self.add_patient_result_row(patient, hems, "HEMS clear")
-                    self.hems_resources.put(hems)
                 self.add_patient_result_row(patient, ambulance, "AMB clear")
 
 
