@@ -19,6 +19,13 @@
     font-family: "Poppins", sans-serif;
 }
 
+[data-testid="stTickBarMin"],
+[data-testid="stTickBarMax"] {
+    color: white;
+    font-family: "Poppins", sans-serif;
+}
+
+
 * {
     font-family: "Poppins", sans-serif;
 }
