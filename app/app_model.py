@@ -107,14 +107,21 @@ if button_run_pressed:
             results_all_runs = pd.read_csv("data/run_results.csv")
 
 
-        tab1, tab2, tab3, tab4 = st.tabs(
-            [
+        tab_names = [
              "Summary Visualisations",
              "Full Event Dataset",
-             "Debugging Visualisations",
-             "Animation"
+             "Debugging Visualisations"
              ]
-        )
+
+        if create_animation_input:
+            tab_names.append("Animation")
+            tab1, tab2, tab3, tab4 = st.tabs(
+                tab_names
+            )
+        else:
+            tab1, tab2, tab3 = st.tabs(
+                tab_names
+            )
 
         with tab1:
             t1_col1, t1_col2 = st.columns(2)
@@ -185,8 +192,8 @@ if button_run_pressed:
 
             patient_viz()
 
-        with tab4:
-            if create_animation_input:
+        if create_animation_input:
+            with tab4:
                 event_position_df = pd.DataFrame([
 
                     {'event': 'AMB call start',
@@ -233,5 +240,3 @@ if button_run_pressed:
                             time_display_units="dhm"
                     )
                 )
-            else:
-                st.write("Animation turned off - toggle on in sidebar and rerun model if required")
