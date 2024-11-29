@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] h4,
+[data-testid="stSidebar"] a,
+[data-testid="stSidebar"] p  {
+    color: white
+}
+
+[data-testid="stSidebar"] {
+    background-color: rgb(0, 32, 91) ;
+}
+
+[data-testid="stSidebarNavLink"] span {
+    color: white;
+    font-family: "Poppins", sans-serif;
+}
+
+* {
+    font-family: "Poppins", sans-serif;
+}
+
+h1 {
+    font-family: "Poppins", sans-serif;
+    font-weight: 700;
+}
+
+p {
+    font-family: "Poppins", sans-serif;
+    font-weight: 300;
+}
+
+
+
+.block-container {
+    width: 100%;
+    padding: 2rem 2rem 2rem;
+    min-width: auto;
+    max-width: initial;
+}
+
+
+/* .st-emotion-cache-1inwz65 {
+    color: white
+} */
