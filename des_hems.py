@@ -235,6 +235,16 @@ class DES_HEMS:
         else: # else it exists so append without writing the header
             self.results_df.to_csv(self.all_results_location, mode='a', header=False)
 
+    def write_run_results(self) -> None:
+        """
+            Writes the content of `result_df` to a csv file that contains only the results from this
+            single run
+        """
+        # https://stackoverflow.com/a/30991707/3650230
+
+        # Check if file exists...if it does, append data, otherwise create a new file with headers matching
+        # the column names of `results_df`
+        self.results_df.to_csv(self.run_results_location, header='column_names')
 
     def run(self) -> None:
         """
@@ -254,3 +264,4 @@ class DES_HEMS:
 
         # Write run results to file
         self.write_all_results()
+        self.write_run_results()

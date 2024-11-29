@@ -4,6 +4,7 @@ import pandas as pd
 class Utils:
 
     ALL_RESULTS_CSV = 'data/all_results.csv'
+    RUN_RESULTS_CSV = 'data/run_results.csv'
 
     # We are going to turn this on its head and start with AMPDS call category (chief complaint) 
     # From there we can calculate age and sex, and desired response (HEMS might be dependent on availability, perhaps)?

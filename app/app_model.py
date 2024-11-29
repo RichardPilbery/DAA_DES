@@ -102,7 +102,7 @@ if button_run_pressed:
                         sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
             )
 
-            results_all_runs = pd.read_csv("data/all_results.csv")
+            results_all_runs = pd.read_csv("data/run_results.csv")
 
 
         tab1, tab2, tab3, tab4 = st.tabs(
