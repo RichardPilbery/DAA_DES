@@ -1,6 +1,6 @@
+fitter==1.7.1
 Jinja2==3.1.4
 MarkupSafe==2.1.5
-numpy==2.1.1
 pandas==2.2.2
 pdoc==14.7.0
 Pygments==2.18.0
@@ -11,4 +11,4 @@ six==1.16.0
 tzdata==2024.1
 plotly==5.23.0
 streamlit==1.37.0
-fitter==1.7.1
+
