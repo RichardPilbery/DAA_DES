@@ -60,6 +60,8 @@ with st.sidebar:
         value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S')
         )
 
+    create_animation_input = st.toggle("Create Animation", value=False)
+
 button_run_pressed = st.button("Run simulation")
 
 if button_run_pressed:
@@ -184,49 +186,52 @@ if button_run_pressed:
             patient_viz()
 
         with tab4:
-            event_position_df = pd.DataFrame([
+            if create_animation_input:
+                event_position_df = pd.DataFrame([
 
-                {'event': 'AMB call start',
-                 'x':  160, 'y': 100, 'label': "Ambulance Call Start"},
+                    {'event': 'AMB call start',
+                    'x':  160, 'y': 100, 'label': "Ambulance Call Start"},
 
-                {'event': 'AMB arrival at hospital',
-                 'x':  360, 'y': 100, 'label': "Ambulance Arrive at Hospital"},
+                    {'event': 'AMB arrival at hospital',
+                    'x':  360, 'y': 100, 'label': "Ambulance Arrive at Hospital"},
 
-                {'event': 'AMB clear',
-                 'x':  660, 'y': 100, 'label': "Ambulance Clear"},
+                    {'event': 'AMB clear',
+                    'x':  660, 'y': 100, 'label': "Ambulance Clear"},
 
-                {'event': 'HEMS call start',
-                 'x':  160, 'y': 600, 'label': "HEMS Call Start"},
+                    {'event': 'HEMS call start',
+                    'x':  160, 'y': 600, 'label': "HEMS Call Start"},
 
-                {'event': 'HEMS arrival at hospital',
-                 'x':  360, 'y': 600, 'label': "HEMS Arrive at Hospital"},
+                    {'event': 'HEMS arrival at hospital',
+                    'x':  360, 'y': 600, 'label': "HEMS Arrive at Hospital"},
 
-                {'event': 'HEMS to AMB handover',
-                 'x':  360, 'y': 300, 'label': "HEMS to AMB handover"},
+                    {'event': 'HEMS to AMB handover',
+                    'x':  360, 'y': 300, 'label': "HEMS to AMB handover"},
 
-                {'event': 'HEMS clear',
-                 'x':  660, 'y': 600, 'label': "HEMS Clear"},
+                    {'event': 'HEMS clear',
+                    'x':  660, 'y': 600, 'label': "HEMS Clear"},
 
-                 ]
-            )
-
-            event_log = results_all_runs.reset_index().rename(
-                            columns = {"timestamp":"time",
-                            "P_ID": "patient",
-                            "time_type": "event",
-                            "callsign": "pathway"}
-                            )
-
-            event_log['pathway'] = event_log['pathway'].fillna('Shared')
-
-            st.plotly_chart(
-                animate_activity_log(
-                        event_log = event_log[event_log["run_number"]==1],
-                        event_position_df=event_position_df,
-                        setup_mode=True,
-                        debug_mode=True,
-                        every_x_time_units=1,
-                        limit_duration=60*24*1,
-                        time_display_units="dhm"
+                    ]
                 )
-            )
+
+                event_log = results_all_runs.reset_index().rename(
+                                columns = {"timestamp":"time",
+                                "P_ID": "patient",
+                                "time_type": "event",
+                                "callsign": "pathway"}
+                                )
+
+                event_log['pathway'] = event_log['pathway'].fillna('Shared')
+
+                st.plotly_chart(
+                    animate_activity_log(
+                            event_log = event_log[event_log["run_number"]==1],
+                            event_position_df=event_position_df,
+                            setup_mode=True,
+                            debug_mode=True,
+                            every_x_time_units=1,
+                            limit_duration=60*24*1,
+                            time_display_units="dhm"
+                    )
+                )
+            else:
+                st.write("Animation turned off - toggle on in sidebar and rerun model if required")
