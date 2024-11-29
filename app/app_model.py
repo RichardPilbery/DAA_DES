@@ -48,7 +48,7 @@ with st.sidebar:
     warm_up_duration =  st.slider("Warm-up Duration (hours)", 0, 24*10, 0)
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
 
-    number_of_runs_input = st.slider("Number of Runs", 1, 100, 5)
+    number_of_runs_input = st.slider("Number of Runs", 1, 30, 5)
 
     sim_start_date_input = st.date_input(
         "Enter the Simulation Start Date",
