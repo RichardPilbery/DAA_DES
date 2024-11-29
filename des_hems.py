@@ -6,6 +6,7 @@ from class_patient import Patient
 from class_hems_availability import HEMSAvailability
 from class_hems import HEMS
 from class_ambulance import Ambulance
+from datetime import timedelta
 
 class DES_HEMS:
     """
@@ -192,7 +193,7 @@ class DES_HEMS:
             "time_type"   : time_type,   # e.g. mobile, at scene, leaving scene etc.
             "event_type"  : event_type,  # for animation: arrival_departure, queue, resource_use, resource_use_end
             "timestamp"   : self.env.now,
-            "timestamp_dt": patient.current_dt,
+            "timestamp_dt": self.sim_start_date + timedelta(minutes=self.env.now),
             "day"         : patient.day,
             "hour"        : patient.hour,
             "weekday"     : patient.weekday,
