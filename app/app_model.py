@@ -1,21 +1,44 @@
+import streamlit as st
+import platform
+
+# Data processing imports
 import pandas as pd
 import numpy as np
-import plotly.express as px
-import re
 from datetime import datetime
-import streamlit as st
+import re
 
-# Temporarily placed in same folder as this as relative imports not behaving with Streamlit
-from des_parallel_process import runSim
-from utils import Utils
-
+# Plotting
+import plotly.express as px
 from vidigi.animation import animate_activity_log
 from vidigi.prep import reshape_for_animations
 
+# Workaround to deal with relative import issues
+# https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+# Simulation imports
+from des_parallel_process import runSim, parallelProcessJoblib
+from utils import Utils
+
 st.set_page_config(layout="wide")
 
-st.title("Air Ambulance Simulation")
+with open("app/style.css") as css:
+    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
+col1, col2 = st.columns([0.7, 0.3])
+
+with col2:
+    st.image("app/assets/daa-logo.svg", width=300)
+
+with col1:
+    st.title("Devon Air Ambulance Simulation")
+
+
+
+# Inputs to the model are currently contained within a collapsible sidebar
+# We may wish to move these elsewhere when
 with st.sidebar:
     st.subheader("Model Inputs")
 
@@ -27,11 +50,15 @@ with st.sidebar:
 
     number_of_runs_input = st.slider("Number of Runs", 1, 100, 5)
 
-    sim_start_date_input = st.date_input("Enter the Simulation Start Date", value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S'))
+    sim_start_date_input = st.date_input(
+        "Enter the Simulation Start Date",
+        value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S')
+        )
 
-    sim_start_time_input = st.time_input("Enter the Simulations Start Time", value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S'))
-
-
+    sim_start_time_input = st.time_input(
+        "Enter the Simulations Start Time",
+        value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S')
+        )
 
 button_run_pressed = st.button("Run simulation")
 
@@ -41,25 +68,42 @@ if button_run_pressed:
 
     with st.spinner('Simulating the system...'):
 
-        results = []
+        # If running on community cloud, parallelisation will not work
+        # so run instead using the runSim function sequentially
+        if platform.processor() == '':
+            print("Running sequentially")
+            results = []
 
-        for run in range(number_of_runs_input):
-            run_results = runSim(
-                    run = run,
-                    total_runs = number_of_runs_input,
-                    sim_duration = sim_duration_input * 24 * 60,
-                    warm_up_time = warm_up_duration * 60,
-                    sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
-                )
+            for run in range(number_of_runs_input):
+                run_results = runSim(
+                        run = run,
+                        total_runs = number_of_runs_input,
+                        sim_duration = sim_duration_input * 24 * 60,
+                        warm_up_time = warm_up_duration * 60,
+                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
+                    )
 
-            results.append(
-                run_results
-                )
+                results.append(
+                    run_results
+                    )
 
-            my_bar.progress((run+1)/number_of_runs_input, text=progress_text)
+                my_bar.progress((run+1)/number_of_runs_input, text=progress_text)
 
+            # Turn into a single dataframe when all runs complete
+            results_all_runs = pd.concat(results)
 
-        results_all_runs = pd.concat(results)
+        # If running locally, use parallel processing function to speed up execution significantly
+        else:
+            print("Running in parallel")
+            parallelProcessJoblib(
+                        total_runs = number_of_runs_input,
+                        sim_duration = sim_duration_input * 24 * 60,
+                        warm_up_time = warm_up_duration * 60,
+                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
+            )
+
+            results_all_runs = pd.read_csv("data/all_results.csv")
+
 
         tab1, tab2, tab3, tab4 = st.tabs(
             [
@@ -122,15 +166,20 @@ if button_run_pressed:
 
                 patient_filter = st.selectbox("Select a patient", results_all_runs.index.unique())
 
-                st.plotly_chart(
-                    px.scatter(
-                        results_all_runs[results_all_runs.index==patient_filter],
-                        x="timestamp_dt",
-                        y="run_number",
-                        facet_row="run_number",
-                        color="time_type"),
-                        use_container_width=True
-                )
+
+                tab_list =  st.tabs([f"Run {i+1}" for i in range(number_of_runs_input)])
+
+                for idx, tab in enumerate(tab_list):
+                    st.plotly_chart(
+                        px.scatter(
+                            results_all_runs[
+                                (results_all_runs.index==patient_filter) &
+                                (results_all_runs.run_number==idx)],
+                            x="timestamp_dt",
+                            y="time_type",
+                            color="time_type"),
+                            use_container_width=True
+                    )
 
             patient_viz()
 
