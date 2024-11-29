@@ -175,11 +175,10 @@ if button_run_pressed:
 
                 patient_filter = st.selectbox("Select a patient", results_all_runs.index.unique())
 
-
                 tab_list =  st.tabs([f"Run {i+1}" for i in range(number_of_runs_input)])
 
                 for idx, tab in enumerate(tab_list):
-                    st.plotly_chart(
+                    tab.plotly_chart(
                         px.scatter(
                             results_all_runs[
                                 (results_all_runs.index==patient_filter) &
