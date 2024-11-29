@@ -26,6 +26,7 @@ class DES_HEMS:
         self.sim_start_date = sim_start_date
 
         self.all_results_location = Utils.ALL_RESULTS_CSV
+        self.run_results_location = Utils.RUN_RESULTS_CSV
 
         self.env = simpy.Environment()
         self.patient_counter = 0
@@ -237,14 +238,15 @@ class DES_HEMS:
 
     def write_run_results(self) -> None:
         """
-            Writes the content of `result_df` to a csv file that contains only the results from this
+            Writes the content of `result_dfs` to csv files that contains only the results from the
             single run
-        """
-        # https://stackoverflow.com/a/30991707/3650230
 
-        # Check if file exists...if it does, append data, otherwise create a new file with headers matching
-        # the column names of `results_df`
-        self.results_df.to_csv(self.run_results_location, header='column_names')
+            Note that this cannot be done in a similar manner to write_all_results due to the impacts of
+            the parallisation approach that is taken with joblib - depending on process timings it can lead to
+            not all
+        """
+
+        self.results_df.to_csv(f"{Utils.RESULTS_FOLDER}/output_run_{self.run_number}.csv", header='column_names')
 
     def run(self) -> None:
         """

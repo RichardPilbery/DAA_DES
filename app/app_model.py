@@ -19,7 +19,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # Simulation imports
-from des_parallel_process import runSim, parallelProcessJoblib
+from des_parallel_process import runSim, parallelProcessJoblib, collateRunResults
 from utils import Utils
 
 st.set_page_config(layout="wide")
@@ -103,7 +103,7 @@ if button_run_pressed:
                         warm_up_time = warm_up_duration * 60,
                         sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
             )
-
+            collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
 
 
