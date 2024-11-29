@@ -24,14 +24,10 @@ class Utils:
         "callsign"              : ["H70", "CC70", "H71", "CC71", "CC72"],
         "category"              : ["CC", "CC", "EC", "EC", "CC"],
         "type"                  : ["helicopter", "car", "helicopter", "car", "car"],
-        "summer_start1"         : [7, 7, 7, 9, 8],
-        "winter_start1"         : [7, 7, 7, 7, 8],
-        "summer_end1"           : [17, 17, 19, 19, 18],
-        "winter_end1"           : [17, 17, 17, 17, 18],
-        "summer_start2"         : ["16:00", "16:00", "", "", ""], # Need to clarify these as the times appear to crossover
-        "winter_start2"         : ["16:00", "16:00", "", "", ""],
-        "summer_end2"           : ["02:00", "02:00", "", "", ""],
-        "winter_end2"           : ["02:00", "02:00", "", "", ""],
+        "summer_start"         : [7, 7, 7, 9, 8],
+        "winter_start"         : [7, 7, 7, 7, 8],
+        "summer_end"           : [2, 2, 19, 19, 18],
+        "winter_end"           : [2, 2, 17, 17, 18],
         "service_freq"          : [40, 0, 40, 0, 0],                         # Not applicable for cars, since always available, Service intervals for helicopters based on flying hours, which will tot up as the resource is (re)used on jobs
         "service_dur"           : [3, 1, 3, 1, 1]                               # weeks
     })

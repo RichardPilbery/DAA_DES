@@ -26,7 +26,7 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
 
     number_of_runs = 1
     sim_duration = 1 * 24 * 60
-    warm_up_time = 0
+    warm_up_time = 8 * 60
     sim_start_date =  "2024-08-01 07:00:00"
 
     pool = mp.Pool(processes = nprocess)
