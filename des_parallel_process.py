@@ -1,8 +1,12 @@
 import logging
 import time
+import glob
+import os
+import pandas as pd
 from utils import Utils
 from des_hems import DES_HEMS
 import multiprocessing as mp
+from joblib import Parallel, delayed
 
 
 def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str):
@@ -42,9 +46,22 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
     logging.debug('Reached end of script')
     logging.shutdown()
 
+def collateRunResults() -> None:
+        """
+            Collates results from a series of runs into a single csv
+        """
+        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
-#runSim(0, 2, 1 * 24 * 60, 0, "2021-08-01 07:00:00")
+        combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
 
+        combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
+
+        for file in matching_files:
+             os.remove(file)
+
+def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str):
+
+    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date) for run in range(total_runs))
 
 if __name__ == "__main__":
     parallelProcess(nprocess = mp.cpu_count() - 1)

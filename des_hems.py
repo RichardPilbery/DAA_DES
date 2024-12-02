@@ -6,6 +6,7 @@ from class_patient import Patient
 from class_hems_availability import HEMSAvailability
 from class_hems import HEMS
 from class_ambulance import Ambulance
+from datetime import timedelta
 
 class DES_HEMS:
     """
@@ -26,6 +27,7 @@ class DES_HEMS:
         self.sim_start_date = sim_start_date
 
         self.all_results_location = Utils.ALL_RESULTS_CSV
+        self.run_results_location = Utils.RUN_RESULTS_CSV
 
         self.env = simpy.Environment()
         self.patient_counter = 0
@@ -69,6 +71,7 @@ class DES_HEMS:
                     pt.weekday = weekday
                     pt.month = month
                     pt.qtr = qtr
+                    pt.current_dt = current_dt
 
                     # Set caller/patient off on their HEMS healthcare journey
                     self.env.process(self.patient_journey(pt))
@@ -100,6 +103,10 @@ class DES_HEMS:
 
         patient_enters_sim = self.env.now
 
+        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
+        if not_in_warm_up_period:
+            self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
+
         # Ambulance resource here?
         # Might also need some logic to determine what the resource(s) requirements are.
         # No point getting a HEMS resource for a non-HEMS job, for example.
@@ -118,8 +125,8 @@ class DES_HEMS:
 
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
-                    self.add_patient_result_row(patient, hems, "HEMS call start")
-                self.add_patient_result_row(patient, ambulance, "AMB call start")
+                    self.add_patient_result_row(patient, hems, "HEMS call start", "queue")
+                self.add_patient_result_row(patient, ambulance, "AMB call start", "queue")
 
 
             yield self.env.timeout(30)
@@ -129,8 +136,8 @@ class DES_HEMS:
                 # Will need separate rows to keep track of ambulance and HEMS
                 # Needs some thought that....
                 if patient.hems_case == 1:
-                    self.add_patient_result_row(patient, hems, "HEMS arrival at hospital")
-                self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital")
+                    self.add_patient_result_row(patient, hems, "HEMS arrival at hospital", "queue")
+                self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital", "queue")
 
             if patient.hems_case == 1:
                 hems.flying_time += self.env.now - patient_enters_sim
@@ -146,8 +153,8 @@ class DES_HEMS:
 
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
-                    self.add_patient_result_row(patient, hems, "AMB handover")
-                self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital")
+                    self.add_patient_result_row(patient, hems, "HEMS to AMB handover", "queue")
+                self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital", "queue")
 
 
             # TODO: Add turnaround time calculation here
@@ -159,29 +166,40 @@ class DES_HEMS:
 
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
-                    self.add_patient_result_row(patient, hems, "HEMS clear")
-                self.add_patient_result_row(patient, ambulance, "AMB clear")
+                    self.add_patient_result_row(patient, hems, "HEMS clear", "queue")
+                self.add_patient_result_row(patient, ambulance, "AMB clear", "queue")
+
+                self.add_patient_result_row(patient, None, "depart", "arrival_departure")
 
 
-
-
-    def add_patient_result_row(self, patient: Patient, resource: HEMS|Ambulance, time_type: str, **kwargs) -> None :
+    def add_patient_result_row(self,
+                               patient: Patient,
+                               resource: None|HEMS|Ambulance,
+                               time_type: str,
+                               event_type: str,
+                               **kwargs) -> None :
         """
             Convenience function to create a row of data for the results table
 
         """
+        if resource is not None:
+            callsign = resource.callsign
+        else:
+            callsign = None
 
         results = {
             "P_ID"        : patient.id,
             "run_number"  : self.run_number,
             "time_type"   : time_type,   # e.g. mobile, at scene, leaving scene etc.
+            "event_type"  : event_type,  # for animation: arrival_departure, queue, resource_use, resource_use_end
             "timestamp"   : self.env.now,
+            "timestamp_dt": self.sim_start_date + timedelta(minutes=self.env.now),
             "day"         : patient.day,
             "hour"        : patient.hour,
             "weekday"     : patient.weekday,
             "month"       : patient.month,
             "qtr"         : patient.qtr,
-            "callsign"    : resource.callsign,
+            "callsign"    : callsign,
             "triage_code" : patient.triage_code,
             "age"         : patient.age,
             "sex"         : patient.sex,
@@ -206,7 +224,6 @@ class DES_HEMS:
         self.results_df = pd.DataFrame(results)
         self.results_df.set_index("P_ID", inplace=True)
 
-
     def write_all_results(self) -> None:
         """
             Writes the content of `result_df` to a csv file
@@ -220,6 +237,17 @@ class DES_HEMS:
         else: # else it exists so append without writing the header
             self.results_df.to_csv(self.all_results_location, mode='a', header=False)
 
+    def write_run_results(self) -> None:
+        """
+            Writes the content of `result_dfs` to csv files that contains only the results from the
+            single run
+
+            Note that this cannot be done in a similar manner to write_all_results due to the impacts of
+            the parallisation approach that is taken with joblib - depending on process timings it can lead to
+            not all
+        """
+
+        self.results_df.to_csv(f"{Utils.RESULTS_FOLDER}/output_run_{self.run_number}.csv", header='column_names')
 
     def run(self) -> None:
         """
@@ -239,3 +267,4 @@ class DES_HEMS:
 
         # Write run results to file
         self.write_all_results()
+        self.write_run_results()

@@ -28,3 +28,10 @@ The model generates a CSV file containing raw data, which can then be wrangled a
 | hems                      | Integer indicating whether HEMS attended the incident (1 or 0) |
 | cc_desk                   | Integer indicating whether HEMS activation was due to critical care desk dispatch |
 | dispatcher_intevention    | Integer indicating whether the ambulance service dispatcher activated HEMS for a called which did not meet auto-dispatch criteria (1 or 0) |
+
+
+## Web App
+
+The web app can be run using the command
+
+`streamlit run app/app_main.py`

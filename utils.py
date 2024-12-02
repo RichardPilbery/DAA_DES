@@ -3,9 +3,12 @@ import pandas as pd
 
 class Utils:
 
-    ALL_RESULTS_CSV = 'data/all_results.csv'
 
-    # We are going to turn this on its head and start with AMPDS call category (chief complaint) 
+    RESULTS_FOLDER = 'data'
+    ALL_RESULTS_CSV = f'{RESULTS_FOLDER}/all_results.csv'
+    RUN_RESULTS_CSV = f'{RESULTS_FOLDER}/run_results.csv'
+
+    # We are going to turn this on its head and start with AMPDS call category (chief complaint)
     # From there we can calculate age and sex, and desired response (HEMS might be dependent on availability, perhaps)?
 
     TRIAGE_CODE_DISTR = pd.DataFrame({

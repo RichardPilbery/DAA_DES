@@ -8,7 +8,7 @@ class Patient:
     def __init__(self, p_id: int):
 
         # Unique ID for patient
-        self.id = p_id 
+        self.id = p_id
 
         # Incident specific data
 
@@ -18,7 +18,7 @@ class Patient:
         self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"])[0]
 
         # Likely to be postcode sector i.e. BS1 9 of BS1 9HJ
-        self.postcode = "" 
+        self.postcode = ""
 
         # incident location - latitude (2 decimal places)
         self.lat = ""
@@ -48,13 +48,14 @@ class Patient:
         self.month = 1
         self.qtr = 1
         self.weekday = "weekday"
+        self.current_dt = None # TODO: Initialise as a dt?
 
         # HEMS/critical care specific items
         self.time_to_cc = 0
         self.cc_conveyed = 0
         self.cc_flown = 0
         self.cc_travelled_with = 0
-        # Bindary flag to indicate whether it is a 'HEMS job' whether they attend or not
+        # Binary flag to indicate whether it is a 'HEMS job' whether they attend or not
         self.hems_case = 0 if uniform(0, 1) < 0.5 else 1
         # Binary flag to indicate whether patient cared for by HEMS or not
         self.hems = 1

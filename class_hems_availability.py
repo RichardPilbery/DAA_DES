@@ -49,8 +49,8 @@ class HEMSAvailability():
 
         #print(df)
 
-        start = df.summer_start1.iloc[0] if season == 3 else df.winter_start1.iloc[0]
-        end = df.summer_end1.iloc[0] if season == 3 else df.winter_end1.iloc[0]
+        start = df.summer_start.iloc[0] if season == 3 else df.winter_start.iloc[0]
+        end = df.summer_end.iloc[0] if season == 3 else df.winter_end.iloc[0]
 
         #print(f"Start is {start} and end is {end}")
 
