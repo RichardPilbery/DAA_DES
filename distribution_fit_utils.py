@@ -112,6 +112,15 @@ class DistributionFitUtils():
 
         # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
         self.inter_arrival_times()
+
+        # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
+        self.callsign_by_ampds_card_and_hour_probs()
+
+        # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
+        self.hems_result_by_callsign_and_hour_probs()
+
+        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
+        self.pt_outcome_by_hems_result_and_callsign_probs()
             
 
     def hour_by_ampds_card_probs(self):
@@ -127,9 +136,7 @@ class DistributionFitUtils():
         total_counts = category_counts.groupby('hour')['count'].transform('sum')
         category_counts['proportion'] = round(category_counts['count'] / total_counts, 4)
 
-        with open('distribution_data/hour_by_ampds_card_probs.csv', 'w+') as convert_file:
-            convert_file.write(category_counts.to_csv())
-        convert_file.close()
+        category_counts.to_csv('distribution_data/hour_by_ampds_card_probs.csv', mode="w+")
 
 
     def sex_by_ampds_card_probs(self):
@@ -139,15 +146,12 @@ class DistributionFitUtils():
             stratified by AMPDS card.
         
         """
-
         age_df = self.df
         category_counts = age_df.groupby(['ampds_card', 'sex']).size().reset_index(name='count')
         total_counts = category_counts.groupby('ampds_card')['count'].transform('sum')
         category_counts['proportion'] = round(category_counts['count'] / total_counts, 3)
 
-        with open('distribution_data/sex_by_ampds_card_probs.csv', 'w+') as convert_file:
-            convert_file.write(category_counts[category_counts['sex'] =='Female'].to_csv())
-        convert_file.close()
+        category_counts[category_counts['sex'] =='Female'].to_csv('distribution_data/sex_by_ampds_card_probs.csv', mode="w+")
 
 
     def activity_time_distributions(self):
@@ -247,9 +251,55 @@ class DistributionFitUtils():
             .reset_index()
         )
 
-        with open('distribution_data/inter_arrival_times.csv', 'w+') as convert_file:
-            convert_file.write(ia_times_df.to_csv())
-        convert_file.close()
+        ia_times_df.to_csv('distribution_data/inter_arrival_times.csv', mode='w+')
+
+
+    def callsign_by_ampds_card_and_hour_probs(self):
+        """
+        
+            Calculates the probabilty of a specific callsign being allocated to
+            a call based on the AMPDS card category and hour of day
+        
+        """
+        callsign_counts = self.df.groupby(['ampds_card', 'hour', 'callsign']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['ampds_card', 'hour'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/callsign_by_ampds_card_and_hour_probs.csv', mode = "w+")
+
+
+    def hems_result_by_callsign_and_hour_probs(self):
+        """
+        
+            Calculates the probabilty of a specific HEMS result being allocated to
+            a call based on the callsign and hour of day
+
+            TODO: These probability calculation functions could probably be refactored into a single
+            function and just specify columns and output name
+        
+        """
+        hems_counts = self.df.groupby(['hems_result', 'hour', 'callsign']).size().reset_index(name='count')
+
+        total_counts = hems_counts.groupby(['hour', 'callsign'])['count'].transform('sum')
+        hems_counts['proportion'] = round(hems_counts['count'] / total_counts, 4)
+
+        hems_counts.to_csv('distribution_data/hems_result_by_callsign_and_hour_probs.csv', mode = "w+")
+
+
+    def pt_outcome_by_hems_result_and_callsign_probs(self):
+        """
+        
+            Calculates the probabilty of a specific patient outcome being allocated to
+            a call based on the callsign and HEMS result
+        
+        """
+        po_counts = self.df.groupby(['hems_result', 'callsign', 'pt_outcome']).size().reset_index(name='count')
+
+        total_counts = po_counts.groupby(['hems_result', 'callsign'])['count'].transform('sum')
+        po_counts['proportion'] = round(po_counts['count'] / total_counts, 4)
+
+        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_callsign_probs.csv', mode = "w+")
 
 
 # Testing ----------

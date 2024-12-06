@@ -1,0 +1,35 @@
+,hems_result,callsign,pt_outcome,count,proportion
+0,Landed but no patient contact,CC70,Unknown,181,1.0
+1,Landed but no patient contact,CC71,Unknown,31,1.0
+2,Landed but no patient contact,CC72,Unknown,106,1.0
+3,Landed but no patient contact,H70,Unknown,329,1.0
+4,Landed but no patient contact,H71,Unknown,109,1.0
+5,Patient Conveyed,CC70,Airlifted,6,0.0168
+6,Patient Conveyed,CC70,Conveyed by land with DAA,351,0.9832
+7,Patient Conveyed,CC71,Airlifted,10,0.1099
+8,Patient Conveyed,CC71,Conveyed by land with DAA,81,0.8901
+9,Patient Conveyed,CC72,Airlifted,6,0.0438
+10,Patient Conveyed,CC72,Conveyed by land with DAA,131,0.9562
+11,Patient Conveyed,H70,Airlifted,737,0.4986
+12,Patient Conveyed,H70,Conveyed by land with DAA,741,0.5014
+13,Patient Conveyed,H71,Airlifted,509,0.7303
+14,Patient Conveyed,H71,Conveyed by land with DAA,188,0.2697
+15,Patient Treated (not conveyed),CC70,Conveyed by land without DAA,183,0.5
+16,Patient Treated (not conveyed),CC70,Deceased,183,0.5
+17,Patient Treated (not conveyed),CC71,Conveyed by land without DAA,95,0.6934
+18,Patient Treated (not conveyed),CC71,Deceased,42,0.3066
+19,Patient Treated (not conveyed),CC72,Conveyed by land without DAA,225,0.7785
+20,Patient Treated (not conveyed),CC72,Deceased,64,0.2215
+21,Patient Treated (not conveyed),H70,Conveyed by land without DAA,700,0.5469
+22,Patient Treated (not conveyed),H70,Deceased,580,0.4531
+23,Patient Treated (not conveyed),H71,Conveyed by land without DAA,327,0.6135
+24,Patient Treated (not conveyed),H71,Deceased,206,0.3865
+25,Stand Down Before Mobile,CC70,Unknown,16,1.0
+26,Stand Down Before Mobile,CC71,Unknown,1,1.0
+27,Stand Down Before Mobile,H70,Unknown,112,1.0
+28,Stand Down Before Mobile,H71,Unknown,22,1.0
+29,Stand Down En Route,CC70,Unknown,483,1.0
+30,Stand Down En Route,CC71,Unknown,123,1.0
+31,Stand Down En Route,CC72,Unknown,173,1.0
+32,Stand Down En Route,H70,Unknown,1236,1.0
+33,Stand Down En Route,H71,Unknown,354,1.0
