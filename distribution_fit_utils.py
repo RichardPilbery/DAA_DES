@@ -24,11 +24,11 @@ class DistributionFitUtils():
 
         self.times_to_fit = [
             {"hems_result": "Patient Treated (not conveyed)", 
-            "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear'], "pt_outcome": ['Deceased', 'Conveyed by land without DAA', 'Unknown']},
-            {"hems_result": "Patient Conveyed" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear'], "pt_outcome" : ['Conveyed by land with DAA', 'Airlifted']},
-            {"hems_result": "Stand Down Before Mobile" , "times_to_fit" : ['time_allocation', 'time_to_clear'],"pt_outcome" : ['Unknown']},
-            {"hems_result": "Stand Down En Route" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_clear'] , "pt_outcome" : ['Unknown']},
-            {"hems_result": "Landed but no patient contact" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear'], "pt_outcome" : ['Unknown']},
+            "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear']},
+            {"hems_result": "Patient Conveyed" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']},
+            {"hems_result": "Stand Down Before Mobile" , "times_to_fit" : ['time_allocation', 'time_to_clear']},
+            {"hems_result": "Stand Down En Route" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_clear']},
+            {"hems_result": "Landed but no patient contact" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear']},
         ]
 
         self.sim_tools_distr_plus = [
@@ -114,13 +114,13 @@ class DistributionFitUtils():
         self.inter_arrival_times()
 
         # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
-        self.callsign_by_ampds_card_and_hour_probs()
+        self.callsign_group_by_ampds_card_and_hour_probs()
 
         # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
-        self.hems_result_by_callsign_and_hour_probs()
+        self.hems_result_by_callsign_group_and_vehicle_type_probs()
 
         # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        self.pt_outcome_by_hems_result_and_callsign_probs()
+        self.pt_outcome_by_hems_result_probs()
             
 
     def hour_by_ampds_card_probs(self):
@@ -163,11 +163,11 @@ class DistributionFitUtils():
             Not all times will apply to all cases, so the class 'times_to_fit'
             variable is a list of dictionaries, which contains the times to fit
             
-            The data is currently stratitied by HEMS callsign, HEMS_result and pt_outcome fields.
+            The data is currently stratitied by HEMS_result and vehicle type fields.
         
         """
        
-        hems_cs = self.df['callsign'].unique()
+        vehicle_type = self.df['vehicle_type'].unique()
 
         # We'll need to make sure that where a distribution is missing that the time is set to 0 in the model.
         # Probably easier than complicated logic to determine what times should be available based on hems_result
@@ -177,24 +177,22 @@ class DistributionFitUtils():
         for row in self.times_to_fit:
             print(row)
             for ttf in row['times_to_fit']:
-                for cs in hems_cs:
-                    for pto in row['pt_outcome']:
-                        #print(f"HEMS result is {row['hems_result']} cs is {cs} and times_to_fit is {ttf} and patient outcome {pto}")
+                for vt in vehicle_type:
+                    #print(f"HEMS result is {row['hems_result']} cs is {cs} and times_to_fit is {ttf} and patient outcome {pto}")
 
-                        # This line might not be required if data quality is determined when importing the data
-                        max_time = 20 if ttf == "time_mobile" else 120
-                        fit_times = self.df[
-                            (self.df.callsign == cs) & 
-                            (self.df[ttf] > 0) & 
-                            (self.df[ttf] < max_time) & 
-                            (self.df.hems_result == row['hems_result']) & 
-                            (self.df.pt_outcome == pto)
-                        ][ttf]
-                        #print(fit_times[:10])
-                        best_fit = self.getBestFit(fit_times, distr=self.sim_tools_distr_plus)
-                        return_dict = { "callsign": cs, "time_type" : ttf, "best_fit": best_fit, "hems_result": row['hems_result'], "pt_outcome": pto, "n": len(fit_times)}
-                        #print(return_dict)
-                        final_distr.append(return_dict)
+                    # This line might not be required if data quality is determined when importing the data
+                    max_time = 20 if ttf == "time_mobile" else 120
+                    fit_times = self.df[
+                        (self.df.vehicle_type == vt) & 
+                        (self.df[ttf] > 0) & 
+                        (self.df[ttf] < max_time) & 
+                        (self.df.hems_result == row['hems_result'])
+                    ][ttf]
+                    #print(fit_times[:10])
+                    best_fit = self.getBestFit(fit_times, distr=self.sim_tools_distr_plus)
+                    return_dict = { "vehicle_type": vt, "time_type" : ttf, "best_fit": best_fit, "hems_result": row['hems_result'], "n": len(fit_times)}
+                    #print(return_dict)
+                    final_distr.append(return_dict)
 
         with open('distribution_data/activity_time_distributions.txt', 'w+') as convert_file:
             convert_file.write(json.dumps(final_distr))
@@ -254,22 +252,36 @@ class DistributionFitUtils():
         ia_times_df.to_csv('distribution_data/inter_arrival_times.csv', mode='w+')
 
 
-    def callsign_by_ampds_card_and_hour_probs(self):
+    def callsign_group_by_ampds_card_and_hour_probs(self):
         """
         
             Calculates the probabilty of a specific callsign being allocated to
             a call based on the AMPDS card category and hour of day
         
         """
-        callsign_counts = self.df.groupby(['ampds_card', 'hour', 'callsign']).size().reset_index(name='count')
+        callsign_counts = self.df.groupby(['ampds_card', 'hour', 'callsign_group']).size().reset_index(name='count')
 
         total_counts = callsign_counts.groupby(['ampds_card', 'hour'])['count'].transform('sum')
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
-        callsign_counts.to_csv('distribution_data/callsign_by_ampds_card_and_hour_probs.csv', mode = "w+")
+        callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv', mode = "w+")
+
+    def vehicle_type_by_month_probs(self):
+        """
+        
+            Calculates the probabilty of a car/helicopter being allocated to
+            a call based on the callsign group and month of the year
+        
+        """
+        callsign_counts = self.df.groupby(['callsign_group', 'month', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group', 'month'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
 
 
-    def hems_result_by_callsign_and_hour_probs(self):
+    def hems_result_by_callsign_group_and_vehicle_type_probs(self):
         """
         
             Calculates the probabilty of a specific HEMS result being allocated to
@@ -279,27 +291,26 @@ class DistributionFitUtils():
             function and just specify columns and output name
         
         """
-        hems_counts = self.df.groupby(['hems_result', 'hour', 'callsign']).size().reset_index(name='count')
+        hems_counts = self.df.groupby(['hems_result', 'callsign_group', 'vehicle_type']).size().reset_index(name='count')
 
-        total_counts = hems_counts.groupby(['hour', 'callsign'])['count'].transform('sum')
+        total_counts = hems_counts.groupby(['callsign_group', 'vehicle_type'])['count'].transform('sum')
         hems_counts['proportion'] = round(hems_counts['count'] / total_counts, 4)
 
-        hems_counts.to_csv('distribution_data/hems_result_by_callsign_and_hour_probs.csv', mode = "w+")
+        hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+")
 
 
-    def pt_outcome_by_hems_result_and_callsign_probs(self):
+    def pt_outcome_by_hems_result_probs(self):
         """
         
-            Calculates the probabilty of a specific patient outcome being allocated to
-            a call based on the callsign and HEMS result
+            Calculates the probabilty of a specific patient outcome based on HEMS result
         
         """
-        po_counts = self.df.groupby(['hems_result', 'callsign', 'pt_outcome']).size().reset_index(name='count')
+        po_counts = self.df.groupby(['pt_outcome', 'hems_result']).size().reset_index(name='count')
 
-        total_counts = po_counts.groupby(['hems_result', 'callsign'])['count'].transform('sum')
+        total_counts = po_counts.groupby(['hems_result'])['count'].transform('sum')
         po_counts['proportion'] = round(po_counts['count'] / total_counts, 4)
 
-        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_callsign_probs.csv', mode = "w+")
+        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_probs.csv', mode = "w+")
 
 
 # Testing ----------

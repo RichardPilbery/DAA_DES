@@ -5,7 +5,7 @@ from utils import Utils
 
 class Patient:
 
-    def __init__(self, p_id: int):
+    def __init__(self, p_id: int, amb_data: bool):
 
         # Unique ID for patient
         self.id = p_id

@@ -9,7 +9,7 @@ import multiprocessing as mp
 from joblib import Parallel, delayed
 
 
-def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str):
+def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str, amb_data: bool):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
 
     start = time.process_time()
@@ -17,7 +17,7 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_
     print (f"{Utils.current_time()}: Run {run+1} of {total_runs}")
     logging.debug(f"{Utils.current_time()}: Run {run+1} of {total_runs}")
 
-    daa_model = DES_HEMS(run, sim_duration, warm_up_time, sim_start_date)
+    daa_model = DES_HEMS(run, sim_duration, warm_up_time, sim_start_date, amb_data)
     daa_model.run()
 
     print(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
@@ -32,6 +32,7 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
     sim_duration = 1 * 24 * 60
     warm_up_time = 8 * 60
     sim_start_date =  "2024-08-01 07:00:00"
+    amb_data = False
 
     pool = mp.Pool(processes = nprocess)
     pool.starmap(runSim, zip(
@@ -39,7 +40,8 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
             [number_of_runs] * number_of_runs,
             [sim_duration] * number_of_runs,
             [warm_up_time] * number_of_runs,
-            [sim_start_date] * number_of_runs
+            [sim_start_date] * number_of_runs,
+            [amb_data] * number_of_runs
         )
     )
 
@@ -65,3 +67,6 @@ def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
 
 if __name__ == "__main__":
     parallelProcess(nprocess = mp.cpu_count() - 1)
+
+# Testing ----------
+# python des_parallel_process.py

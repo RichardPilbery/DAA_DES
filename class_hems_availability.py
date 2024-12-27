@@ -47,10 +47,10 @@ class HEMSAvailability():
         df = Utils.HEMS_ROTA
         df = df[df.index == callsign]
 
-        #print(df)
-
-        start = df.summer_start.iloc[0] if season == 3 else df.winter_start.iloc[0]
-        end = df.summer_end.iloc[0] if season == 3 else df.winter_end.iloc[0]
+        # Assuming summer hours are quarters 2 and 3 i.e. April-September
+        # Can be modified if required.
+        start = df.summer_start.iloc[0] if season in [2, 3] else df.winter_start.iloc[0]
+        end = df.summer_end.iloc[0] if season in [2, 3] else df.winter_end.iloc[0]
 
         #print(f"Start is {start} and end is {end}")
 

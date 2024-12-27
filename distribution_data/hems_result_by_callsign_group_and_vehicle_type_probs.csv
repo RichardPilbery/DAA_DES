@@ -1,0 +1,24 @@
+,hems_result,callsign_group,vehicle_type,count,proportion
+0,Landed but no patient contact,70,car,89,0.1229
+1,Landed but no patient contact,70,helicopter,131,0.0759
+2,Landed but no patient contact,71,car,12,0.0706
+3,Landed but no patient contact,71,helicopter,46,0.0789
+4,Landed but no patient contact,72,car,84,0.1438
+5,Patient Conveyed,70,car,198,0.2735
+6,Patient Conveyed,70,helicopter,583,0.3376
+7,Patient Conveyed,71,car,43,0.2529
+8,Patient Conveyed,71,helicopter,215,0.3688
+9,Patient Conveyed,72,car,119,0.2038
+10,Patient Treated (not conveyed),70,car,192,0.2652
+11,Patient Treated (not conveyed),70,helicopter,483,0.2797
+12,Patient Treated (not conveyed),71,car,65,0.3824
+13,Patient Treated (not conveyed),71,helicopter,186,0.319
+14,Patient Treated (not conveyed),72,car,244,0.4178
+15,Stand Down Before Mobile,70,car,12,0.0166
+16,Stand Down Before Mobile,70,helicopter,50,0.029
+17,Stand Down Before Mobile,71,helicopter,11,0.0189
+18,Stand Down En Route,70,car,233,0.3218
+19,Stand Down En Route,70,helicopter,480,0.2779
+20,Stand Down En Route,71,car,50,0.2941
+21,Stand Down En Route,71,helicopter,125,0.2144
+22,Stand Down En Route,72,car,137,0.2346

@@ -19,12 +19,16 @@ class DES_HEMS:
 
     """
 
-    def __init__(self, run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str):
+    def __init__(self, run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str, amb_data: bool):
 
         self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
         self.sim_duration = sim_duration
         self.warm_up_duration = warm_up_duration
         self.sim_start_date = sim_start_date
+
+        # Option to include/exclude ambulance service cases in addition to HEMS
+        self.amb_data = amb_data
+        print(f"Ambulance data values is {self.amb_data}")
 
         self.all_results_location = Utils.ALL_RESULTS_CSV
         self.run_results_location = Utils.RUN_RESULTS_CSV
@@ -60,7 +64,7 @@ class DES_HEMS:
                     self.patient_counter += 1
 
                     # Create a new caller/patient
-                    pt = Patient(self.patient_counter)
+                    pt = Patient(self.patient_counter, self.amb_data)
 
                     # Get current day of week and hour of day
                     [dow, hod, weekday, month, qtr, current_dt] = Utils.date_time_of_call(self.sim_start_date, self.env.now)
@@ -73,7 +77,6 @@ class DES_HEMS:
                     pt.qtr = qtr
                     pt.current_dt = current_dt
 
-                    # Set caller/patient off on their HEMS healthcare journey
                     self.env.process(self.patient_journey(pt))
 
                     # Convery weekday/weekend into boolean value
@@ -104,8 +107,11 @@ class DES_HEMS:
         patient_enters_sim = self.env.now
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
+
         if not_in_warm_up_period:
-            self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
+            
+            if self.amb_data or patient.hems_case == 1:
+                self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
 
         # Ambulance resource here?
         # Might also need some logic to determine what the resource(s) requirements are.
@@ -115,7 +121,8 @@ class DES_HEMS:
         if patient.hems_case == 1:
             hems = yield self.hems_resources.get(patient.hour, patient.qtr)
 
-        ambulance = Ambulance()
+        if self.amb_data:
+            ambulance = Ambulance()
 
         while patient.incident_completed == 0:
 
@@ -126,7 +133,9 @@ class DES_HEMS:
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
                     self.add_patient_result_row(patient, hems, "HEMS call start", "queue")
-                self.add_patient_result_row(patient, ambulance, "AMB call start", "queue")
+                
+                if self.amb_data:
+                    self.add_patient_result_row(patient, ambulance, "AMB call start", "queue")
 
 
             yield self.env.timeout(30)
@@ -137,7 +146,9 @@ class DES_HEMS:
                 # Needs some thought that....
                 if patient.hems_case == 1:
                     self.add_patient_result_row(patient, hems, "HEMS arrival at hospital", "queue")
-                self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital", "queue")
+
+                if self.amb_data:
+                    self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital", "queue")
 
             if patient.hems_case == 1:
                 hems.flying_time += self.env.now - patient_enters_sim
@@ -154,7 +165,9 @@ class DES_HEMS:
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
                     self.add_patient_result_row(patient, hems, "HEMS to AMB handover", "queue")
-                self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital", "queue")
+
+                if self.amb_data:
+                    self.add_patient_result_row(patient, ambulance, "AMB arrival at hospital", "queue")
 
 
             # TODO: Add turnaround time calculation here
@@ -167,9 +180,12 @@ class DES_HEMS:
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
                     self.add_patient_result_row(patient, hems, "HEMS clear", "queue")
-                self.add_patient_result_row(patient, ambulance, "AMB clear", "queue")
 
-                self.add_patient_result_row(patient, None, "depart", "arrival_departure")
+                if self.amb_data:
+                    self.add_patient_result_row(patient, ambulance, "AMB clear", "queue")
+
+                if self.amb_data or patient.hems_case == 1:
+                    self.add_patient_result_row(patient, None, "depart", "arrival_departure")
 
 
     def add_patient_result_row(self,

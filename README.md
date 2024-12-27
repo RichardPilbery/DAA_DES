@@ -1,5 +1,14 @@
 # Devon Air Ambulance Discrete Event Simulation
 
+## DES model logic
+
+The model creates patient episodes and associated outcomes based on the following sequence:
+
+1.  Obtain AMPDS card category based on hour of day
+2.  Choose a callsign based on activation criteria, which helicopter (if any) is available, whether helicopter can currently fly (servicing or weather impacts), 
+3.  Based on callsign, determine the HEMS result (Stand Down Before Mobile, Stand Down En Route, Landed but no patient contact, Patient Treated (Not Conveyed), Patient Conveyed)
+4.  Based on the HEMS result determine the patient outcome (Airlifted, Conveyed by land with DAA, Conveyed by land without DAA, Deceased, Unknown)
+
 
 ## Data output items
 
