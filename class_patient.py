@@ -1,11 +1,9 @@
 
 from math import floor
-from random import betavariate, uniform, choices
-from utils import Utils
 
 class Patient:
 
-    def __init__(self, p_id: int, amb_data: bool):
+    def __init__(self, p_id: int):
 
         # Unique ID for patient
         self.id = p_id
@@ -15,7 +13,7 @@ class Patient:
         # Allocate triage code to patient
         # This might vary by time of day/year etc. so lookup table might be more complicated
         # or could use a simple regression?
-        self.triage_code = choices(Utils.TRIAGE_CODE_DISTR.index, weights=Utils.TRIAGE_CODE_DISTR["prob"])[0]
+        self.ampds_card = ""
 
         # Likely to be postcode sector i.e. BS1 9 of BS1 9HJ
         self.postcode = ""
@@ -29,12 +27,8 @@ class Patient:
 
         # Demographic data
 
-        # Age selection based on distribution (although might need to take account of incident type)
-        self.age = floor(betavariate(0.733, 2.82)*100) # Just an example will need updating
-
-        # Calculate patient sex based on AMPDS code
-        prop_female = Utils.TRIAGE_CODE_DISTR.sex_female[Utils.TRIAGE_CODE_DISTR.index == self.triage_code].iloc[0]
-        self.sex =  "female" if uniform(0, 1) < prop_female else "male"
+        self.age = 0
+        self.sex =  "female"
 
         #print(f"AMPDS code is {self.triage_code} and prop_female is {prop_female} and sex is {self.sex}")
 
@@ -56,9 +50,15 @@ class Patient:
         self.cc_flown = 0
         self.cc_travelled_with = 0
         # Binary flag to indicate whether it is a 'HEMS job' whether they attend or not
-        self.hems_case = 0 if uniform(0, 1) < 0.5 else 1
+        self.hems_case = -1
         # Binary flag to indicate whether patient cared for by HEMS or not
-        self.hems = 1
+        self.hems = -1
+        self.hems_result = ""
+        self.hems_vehicle_type = ""
+        self.hems_callsign_group = ""
+
+        self.pt_outcome = ""
+
         # Critical care desk staffed
         self.cc_desk = 0
 

@@ -3,7 +3,6 @@ import random
 import numpy as np
 import pandas as pd
 import ast
-
 import scipy
 
 class Utils:
@@ -16,9 +15,9 @@ class Utils:
     # This rota is going to be split into vehicle (car/helicopter) and personnel
     # Each row will only have two sets of start/end times (one pair for summer and one for winter)
     HEMS_ROTA = pd.DataFrame({
-        "callsign"              : ["H70", "CC70", "H71", "CC71", "CC72"],
-        "category"              : ["CC", "CC", "EC", "EC", "CC"],
-        "type"                  : ["helicopter", "car", "helicopter", "car", "car"],
+        "callsign"             : ["H70", "CC70", "H71", "CC71", "CC72"],
+        "category"             : ["CC", "CC", "EC", "EC", "CC"],
+        "type"                 : ["helicopter", "car", "helicopter", "car", "car"],
         "summer_start"         : [7, 7, 7, 9, 8],
         "winter_start"         : [7, 7, 7, 7, 8],
         "summer_end"           : [2, 2, 19, 19, 18],
@@ -34,9 +33,13 @@ class Utils:
     def __init__(self):
 
         # Load in mean inter_arrival_times
-        self.inter_arrival_rate_df = pd.read_csv('distribution_data/interarrival_times.csv')
-        self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_amdpd_card_probs.csv')
+        self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
+        self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_ampds_card_probs.csv')
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
+        self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
+        self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
+        self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
+        self.pt_outcome_by_hems_result_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_probs.csv')
 
         # Read in age distribution data into a dictionary
         age_data = []
@@ -60,7 +63,7 @@ class Utils:
         now = datetime.now()
         return now.strftime("%H:%M:%S")
 
-    def date_time_of_call(start_dt: str, elapsed_time: int) -> list[int, int, str, int, int, pd.Timestamp]:
+    def date_time_of_call(self, start_dt: str, elapsed_time: int) -> list[int, int, str, int, int, pd.Timestamp]:
         """
         Calculate a range of time-based parameters given a specific date-time
 
@@ -111,7 +114,70 @@ class Utils:
 
         df = self.hour_by_ampds_df[self.hour_by_ampds_df['hour'] == hour]
         
-        pd.Series.sample(df['ampds_card'], weights = df['proportion'])
+        return pd.Series.sample(df['ampds_card'], weights = df['proportion']).iloc[0]
+
+
+    def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
+        """
+            This function will allocate and return an callsign group
+            based on the hour of day and AMPDS card
+        """
+
+        #print(f"Callsign group selection with {hour} and {ampds_card}")
+
+        df = self.callsign_by_ampds_and_hour_df[
+            (self.callsign_by_ampds_and_hour_df['hour'] == hour) &
+            (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
+        ]
+
+        #print(df)
+        sample_cg = pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
+        #print(sample_cg)
+        
+        return sample_cg
+
+    def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
+        """
+            This function will allocate and return an callsign group
+            based on the hour of day and AMPDS card
+        """
+
+        #print(f"Vehicle type with month {month} and cg {callsign_group}")
+        df = self.vehicle_type_by_month_df[
+            (self.vehicle_type_by_month_df['month'] == month) &
+            (self.vehicle_type_by_month_df['callsign_group'] == callsign_group)
+        ]
+        
+        #print(df)
+
+        return pd.Series.sample(df['vehicle_type'], weights = df['proportion']).iloc[0]
+
+    def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
+        """
+            This function will allocate a HEMS result based on callsign group and vehicle type
+        """
+
+        #print(f"HEMS result with {callsign_group} and {vehicle_type}")
+
+        df = self.hems_result_by_callsign_group_and_vehicle_type_df[
+            (self.hems_result_by_callsign_group_and_vehicle_type_df['callsign_group'] == callsign_group) &
+            (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
+        ]
+
+        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
+
+    def pt_outcome_selection(self, hems_result: str) -> int:
+        """
+            This function will allocate and return an AMPDS card category
+            based on the hour of day
+        """
+
+        #print(f"Hems result is {hems_result}")
+
+        df = self.pt_outcome_by_hems_result_df[self.pt_outcome_by_hems_result_df['hems_result'] == hems_result]
+        
+        #print(df)
+        return pd.Series.sample(df['pt_outcome'], weights = df['proportion']).iloc[0]
 
     def sex_selection(self, ampds_card: int) -> str:       
         """
@@ -123,14 +189,15 @@ class Utils:
 
         return 'Female' if (random.uniform(0, 1) < prob_female.iloc[0]) else 'Male'
     
-    def age_sampling(self, ampds_card: int) -> dict:
+    def age_sampling(self, ampds_card: int) -> float:
         """
-            This function will return a dictionary containing
-            the distribution and parameters for the distribution 
-            that match the provided ampds_card category
+            This function will return the patient's age based
+            on sampling from the distribution that matches the allocated AMPDS card
         """
 
         distribution = {}
+
+        #print(self.age_distr)
 
         for i in self.age_distr:
             #print(i)
@@ -138,41 +205,54 @@ class Utils:
                 #print('Match')
                 distribution = i['best_fit']
 
-        return distribution
+        # print(f"Getting age for {ampds_card}")
+        # print(distribution)
+        
+        sampled_age = self.sample_from_distribution(distribution)
+        #print(f"Patient age is {sampled_age}")
 
-    def activity_time(self, callsign: str, time_type: str, hems_result: str, pt_outcome: str) -> float:
+        return sampled_age
+
+    def activity_time(self, vehicle_type: str, time_type: str) -> float:
         """
             This function will return a dictionary containing
             the distribution and parameters for the distribution 
-            that match the provided ampds_card category, time type, 
-            HEMS result and patient outcome
+            that match the provided HEMS vehicle type and time type
+
         """
 
         distribution = {}
 
         for i in self.activity_time_distr:
             #print(i)
-            if (i['callsign'] == callsign) & (i['time_type'] == time_type) & (i['hems_result'] == hems_result) & (i['pt_outcome'] == pt_outcome):
+            if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
                 #print('Match')
                 distribution = i['best_fit']
 
+        sampled_time = self.sample_from_distribution(distribution)
 
-        # Use the appropriate distribution function from scipy.stats
-        sci_distr = getattr(scipy.stats, list(distribution)[0])
+        return sampled_time
+        
 
-        activity_time_min = 0
+    def sample_from_distribution(self, distr: dict) -> float:
+        """
+            This function will return a single sampled float value from
+            the specified distribution and parameters in the dictionay, distr.
+        """
 
-        distr = ""
+        distribution = {}
+        return_list = []
+
+        #print(distribution)
+
+        for k,v in distr.items():
+            #print(f"Key is {k}")
+            sci_distr = getattr(scipy.stats, k)
+            values = v
 
         while True:
-            # Use the dictionary values, identify them as kwargs for use by scipy distribution function
-            a_time = np.floor(sci_distr.rvs(**list(distribution.values())[0]))
-            if a_time > 0:
-                # Sometimes, a negative number can crop up, which is nonsense with respect to response and activity times.
-                activity_time_min = a_time
+            sampled_value = np.floor(sci_distr.rvs(**values))
+            if sampled_value > 0:
                 break
 
-
-        return activity_time_min
-
-    
+        return sampled_value

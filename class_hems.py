@@ -22,8 +22,8 @@ class HEMS(Ambulance):
         self.flying_time = 0
         self.type = Utils.HEMS_ROTA["type"][Utils.HEMS_ROTA.index == self.callsign].iloc[0]
         # NOTE: HEMS_ROTA is indexed on callsign
-        self.servicing_frequency_hours = Utils.HEMS_ROTA["service_freq"][Utils.HEMS_ROTA.index == self.callsign].iloc[0]
-        self.servicing_duration_weeks = Utils.HEMS_ROTA["service_dur"][Utils.HEMS_ROTA.index == self.callsign].iloc[0]
+        self.servicing_frequency_hours = 100
+        self.servicing_duration_weeks = 4
         # This will need revising once we've settled on how to keep track of service start and end times
         self.service_start_date = 0
         self.service_end_date = 0

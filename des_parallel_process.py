@@ -1,12 +1,22 @@
 import logging
 import time
 import glob
-import os
+import os, sys
 import pandas as pd
 from utils import Utils
 from des_hems import DES_HEMS
 import multiprocessing as mp
 from joblib import Parallel, delayed
+
+try:
+     __file__
+except NameError: 
+    __file__ = sys.argv[0]
+
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
+utilityClass = Utils()
 
 
 def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str, amb_data: bool):
@@ -28,8 +38,8 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_
 def parallelProcess(nprocess = mp.cpu_count() - 1):
     logging.debug('Model called')
 
-    number_of_runs = 1
-    sim_duration = 1 * 24 * 60
+    number_of_runs = 2
+    sim_duration = 30 * 24 * 60
     warm_up_time = 8 * 60
     sim_start_date =  "2024-08-01 07:00:00"
     amb_data = False
@@ -52,11 +62,11 @@ def collateRunResults() -> None:
         """
             Collates results from a series of runs into a single csv
         """
-        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
+        matching_files = glob.glob(os.path.join(utilityClass.RESULTS_FOLDER, "output_run_*.csv"))
 
         combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
 
-        combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
+        combined_df.to_csv(utilityClass.RUN_RESULTS_CSV, index=False)
 
         for file in matching_files:
              os.remove(file)

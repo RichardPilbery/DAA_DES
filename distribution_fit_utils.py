@@ -78,7 +78,6 @@ class DistributionFitUtils():
         
         """
 
-        #print(f"Open file {self.file_path}")
         try:
             df = pd.read_csv(self.file_path)
             self.df = df
@@ -93,6 +92,7 @@ class DistributionFitUtils():
         self.df['date_only'] = pd.to_datetime(df['inc_date'].dt.date)
         self.df['hour'] = self.df['inc_date'].dt.hour                      # Hour of the day
         self.df['day_of_week'] = self.df['inc_date'].dt.day_name()         # Day of the week (e.g., Monday)
+        self.df['month'] = self.df['inc_date'].dt.month
         self.df['quarter'] = self.df['inc_date'].dt.quarter   
 
         # This will be needed for other datasets, but has already been computed for DAA
@@ -121,6 +121,9 @@ class DistributionFitUtils():
 
         # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
         self.pt_outcome_by_hems_result_probs()
+
+        # Calculate probability of a particular vehicle type based on callsign group and month of year
+        self.vehicle_type_by_month_probs()
             
 
     def hour_by_ampds_card_probs(self):
@@ -285,7 +288,7 @@ class DistributionFitUtils():
         """
         
             Calculates the probabilty of a specific HEMS result being allocated to
-            a call based on the callsign and hour of day
+            a call based on the callsign group and hour of day
 
             TODO: These probability calculation functions could probably be refactored into a single
             function and just specify columns and output name
