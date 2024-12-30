@@ -39,7 +39,7 @@ class DES_HEMS:
         self.patient_counter = 0
 
         # Going to need to work out how we can keep track of flying hours
-        self.hems_resources = HEMSAvailability(self.env, sim_start_date)
+        self.hems_resources = HEMSAvailability(self.env)
 
         # Set up empty list to store results prior to conversion to dataframe
         self.results_list = []
@@ -113,7 +113,7 @@ class DES_HEMS:
 
                     # We need a lookup table for mean inter arrival times. A tabulated version of Figure 1 from
                     # the UoR report would be a good starter for 10...
-                    inter_time = 30
+                    inter_time = self.utils.inter_arrival_rate(pt.hour, pt.qtr)
                     sampled_interarrival = expovariate(1.0 / inter_time)
 
                     # Use sampled interarrival time with a check to ensure it does not go over 60 minutes
@@ -138,7 +138,9 @@ class DES_HEMS:
         # Check if HEMS result indicates no leaving scene/at hospital times
         no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
                     
-        # self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
+        if not_in_warm_up_period:
+            #print(f"Arrival for patient {patient.id} on run {self.run_number}")
+            self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
   
         if patient.hems_case == 1:
             hems = yield self.hems_resources.get(patient.hour, patient.qtr)
@@ -152,12 +154,14 @@ class DES_HEMS:
             # period. If so, then we will not record the patient progress
             not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
+            patient.time_in_sim = self.env.now - patient_enters_sim
+
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
-                    self.add_patient_result_row(patient, hems, "HEMS call start", "queue")
+                    self.add_patient_result_row(patient, hems, "HEMS call start", "event")
                 
                 if self.amb_data:
-                    self.add_patient_result_row(patient, ambulance, "AMB call start", "queue")
+                    self.add_patient_result_row(patient, ambulance, "AMB call start", "event")
 
             # Allocation time --------------
 
@@ -173,9 +177,9 @@ class DES_HEMS:
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
                     if patient.hems_result != "Stand Down Before Mobile":
-                        self.add_patient_result_row(patient, hems, "HEMS allocated to call", "queue")
+                        self.add_patient_result_row(patient, hems, "HEMS allocated to call", "event")
                     else:
-                        self.add_patient_result_row(patient, hems, "HEMS stand down before mobile", "queue")
+                        self.add_patient_result_row(patient, hems, "HEMS stand down before mobile", "event")
 
                 if self.amb_data:
                     print('Ambulance time to allocation')
@@ -197,7 +201,7 @@ class DES_HEMS:
 
             if not_in_warm_up_period:
                 if patient.hems_case == 1:
-                    self.add_patient_result_row(patient, hems, "HEMS mobile", "queue")
+                    self.add_patient_result_row(patient, hems, "HEMS mobile", "event")
 
                 if self.amb_data:
                     print('Ambulance time to allocation')
@@ -218,9 +222,9 @@ class DES_HEMS:
             if not_in_warm_up_period:
                 if (patient.hems_case == 1):
                     if patient.hems_result != "Stand Down En Route":
-                        self.add_patient_result_row(patient, hems, "HEMS on scene", "queue")
+                        self.add_patient_result_row(patient, hems, "HEMS on scene", "event")
                     else:
-                        self.add_patient_result_row(patient, hems, "HEMS stood down en route", "queue")
+                        self.add_patient_result_row(patient, hems, "HEMS stand down en route","event")
 
                 if self.amb_data:
                     print('Ambulance on scene time')
@@ -228,19 +232,21 @@ class DES_HEMS:
 
             # Leaving scene ------------
 
-            if patient.hems_case == 1:
-                ost_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene')
-                yield self.env.timeout(ost_time)
+            if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
+                tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene')
+                yield self.env.timeout(tos_time)
 
             if self.amb_data:
                 print('Ambulance on scene duration')
 
+            patient.time_in_sim = self.env.now - patient_enters_sim
+
             if not_in_warm_up_period:
                 if (patient.hems_case == 1):
                     if no_HEMS_hospital == False:
-                        self.add_patient_result_row(patient, hems, "HEMS leaving scene", "queue")
+                        self.add_patient_result_row(patient, hems, "HEMS leaving scene", "event")
                     else:
-                        self.add_patient_result_row(patient, hems, f"HEMS {patient.hems_result.lower()}", "queue")
+                        self.add_patient_result_row(patient, hems, f"HEMS {patient.hems_result.lower()}", "event")
 
                 if self.amb_data:
                     print('Ambulance leaving scene time')
@@ -255,28 +261,43 @@ class DES_HEMS:
             if self.amb_data:
                 print('Ambulance travel time')
 
+            patient.time_in_sim = self.env.now - patient_enters_sim
+
             if not_in_warm_up_period:
                 if (patient.hems_case == 1) and no_HEMS_hospital == False:
-                    self.add_patient_result_row(patient, hems, "HEMS arrived destination", "queue")
+                    self.add_patient_result_row(patient, hems, "HEMS arrived destination", "event")
 
             if self.amb_data:
                 print('Ambulance at destination time')
+
+
+            # Handover time ---------------
+
+            # Not currently available
+            patient.incident_completed = 1
  
             # Clear time ------------
 
             if (patient.hems_case == 1):
                 clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear')
                 yield self.env.timeout(clear_time)
+                self.hems_resources.put(hems)
 
             if self.amb_data:
                 print('Ambulance clear time')
 
-            if not_in_warm_up_period:
-                if (patient.hems_case == 1):
-                    self.add_patient_result_row(patient, hems, "HEMS arrived destination", "queue")
+            patient.time_in_sim = self.env.now - patient_enters_sim
 
-            if self.amb_data:
-                print('Ambulance at destination time')
+            if not_in_warm_up_period:
+                if patient.hems_case == 1:
+                    self.add_patient_result_row(patient, hems, "HEMS clear", "event")
+
+                if self.amb_data:
+                    print('Ambulance clear time')
+
+        if not_in_warm_up_period:
+            #print(f"Depart for patient {patient.id} on run {self.run_number}")
+            self.add_patient_result_row(patient, None, "depart", "arrival_departure")
  
 
 
@@ -301,7 +322,7 @@ class DES_HEMS:
             "time_type"         : time_type,   # e.g. mobile, at scene, leaving scene etc.
             "event_type"        : event_type,  # for animation: arrival_departure, queue, resource_use, resource_use_end
             "timestamp"         : self.env.now,
-            "timestamp_dt"      : datetime.strptime(self.sim_start_date, "%Y-%m-%d %H:%M:%S") + timedelta(minutes=self.env.now),
+            "timestamp_dt"      : self.sim_start_date + timedelta(minutes=self.env.now),
             "day"               : patient.day,
             "hour"              : patient.hour,
             "weekday"           : patient.weekday,

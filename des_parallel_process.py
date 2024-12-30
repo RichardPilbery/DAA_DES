@@ -1,3 +1,4 @@
+from datetime import datetime
 import logging
 import time
 import glob
@@ -19,7 +20,7 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 utilityClass = Utils()
 
 
-def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str, amb_data: bool):
+def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
 
     start = time.process_time()
@@ -39,9 +40,9 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
     logging.debug('Model called')
 
     number_of_runs = 2
-    sim_duration = 30 * 24 * 60
+    sim_duration = 2 * 24 * 60
     warm_up_time = 8 * 60
-    sim_start_date =  "2024-08-01 07:00:00"
+    sim_start_date =  datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S") 
     amb_data = False
 
     pool = mp.Pool(processes = nprocess)
@@ -71,9 +72,9 @@ def collateRunResults() -> None:
         for file in matching_files:
              os.remove(file)
 
-def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: str):
+def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool):
 
-    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date) for run in range(total_runs))
+    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data) for run in range(total_runs))
 
 if __name__ == "__main__":
     parallelProcess(nprocess = mp.cpu_count() - 1)

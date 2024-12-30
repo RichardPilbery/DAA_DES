@@ -41,6 +41,9 @@ with st.sidebar:
     st.subheader("Model Inputs")
 
     st.markdown("#### Simulation Run Settings")
+
+    amb_data = st.toggle("Model ambulance service data", value=False)
+
     sim_duration_input =  st.slider("Simulation Duration (days)", 1, 30, 10)
 
     warm_up_duration =  st.slider("Warm-up Duration (hours)", 0, 24*10, 0)
@@ -80,7 +83,8 @@ if button_run_pressed:
                         total_runs = number_of_runs_input,
                         sim_duration = sim_duration_input * 24 * 60,
                         warm_up_time = warm_up_duration * 60,
-                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
+                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input),
+                        amb_data=amb_data
                     )
 
                 results.append(
@@ -99,7 +103,8 @@ if button_run_pressed:
                         total_runs = number_of_runs_input,
                         sim_duration = sim_duration_input * 24 * 60,
                         warm_up_time = warm_up_duration * 60,
-                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input)
+                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input),
+                        amb_data = amb_data
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -147,8 +152,8 @@ if button_run_pressed:
 
             st.write(
                 pd.DataFrame(
-                    results_all_runs[["run_number", "callsign"]].value_counts()).reset_index()
-                    .pivot(index="run_number", columns="callsign", values="count")
+                    results_all_runs[["run_number", "callsign_group"]].value_counts()).reset_index()
+                    .pivot(index="run_number", columns="callsign_group", values="count")
                     )
 
 
@@ -205,7 +210,7 @@ if button_run_pressed:
                 )
             )
 
-            hems_events = ["arrival", "HEMS call start", "HEMS to AMB handover", "HEMS arrival at hospital", "HEMS clear"]
+            hems_events = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile", "HEMS stood down en route", "HEMS on scene", "HEMS patient treated (not conveyed)", "HEMS leaving scene", "HEMS arrived destination", "HEMS clear"]
 
             st.plotly_chart(
                     px.funnel(
@@ -257,27 +262,42 @@ if button_run_pressed:
         if create_animation_input:
             with tab4:
                 event_position_df = pd.DataFrame([
-
-                    {'event': 'AMB call start',
-                    'x':  160, 'y': 100, 'label': "Ambulance Call Start"},
-
-                    {'event': 'AMB arrival at hospital',
-                    'x':  360, 'y': 100, 'label': "Ambulance Arrive at Hospital"},
-
-                    {'event': 'AMB clear',
-                    'x':  660, 'y': 100, 'label': "Ambulance Clear"},
-
+                
                     {'event': 'HEMS call start',
-                    'x':  160, 'y': 600, 'label': "HEMS Call Start"},
+                    'x':  10, 'y': 600, 'label': "HEMS Call Start"},
 
-                    {'event': 'HEMS arrival at hospital',
-                    'x':  360, 'y': 600, 'label': "HEMS Arrive at Hospital"},
+                    {'event': 'HEMS allocated to call',
+                    'x':  180, 'y': 550, 'label': "HEMS Allocated"},
 
-                    {'event': 'HEMS to AMB handover',
-                    'x':  360, 'y': 300, 'label': "HEMS to AMB handover"},
+                    {'event': 'HEMS mobile',
+                    'x':  300, 'y': 500, 'label': "HEMS Mobile"},
+
+                    {'event': 'HEMS on scene',
+                    'x':  400, 'y': 450, 'label': "HEMS On Scene"},
+
+                    {'event': "HEMS stood down en route",
+                    'x':  400, 'y': 425, 'label': "HEMS Stood Down"},
+
+                    {'event': 'HEMS leaving scene',
+                    'x':  530, 'y': 400, 'label': "HEMS Leaving Scene"},
+
+                    {'event': 'HEMS arrived destination',
+                    'x':  700, 'y': 350, 'label': "HEMS Arrived Destination"},
 
                     {'event': 'HEMS clear',
-                    'x':  660, 'y': 600, 'label': "HEMS Clear"},
+                    'x':  900, 'y': 300, 'label': "HEMS Clear"},
+
+                    # {'event': 'AMB call start',
+                    # 'x':  160, 'y': 100, 'label': "Ambulance Call Start"},
+
+                    # {'event': 'AMB arrival at hospital',
+                    # 'x':  360, 'y': 100, 'label': "Ambulance Arrive at Hospital"},
+
+                    # {'event': 'AMB clear',
+                    # 'x':  660, 'y': 100, 'label': "Ambulance Clear"},
+
+                    # {'event': 'HEMS to AMB handover',
+                    # 'x':  360, 'y': 300, 'label': "HEMS to AMB handover"},
 
                     ]
                 )
@@ -286,10 +306,12 @@ if button_run_pressed:
                                 columns = {"timestamp":"time",
                                 "P_ID": "patient",
                                 "time_type": "event",
-                                "callsign": "pathway"}
+                                "callsign_group": "pathway"}
                                 )
 
                 event_log['pathway'] = event_log['pathway'].fillna('Shared')
+
+                #print(event_log.head(50))
 
                 st.plotly_chart(
                     animate_activity_log(

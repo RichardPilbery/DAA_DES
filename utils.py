@@ -17,7 +17,8 @@ class Utils:
     HEMS_ROTA = pd.DataFrame({
         "callsign"             : ["H70", "CC70", "H71", "CC71", "CC72"],
         "category"             : ["CC", "CC", "EC", "EC", "CC"],
-        "type"                 : ["helicopter", "car", "helicopter", "car", "car"],
+        "vehicle_type"         : ["helicopter", "car", "helicopter", "car", "car"],
+        "callsign_group"       : ["70", "70", "71", "71", "72"],
         "summer_start"         : [7, 7, 7, 9, 8],
         "winter_start"         : [7, 7, 7, 7, 8],
         "summer_end"           : [2, 2, 19, 19, 18],
@@ -103,8 +104,15 @@ class Utils:
             for the provided hour of day and yearly quarter
         """
 
+        #print(f"IA with values hour {hour} and quarter {quarter}")
         df = self.inter_arrival_rate_df
-        df[df['hour'] == hour & df['quarter'] == quarter]['mean_inter_arrival_time']
+        mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_inter_arrival_time']
+
+        # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
+        # then iloc value broken. Set default to 60 in that case.
+
+        return 60 if len(mean_ia) == 0 else mean_ia.iloc[0]
+
 
     def ampds_code_selection(self, hour: int) -> int:
         """

@@ -13,7 +13,7 @@ class HEMSAvailability():
     
     """
 
-    def __init__(self, env, current_date: str):
+    def __init__(self, env):
        
         self.env = env
 
@@ -28,7 +28,7 @@ class HEMSAvailability():
         # Populate the store with HEMS resources
         self.hems_list = []
         for index, row in Utils.HEMS_ROTA.iterrows():
-            self.hems_list.append(HEMS(index, current_date))
+            self.hems_list.append(HEMS(index))
 
         self.hems.items = self.hems_list
 

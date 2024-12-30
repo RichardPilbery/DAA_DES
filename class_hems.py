@@ -12,15 +12,15 @@ class HEMS(Ambulance):
     
     """
 
-    def __init__(self, callsign: str, current_date: str):
+    def __init__(self, callsign: str):
         # Inherit all parent class functions
         super().__init__(ambulance_type = "HEMS")
-
         self.callsign = callsign
+        self.callsign_group = callsign[-2:]
         self.available = 1
         self.being_serviced = 0
         self.flying_time = 0
-        self.type = Utils.HEMS_ROTA["type"][Utils.HEMS_ROTA.index == self.callsign].iloc[0]
+        self.vehicle_type = "helicopter" if callsign[1] == "H" else "car"
         # NOTE: HEMS_ROTA is indexed on callsign
         self.servicing_frequency_hours = 100
         self.servicing_duration_weeks = 4
@@ -41,7 +41,7 @@ class HEMS(Ambulance):
 
         """
 
-        if self.type == "helicopter" and (self.flying_time > self.servicing_frequency_hours * 60):
+        if self.vehicle_type == "helicopter" and (self.flying_time > self.servicing_frequency_hours * 60):
             self.being_serviced = 1
             self.service_start_date = service_start_time
             self.service_end_date = service_start_time + (self.servicing_duration_weeks * 7 * 24 * 60)
@@ -57,7 +57,7 @@ class HEMS(Ambulance):
             now completed the service interval and can be returned to operational use
 
         """
-        if self.type == "helicopter" and (current_time >= self.service_end_date):
+        if self.vehicle_type == "helicopter" and (current_time >= self.service_end_date):
             self.being_serviced = 0
             self.flying_time = 0
 
