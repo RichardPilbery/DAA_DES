@@ -17,8 +17,6 @@ except NameError:
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
-utilityClass = Utils()
-
 
 def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
@@ -63,11 +61,11 @@ def collateRunResults() -> None:
         """
             Collates results from a series of runs into a single csv
         """
-        matching_files = glob.glob(os.path.join(utilityClass.RESULTS_FOLDER, "output_run_*.csv"))
+        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
         combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
 
-        combined_df.to_csv(utilityClass.RUN_RESULTS_CSV, index=False)
+        combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
 
         for file in matching_files:
              os.remove(file)
@@ -77,7 +75,7 @@ def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
     return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data) for run in range(total_runs))
 
 if __name__ == "__main__":
-    parallelProcess(nprocess = mp.cpu_count() - 1)
+    parallelProcessJoblib(2, (8*60), (2*24*60), datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S"), False)
 
 # Testing ----------
 # python des_parallel_process.py

@@ -68,5 +68,3 @@ class Patient:
 
         self.time_to_first_respone = 0
 
-        # Flag to indicate whether incident has completed
-        self.incident_completed = 0
