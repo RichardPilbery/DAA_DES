@@ -160,9 +160,6 @@ class DES_HEMS:
         if patient.hems_case == 1:
             hems = yield self.hems_resources.get(patient)
 
-            patient.hems_callsign_group = self.utils.callsign_group_selection(patient.hour, patient.ampds_card)
-            #print(f"Callsign is {pt.hems_callsign_group}")
-            patient.hems_vehicle_type = self.utils.vehicle_type_selection(patient.month, hems.callsign_group)
             #print(f"Vehicle type is {pt.hems_vehicle_type}")
             patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(hems.callsign_group, hems.vehicle_type)
             #print(f"HEMS result is {pt.hems_result}")
