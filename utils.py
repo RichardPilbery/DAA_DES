@@ -102,6 +102,8 @@ class Utils:
         """
             This function will return the current mean inter_arrival rate in minutes
             for the provided hour of day and yearly quarter
+
+            NOTE: not used with NSPPThinning
         """
 
         #print(f"IA with values hour {hour} and quarter {quarter}")
@@ -111,7 +113,8 @@ class Utils:
         # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
         # then iloc value broken. Set default to 60 in that case.
 
-        return 60 if len(mean_ia) == 0 else mean_ia.iloc[0]
+        # return 60 if len(mean_ia) == 0 else mean_ia.iloc[0]
+        return mean_ia.iloc[0]
 
 
     def ampds_code_selection(self, hour: int) -> int:
@@ -134,7 +137,7 @@ class Utils:
         #print(f"Callsign group selection with {hour} and {ampds_card}")
 
         df = self.callsign_by_ampds_and_hour_df[
-            (self.callsign_by_ampds_and_hour_df['hour'] == hour) &
+            (self.callsign_by_ampds_and_hour_df['hour'] == int(hour)) &
             (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
         ]
 
@@ -152,8 +155,8 @@ class Utils:
 
         #print(f"Vehicle type with month {month} and cg {callsign_group}")
         df = self.vehicle_type_by_month_df[
-            (self.vehicle_type_by_month_df['month'] == month) &
-            (self.vehicle_type_by_month_df['callsign_group'] == callsign_group)
+            (self.vehicle_type_by_month_df['month'] == int(month)) &
+            (self.vehicle_type_by_month_df['callsign_group'] == int(callsign_group))
         ]
         
         #print(df)
@@ -165,10 +168,8 @@ class Utils:
             This function will allocate a HEMS result based on callsign group and vehicle type
         """
 
-        #print(f"HEMS result with {callsign_group} and {vehicle_type}")
-
         df = self.hems_result_by_callsign_group_and_vehicle_type_df[
-            (self.hems_result_by_callsign_group_and_vehicle_type_df['callsign_group'] == callsign_group) &
+            (self.hems_result_by_callsign_group_and_vehicle_type_df['callsign_group'] == int(callsign_group)) &
             (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
         ]
 

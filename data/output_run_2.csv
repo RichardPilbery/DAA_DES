@@ -1,0 +1,23 @@
+P_ID,run_number,time_type,event_type,timestamp,timestamp_dt,day,hour,weekday,month,qtr,callsign_group,vehicle_type,ampds_card,age,sex
+1,2,HEMS allocated to call,event,35.0,2024-08-01 07:35:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+1,2,HEMS mobile,event,40.0,2024-08-01 07:40:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+1,2,HEMS on scene,event,52.0,2024-08-01 07:52:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+1,2,HEMS leaving scene,event,57.0,2024-08-01 07:57:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+1,2,HEMS arrived destination,event,84.0,2024-08-01 08:24:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+2,2,arrival,arrival_departure,93.10810167018779,2024-08-01 08:33:06.486100,Thu,8,weekday,8,3,,,31,82.0,Male
+2,2,HEMS call start,event,93.10810167018779,2024-08-01 08:33:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+2,2,HEMS allocated to call,event,100.10810167018779,2024-08-01 08:40:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+2,2,HEMS mobile,event,106.10810167018779,2024-08-01 08:46:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+1,2,HEMS clear,event,112.0,2024-08-01 08:52:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+1,2,depart,arrival_departure,112.0,2024-08-01 08:52:00.000000,Thu,7,weekday,8,3,70,helicopter,29,49.0,Male
+2,2,HEMS on scene,event,123.10810167018779,2024-08-01 09:03:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+2,2,HEMS leaving scene,event,129.1081016701878,2024-08-01 09:09:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+2,2,HEMS arrived destination,event,163.1081016701878,2024-08-01 09:43:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+3,2,arrival,arrival_departure,186.21620334037559,2024-08-01 10:06:12.972200,Thu,10,weekday,8,3,,,28,51.0,Female
+2,2,HEMS clear,event,197.1081016701878,2024-08-01 10:17:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+2,2,depart,arrival_departure,197.1081016701878,2024-08-01 10:17:06.486100,Thu,8,weekday,8,3,70,helicopter,31,82.0,Male
+4,2,arrival,arrival_departure,279.32430501056336,2024-08-01 11:39:19.458301,Thu,11,weekday,8,3,,,29,59.0,Male
+5,2,arrival,arrival_departure,372.43240668075117,2024-08-01 13:12:25.944401,Thu,13,weekday,8,3,,,31,55.0,Male
+6,2,arrival,arrival_departure,465.540508350939,2024-08-01 14:45:32.430501,Thu,14,weekday,8,3,,,9,70.0,Male
+7,2,arrival,arrival_departure,558.6486100211267,2024-08-01 16:18:38.916601,Thu,16,weekday,8,3,,,29,148.0,Female
+8,2,arrival,arrival_departure,651.7567116913145,2024-08-01 17:51:45.402701,Thu,17,weekday,8,3,,,7,44.0,Female

@@ -1,3 +1,4 @@
+from class_patient import Patient
 from utils import Utils
 import pandas as pd
 from class_hems import HEMS
@@ -16,18 +17,19 @@ class HEMSAvailability():
     def __init__(self, env):
        
         self.env = env
+        self.utilityClass = Utils
 
         # set number of possible HEMS resources
-        self.number_hems_resources = len(Utils.HEMS_ROTA)
+        self.number_hems_resources = len(self.utilityClass.HEMS_ROTA)
 
-        self.hems_callsigns = Utils.HEMS_ROTA.index
+        self.hems_callsigns = self.utilityClass.HEMS_ROTA.index
 
         # Create a store for HEMS resources
         self.hems = FilterStore(env)
 
         # Populate the store with HEMS resources
         self.hems_list = []
-        for index, row in Utils.HEMS_ROTA.iterrows():
+        for index, row in self.utilityClass.HEMS_ROTA.iterrows():
             self.hems_list.append(HEMS(index))
 
         self.hems.items = self.hems_list
@@ -44,7 +46,7 @@ class HEMSAvailability():
 
         #print(f"on shift callsign {callsign}, hour {hour}, season {season}")
         
-        df = Utils.HEMS_ROTA
+        df = self.utilityClass.HEMS_ROTA
         df = df[df.index == callsign]
 
         # Assuming summer hours are quarters 2 and 3 i.e. April-September
@@ -71,14 +73,14 @@ class HEMSAvailability():
         return (item.being_serviced == 0 and self.hems_resource_on_shift(item.callsign, hour, season))
 
 
-    def get(self, hour: int, season: str):
+    def get(self, patient: Patient):
         """
             Get a HEMS resource
 
             returns a get request that can be yield to
         """
 
-        hems_res = self.hems.get(lambda item : self.available_hems_resources(item, hour, season))
+        hems_res = self.hems.get(lambda item : self.available_hems_resources(item, patient.hour, patient.qtr))
 
         return hems_res
 
@@ -89,6 +91,10 @@ class HEMSAvailability():
 
         self.hems.put(hems_res)
         #print(f'{self.env.now:0.2f} HEMS returned')
+        
+# pt.hems_callsign_group = self.utils.callsign_group_selection(pt.hour, pt.ampds_card)
+# #print(f"Callsign is {pt.hems_callsign_group}")
+# pt.hems_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_callsign_group)
 
 
         

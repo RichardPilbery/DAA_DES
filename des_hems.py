@@ -1,12 +1,15 @@
 import os, simpy
+from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
-from random import expovariate
+# from random import expovariate
 from utils import Utils
 from class_patient import Patient
 from class_hems_availability import HEMSAvailability
 from class_hems import HEMS
 from class_ambulance import Ambulance
 from datetime import timedelta
+import warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 class DES_HEMS:
     """
@@ -53,6 +56,10 @@ class DES_HEMS:
         # stand downs etc.
         self.results_df = None
 
+        # Arrivals distribution using NSPPThinning
+        # HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
+        self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
+
     def generate_calls(self):
             """
             **Patient generator**
@@ -94,15 +101,16 @@ class DES_HEMS:
                     else:
                         pt.hems_case = 1
 
-                    if pt.hems_case == 1:
-                        pt.hems_callsign_group = self.utils.callsign_group_selection(pt.hour, pt.ampds_card)
-                        #print(f"Callsign is {pt.hems_callsign_group}")
-                        pt.hems_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_callsign_group)
-                        #print(f"Vehicle type is {pt.hems_vehicle_type}")
-                        pt.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(pt.hems_callsign_group, pt.hems_vehicle_type)
-                        #print(f"HEMS result is {pt.hems_result}")
-                        # Note patient outcome is generic, so we'll need to include this for non-HEMS cases too
-                        pt.pt_outcome = self.utils.pt_outcome_selection(pt.hems_result)
+                    # if pt.hems_case == 1:
+                    #     pt.hems_callsign_group = self.utils.callsign_group_selection(pt.hour, pt.ampds_card)
+                    #     #print(f"Callsign is {pt.hems_callsign_group}")
+                    #     pt.hems_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_callsign_group)
+                    #     #print(f"Vehicle type is {pt.hems_vehicle_type}")
+                    #     pt.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(pt.hems_callsign_group, pt.hems_vehicle_type)
+                    #     #print(f"HEMS result is {pt.hems_result}")
+                    #     # Note patient outcome is generic, so we'll need to include this for non-HEMS cases too
+                    #     pt.pt_outcome = self.utils.pt_outcome_selection(pt.hems_result)
+                    #     #print(f"Pt outcome is {pt.pt_outcome}")
 
                     self.env.process(self.patient_journey(pt))
 
@@ -111,14 +119,21 @@ class DES_HEMS:
 
                     # Determine the interarrival time for the next patient by sampling from the exponential distrubution
 
-                    # We need a lookup table for mean inter arrival times. A tabulated version of Figure 1 from
-                    # the UoR report would be a good starter for 10...
-                    inter_time = self.utils.inter_arrival_rate(pt.hour, pt.qtr)
-                    sampled_interarrival = expovariate(1.0 / inter_time)
+                    # Determine the inter-arrival time
+                    arrivals_dist = NSPPThinning(
+                        data = self.inter_arrival_times_df[
+                            (self.inter_arrival_times_df['quarter'] == pt.qtr)
+                        ],
+                        random_seed1 = self.run_number * 112,
+                        random_seed2 = self.run_number * 999
+                    )
+
+                    #inter_time = self.utils.inter_arrival_rate(pt.hour, pt.qtr)
+                    sampled_interarrival = arrivals_dist.sample(pt.hour)
 
                     # Use sampled interarrival time with a check to ensure it does not go over 60 minutes
                     # as this would technically be in the 'next' hour
-                    sampled_interarrival = 59 if sampled_interarrival >= 60 else sampled_interarrival
+                    #sampled_interarrival = 59 if sampled_interarrival >= 60 else sampled_interarrival
 
                     # Freeze function until interarrival time has elapsed
                     yield self.env.timeout(sampled_interarrival)
@@ -143,7 +158,17 @@ class DES_HEMS:
             self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
   
         if patient.hems_case == 1:
-            hems = yield self.hems_resources.get(patient.hour, patient.qtr)
+            hems = yield self.hems_resources.get(patient)
+
+            patient.hems_callsign_group = self.utils.callsign_group_selection(patient.hour, patient.ampds_card)
+            #print(f"Callsign is {pt.hems_callsign_group}")
+            patient.hems_vehicle_type = self.utils.vehicle_type_selection(patient.month, hems.callsign_group)
+            #print(f"Vehicle type is {pt.hems_vehicle_type}")
+            patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(hems.callsign_group, hems.vehicle_type)
+            #print(f"HEMS result is {pt.hems_result}")
+            # Note patient outcome is generic, so we'll need to include this for non-HEMS cases too
+            patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result)
+            #print(f"Pt outcome is {pt.pt_outcome}")
 
         if self.amb_data:
             ambulance = Ambulance()

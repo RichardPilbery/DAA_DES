@@ -75,7 +75,7 @@ def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
     return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data) for run in range(total_runs))
 
 if __name__ == "__main__":
-    parallelProcessJoblib(2, (8*60), (2*24*60), datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S"), False)
+    parallelProcessJoblib(2, (0.5*24*60), (0*60), datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S"), False)
 
 # Testing ----------
 # python des_parallel_process.py
