@@ -159,16 +159,13 @@ class DES_HEMS:
             Send patient on their journey!
         """
 
-        # print(f"Patient journey triggered for {patient.id}")
-        # print(f"patient journey Time: {self.env.now}")
+        print(f"Patient journey triggered for {patient.id}")
+        print(f"patient journey Time: {self.env.now}")
         # print(hems_res.callsign)
 
         patient_enters_sim = self.env.now
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
-
-        # Check if HEMS result indicates no leaving scene/at hospital times
-        no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
                     
         if not_in_warm_up_period:
             #print(f"Arrival for patient {patient.id} on run {self.run_number}")
@@ -185,7 +182,9 @@ class DES_HEMS:
 
                 patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
 
-                #print(f"Patient HEMS result is {patient.hems_result}")
+                
+                # Check if HEMS result indicates no leaving scene/at hospital times
+                no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
 
                 patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result)
 
@@ -296,7 +295,7 @@ class DES_HEMS:
                 patient.time_in_sim = self.env.now - patient_enters_sim
 
                 if not_in_warm_up_period:
-                    if (patient.hems_case == 1):
+                    if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
                         if no_HEMS_hospital == False:
                             self.add_patient_result_row(patient, "HEMS leaving scene", "event")
                         else:
@@ -319,6 +318,7 @@ class DES_HEMS:
 
                 if not_in_warm_up_period:
                     if (patient.hems_case == 1) and no_HEMS_hospital == False:
+                        
                         self.add_patient_result_row(patient, "HEMS arrived destination", "event")
 
                 if self.amb_data:
