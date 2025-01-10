@@ -242,12 +242,12 @@ class DistributionFitUtils():
         ia_times_df = (
             count_df.groupby(['hour', 'quarter'])
             .agg(
-                max_arrivals_per_hour=('n', lambda x: round(60 / np.max(x), 3)),
-                min_arrivals_per_hour=('n', lambda x: round(60 / np.min(x),3)),
-                mean_cases=('n', lambda x: round(x.mean(), 3)),
-                sd_cases=('n', lambda x: round(x.std(), 3)), 
-                mean_iat=('n', lambda x: 60 / x.mean()),
-                n=('n', 'size')
+                # max_arrivals_per_hour=('n', lambda x: round(60 / np.max(x), 3)),
+                # min_arrivals_per_hour=('n', lambda x: round(60 / np.min(x),3)),
+                mean_cases=('n', lambda x: round(x.mean(), 1)),
+                # sd_cases=('n', lambda x: round(x.std(), 3)), 
+                mean_iat=('n', lambda x: 60 / x.mean())
+                # n=('n', 'size')
             )
             .reset_index()
         )

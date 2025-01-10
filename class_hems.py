@@ -15,12 +15,22 @@ class HEMS(Ambulance):
     def __init__(self, callsign: str):
         # Inherit all parent class functions
         super().__init__(ambulance_type = "HEMS")
+        self.utilityClass = Utils()
+
+        df = self.utilityClass.HEMS_ROTA[self.utilityClass.HEMS_ROTA.index == callsign]
+
         self.callsign = callsign
-        self.callsign_group = callsign[-2:]
+        self.callsign_group = df['callsign_group']
         self.available = 1
         self.being_serviced = 0
         self.flying_time = 0
-        self.vehicle_type = "helicopter" if callsign[1] == "H" else "car"
+        self.vehicle_type = df['vehicle_type'].iloc[0]
+        self.category = df['category'].iloc[0]
+        self.summer_start = df["summer_start"].iloc[0]
+        self.winter_start = df["winter_start"].iloc[0]
+        self.summer_end = df["summer_end"].iloc[0]
+        self.winter_end = df["winter_end"].iloc[0]
+
         # NOTE: HEMS_ROTA is indexed on callsign
         self.servicing_frequency_hours = 100
         self.servicing_duration_weeks = 4
@@ -28,27 +38,9 @@ class HEMS(Ambulance):
         self.service_start_date = 0
         self.service_end_date = 0
 
-    def next_service(self):
-        print(f"Next service for {self.callsign} is {self.service_start_date}")
+        self.in_use = False
         
-
-    def update_flying_time(self, service_start_time):
-        """
-            Update flying hours of a HEMS resource
-
-            This function will make it possible to update the flying hours of a given HEMS resource
-            and if necessary, mark it as being serviced.
-
-        """
-
-        if self.vehicle_type == "helicopter" and (self.flying_time > self.servicing_frequency_hours * 60):
-            self.being_serviced = 1
-            self.service_start_date = service_start_time
-            self.service_end_date = service_start_time + (self.servicing_duration_weeks * 7 * 24 * 60)
-
-            print(f'{service_start_time:0.2f} Callsign {self.callsign} flying time updated to {self.flying_time} and start is {self.service_start_date} and end {self.service_end_date}')
-
-
+        
     def operational_after_service(self, current_time):
         """
             Update service status of HEMS' resources
@@ -56,9 +48,31 @@ class HEMS(Ambulance):
             This function will periodically check to see whether HEMS' resources have
             now completed the service interval and can be returned to operational use
 
+            CURRENTLY NOT IN USE
+
         """
         if self.vehicle_type == "helicopter" and (current_time >= self.service_end_date):
             self.being_serviced = 0
             self.flying_time = 0
+
+    def hems_resource_on_shift(self, hour: int, season: int):
+
+        """
+            Function to determine whether the HEMS resource is within
+            its operational hours
+        """
+
+        #print(f"on shift callsign {self.callsign}, hour {hour}, season {season} with summer_start {self.summer_start} and winter_start = {self.winter_start}")
+        
+        # Assuming summer hours are quarters 2 and 3 i.e. April-September
+        # Can be modified if required.
+        start = self.summer_start if season in [2, 3] else self.winter_start
+        end = self.summer_end if season in [2, 3] else self.winter_end
+
+        #print(f"Start is {start} and end is {end} and current hour is {hour}")
+
+        #print(f"Is time in range: {self.utilityClass.is_time_in_range(int(hour), int(start), int(end))}")
+
+        return self.utilityClass.is_time_in_range(int(hour), int(start), int(end))
 
         

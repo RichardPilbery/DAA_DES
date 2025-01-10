@@ -2,7 +2,7 @@ from class_patient import Patient
 from utils import Utils
 import pandas as pd
 from class_hems import HEMS
-from simpy import FilterStore
+from simpy import FilterStore, Interrupt, Event
 
 class HEMSAvailability():
     """
@@ -17,22 +17,15 @@ class HEMSAvailability():
     def __init__(self, env):
        
         self.env = env
-        self.utilityClass = Utils
-
-        # set number of possible HEMS resources
-        self.number_hems_resources = len(self.utilityClass.HEMS_ROTA)
-
-        self.hems_callsigns = self.utilityClass.HEMS_ROTA.index
+        self.utilityClass = Utils()
 
         # Create a store for HEMS resources
-        self.hems = FilterStore(env)
+        self.store = FilterStore(env)
 
         # Populate the store with HEMS resources
-        self.hems_list = []
         for index, row in self.utilityClass.HEMS_ROTA.iterrows():
-            self.hems_list.append(HEMS(index))
+            self.store.put(HEMS(index))
 
-        self.hems.items = self.hems_list
 
     def add_hems(self):
         """
@@ -42,60 +35,78 @@ class HEMSAvailability():
         """
         pass
 
-    def hems_resource_on_shift(self, callsign: str, hour: int, season: int):
+    
+    def preferred_group_available(self, preferred_group, preferred_vehicle_type):
 
-        #print(f"on shift callsign {callsign}, hour {hour}, season {season}")
+        hems = HEMS
+        preferred = False
+        for h in self.store.items:
+            #print(f"pref group is {preferred_group} and pref_veh is {preferred_vehicle_type} and h vehicle is {h.vehicle_type} and h callsing group is {h.callsign_group.iloc[0]}")
+            #print(int(h.callsign_group.iloc[0]) == int(preferred_group))
+            if int(h.callsign_group.iloc[0]) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+                return h
+            elif h.callsign_group.iloc[0] == preferred_group:
+                hems = h
+                preferred = True
+            
+        if preferred:
+            return hems
+        else:
+            return None
+
+
+
+    def allocate_resource(self, pt: Patient):
+        """Attempt to allocate a resource from the preferred group."""
         
-        df = self.utilityClass.HEMS_ROTA
-        df = df[df.index == callsign]
+        print(f"Allocating resource with callsign group {pt.hems_pref_callsign_group} and vehicle {pt.hems_pref_vehicle_type}")
 
-        # Assuming summer hours are quarters 2 and 3 i.e. April-September
-        # Can be modified if required.
-        start = df.summer_start.iloc[0] if season in [2, 3] else df.winter_start.iloc[0]
-        end = df.summer_end.iloc[0] if season in [2, 3] else df.winter_end.iloc[0]
+        pref_res = self.preferred_group_available(pt.hems_pref_callsign_group, pt.hems_pref_vehicle_type)
 
-        #print(f"Start is {start} and end is {end}")
+        resource_event: Event = self.env.event()
 
-        if start >= hour and hour <= end:
-            return True
-        
-        return False
+        def process():
+            def resource_filter(resource: HEMS, pref_res: HEMS):
+                #print(f"Resource filter with hour {hour} and qtr {qtr}")
+                if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr):
+                    if pref_res != None:
+                        #print(f"{resource.callsign} and {pre_res.callsign}")
+                        if resource.callsign == pref_res.callsign:
+                            #print("Preferred resource available")
+                            return True
+                    else:
+                        #print("Other resource available")
+                        return True
+            
+                return False
+            
+            request = self.store.get(lambda item: resource_filter(item, pref_res))
 
+            try:
+                
+                resource: HEMS = yield request
+                #print(resource)
+                resource.in_use = True
+                #print(resource)
+                #print(f"Allocating HEMS resource {resource.callsign} at time {hour}")
+                pt.hems_callsign_group = resource.callsign_group.iloc[0]
+                pt.hems_vehicle_type = resource.vehicle_type
 
-    def available_hems_resources(self, item: HEMS, hour: int, season: str):
-        #print(f"Inside resource with {item.callsign} and hours {hour} and season {season}")
+                resource_event.succeed(resource)
+                
+            except Interrupt:
+                print(f"No HEMS resource available using Ambulance")
+                resource_event.succeed()
 
-        # For now, check if HEMS resource has completed it's servicing schedule and is therefor ready to come
-        # back into service. Not sure if there is a better place to check this
-        
-        item.operational_after_service(self.env.now)
-
-        return (item.being_serviced == 0 and self.hems_resource_on_shift(item.callsign, hour, season))
-
-
-    def get(self, patient: Patient):
-        """
-            Get a HEMS resource
-
-            returns a get request that can be yield to
-        """
-
-        hems_res = self.hems.get(lambda item : self.available_hems_resources(item, patient.hour, patient.qtr))
-
-        return hems_res
-
-    def put(self, hems_res):
-        """
-            Free up HEMS resource
-        """
-
-        self.hems.put(hems_res)
-        #print(f'{self.env.now:0.2f} HEMS returned')
-        
-# pt.hems_callsign_group = self.utils.callsign_group_selection(pt.hour, pt.ampds_card)
-# #print(f"Callsign is {pt.hems_callsign_group}")
-# pt.hems_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_callsign_group)
+        self.env.process(process())
+    
+        return resource_event
 
 
-        
+    def return_resource(self, resource):
+        #print(f"Returning resource {resource.callsign}")
+        #print(f"Current store length is {len(self.store.items)}")
+        resource.in_use = False
+        self.store.put(resource)
+        #print(f"Current store length is {len(self.store.items)}")
 

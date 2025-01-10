@@ -70,12 +70,26 @@ def collateRunResults() -> None:
         for file in matching_files:
              os.remove(file)
 
+def removeExistingResults() -> None:
+        """
+            Removes results from previous simulation runs
+        """
+        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
+
+        for file in matching_files:
+             os.remove(file)
+
+        all_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "all_results.csv")
+        if os.path.isfile(all_results_file_path):
+            os.unlink(all_results_file_path)
+
 def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool):
 
     return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data) for run in range(total_runs))
 
 if __name__ == "__main__":
-    parallelProcessJoblib(2, (0.5*24*60), (0*60), datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S"), False)
+    removeExistingResults()
+    parallelProcessJoblib(1, (3*24*60), (0*60), datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S"), False)
 
 # Testing ----------
 # python des_parallel_process.py

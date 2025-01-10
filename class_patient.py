@@ -54,6 +54,8 @@ class Patient:
         # Binary flag to indicate whether patient cared for by HEMS or not
         self.hems = -1
         self.hems_result = ""
+        self.hems_pref_vehicle_type = ""
+        self.hems_pref_callsign_group = ""
         self.hems_vehicle_type = ""
         self.hems_callsign_group = ""
 

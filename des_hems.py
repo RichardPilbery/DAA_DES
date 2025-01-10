@@ -1,4 +1,5 @@
 import os, simpy
+from random import expovariate
 from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 # from random import expovariate
@@ -41,7 +42,6 @@ class DES_HEMS:
         self.env = simpy.Environment()
         self.patient_counter = 0
 
-        # Going to need to work out how we can keep track of flying hours
         self.hems_resources = HEMSAvailability(self.env)
 
         # Set up empty list to store results prior to conversion to dataframe
@@ -56,9 +56,36 @@ class DES_HEMS:
         # stand downs etc.
         self.results_df = None
 
-        # Arrivals distribution using NSPPThinning
-        # HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
         self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
+
+    def calc_interarrival_time(self, pt: Patient, NSPPThin = False):
+        """
+            Convenience function to return the time between incidents
+            using either NSPPThinning or sampling the exponential 
+            distribution
+
+            Arrivals distribution using NSPPThinning
+            HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
+        
+        """
+
+        if NSPPThin:
+           # Determine the inter-arrival time usiong NSPPThinning
+            arrivals_dist = NSPPThinning(
+                data = self.inter_arrival_times_df[
+                    (self.inter_arrival_times_df['quarter'] == pt.qtr)
+                ],
+                random_seed1 = self.run_number * 112,
+                random_seed2 = self.run_number * 999
+            )
+
+            return arrivals_dist.sample(pt.hour)
+
+        else:
+            # Or just regular exponential distrib.
+            inter_time = self.utils.inter_arrival_rate(pt.hour, pt.qtr)
+            return expovariate(1.0 / inter_time)
+        
 
     def generate_calls(self):
             """
@@ -68,83 +95,73 @@ class DES_HEMS:
 
             """
 
-            if self.env.now < self.sim_duration + self.warm_up_duration :
-                while True:
-                    self.patient_counter += 1
+            while self.env.now < (self.sim_duration + self.warm_up_duration):
+                print(f"Sim duration is {self.sim_duration} and current time is {self.env.now}")
+                
+                self.patient_counter += 1
 
-                    # Create a new caller/patient
-                    pt = Patient(self.patient_counter)
+                # Create a new caller/patient
+                pt = Patient(self.patient_counter)
 
-                    # Get current day of week and hour of day
-                    [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                # Get current day of week and hour of day
+                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
-                    # Update patient instance with time-based values so the current time is known
-                    pt.day = dow
-                    pt.hour = hod
-                    pt.weekday = weekday
-                    pt.month = month
-                    pt.qtr = qtr
-                    pt.current_dt = current_dt
+                # Update patient instance with time-based values so the current time is known
+                pt.day = dow
+                pt.hour = hod
+                pt.weekday = weekday
+                pt.month = month
+                pt.qtr = qtr
+                pt.current_dt = current_dt
 
-                    # Update patient instance with age, sex, AMPDS card, whether they are a HEMS' patient and if so, the HEMS result,
-                    # and patient outcome
-                    #print(f"Patient hour is {pt.hour}")
-                    pt.ampds_card = self.utils.ampds_code_selection(pt.hour)
-                    #print(f"AMPDS card is {pt.ampds_card}")
-                    pt.age = self.utils.age_sampling(pt.ampds_card)
-                    pt.sex = self.utils.sex_selection(pt.ampds_card)
+                print(f"Patient {pt.id} incident date: {pt.current_dt}")
 
-                    if self.amb_data:
-                        # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
-                        # if ambulance data is being collected too.
-                        continue
-                    else:
-                        pt.hems_case = 1
+                # Update patient instance with age, sex, AMPDS card, whether they are a HEMS' patient and if so, the HEMS result,
+                pt.ampds_card = self.utils.ampds_code_selection(pt.hour)
+                #print(f"AMPDS card is {pt.ampds_card}")
+                pt.age = self.utils.age_sampling(pt.ampds_card)
+                pt.sex = self.utils.sex_selection(pt.ampds_card)
 
-                    # if pt.hems_case == 1:
-                    #     pt.hems_callsign_group = self.utils.callsign_group_selection(pt.hour, pt.ampds_card)
-                    #     #print(f"Callsign is {pt.hems_callsign_group}")
-                    #     pt.hems_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_callsign_group)
-                    #     #print(f"Vehicle type is {pt.hems_vehicle_type}")
-                    #     pt.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(pt.hems_callsign_group, pt.hems_vehicle_type)
-                    #     #print(f"HEMS result is {pt.hems_result}")
-                    #     # Note patient outcome is generic, so we'll need to include this for non-HEMS cases too
-                    #     pt.pt_outcome = self.utils.pt_outcome_selection(pt.hems_result)
-                    #     #print(f"Pt outcome is {pt.pt_outcome}")
+                if self.amb_data:
+                    # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
+                    # if ambulance data is being collected too.
+                    continue
+                else:
+                    pt.hems_case = 1
 
-                    self.env.process(self.patient_journey(pt))
+                if pt.hems_case == 1:
+                    #print(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
+                    pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
+                    #print(f"Callsign is {pt.hems_pref_callsign_group}")
+                    pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
+                    #print(f"Vehicle type is {pt.hems_pref_vehicle_type}")
 
-                    # Convery weekday/weekend into boolean value
-                    weekday_bool = 1 if weekday == 'weekday' else 0
+                    hems_allocation: HEMS = yield self.hems_resources.allocate_resource(pt)
 
-                    # Determine the interarrival time for the next patient by sampling from the exponential distrubution
+                    print(f"allocated {hems_allocation.callsign}")
 
-                    # Determine the inter-arrival time
-                    arrivals_dist = NSPPThinning(
-                        data = self.inter_arrival_times_df[
-                            (self.inter_arrival_times_df['quarter'] == pt.qtr)
-                        ],
-                        random_seed1 = self.run_number * 112,
-                        random_seed2 = self.run_number * 999
-                    )
+                    self.env.process(self.patient_journey(hems_allocation, pt))
 
-                    #inter_time = self.utils.inter_arrival_rate(pt.hour, pt.qtr)
-                    sampled_interarrival = arrivals_dist.sample(pt.hour)
+                    # hems_allocation_event.callbacks.append(lambda event: self.log(event, pt))
+                    # hems_allocation_event.callbacks.append(lambda event: self.patient_journey(event, pt))
 
-                    # Use sampled interarrival time with a check to ensure it does not go over 60 minutes
-                    # as this would technically be in the 'next' hour
-                    #sampled_interarrival = 59 if sampled_interarrival >= 60 else sampled_interarrival
+                # Determine the interarrival time for the next patient by sampling from the exponential distrubution
+                sampled_interarrival = self.calc_interarrival_time(pt)
 
-                    # Freeze function until interarrival time has elapsed
-                    yield self.env.timeout(sampled_interarrival)
+                print(f"sampled interrarival time is {sampled_interarrival} mins")
+
+                # Freeze function until interarrival time has elapsed
+                yield self.env.timeout(sampled_interarrival)
 
 
-
-    def patient_journey(self, patient: Patient):
+    def patient_journey(self, hems_res: HEMS, patient: Patient):
         """
             Send patient on their journey!
         """
-        #print('Patient is on journey')
+
+        # print(f"Patient journey triggered for {patient.id}")
+        # print(f"patient journey Time: {self.env.now}")
+        # print(hems_res.callsign)
 
         patient_enters_sim = self.env.now
 
@@ -155,174 +172,195 @@ class DES_HEMS:
                     
         if not_in_warm_up_period:
             #print(f"Arrival for patient {patient.id} on run {self.run_number}")
-            self.add_patient_result_row(patient, None, "arrival", "arrival_departure")
+            self.add_patient_result_row(patient, "arrival", "arrival_departure")
   
+        hems_avail = True
         if patient.hems_case == 1:
-            hems = yield self.hems_resources.get(patient)
 
-            #print(f"Vehicle type is {pt.hems_vehicle_type}")
-            patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(hems.callsign_group, hems.vehicle_type)
-            #print(f"HEMS result is {pt.hems_result}")
-            # Note patient outcome is generic, so we'll need to include this for non-HEMS cases too
-            patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result)
-            #print(f"Pt outcome is {pt.pt_outcome}")
+            if hems_res != None:
 
-        if self.amb_data:
-            ambulance = Ambulance()
+                patient.hems_callsign_group = hems_res.callsign_group.iloc[0]
+                #print(f"Patient csg is {patient.hems_callsign_group}")
+                patient.hems_vehicle_type = hems_res.vehicle_type
 
-        # Add boolean to determine whether the patient is still within the simulation warm-up
-        # period. If so, then we will not record the patient progress
-        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
+                patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+                #print(f"Patient HEMS result is {patient.hems_result}")
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1:
-                self.add_patient_result_row(patient, hems, "HEMS call start", "event")
-            
-            if self.amb_data:
-                self.add_patient_result_row(patient, ambulance, "AMB call start", "event")
+                patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result)
 
-        # Allocation time --------------
+                #print(f"Patient outcome is {patient.pt_outcome}")
 
-        if patient.hems_case == 1:
-            allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation')
-            yield self.env.timeout(allocation_time)
+            else:
+                print("No HEMS available")
+                self.add_patient_result_row(patient, "No HEMS available", "event")
+                self.add_patient_result_row(patient, "depart", "arrival_departure")
+                hems_avail = False
 
-        if self.amb_data:
-                print('Ambulance allocation time')
+            if hems_avail:
+                #print('Inside hems_avail')
+                if self.amb_data:
+                    ambulance = Ambulance()
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+                # Add boolean to determine whether the patient is still within the simulation warm-up
+                # period. If so, then we will not record the patient progress
+                not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1:
-                if patient.hems_result != "Stand Down Before Mobile":
-                    self.add_patient_result_row(patient, hems, "HEMS allocated to call", "event")
-                else:
-                    self.add_patient_result_row(patient, hems, "HEMS stand down before mobile", "event")
+                patient.time_in_sim = self.env.now - patient_enters_sim
 
-            if self.amb_data:
-                print('Ambulance time to allocation')
+                if not_in_warm_up_period:
+                    if patient.hems_case == 1:
+                        #print(f"Adding result row with csg {patient.hems_callsign_group}")
+                        self.add_patient_result_row(patient, "HEMS call start", "event")
+                    
+                    if self.amb_data:
+                        self.add_patient_result_row(patient,  "AMB call start", "event")
 
+                # Allocation time --------------
 
-        # Mobilisation time ---------------
+                if patient.hems_case == 1:
+                    allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation')
+                    #print(f"Vehicle type {patient.hems_vehicle_type} and allocation time is {allocation_time}")
+                    yield self.env.timeout(allocation_time)
 
-        # Calculate mobile to time at scene (or stood down before)
-        if patient.hems_case == 1:
-            mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile')
-            yield self.env.timeout(mobile_time)
+                if self.amb_data:
+                        print('Ambulance allocation time')
 
-        if self.amb_data:
-                # Determine allocation time for ambulance
-                # Yield until done
-                print('Ambulance time to going mobile')
+                patient.time_in_sim = self.env.now - patient_enters_sim
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+                if not_in_warm_up_period:
+                    if patient.hems_case == 1:
+                        if patient.hems_result != "Stand Down Before Mobile":
+                            self.add_patient_result_row(patient, "HEMS allocated to call", "event")
+                        else:
+                            self.add_patient_result_row(patient, "HEMS stand down before mobile", "event")
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1:
-                self.add_patient_result_row(patient, hems, "HEMS mobile", "event")
-
-            if self.amb_data:
-                print('Ambulance time to allocation')
-
-        # On scene ---------------
-
-        if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
-            tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene')
-            yield self.env.timeout(tts_time)
-
-        if self.amb_data:
-                # Determine allocation time for ambulance
-                # Yield until done
-                print('Ambulance time to scene')
-
-        patient.time_in_sim = self.env.now - patient_enters_sim
-
-        if not_in_warm_up_period:
-            if (patient.hems_case == 1):
-                if patient.hems_result != "Stand Down En Route":
-                    self.add_patient_result_row(patient, hems, "HEMS on scene", "event")
-                else:
-                    self.add_patient_result_row(patient, hems, "HEMS stand down en route","event")
-
-            if self.amb_data:
-                print('Ambulance on scene time')
+                    if self.amb_data:
+                        print('Ambulance time to allocation')
 
 
-        # Leaving scene ------------
+                # Mobilisation time ---------------
 
-        if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
-            tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene')
-            yield self.env.timeout(tos_time)
+                # Calculate mobile to time at scene (or stood down before)
+                if patient.hems_case == 1:
+                    mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile')
+                    yield self.env.timeout(mobile_time)
 
-        if self.amb_data:
-            print('Ambulance on scene duration')
+                if self.amb_data:
+                        # Determine allocation time for ambulance
+                        # Yield until done
+                        print('Ambulance time to going mobile')
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+                patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if (patient.hems_case == 1):
-                if no_HEMS_hospital == False:
-                    self.add_patient_result_row(patient, hems, "HEMS leaving scene", "event")
-                else:
-                    self.add_patient_result_row(patient, hems, f"HEMS {patient.hems_result.lower()}", "event")
+                if not_in_warm_up_period:
+                    if patient.hems_case == 1:
+                        self.add_patient_result_row(patient,  "HEMS mobile", "event")
 
-            if self.amb_data:
-                print('Ambulance leaving scene time')
+                    if self.amb_data:
+                        print('Ambulance time to allocation')
+
+                # On scene ---------------
+
+                if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
+                    tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene')
+                    yield self.env.timeout(tts_time)
+
+                if self.amb_data:
+                        # Determine allocation time for ambulance
+                        # Yield until done
+                        print('Ambulance time to scene')
+
+                patient.time_in_sim = self.env.now - patient_enters_sim
+
+                if not_in_warm_up_period:
+                    if (patient.hems_case == 1):
+                        if patient.hems_result != "Stand Down En Route":
+                            self.add_patient_result_row(patient,  "HEMS on scene", "event")
+                        else:
+                            self.add_patient_result_row(patient,  "HEMS stand down en route","event")
+
+                    if self.amb_data:
+                        print('Ambulance on scene time')
 
 
-        # Arrived destination time ------------
+                # Leaving scene ------------
 
-        if (patient.hems_case == 1) and no_HEMS_hospital == False:
-            travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital')
-            yield self.env.timeout(travel_time)
+                if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
+                    tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene')
+                    yield self.env.timeout(tos_time)
 
-        if self.amb_data:
-            print('Ambulance travel time')
+                if self.amb_data:
+                    print('Ambulance on scene duration')
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+                patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if (patient.hems_case == 1) and no_HEMS_hospital == False:
-                self.add_patient_result_row(patient, hems, "HEMS arrived destination", "event")
+                if not_in_warm_up_period:
+                    if (patient.hems_case == 1):
+                        if no_HEMS_hospital == False:
+                            self.add_patient_result_row(patient, "HEMS leaving scene", "event")
+                        else:
+                            self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "event")
 
-        if self.amb_data:
-            print('Ambulance at destination time')
+                    if self.amb_data:
+                        print('Ambulance leaving scene time')
 
 
-        # Handover time ---------------
+                # Arrived destination time ------------
 
-        # Not currently available
+                if (patient.hems_case == 1) and no_HEMS_hospital == False:
+                    travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital')
+                    yield self.env.timeout(travel_time)
 
-        # Clear time ------------
+                if self.amb_data:
+                    print('Ambulance travel time')
 
-        if (patient.hems_case == 1):
-            clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear')
-            yield self.env.timeout(clear_time)
-            self.hems_resources.put(hems)
+                patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if self.amb_data:
-            print('Ambulance clear time')
+                if not_in_warm_up_period:
+                    if (patient.hems_case == 1) and no_HEMS_hospital == False:
+                        self.add_patient_result_row(patient, "HEMS arrived destination", "event")
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+                if self.amb_data:
+                    print('Ambulance at destination time')
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1:
-                self.add_patient_result_row(patient, hems, "HEMS clear", "event")
 
-            if self.amb_data:
-                print('Ambulance clear time')
+                # Handover time ---------------
 
-        if not_in_warm_up_period:
-            #print(f"Depart for patient {patient.id} on run {self.run_number}")
-            self.add_patient_result_row(patient, None, "depart", "arrival_departure")
- 
+                # Not currently available
 
+                # Clear time ------------
+
+                if (patient.hems_case == 1):
+                    clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear')
+                    yield self.env.timeout(clear_time)
+
+                    if hems_res != None:
+                        #print(f"Returning resource {hems_res.callsign}")
+                        self.hems_resources.return_resource(hems_res)
+
+                if self.amb_data:
+                    print('Ambulance clear time')
+
+                patient.time_in_sim = self.env.now - patient_enters_sim
+
+                if not_in_warm_up_period:
+                    if patient.hems_case == 1:
+                        self.add_patient_result_row(patient,"HEMS clear", "event")
+
+                    if self.amb_data:
+                        print('Ambulance clear time')
+
+                if not_in_warm_up_period:
+                    #print(f"Depart for patient {patient.id} on run {self.run_number}")
+                    self.add_patient_result_row(patient, "depart", "arrival_departure")
+
+            else:
+                print("HEMS not available")
+    
 
     def add_patient_result_row(self,
                                patient: Patient,
-                               resource: None|HEMS|Ambulance,
                                time_type: str,
                                event_type: str,
                                **kwargs) -> None :
@@ -330,10 +368,6 @@ class DES_HEMS:
             Convenience function to create a row of data for the results table
 
         """
-        if resource is not None:
-            callsign = resource.callsign
-        else:
-            callsign = None
 
         results = {
             "P_ID"              : patient.id,
@@ -354,6 +388,8 @@ class DES_HEMS:
             "sex"               : patient.sex,
         }
 
+        #print(results)
+
         # Add any additional items passed in **kwargs
         for key, value in kwargs.items():
              results[key] = value
@@ -368,6 +404,7 @@ class DES_HEMS:
         """
 
         self.results_list.append(results)
+
 
     def convert_results_to_df(self, results: dict) -> None:
         self.results_df = pd.DataFrame(results)

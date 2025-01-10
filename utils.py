@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 import random
 import numpy as np
 import pandas as pd
@@ -108,13 +108,13 @@ class Utils:
 
         #print(f"IA with values hour {hour} and quarter {quarter}")
         df = self.inter_arrival_rate_df
-        mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_inter_arrival_time']
+        mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_iat']
 
         # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
-        # then iloc value broken. Set default to 60 in that case.
+        # then iloc value broken. Set default to 120 in that case.
 
-        # return 60 if len(mean_ia) == 0 else mean_ia.iloc[0]
-        return mean_ia.iloc[0]
+        return 120 if len(mean_ia) == 0 else mean_ia.iloc[0]
+        #return mean_ia.iloc[0]
 
 
     def ampds_code_selection(self, hour: int) -> int:
@@ -126,6 +126,29 @@ class Utils:
         df = self.hour_by_ampds_df[self.hour_by_ampds_df['hour'] == hour]
         
         return pd.Series.sample(df['ampds_card'], weights = df['proportion']).iloc[0]
+    
+    
+    def is_time_in_range(self, current: int, start: int, end: int) -> bool:
+        """
+        Function to check if a given time is within a range of start and end times on a 24-hour clock.
+        
+        Parameters:
+        - current (datetime.time): The time to check.
+        - start (datetime.time): The start time.
+        - end (datetime.time): The end time.
+        
+        """
+
+        current = time(current, 0)
+        start = time(start, 0)
+        end = time(end, 0)
+
+        if start <= end:
+            # Range does not cross midnight
+            return start <= current < end
+        else:
+            # Range crosses midnight
+            return current >= start or current < end
 
 
     def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
@@ -141,11 +164,7 @@ class Utils:
             (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
         ]
 
-        #print(df)
-        sample_cg = pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
-        #print(sample_cg)
-        
-        return sample_cg
+        return  pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
 
     def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
         """
@@ -153,13 +172,10 @@ class Utils:
             based on the hour of day and AMPDS card
         """
 
-        #print(f"Vehicle type with month {month} and cg {callsign_group}")
         df = self.vehicle_type_by_month_df[
             (self.vehicle_type_by_month_df['month'] == int(month)) &
             (self.vehicle_type_by_month_df['callsign_group'] == int(callsign_group))
         ]
-        
-        #print(df)
 
         return pd.Series.sample(df['vehicle_type'], weights = df['proportion']).iloc[0]
 
@@ -241,7 +257,6 @@ class Utils:
         sampled_time = self.sample_from_distribution(distribution)
 
         return sampled_time
-        
 
     def sample_from_distribution(self, distr: dict) -> float:
         """
