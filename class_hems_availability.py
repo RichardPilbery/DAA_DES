@@ -85,46 +85,66 @@ class HEMSAvailability():
 
 
     def allocate_resource(self, pt: Patient):
-        """Attempt to allocate a resource from the preferred group."""
-        
-        print(f"Allocating resource with callsign group {pt.hems_pref_callsign_group} and vehicle {pt.hems_pref_vehicle_type}")
+        """
+        Attempt to allocate a resource from the preferred group.
+        """
 
-        pref_res = self.preferred_group_available(pt.hems_pref_callsign_group, pt.hems_pref_vehicle_type)
+        print(f"Attempting to allocate resource with callsign group {pt.hems_pref_callsign_group} and preferred vehicle type {pt.hems_pref_vehicle_type}")
+
+        # Pref Res will be either
+        # - a HEMS resource object if the preferred callsign group+vehicle is available
+        # - OR if some vehicle from the preferred callsign group is available even if the preferred vehicle is not
+        # - OR None if neither of those conditions are met
+        pref_res = self.preferred_group_available(
+            preferred_group=pt.hems_pref_callsign_group,
+            preferred_vehicle_type=pt.hems_pref_vehicle_type
+            )
 
         resource_event: Event = self.env.event()
 
         def process():
             def resource_filter(resource: HEMS, pref_res: HEMS):
+                """
+                Checks whether the resource the incident wants is available in the
+                simpy FilterStore
+                Returns True if resource is
+                - not in use
+                - on shift
+                Otherwise, returns False
+                """
                 #print(f"Resource filter with hour {hour} and qtr {qtr}")
+
+                # If the resource **is not currently in use** AND **is currently on shift**...
                 if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr):
+                    # Check whether the resource is the preferred resource
                     if pref_res != None:
-                        #print(f"{resource.callsign} and {pre_res.callsign}")
                         if resource.callsign == pref_res.callsign:
-                            #print("Preferred resource available")
+                            print(f"Preferred resource {pref_res.callsign} available")
                             return True
                     else:
-                        #print("Other resource available")
+                        print("Other (non-preferred) resource available")
                         return True
-            
-                return False
-            
-            request = self.store.get(lambda item: resource_filter(item, pref_res))
+                else:
+                    # If neither of these are available, return 'False'
+                    # print("Neither preferred or non-preferred resource available")
+                    return False
 
-            try:
-                
-                resource: HEMS = yield request
-                #print(resource)
-                resource.in_use = True
-                #print(resource)
-                #print(f"Allocating HEMS resource {resource.callsign} at time {hour}")
-                pt.hems_callsign_group = resource.callsign_group.iloc[0]
-                pt.hems_vehicle_type = resource.vehicle_type
 
-                resource_event.succeed(resource)
-                
-            except Interrupt:
-                print(f"No HEMS resource available using Ambulance")
-                resource_event.succeed()
+            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as request:
+                resource = yield request | self.env.timeout(0.1)
+
+                if request in resource:
+                    print(f"Allocating HEMS resource at time {self.env.now:.3f}")
+                    # print(request)
+                    # print(resource)
+                    resource.in_use = True
+                    pt.hems_callsign_group = resource[request].callsign_group.iloc[0]
+                    pt.hems_vehicle_type = resource[request].vehicle_type
+
+                    resource_event.succeed(resource[request])
+                else:
+                    print(f"No HEMS (helimed or ccc) resource available; using Non-DAAT land ambulance")
+                    resource_event.succeed()
 
         self.env.process(process())
     
