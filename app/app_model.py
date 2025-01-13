@@ -44,7 +44,7 @@ with st.sidebar:
 
     amb_data = st.toggle("Model ambulance service data", value=False)
 
-    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 30, 7)
+    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 365, 7)
 
     warm_up_duration =  st.slider("Warm-up Duration (hours)", 0, 24*10, 0)
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
