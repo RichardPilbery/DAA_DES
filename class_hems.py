@@ -9,10 +9,10 @@ class HEMS(Ambulance):
 
         This class defines a HEMS resource
 
-    
+
     """
 
-    def __init__(self, callsign: str):
+    def __init__(self, callsign: str, resource_id=None):
         # Inherit all parent class functions
         super().__init__(ambulance_type = "HEMS")
         self.utilityClass = Utils()
@@ -39,8 +39,9 @@ class HEMS(Ambulance):
         self.service_end_date = 0
 
         self.in_use = False
-        
-        
+        self.resource_id = resource_id
+
+
     def operational_after_service(self, current_time):
         """
             Update service status of HEMS' resources
