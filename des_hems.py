@@ -413,7 +413,11 @@ class DES_HEMS:
 
     def convert_results_to_df(self, results: dict) -> None:
         self.results_df = pd.DataFrame(results)
-        self.results_df.set_index("P_ID", inplace=True)
+        try:
+            self.results_df.set_index("P_ID", inplace=True)
+        # TODO - Improve error handling here
+        except KeyError:
+            pass
 
     def write_all_results(self) -> None:
         """
