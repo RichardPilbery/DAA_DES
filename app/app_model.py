@@ -113,16 +113,17 @@ if button_run_pressed:
         tab_names = [
              "Summary Visualisations",
              "Full Event Dataset",
-             "Debugging Visualisations"
+             "Debugging Visualisations - Patients",
+             "Debugging Visualisations - Resources"
              ]
 
         if create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
             )
         else:
-            tab1, tab2, tab3 = st.tabs(
+            tab1, tab2, tab3, tab4 = st.tabs(
                 tab_names
             )
 
@@ -259,10 +260,27 @@ if button_run_pressed:
 
             patient_viz()
 
+        with tab4:
+            st.subheader("Resource Use")
+
+            resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
+            with st.expander("Click here to see the timings of resource use"):
+                st.dataframe(resource_use_events_only)
+                st.dataframe(resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"))
+
+            st.plotly_chart(
+                px.scatter(
+                resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
+                x="value",
+                y="time_type",
+                color="event_type"
+                )
+            )
+
         if create_animation_input:
-            with tab4:
+            with tab5:
                 event_position_df = pd.DataFrame([
-                
+
                     {'event': 'HEMS call start',
                     'x':  10, 'y': 600, 'label': "HEMS Call Start"},
 
