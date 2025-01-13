@@ -24,7 +24,9 @@ class HEMSAvailability():
 
         # Populate the store with HEMS resources
         for index, row in self.utilityClass.HEMS_ROTA.iterrows():
-            self.store.put(HEMS(index))
+            print(f"Populating resource store: HEMS({index})")
+            self.store.put(HEMS(index, resource_id=index))
+
 
 
     def add_hems(self):
