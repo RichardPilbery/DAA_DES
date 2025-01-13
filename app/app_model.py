@@ -194,7 +194,7 @@ if button_run_pressed:
                     )
 
             st.subheader("Event Counts")
-            st.write("Period: {sim_duration_input} days")
+            st.write(f"Period: {sim_duration_input} days")
 
             # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
 
