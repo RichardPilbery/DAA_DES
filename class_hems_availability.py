@@ -35,20 +35,48 @@ class HEMSAvailability():
         """
         pass
 
-    
-    def preferred_group_available(self, preferred_group, preferred_vehicle_type):
 
+    def preferred_group_available(self, preferred_group, preferred_vehicle_type):
+        """
+        Check whether the preferred resource group is available and respond accordingly
+        """
+        # Initialise object HEMS as a placeholder object
         hems = HEMS
+        # Initialise variable 'preferred' to False
         preferred = False
+
+        # Iterates through items **available** in store at the time the function is called
         for h in self.store.items:
-            #print(f"pref group is {preferred_group} and pref_veh is {preferred_vehicle_type} and h vehicle is {h.vehicle_type} and h callsing group is {h.callsign_group.iloc[0]}")
+            # print(f"pref group is {preferred_group} and pref_veh is {preferred_vehicle_type} and h vehicle is {h.vehicle_type} and h callsign group is {h.callsign_group.iloc[0]}")
             #print(int(h.callsign_group.iloc[0]) == int(preferred_group))
+            # print(f"int(h.callsign_group.iloc[0]): {int(h.callsign_group.iloc[0])}")
+            # print(f"int(preferred_group): {int(preferred_group)}")
+
+            # If callsign group is preferred group AND is preferred vehicle type, returns that item at that point
+            # Rest of code will not be reached as the return statement will terminate this for loop as soon as
+            # this condition is met
+            # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
+            # so return)
             if int(h.callsign_group.iloc[0]) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
                 return h
+
+            # If it's the preferred group but not the preferred vehicle type, the variable
+            # hems becomes the HEMS resource object that we are currently looking at in the store
+            # so we will basically - in the event of not finding the exact resource we want - find
+            # the next best thing from the callsign group
+            # SR note 13/1/25 - double check this logic - as we would send a critical care car over
+            # a different available helicopter if I'm interpreting this correctly. Just need to confirm
+            # this was the order of priority agreed on.
             elif h.callsign_group.iloc[0] == preferred_group:
                 hems = h
                 preferred = True
-            
+
+        # If we have not found an exact match for preferred callsign and vehicle type out of the
+        # resources currently available in our store, we will then reach this code
+        # If the preferred variable was set to True at any point, we will refer HEMS
+        # Note that this will be the last resource that met the condition h.callsign_group.iloc[0] == preferred_group
+        # which may be relevant if there is more than one other resource within that callsign group
+        # (though this is not currently a situation that occurs within the naming conventions at DAAT)
         if preferred:
             return hems
         else:
