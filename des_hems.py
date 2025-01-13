@@ -138,9 +138,13 @@ class DES_HEMS:
 
                     hems_allocation: HEMS = yield self.hems_resources.allocate_resource(pt)
 
-                    print(f"allocated {hems_allocation.callsign}")
+                    if hems_allocation is not None:
+                        print(f"allocated {hems_allocation.callsign}")
+                        self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
-                    self.env.process(self.patient_journey(hems_allocation, pt))
+                        self.env.process(self.patient_journey(hems_allocation, pt))
+                    else:
+                        print("No HEMS resource available - non-DAAT land crew sent")
 
                     # hems_allocation_event.callbacks.append(lambda event: self.log(event, pt))
                     # hems_allocation_event.callbacks.append(lambda event: self.patient_journey(event, pt))
@@ -336,8 +340,9 @@ class DES_HEMS:
                     yield self.env.timeout(clear_time)
 
                     if hems_res != None:
-                        #print(f"Returning resource {hems_res.callsign}")
+                        print(f"Returning resource {hems_res.callsign}")
                         self.hems_resources.return_resource(hems_res)
+                        self.add_patient_result_row(patient, hems_res.callsign, "resource_use_end")
 
                 if self.amb_data:
                     print('Ambulance clear time')
