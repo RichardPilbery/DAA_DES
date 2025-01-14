@@ -138,9 +138,13 @@ class DES_HEMS:
 
                     hems_allocation: HEMS = yield self.hems_resources.allocate_resource(pt)
 
-                    print(f"allocated {hems_allocation.callsign}")
+                    if hems_allocation is not None:
+                        print(f"allocated {hems_allocation.callsign}")
+                        self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
-                    self.env.process(self.patient_journey(hems_allocation, pt))
+                        self.env.process(self.patient_journey(hems_allocation, pt))
+                    else:
+                        print("No HEMS resource available - non-DAAT land crew sent")
 
                     # hems_allocation_event.callbacks.append(lambda event: self.log(event, pt))
                     # hems_allocation_event.callbacks.append(lambda event: self.patient_journey(event, pt))
@@ -192,7 +196,7 @@ class DES_HEMS:
 
             else:
                 print("No HEMS available")
-                self.add_patient_result_row(patient, "No HEMS available", "event")
+                self.add_patient_result_row(patient, "No HEMS available", "queue")
                 self.add_patient_result_row(patient, "depart", "arrival_departure")
                 hems_avail = False
 
@@ -210,10 +214,10 @@ class DES_HEMS:
                 if not_in_warm_up_period:
                     if patient.hems_case == 1:
                         #print(f"Adding result row with csg {patient.hems_callsign_group}")
-                        self.add_patient_result_row(patient, "HEMS call start", "event")
-                    
+                        self.add_patient_result_row(patient, "HEMS call start", "queue")
+
                     if self.amb_data:
-                        self.add_patient_result_row(patient,  "AMB call start", "event")
+                        self.add_patient_result_row(patient,  "AMB call start", "queue")
 
                 # Allocation time --------------
 
@@ -230,9 +234,9 @@ class DES_HEMS:
                 if not_in_warm_up_period:
                     if patient.hems_case == 1:
                         if patient.hems_result != "Stand Down Before Mobile":
-                            self.add_patient_result_row(patient, "HEMS allocated to call", "event")
+                            self.add_patient_result_row(patient, "HEMS allocated to call", "queue")
                         else:
-                            self.add_patient_result_row(patient, "HEMS stand down before mobile", "event")
+                            self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
 
                     if self.amb_data:
                         print('Ambulance time to allocation')
@@ -254,7 +258,7 @@ class DES_HEMS:
 
                 if not_in_warm_up_period:
                     if patient.hems_case == 1:
-                        self.add_patient_result_row(patient,  "HEMS mobile", "event")
+                        self.add_patient_result_row(patient,  "HEMS mobile", "queue")
 
                     if self.amb_data:
                         print('Ambulance time to allocation')
@@ -275,9 +279,9 @@ class DES_HEMS:
                 if not_in_warm_up_period:
                     if (patient.hems_case == 1):
                         if patient.hems_result != "Stand Down En Route":
-                            self.add_patient_result_row(patient,  "HEMS on scene", "event")
+                            self.add_patient_result_row(patient,  "HEMS on scene", "queue")
                         else:
-                            self.add_patient_result_row(patient,  "HEMS stand down en route","event")
+                            self.add_patient_result_row(patient,  "HEMS stand down en route","queue")
 
                     if self.amb_data:
                         print('Ambulance on scene time')
@@ -297,9 +301,9 @@ class DES_HEMS:
                 if not_in_warm_up_period:
                     if (patient.hems_case == 1) and (patient.hems_result != "Stand Down En Route"):
                         if no_HEMS_hospital == False:
-                            self.add_patient_result_row(patient, "HEMS leaving scene", "event")
+                            self.add_patient_result_row(patient, "HEMS leaving scene", "queue")
                         else:
-                            self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "event")
+                            self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "queue")
 
                     if self.amb_data:
                         print('Ambulance leaving scene time')
@@ -318,8 +322,8 @@ class DES_HEMS:
 
                 if not_in_warm_up_period:
                     if (patient.hems_case == 1) and no_HEMS_hospital == False:
-                        
-                        self.add_patient_result_row(patient, "HEMS arrived destination", "event")
+
+                        self.add_patient_result_row(patient, "HEMS arrived destination", "queue")
 
                 if self.amb_data:
                     print('Ambulance at destination time')
@@ -336,8 +340,9 @@ class DES_HEMS:
                     yield self.env.timeout(clear_time)
 
                     if hems_res != None:
-                        #print(f"Returning resource {hems_res.callsign}")
+                        print(f"Returning resource {hems_res.callsign}")
                         self.hems_resources.return_resource(hems_res)
+                        self.add_patient_result_row(patient, hems_res.callsign, "resource_use_end")
 
                 if self.amb_data:
                     print('Ambulance clear time')
@@ -346,7 +351,7 @@ class DES_HEMS:
 
                 if not_in_warm_up_period:
                     if patient.hems_case == 1:
-                        self.add_patient_result_row(patient,"HEMS clear", "event")
+                        self.add_patient_result_row(patient,"HEMS clear", "queue")
 
                     if self.amb_data:
                         print('Ambulance clear time')
@@ -408,7 +413,11 @@ class DES_HEMS:
 
     def convert_results_to_df(self, results: dict) -> None:
         self.results_df = pd.DataFrame(results)
-        self.results_df.set_index("P_ID", inplace=True)
+        try:
+            self.results_df.set_index("P_ID", inplace=True)
+        # TODO - Improve error handling here
+        except KeyError:
+            pass
 
     def write_all_results(self) -> None:
         """

@@ -9,8 +9,8 @@ import re
 
 # Plotting
 import plotly.express as px
-from vidigi.animation import animate_activity_log
-from vidigi.prep import reshape_for_animations
+from vidigi.animation import animate_activity_log, generate_animation
+from vidigi.prep import reshape_for_animations, generate_animation_df
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -44,7 +44,7 @@ with st.sidebar:
 
     amb_data = st.toggle("Model ambulance service data", value=False)
 
-    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 30, 7)
+    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 365, 7)
 
     warm_up_duration =  st.slider("Warm-up Duration (hours)", 0, 24*10, 0)
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
@@ -81,8 +81,8 @@ if button_run_pressed:
                 run_results = runSim(
                         run = run,
                         total_runs = number_of_runs_input,
-                        sim_duration = sim_duration_input * 24 * 60,
-                        warm_up_time = warm_up_duration * 60,
+                        sim_duration = float(sim_duration_input * 24 * 60),
+                        warm_up_time = float(warm_up_duration * 60),
                         sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input),
                         amb_data=amb_data
                     )
@@ -101,8 +101,8 @@ if button_run_pressed:
             print("Running in parallel")
             parallelProcessJoblib(
                         total_runs = number_of_runs_input,
-                        sim_duration = sim_duration_input * 24 * 60,
-                        warm_up_time = warm_up_duration * 60,
+                        sim_duration = float(sim_duration_input * 24 * 60),
+                        warm_up_time = float(warm_up_duration * 60),
                         sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input),
                         amb_data = amb_data
             )
@@ -113,16 +113,17 @@ if button_run_pressed:
         tab_names = [
              "Summary Visualisations",
              "Full Event Dataset",
-             "Debugging Visualisations"
+             "Debugging Visualisations - Patients",
+             "Debugging Visualisations - Resources"
              ]
 
         if create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
             )
         else:
-            tab1, tab2, tab3 = st.tabs(
+            tab1, tab2, tab3, tab4 = st.tabs(
                 tab_names
             )
 
@@ -194,7 +195,7 @@ if button_run_pressed:
                     )
 
             st.subheader("Event Counts")
-            st.write("Period: {sim_duration_input} days")
+            st.write(f"Period: {sim_duration_input} days")
 
             # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
 
@@ -236,7 +237,6 @@ if button_run_pressed:
                 )
             )
 
-
             @st.fragment
             def patient_viz():
                 st.subheader("Per-patient journey exploration")
@@ -259,10 +259,29 @@ if button_run_pressed:
 
             patient_viz()
 
+        with tab4:
+            st.subheader("Resource Use")
+
+            resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
+            with st.expander("Click here to see the timings of resource use"):
+                st.dataframe(resource_use_events_only)
+                st.dataframe(resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"))
+
+            st.plotly_chart(
+                px.scatter(
+                resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
+                x="value",
+                y="time_type",
+                color="event_type"
+                )
+            )
+
         if create_animation_input:
-            with tab4:
+            with tab5:
+
+                st.error("Warning - this is not yet working as intended")
                 event_position_df = pd.DataFrame([
-                
+
                     {'event': 'HEMS call start',
                     'x':  10, 'y': 600, 'label': "HEMS Call Start"},
 
@@ -305,22 +324,104 @@ if button_run_pressed:
                 event_log = results_all_runs.reset_index().rename(
                                 columns = {"timestamp":"time",
                                 "P_ID": "patient",
-                                "time_type": "event",
+                                # "time_type": "event",
                                 "callsign_group": "pathway"}
                                 )
 
                 event_log['pathway'] = event_log['pathway'].fillna('Shared')
+                event_log['resource_id'] = 1
 
                 #print(event_log.head(50))
+                event_log['callsign'] = event_log['vehicle_type'].str[0].str.upper() + event_log['pathway'].astype(str)
+
+                event_log['event'] = event_log.apply(lambda row:
+                    row['time_type'] if row['time_type'] in ['arrival', 'depart'] else row['callsign'],
+                    axis=1)
+
+
+                with st.expander("See final event log"):
+                    st.dataframe(event_log[event_log["run_number"]==1])
+
+                event_position_df = pd.DataFrame([
+                    {'event': 'arrival',
+                     'x':  50, 'y': 400,
+                     'label': "Arrival" },
+
+                    {'event': 'H70',
+                     'x':  150, 'y': 275,
+                     'resource':'n_H70',
+                     'label': "H70 Attending"},
+
+                    {'event': 'CC70',
+                     'x':  150, 'y': 175,
+                     'resource':'n_CC70',
+                     'label': "CC70 Attending"},
+
+                   {'event': 'H71',
+                     'x':  325, 'y': 275,
+                     'resource':'n_H71',
+                     'label': "H71 Attending"},
+
+                    {'event': 'CC71',
+                     'x':  325, 'y': 175,
+                     'resource':'n_CC71',
+                     'label': "CC71 Attending"},
+
+                    {'event': 'CC72',
+                     'x':  475, 'y': 175,
+                     'resource':'n_CC72',
+                     'label': "CC72 Attending"},
+
+                    {'event': 'exit',
+                     'x':  270, 'y': 70,
+                     'label': "Exit"}
+
+                ])
+
+                class g():
+                    n_H70 = 1
+                    n_CC70 = 1
+                    n_H71 = 1
+                    n_CC71 = 1
+                    n_CC72 = 1
+
+                full_patient_df = reshape_for_animations(
+                    event_log[event_log["run_number"]==1],
+                    every_x_time_units=5,
+                    limit_duration=60*24*sim_duration_input,
+                    debug_mode=True
+                )
+
+                with st.expander("See step 1 animation dataframe"):
+                    st.dataframe(full_patient_df)
+
+                full_patient_df_with_position = generate_animation_df(full_patient_df=full_patient_df, event_position_df=event_position_df)
+
+                with st.expander("See step 2 animation dataframe"):
+                    st.dataframe(full_patient_df_with_position)
 
                 st.plotly_chart(
-                    animate_activity_log(
-                            event_log = event_log[event_log["run_number"]==1],
-                            event_position_df=event_position_df,
-                            setup_mode=True,
-                            debug_mode=True,
-                            every_x_time_units=10,
-                            limit_duration=60*24*1,
-                            time_display_units="dhm"
-                    )
+                    generate_animation(
+                        full_patient_df_plus_pos=full_patient_df_with_position,
+                        event_position_df=event_position_df,
+                        scenario=g(),
+                        plotly_height=750,
+                        # start_date=datetime.combine(sim_start_date_input, sim_start_time_input),
+                        # time_display_units="dhm"
+
+                                       )
                 )
+
+                # st.plotly_chart(
+                #     animate_activity_log(
+                #             event_log = event_log[event_log["run_number"]==1],
+                #             event_position_df=event_position_df,
+                #             scenario=g(),
+                #             setup_mode=True,
+                #             debug_mode=True,
+                #             every_x_time_units=10,
+                #             display_stage_labels=True,
+                #             limit_duration=60*24*sim_duration_input,
+                #             time_display_units="dhm"
+                #     )
+                # )
