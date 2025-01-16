@@ -214,7 +214,7 @@ class Utils:
 
         return 'Female' if (random.uniform(0, 1) < prob_female.iloc[0]) else 'Male'
     
-    def age_sampling(self, ampds_card: int) -> float:
+    def age_sampling(self, ampds_card: int, max_age: int) -> float:
         """
             This function will return the patient's age based
             on sampling from the distribution that matches the allocated AMPDS card
@@ -232,11 +232,12 @@ class Utils:
 
         # print(f"Getting age for {ampds_card}")
         # print(distribution)
-        
-        sampled_age = self.sample_from_distribution(distribution)
-        #print(f"Patient age is {sampled_age}")
 
-        return sampled_age
+        age = 100000
+        while age > max_age:
+            age = self.sample_from_distribution(distribution)
+        
+        return age
 
     def activity_time(self, vehicle_type: str, time_type: str) -> float:
         """

@@ -119,7 +119,7 @@ class DES_HEMS:
                 # Update patient instance with age, sex, AMPDS card, whether they are a HEMS' patient and if so, the HEMS result,
                 pt.ampds_card = self.utils.ampds_code_selection(pt.hour)
                 #print(f"AMPDS card is {pt.ampds_card}")
-                pt.age = self.utils.age_sampling(pt.ampds_card)
+                pt.age = self.utils.age_sampling(pt.ampds_card, 115)
                 pt.sex = self.utils.sex_selection(pt.ampds_card)
 
                 if self.amb_data:
