@@ -1,219 +1,703 @@
 P_ID,run_number,time_type,event_type,timestamp,timestamp_dt,day,hour,weekday,month,qtr,callsign_group,vehicle_type,ampds_card,age,sex
-1,1,HEMS allocated to call,event,14.0,2024-08-01 07:14:00.000000,Thu,7,weekday,8,3,70,helicopter,9,15.0,Male
-1,1,HEMS mobile,event,19.0,2024-08-01 07:19:00.000000,Thu,7,weekday,8,3,70,helicopter,9,15.0,Male
-1,1,HEMS stand down en route,event,19.0,2024-08-01 07:19:00.000000,Thu,7,weekday,8,3,70,helicopter,9,15.0,Male
-1,1,HEMS clear,event,24.0,2024-08-01 07:24:00.000000,Thu,7,weekday,8,3,70,helicopter,9,15.0,Male
-1,1,depart,arrival_departure,24.0,2024-08-01 07:24:00.000000,Thu,7,weekday,8,3,70,helicopter,9,15.0,Male
-2,1,arrival,arrival_departure,112.26762257425828,2024-08-01 08:52:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS call start,event,112.26762257425828,2024-08-01 08:52:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS allocated to call,event,117.26762257425828,2024-08-01 08:57:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS mobile,event,118.26762257425828,2024-08-01 08:58:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS on scene,event,127.26762257425828,2024-08-01 09:07:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS leaving scene,event,130.26762257425827,2024-08-01 09:10:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS arrived destination,event,165.26762257425827,2024-08-01 09:45:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,HEMS clear,event,203.26762257425827,2024-08-01 10:23:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-2,1,depart,arrival_departure,203.26762257425827,2024-08-01 10:23:16.057354,Thu,8,weekday,8,3,70,car,9,70.0,Male
-3,1,arrival,arrival_departure,228.79652276332934,2024-08-01 10:48:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-3,1,HEMS call start,event,228.79652276332934,2024-08-01 10:48:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-3,1,HEMS allocated to call,event,237.79652276332934,2024-08-01 10:57:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-3,1,HEMS mobile,event,241.79652276332934,2024-08-01 11:01:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-3,1,HEMS on scene,event,251.79652276332934,2024-08-01 11:11:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-3,1,HEMS leaving scene,event,257.79652276332934,2024-08-01 11:17:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-4,1,arrival,arrival_departure,261.59072000572223,2024-08-01 11:21:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-4,1,HEMS call start,event,261.59072000572223,2024-08-01 11:21:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-4,1,HEMS allocated to call,event,264.59072000572223,2024-08-01 11:24:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-4,1,HEMS mobile,event,265.59072000572223,2024-08-01 11:25:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-3,1,HEMS arrived destination,event,275.79652276332934,2024-08-01 11:35:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-4,1,HEMS on scene,event,277.59072000572223,2024-08-01 11:37:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-4,1,HEMS leaving scene,event,280.59072000572223,2024-08-01 11:40:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-3,1,HEMS clear,event,288.79652276332934,2024-08-01 11:48:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-3,1,depart,arrival_departure,288.79652276332934,2024-08-01 11:48:47.791366,Thu,10,weekday,8,3,71,helicopter,9,78.0,Male
-4,1,HEMS arrived destination,event,290.59072000572223,2024-08-01 11:50:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-4,1,HEMS clear,event,295.59072000572223,2024-08-01 11:55:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-4,1,depart,arrival_departure,295.59072000572223,2024-08-01 11:55:35.443200,Thu,11,weekday,8,3,71,car,17,69.0,Female
-5,1,arrival,arrival_departure,344.99556359438446,2024-08-01 12:44:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-5,1,HEMS call start,event,344.99556359438446,2024-08-01 12:44:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-5,1,HEMS allocated to call,event,351.99556359438446,2024-08-01 12:51:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-6,1,arrival,arrival_departure,355.72404435918855,2024-08-01 12:55:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-6,1,HEMS call start,event,355.72404435918855,2024-08-01 12:55:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-5,1,HEMS mobile,event,357.99556359438446,2024-08-01 12:57:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-5,1,HEMS on scene,event,370.99556359438446,2024-08-01 13:10:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-5,1,HEMS patient treated (not conveyed),event,376.99556359438446,2024-08-01 13:16:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-6,1,HEMS allocated to call,event,389.72404435918855,2024-08-01 13:29:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-5,1,HEMS clear,event,392.99556359438446,2024-08-01 13:32:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-5,1,depart,arrival_departure,392.99556359438446,2024-08-01 13:32:59.733816,Thu,12,weekday,8,3,70,helicopter,9,65.0,Male
-6,1,HEMS mobile,event,393.72404435918855,2024-08-01 13:33:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-6,1,HEMS on scene,event,418.72404435918855,2024-08-01 13:58:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-6,1,HEMS leaving scene,event,425.72404435918855,2024-08-01 14:05:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-7,1,arrival,arrival_departure,429.72526340191126,2024-08-01 14:09:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-7,1,HEMS call start,event,429.72526340191126,2024-08-01 14:09:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-7,1,HEMS allocated to call,event,448.72526340191126,2024-08-01 14:28:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-7,1,HEMS mobile,event,455.72526340191126,2024-08-01 14:35:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-6,1,HEMS arrived destination,event,456.72404435918855,2024-08-01 14:36:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-7,1,HEMS on scene,event,479.72526340191126,2024-08-01 14:59:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-7,1,HEMS leaving scene,event,484.72526340191126,2024-08-01 15:04:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-7,1,HEMS arrived destination,event,497.72526340191126,2024-08-01 15:17:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-8,1,arrival,arrival_departure,500.18636461307653,2024-08-01 15:20:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-8,1,HEMS call start,event,500.18636461307653,2024-08-01 15:20:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-7,1,HEMS clear,event,505.72526340191126,2024-08-01 15:25:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-7,1,depart,arrival_departure,505.72526340191126,2024-08-01 15:25:43.515804,Thu,14,weekday,8,3,70,helicopter,29,66.0,Male
-8,1,HEMS allocated to call,event,512.1863646130765,2024-08-01 15:32:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-8,1,HEMS mobile,event,513.1863646130765,2024-08-01 15:33:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-6,1,HEMS clear,event,515.7240443591886,2024-08-01 15:35:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-6,1,depart,arrival_departure,515.7240443591886,2024-08-01 15:35:43.442662,Thu,12,weekday,8,3,71,helicopter,28,69.0,Male
-8,1,HEMS on scene,event,538.1863646130765,2024-08-01 15:58:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-8,1,HEMS patient treated (not conveyed),event,541.1863646130765,2024-08-01 16:01:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-8,1,HEMS clear,event,553.1863646130765,2024-08-01 16:13:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-8,1,depart,arrival_departure,553.1863646130765,2024-08-01 16:13:11.181877,Thu,15,weekday,8,3,72,car,29,95.0,Female
-9,1,arrival,arrival_departure,593.3223342931155,2024-08-01 16:53:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-9,1,HEMS call start,event,593.3223342931155,2024-08-01 16:53:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-9,1,HEMS allocated to call,event,616.3223342931155,2024-08-01 17:16:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-9,1,HEMS mobile,event,620.3223342931155,2024-08-01 17:20:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-9,1,HEMS stand down en route,event,620.3223342931155,2024-08-01 17:20:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-10,1,arrival,arrival_departure,655.2337419026621,2024-08-01 17:55:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-10,1,HEMS call start,event,655.2337419026621,2024-08-01 17:55:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-9,1,HEMS clear,event,657.3223342931155,2024-08-01 17:57:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-9,1,depart,arrival_departure,657.3223342931155,2024-08-01 17:57:19.340058,Thu,16,weekday,8,3,70,helicopter,30,68.0,Male
-10,1,HEMS allocated to call,event,668.2337419026621,2024-08-01 18:08:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-10,1,HEMS mobile,event,672.2337419026621,2024-08-01 18:12:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-10,1,HEMS on scene,event,709.2337419026621,2024-08-01 18:49:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-11,1,arrival,arrival_departure,730.4480805329473,2024-08-01 19:10:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS call start,event,730.4480805329473,2024-08-01 19:10:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS allocated to call,event,733.4480805329473,2024-08-01 19:13:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS mobile,event,739.4480805329473,2024-08-01 19:19:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS on scene,event,760.4480805329473,2024-08-01 19:40:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS leaving scene,event,776.4480805329473,2024-08-01 19:56:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS arrived destination,event,823.4480805329473,2024-08-01 20:43:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,HEMS clear,event,838.4480805329473,2024-08-01 20:58:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-11,1,depart,arrival_departure,838.4480805329473,2024-08-01 20:58:26.884832,Thu,19,weekday,8,3,70,helicopter,29,16.0,Male
-12,1,arrival,arrival_departure,838.4480805329473,2024-08-01 20:58:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-12,1,HEMS call start,event,838.4480805329473,2024-08-01 20:58:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-12,1,HEMS allocated to call,event,843.4480805329473,2024-08-01 21:03:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-12,1,HEMS mobile,event,848.4480805329473,2024-08-01 21:08:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-12,1,HEMS stand down en route,event,848.4480805329473,2024-08-01 21:08:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-12,1,HEMS clear,event,863.4480805329473,2024-08-01 21:23:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-12,1,depart,arrival_departure,863.4480805329473,2024-08-01 21:23:26.884832,Thu,20,weekday,8,3,70,helicopter,12,5.0,Male
-13,1,arrival,arrival_departure,863.4480805329473,2024-08-01 21:23:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS call start,event,863.4480805329473,2024-08-01 21:23:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS allocated to call,event,878.4480805329473,2024-08-01 21:38:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS mobile,event,881.4480805329473,2024-08-01 21:41:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS on scene,event,910.4480805329473,2024-08-01 22:10:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS leaving scene,event,920.4480805329473,2024-08-01 22:20:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS arrived destination,event,951.4480805329473,2024-08-01 22:51:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,HEMS clear,event,966.4480805329473,2024-08-01 23:06:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-13,1,depart,arrival_departure,966.4480805329473,2024-08-01 23:06:26.884832,Thu,21,weekday,8,3,70,helicopter,23,40.0,Female
-14,1,arrival,arrival_departure,973.7147680678692,2024-08-01 23:13:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-14,1,HEMS call start,event,973.7147680678692,2024-08-01 23:13:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-14,1,HEMS allocated to call,event,977.7147680678692,2024-08-01 23:17:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-14,1,HEMS mobile,event,978.7147680678692,2024-08-01 23:18:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-14,1,HEMS stand down en route,event,978.7147680678692,2024-08-01 23:18:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-14,1,HEMS clear,event,1065.714768067869,2024-08-02 00:45:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-14,1,depart,arrival_departure,1065.714768067869,2024-08-02 00:45:42.886084,Thu,23,weekday,8,3,70,helicopter,9,70.0,Male
-15,1,arrival,arrival_departure,1609.9196918835505,2024-08-02 09:49:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-15,1,HEMS call start,event,1609.9196918835505,2024-08-02 09:49:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-15,1,HEMS allocated to call,event,1611.9196918835505,2024-08-02 09:51:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-15,1,HEMS mobile,event,1618.9196918835505,2024-08-02 09:58:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-15,1,HEMS stand down en route,event,1618.9196918835505,2024-08-02 09:58:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-15,1,HEMS clear,event,1641.9196918835505,2024-08-02 10:21:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-15,1,depart,arrival_departure,1641.9196918835505,2024-08-02 10:21:55.181513,Fri,9,weekday,8,3,71,helicopter,17,83.0,Female
-16,1,arrival,arrival_departure,1735.5490655438955,2024-08-02 11:55:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-16,1,HEMS call start,event,1735.5490655438955,2024-08-02 11:55:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-17,1,arrival,arrival_departure,1754.0327361306036,2024-08-02 12:14:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-17,1,HEMS call start,event,1754.0327361306036,2024-08-02 12:14:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-16,1,HEMS allocated to call,event,1793.5490655438955,2024-08-02 12:53:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-16,1,HEMS mobile,event,1795.5490655438955,2024-08-02 12:55:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-10,1,HEMS landed but no patient contact,event,1801.2337419026621,2024-08-02 13:01:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-16,1,HEMS on scene,event,1805.5490655438955,2024-08-02 13:05:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-16,1,HEMS patient treated (not conveyed),event,1809.5490655438955,2024-08-02 13:09:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-17,1,HEMS allocated to call,event,1836.0327361306036,2024-08-02 13:36:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-17,1,HEMS mobile,event,1837.0327361306036,2024-08-02 13:37:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-17,1,HEMS on scene,event,1839.0327361306036,2024-08-02 13:39:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-17,1,HEMS patient treated (not conveyed),event,1842.0327361306036,2024-08-02 13:42:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-18,1,arrival,arrival_departure,1842.7023727018322,2024-08-02 13:42:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-18,1,HEMS call start,event,1842.7023727018322,2024-08-02 13:42:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-10,1,HEMS clear,event,1847.2337419026621,2024-08-02 13:47:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-10,1,depart,arrival_departure,1847.2337419026621,2024-08-02 13:47:14.024514,Thu,17,weekday,8,3,70,car,28,76.0,Female
-18,1,HEMS allocated to call,event,1854.7023727018322,2024-08-02 13:54:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-18,1,HEMS mobile,event,1855.7023727018322,2024-08-02 13:55:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-17,1,HEMS clear,event,1857.0327361306036,2024-08-02 13:57:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-17,1,depart,arrival_departure,1857.0327361306036,2024-08-02 13:57:01.964168,Fri,12,weekday,8,3,71,car,29,83.0,Female
-16,1,HEMS clear,event,1863.5490655438955,2024-08-02 14:03:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-16,1,depart,arrival_departure,1863.5490655438955,2024-08-02 14:03:32.943933,Fri,11,weekday,8,3,71,helicopter,30,83.0,Female
-18,1,HEMS on scene,event,1906.7023727018322,2024-08-02 14:46:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-18,1,HEMS patient treated (not conveyed),event,1909.7023727018322,2024-08-02 14:49:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-19,1,arrival,arrival_departure,1920.917846178541,2024-08-02 15:00:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-19,1,HEMS call start,event,1920.917846178541,2024-08-02 15:00:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-18,1,HEMS clear,event,1930.7023727018322,2024-08-02 15:10:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-18,1,depart,arrival_departure,1930.7023727018322,2024-08-02 15:10:42.142362,Fri,13,weekday,8,3,72,car,17,73.0,Female
-19,1,HEMS allocated to call,event,1935.917846178541,2024-08-02 15:15:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-19,1,HEMS mobile,event,1941.917846178541,2024-08-02 15:21:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-19,1,HEMS on scene,event,1968.917846178541,2024-08-02 15:48:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-19,1,HEMS leaving scene,event,1973.917846178541,2024-08-02 15:53:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-20,1,arrival,arrival_departure,1994.0969821808926,2024-08-02 16:14:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-20,1,HEMS call start,event,1994.0969821808926,2024-08-02 16:14:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-19,1,HEMS arrived destination,event,1999.917846178541,2024-08-02 16:19:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-20,1,HEMS allocated to call,event,2009.0969821808926,2024-08-02 16:29:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-20,1,HEMS mobile,event,2010.0969821808926,2024-08-02 16:30:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-21,1,arrival,arrival_departure,2013.7157715155688,2024-08-02 16:33:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-21,1,HEMS call start,event,2013.7157715155688,2024-08-02 16:33:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-22,1,arrival,arrival_departure,2014.3522460340835,2024-08-02 16:34:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-22,1,HEMS call start,event,2014.3522460340835,2024-08-02 16:34:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-19,1,HEMS clear,event,2019.917846178541,2024-08-02 16:39:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-19,1,depart,arrival_departure,2019.917846178541,2024-08-02 16:39:55.070771,Fri,15,weekday,8,3,70,helicopter,29,27.0,Female
-21,1,HEMS allocated to call,event,2020.7157715155688,2024-08-02 16:40:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-21,1,HEMS mobile,event,2021.7157715155688,2024-08-02 16:41:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-20,1,HEMS on scene,event,2035.0969821808926,2024-08-02 16:55:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-20,1,HEMS landed but no patient contact,event,2038.0969821808926,2024-08-02 16:58:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-21,1,HEMS on scene,event,2042.7157715155688,2024-08-02 17:02:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-21,1,HEMS landed but no patient contact,event,2045.7157715155688,2024-08-02 17:05:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-22,1,HEMS allocated to call,event,2061.3522460340837,2024-08-02 17:21:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-21,1,HEMS clear,event,2062.715771515569,2024-08-02 17:22:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-21,1,depart,arrival_departure,2062.715771515569,2024-08-02 17:22:42.946291,Fri,16,weekday,8,3,72,car,31,41.0,Male
-22,1,HEMS mobile,event,2063.3522460340837,2024-08-02 17:23:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-20,1,HEMS clear,event,2092.0969821808926,2024-08-02 17:52:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-20,1,depart,arrival_departure,2092.0969821808926,2024-08-02 17:52:05.818931,Fri,16,weekday,8,3,70,car,12,13.0,Female
-22,1,HEMS on scene,event,2125.3522460340837,2024-08-02 18:25:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-22,1,HEMS patient treated (not conveyed),event,2128.3522460340837,2024-08-02 18:28:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-22,1,HEMS clear,event,2153.3522460340837,2024-08-02 18:53:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-22,1,depart,arrival_departure,2153.3522460340837,2024-08-02 18:53:21.134762,Fri,16,weekday,8,3,71,car,30,13.0,Female
-23,1,arrival,arrival_departure,2167.895927695776,2024-08-02 19:07:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-23,1,HEMS call start,event,2167.895927695776,2024-08-02 19:07:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-24,1,arrival,arrival_departure,2182.510284781284,2024-08-02 19:22:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-24,1,HEMS call start,event,2182.510284781284,2024-08-02 19:22:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-23,1,HEMS allocated to call,event,2185.895927695776,2024-08-02 19:25:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-23,1,HEMS mobile,event,2186.895927695776,2024-08-02 19:26:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-24,1,HEMS allocated to call,event,2191.510284781284,2024-08-02 19:31:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-24,1,HEMS mobile,event,2196.510284781284,2024-08-02 19:36:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-23,1,HEMS on scene,event,2196.895927695776,2024-08-02 19:36:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-23,1,HEMS patient treated (not conveyed),event,2199.895927695776,2024-08-02 19:39:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-23,1,HEMS clear,event,2210.895927695776,2024-08-02 19:50:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-23,1,depart,arrival_departure,2210.895927695776,2024-08-02 19:50:53.755662,Fri,19,weekday,8,3,70,car,17,6.0,Male
-24,1,HEMS on scene,event,2216.510284781284,2024-08-02 19:56:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-24,1,HEMS leaving scene,event,2224.510284781284,2024-08-02 20:04:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-24,1,HEMS arrived destination,event,2250.510284781284,2024-08-02 20:30:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-25,1,arrival,arrival_departure,2254.2837720834714,2024-08-02 20:34:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-25,1,HEMS call start,event,2254.2837720834714,2024-08-02 20:34:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-25,1,HEMS allocated to call,event,2262.2837720834714,2024-08-02 20:42:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-25,1,HEMS mobile,event,2263.2837720834714,2024-08-02 20:43:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-25,1,HEMS stand down en route,event,2263.2837720834714,2024-08-02 20:43:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-24,1,HEMS clear,event,2277.510284781284,2024-08-02 20:57:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-24,1,depart,arrival_departure,2277.510284781284,2024-08-02 20:57:30.617087,Fri,19,weekday,8,3,70,helicopter,30,78.0,Male
-26,1,arrival,arrival_departure,2277.510284781284,2024-08-02 20:57:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-26,1,HEMS call start,event,2277.510284781284,2024-08-02 20:57:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-25,1,HEMS clear,event,2294.2837720834714,2024-08-02 21:14:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-25,1,depart,arrival_departure,2294.2837720834714,2024-08-02 21:14:17.026325,Fri,20,weekday,8,3,70,car,31,82.0,Female
-26,1,HEMS allocated to call,event,2316.510284781284,2024-08-02 21:36:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-26,1,HEMS mobile,event,2321.510284781284,2024-08-02 21:41:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-26,1,HEMS on scene,event,2336.510284781284,2024-08-02 21:56:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-26,1,HEMS leaving scene,event,2340.510284781284,2024-08-02 22:00:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-26,1,HEMS arrived destination,event,2362.510284781284,2024-08-02 22:22:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-27,1,arrival,arrival_departure,2370.0175357207772,2024-08-02 22:30:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-27,1,HEMS call start,event,2370.0175357207772,2024-08-02 22:30:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-27,1,HEMS allocated to call,event,2374.0175357207772,2024-08-02 22:34:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-27,1,HEMS mobile,event,2375.0175357207772,2024-08-02 22:35:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-26,1,HEMS clear,event,2379.510284781284,2024-08-02 22:39:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-26,1,depart,arrival_departure,2379.510284781284,2024-08-02 22:39:30.617087,Fri,20,weekday,8,3,70,helicopter,6,81.0,Male
-27,1,HEMS on scene,event,2402.0175357207772,2024-08-02 23:02:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-27,1,HEMS landed but no patient contact,event,2405.0175357207772,2024-08-02 23:05:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-27,1,HEMS clear,event,2430.0175357207772,2024-08-02 23:30:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
-27,1,depart,arrival_departure,2430.0175357207772,2024-08-02 23:30:01.052143,Fri,22,weekday,8,3,70,car,28,73.0,Male
+1,1,HEMS allocated to call,queue,13.0,2024-08-01 07:13:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+1,1,HEMS mobile,queue,18.0,2024-08-01 07:18:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+2,1,arrival,arrival_departure,32.38019146114731,2024-08-01 07:32:22.811488,Thu,7,weekday,8,3,,,9,82.0,Male
+2,1,No HEMS available,queue,32.38019146114731,2024-08-01 07:32:22.811488,Thu,7,weekday,8,3,,,9,82.0,Male
+2,1,depart,arrival_departure,32.38019146114731,2024-08-01 07:32:22.811488,Thu,7,weekday,8,3,,,9,82.0,Male
+2,1,depart,arrival_departure,32.38019146114731,2024-08-01 07:32:22.811488,Thu,7,weekday,8,3,,,9,82.0,Male
+1,1,HEMS on scene,queue,36.0,2024-08-01 07:36:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+1,1,HEMS leaving scene,queue,40.0,2024-08-01 07:40:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+3,1,CC70,resource_use,43.16268472491354,2024-08-01 07:43:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,arrival,arrival_departure,43.16268472491354,2024-08-01 07:43:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,HEMS call start,queue,43.16268472491354,2024-08-01 07:43:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,HEMS allocated to call,queue,45.16268472491354,2024-08-01 07:45:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,HEMS mobile,queue,46.16268472491354,2024-08-01 07:46:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,HEMS on scene,queue,55.16268472491354,2024-08-01 07:55:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+1,1,HEMS arrived destination,queue,63.0,2024-08-01 08:03:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+1,1,H70,resource_use_end,82.0,2024-08-01 08:22:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+1,1,HEMS clear,queue,82.0,2024-08-01 08:22:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+1,1,depart,arrival_departure,82.0,2024-08-01 08:22:00.000000,Thu,7,weekday,8,3,70,helicopter,17,28.0,Female
+4,1,CC72,resource_use,212.25537836511793,2024-08-01 10:32:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+4,1,arrival,arrival_departure,212.25537836511793,2024-08-01 10:32:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+4,1,HEMS call start,queue,212.25537836511793,2024-08-01 10:32:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+5,1,H70,resource_use,224.85510866236714,2024-08-01 10:44:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+5,1,arrival,arrival_departure,224.85510866236714,2024-08-01 10:44:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+5,1,HEMS call start,queue,224.85510866236714,2024-08-01 10:44:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+5,1,HEMS allocated to call,queue,229.85510866236714,2024-08-01 10:49:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+4,1,HEMS allocated to call,queue,232.25537836511793,2024-08-01 10:52:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+4,1,HEMS mobile,queue,233.25537836511793,2024-08-01 10:53:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+4,1,HEMS stand down en route,queue,233.25537836511793,2024-08-01 10:53:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+5,1,HEMS mobile,queue,240.85510866236714,2024-08-01 11:00:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+5,1,HEMS stand down en route,queue,240.85510866236714,2024-08-01 11:00:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+4,1,CC72,resource_use_end,261.25537836511796,2024-08-01 11:21:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+4,1,HEMS clear,queue,261.25537836511796,2024-08-01 11:21:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+4,1,depart,arrival_departure,261.25537836511796,2024-08-01 11:21:15.322702,Thu,10,weekday,8,3,72,car,6,74.0,Male
+5,1,H70,resource_use_end,264.8551086623671,2024-08-01 11:24:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+5,1,HEMS clear,queue,264.8551086623671,2024-08-01 11:24:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+5,1,depart,arrival_departure,264.8551086623671,2024-08-01 11:24:51.306520,Thu,10,weekday,8,3,70,helicopter,31,78.0,Male
+3,1,HEMS leaving scene,queue,332.16268472491356,2024-08-01 12:32:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,HEMS arrived destination,queue,362.16268472491356,2024-08-01 13:02:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+6,1,H70,resource_use,399.0822101841011,2024-08-01 13:39:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,arrival,arrival_departure,399.0822101841011,2024-08-01 13:39:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,HEMS call start,queue,399.0822101841011,2024-08-01 13:39:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,HEMS allocated to call,queue,419.0822101841011,2024-08-01 13:59:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,HEMS mobile,queue,422.0822101841011,2024-08-01 14:02:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,HEMS stand down en route,queue,422.0822101841011,2024-08-01 14:02:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+3,1,CC70,resource_use_end,433.16268472491356,2024-08-01 14:13:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,HEMS clear,queue,433.16268472491356,2024-08-01 14:13:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+3,1,depart,arrival_departure,433.16268472491356,2024-08-01 14:13:09.761083,Thu,7,weekday,8,3,70,car,6,29.0,Female
+6,1,H70,resource_use_end,438.0822101841011,2024-08-01 14:18:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,HEMS clear,queue,438.0822101841011,2024-08-01 14:18:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+6,1,depart,arrival_departure,438.0822101841011,2024-08-01 14:18:04.932611,Thu,13,weekday,8,3,70,helicopter,17,55.0,Female
+7,1,CC72,resource_use,440.963173840425,2024-08-01 14:20:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,arrival,arrival_departure,440.963173840425,2024-08-01 14:20:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,HEMS call start,queue,440.963173840425,2024-08-01 14:20:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,HEMS allocated to call,queue,451.963173840425,2024-08-01 14:31:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,HEMS mobile,queue,452.963173840425,2024-08-01 14:32:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+8,1,H71,resource_use,483.8785647990329,2024-08-01 15:03:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+8,1,arrival,arrival_departure,483.8785647990329,2024-08-01 15:03:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+8,1,HEMS call start,queue,483.8785647990329,2024-08-01 15:03:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+7,1,HEMS on scene,queue,484.963173840425,2024-08-01 15:04:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,HEMS landed but no patient contact,queue,488.963173840425,2024-08-01 15:08:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+9,1,CC70,resource_use,491.09531421645056,2024-08-01 15:11:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+9,1,arrival,arrival_departure,491.09531421645056,2024-08-01 15:11:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+9,1,HEMS call start,queue,491.09531421645056,2024-08-01 15:11:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+8,1,HEMS allocated to call,queue,491.8785647990329,2024-08-01 15:11:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+9,1,HEMS allocated to call,queue,492.09531421645056,2024-08-01 15:12:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+9,1,HEMS mobile,queue,493.09531421645056,2024-08-01 15:13:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+9,1,HEMS stand down en route,queue,493.09531421645056,2024-08-01 15:13:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+8,1,HEMS mobile,queue,495.8785647990329,2024-08-01 15:15:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+8,1,HEMS stand down en route,queue,495.8785647990329,2024-08-01 15:15:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+8,1,H71,resource_use_end,499.8785647990329,2024-08-01 15:19:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+8,1,HEMS clear,queue,499.8785647990329,2024-08-01 15:19:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+8,1,depart,arrival_departure,499.8785647990329,2024-08-01 15:19:52.713888,Thu,15,weekday,8,3,71,helicopter,7,1.0,Female
+7,1,CC72,resource_use_end,499.963173840425,2024-08-01 15:19:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,HEMS clear,queue,499.963173840425,2024-08-01 15:19:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+7,1,depart,arrival_departure,499.963173840425,2024-08-01 15:19:57.790430,Thu,14,weekday,8,3,72,car,31,61.0,Female
+9,1,CC70,resource_use_end,502.09531421645056,2024-08-01 15:22:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+9,1,HEMS clear,queue,502.09531421645056,2024-08-01 15:22:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+9,1,depart,arrival_departure,502.09531421645056,2024-08-01 15:22:05.718853,Thu,15,weekday,8,3,70,car,17,59.0,Male
+10,1,H70,resource_use,678.6927118684466,2024-08-01 18:18:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+10,1,arrival,arrival_departure,678.6927118684466,2024-08-01 18:18:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+10,1,HEMS call start,queue,678.6927118684466,2024-08-01 18:18:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+11,1,CC71,resource_use,694.9960215487474,2024-08-01 18:34:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,arrival,arrival_departure,694.9960215487474,2024-08-01 18:34:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,HEMS call start,queue,694.9960215487474,2024-08-01 18:34:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+10,1,HEMS allocated to call,queue,696.6927118684466,2024-08-01 18:36:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+12,1,H71,resource_use,697.8505628824154,2024-08-01 18:37:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+12,1,arrival,arrival_departure,697.8505628824154,2024-08-01 18:37:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+12,1,HEMS call start,queue,697.8505628824154,2024-08-01 18:37:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+10,1,HEMS mobile,queue,699.6927118684466,2024-08-01 18:39:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+11,1,HEMS allocated to call,queue,717.9960215487474,2024-08-01 18:57:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,HEMS mobile,queue,720.9960215487474,2024-08-01 19:00:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+10,1,HEMS on scene,queue,721.6927118684466,2024-08-01 19:01:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+13,1,CC70,resource_use,724.0126165498152,2024-08-01 19:04:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+13,1,arrival,arrival_departure,724.0126165498152,2024-08-01 19:04:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+13,1,HEMS call start,queue,724.0126165498152,2024-08-01 19:04:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+10,1,HEMS leaving scene,queue,725.6927118684466,2024-08-01 19:05:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+13,1,HEMS allocated to call,queue,727.0126165498152,2024-08-01 19:07:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+12,1,HEMS allocated to call,queue,727.8505628824154,2024-08-01 19:07:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+13,1,HEMS mobile,queue,728.0126165498152,2024-08-01 19:08:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+12,1,HEMS mobile,queue,733.8505628824154,2024-08-01 19:13:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+12,1,HEMS stand down en route,queue,733.8505628824154,2024-08-01 19:13:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+13,1,HEMS on scene,queue,741.0126165498152,2024-08-01 19:21:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+10,1,HEMS arrived destination,queue,749.6927118684466,2024-08-01 19:29:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+11,1,HEMS on scene,queue,752.9960215487474,2024-08-01 19:32:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,HEMS leaving scene,queue,756.9960215487474,2024-08-01 19:36:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+12,1,H71,resource_use_end,757.8505628824154,2024-08-01 19:37:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+12,1,HEMS clear,queue,757.8505628824154,2024-08-01 19:37:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+12,1,depart,arrival_departure,757.8505628824154,2024-08-01 19:37:51.033773,Thu,18,weekday,8,3,71,helicopter,21,48.0,Male
+11,1,HEMS arrived destination,queue,771.9960215487474,2024-08-01 19:51:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,CC71,resource_use_end,796.9960215487474,2024-08-01 20:16:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,HEMS clear,queue,796.9960215487474,2024-08-01 20:16:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+11,1,depart,arrival_departure,796.9960215487474,2024-08-01 20:16:59.761293,Thu,18,weekday,8,3,71,car,17,54.0,Male
+14,1,arrival,arrival_departure,809.3800206731613,2024-08-01 20:29:22.801240,Thu,20,weekday,8,3,,,9,62.0,Male
+14,1,No HEMS available,queue,809.3800206731613,2024-08-01 20:29:22.801240,Thu,20,weekday,8,3,,,9,62.0,Male
+14,1,depart,arrival_departure,809.3800206731613,2024-08-01 20:29:22.801240,Thu,20,weekday,8,3,,,9,62.0,Male
+14,1,depart,arrival_departure,809.3800206731613,2024-08-01 20:29:22.801240,Thu,20,weekday,8,3,,,9,62.0,Male
+10,1,H70,resource_use_end,812.6927118684466,2024-08-01 20:32:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+10,1,HEMS clear,queue,812.6927118684466,2024-08-01 20:32:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+10,1,depart,arrival_departure,812.6927118684466,2024-08-01 20:32:41.562712,Thu,18,weekday,8,3,70,helicopter,31,19.0,Female
+15,1,H70,resource_use,832.2491363376241,2024-08-01 20:52:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,arrival,arrival_departure,832.2491363376241,2024-08-01 20:52:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,HEMS call start,queue,832.2491363376241,2024-08-01 20:52:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+13,1,HEMS leaving scene,queue,856.0126165498152,2024-08-01 21:16:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+13,1,HEMS arrived destination,queue,863.0126165498152,2024-08-01 21:23:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+16,1,arrival,arrival_departure,875.6338480580887,2024-08-01 21:35:38.030883,Thu,21,weekday,8,3,,,29,24.0,Male
+16,1,No HEMS available,queue,875.6338480580887,2024-08-01 21:35:38.030883,Thu,21,weekday,8,3,,,29,24.0,Male
+16,1,depart,arrival_departure,875.6338480580887,2024-08-01 21:35:38.030883,Thu,21,weekday,8,3,,,29,24.0,Male
+16,1,depart,arrival_departure,875.6338480580887,2024-08-01 21:35:38.030883,Thu,21,weekday,8,3,,,29,24.0,Male
+15,1,HEMS allocated to call,queue,877.2491363376241,2024-08-01 21:37:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,HEMS mobile,queue,881.2491363376241,2024-08-01 21:41:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,HEMS on scene,queue,893.2491363376241,2024-08-01 21:53:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,HEMS leaving scene,queue,897.2491363376241,2024-08-01 21:57:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+13,1,CC70,resource_use_end,904.0126165498152,2024-08-01 22:04:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+13,1,HEMS clear,queue,904.0126165498152,2024-08-01 22:04:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+13,1,depart,arrival_departure,904.0126165498152,2024-08-01 22:04:00.756993,Thu,19,weekday,8,3,70,car,9,50.0,Male
+15,1,HEMS arrived destination,queue,916.2491363376241,2024-08-01 22:16:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,H70,resource_use_end,926.2491363376241,2024-08-01 22:26:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,HEMS clear,queue,926.2491363376241,2024-08-01 22:26:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+15,1,depart,arrival_departure,926.2491363376241,2024-08-01 22:26:14.948180,Thu,20,weekday,8,3,70,helicopter,6,15.0,Female
+17,1,H70,resource_use,960.3545612220615,2024-08-01 23:00:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,arrival,arrival_departure,960.3545612220615,2024-08-01 23:00:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,HEMS call start,queue,960.3545612220615,2024-08-01 23:00:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,HEMS stand down before mobile,queue,971.3545612220615,2024-08-01 23:11:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,HEMS mobile,queue,973.3545612220615,2024-08-01 23:13:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,HEMS on scene,queue,986.3545612220615,2024-08-01 23:26:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,HEMS stand down before mobile,queue,995.3545612220615,2024-08-01 23:35:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,H70,resource_use_end,1009.3545612220615,2024-08-01 23:49:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,HEMS clear,queue,1009.3545612220615,2024-08-01 23:49:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+17,1,depart,arrival_departure,1009.3545612220615,2024-08-01 23:49:21.273673,Thu,23,weekday,8,3,70,helicopter,9,72.0,Male
+18,1,H70,resource_use,1026.6624606142252,2024-08-02 00:06:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,arrival,arrival_departure,1026.6624606142252,2024-08-02 00:06:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,HEMS call start,queue,1026.6624606142252,2024-08-02 00:06:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,HEMS allocated to call,queue,1032.6624606142252,2024-08-02 00:12:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,HEMS mobile,queue,1035.6624606142252,2024-08-02 00:15:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,HEMS stand down en route,queue,1035.6624606142252,2024-08-02 00:15:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+19,1,CC70,resource_use,1056.319435501671,2024-08-02 00:36:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+19,1,arrival,arrival_departure,1056.319435501671,2024-08-02 00:36:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+19,1,HEMS call start,queue,1056.319435501671,2024-08-02 00:36:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+18,1,H70,resource_use_end,1066.6624606142252,2024-08-02 00:46:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,HEMS clear,queue,1066.6624606142252,2024-08-02 00:46:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+18,1,depart,arrival_departure,1066.6624606142252,2024-08-02 00:46:39.747637,Fri,0,weekday,8,3,70,helicopter,9,34.0,Male
+19,1,HEMS allocated to call,queue,1069.319435501671,2024-08-02 00:49:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+19,1,HEMS mobile,queue,1071.319435501671,2024-08-02 00:51:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+19,1,HEMS on scene,queue,1081.319435501671,2024-08-02 01:01:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+20,1,H70,resource_use,1083.4015455175022,2024-08-02 01:03:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+20,1,arrival,arrival_departure,1083.4015455175022,2024-08-02 01:03:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+20,1,HEMS call start,queue,1083.4015455175022,2024-08-02 01:03:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+19,1,HEMS leaving scene,queue,1084.319435501671,2024-08-02 01:04:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+20,1,HEMS allocated to call,queue,1087.4015455175022,2024-08-02 01:07:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+19,1,HEMS arrived destination,queue,1092.319435501671,2024-08-02 01:12:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+20,1,HEMS mobile,queue,1096.4015455175022,2024-08-02 01:16:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+20,1,HEMS stand down en route,queue,1096.4015455175022,2024-08-02 01:16:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+19,1,CC70,resource_use_end,1102.319435501671,2024-08-02 01:22:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+19,1,HEMS clear,queue,1102.319435501671,2024-08-02 01:22:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+19,1,depart,arrival_departure,1102.319435501671,2024-08-02 01:22:19.166130,Fri,0,weekday,8,3,70,car,29,19.0,Male
+20,1,H70,resource_use_end,1118.4015455175022,2024-08-02 01:38:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+20,1,HEMS clear,queue,1118.4015455175022,2024-08-02 01:38:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+20,1,depart,arrival_departure,1118.4015455175022,2024-08-02 01:38:24.092731,Fri,1,weekday,8,3,70,helicopter,27,56.0,Male
+21,1,arrival,arrival_departure,1142.4541090291543,2024-08-02 02:02:27.246542,Fri,2,weekday,8,3,,,10,65.0,Male
+21,1,No HEMS available,queue,1142.4541090291543,2024-08-02 02:02:27.246542,Fri,2,weekday,8,3,,,10,65.0,Male
+21,1,depart,arrival_departure,1142.4541090291543,2024-08-02 02:02:27.246542,Fri,2,weekday,8,3,,,10,65.0,Male
+21,1,depart,arrival_departure,1142.4541090291543,2024-08-02 02:02:27.246542,Fri,2,weekday,8,3,,,10,65.0,Male
+22,1,H70,resource_use,1447.1755924766026,2024-08-02 07:07:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+22,1,arrival,arrival_departure,1447.1755924766026,2024-08-02 07:07:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+22,1,HEMS call start,queue,1447.1755924766026,2024-08-02 07:07:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+22,1,HEMS allocated to call,queue,1453.1755924766026,2024-08-02 07:13:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+23,1,H71,resource_use,1453.9068380384217,2024-08-02 07:13:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+23,1,arrival,arrival_departure,1453.9068380384217,2024-08-02 07:13:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+23,1,HEMS call start,queue,1453.9068380384217,2024-08-02 07:13:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+22,1,HEMS mobile,queue,1460.1755924766026,2024-08-02 07:20:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+24,1,CC70,resource_use,1469.234747619361,2024-08-02 07:29:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+24,1,arrival,arrival_departure,1469.234747619361,2024-08-02 07:29:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+24,1,HEMS call start,queue,1469.234747619361,2024-08-02 07:29:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+23,1,HEMS allocated to call,queue,1470.9068380384217,2024-08-02 07:30:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+22,1,HEMS on scene,queue,1474.1755924766026,2024-08-02 07:34:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+22,1,HEMS patient treated (not conveyed),queue,1481.1755924766026,2024-08-02 07:41:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+24,1,HEMS allocated to call,queue,1492.234747619361,2024-08-02 07:52:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+24,1,HEMS mobile,queue,1493.234747619361,2024-08-02 07:53:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+25,1,CC72,resource_use,1503.1714941777725,2024-08-02 08:03:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+25,1,arrival,arrival_departure,1503.1714941777725,2024-08-02 08:03:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+25,1,HEMS call start,queue,1503.1714941777725,2024-08-02 08:03:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+24,1,HEMS on scene,queue,1503.234747619361,2024-08-02 08:03:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+25,1,HEMS allocated to call,queue,1505.1714941777725,2024-08-02 08:05:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+26,1,arrival,arrival_departure,1505.2521742094589,2024-08-02 08:05:15.130453,Fri,8,weekday,8,3,,,29,15.0,Male
+26,1,No HEMS available,queue,1505.2521742094589,2024-08-02 08:05:15.130453,Fri,8,weekday,8,3,,,29,15.0,Male
+26,1,depart,arrival_departure,1505.2521742094589,2024-08-02 08:05:15.130453,Fri,8,weekday,8,3,,,29,15.0,Male
+26,1,depart,arrival_departure,1505.2521742094589,2024-08-02 08:05:15.130453,Fri,8,weekday,8,3,,,29,15.0,Male
+25,1,HEMS mobile,queue,1506.1714941777725,2024-08-02 08:06:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+24,1,HEMS patient treated (not conveyed),queue,1507.234747619361,2024-08-02 08:07:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+25,1,HEMS on scene,queue,1508.1714941777725,2024-08-02 08:08:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+25,1,HEMS patient treated (not conveyed),queue,1511.1714941777725,2024-08-02 08:11:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+27,1,arrival,arrival_departure,1515.700435481401,2024-08-02 08:15:42.026129,Fri,8,weekday,8,3,,,10,7.0,Female
+27,1,No HEMS available,queue,1515.700435481401,2024-08-02 08:15:42.026129,Fri,8,weekday,8,3,,,10,7.0,Female
+27,1,depart,arrival_departure,1515.700435481401,2024-08-02 08:15:42.026129,Fri,8,weekday,8,3,,,10,7.0,Female
+27,1,depart,arrival_departure,1515.700435481401,2024-08-02 08:15:42.026129,Fri,8,weekday,8,3,,,10,7.0,Female
+25,1,CC72,resource_use_end,1516.1714941777725,2024-08-02 08:16:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+25,1,HEMS clear,queue,1516.1714941777725,2024-08-02 08:16:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+25,1,depart,arrival_departure,1516.1714941777725,2024-08-02 08:16:10.289651,Fri,8,weekday,8,3,72,car,29,40.0,Male
+22,1,H70,resource_use_end,1518.1755924766026,2024-08-02 08:18:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+22,1,HEMS clear,queue,1518.1755924766026,2024-08-02 08:18:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+22,1,depart,arrival_departure,1518.1755924766026,2024-08-02 08:18:10.535549,Fri,7,weekday,8,3,70,helicopter,17,12.0,Male
+24,1,CC70,resource_use_end,1556.234747619361,2024-08-02 08:56:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+24,1,HEMS clear,queue,1556.234747619361,2024-08-02 08:56:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+24,1,depart,arrival_departure,1556.234747619361,2024-08-02 08:56:14.084857,Fri,7,weekday,8,3,70,car,28,67.0,Male
+28,1,H70,resource_use,1561.1151925172505,2024-08-02 09:01:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,arrival,arrival_departure,1561.1151925172505,2024-08-02 09:01:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,HEMS call start,queue,1561.1151925172505,2024-08-02 09:01:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,HEMS allocated to call,queue,1567.1151925172505,2024-08-02 09:07:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,HEMS mobile,queue,1569.1151925172505,2024-08-02 09:09:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,HEMS stand down en route,queue,1569.1151925172505,2024-08-02 09:09:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+29,1,CC71,resource_use,1583.6785021982316,2024-08-02 09:23:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,arrival,arrival_departure,1583.6785021982316,2024-08-02 09:23:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,HEMS call start,queue,1583.6785021982316,2024-08-02 09:23:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,HEMS allocated to call,queue,1587.6785021982316,2024-08-02 09:27:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,HEMS mobile,queue,1588.6785021982316,2024-08-02 09:28:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+28,1,H70,resource_use_end,1592.1151925172505,2024-08-02 09:32:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,HEMS clear,queue,1592.1151925172505,2024-08-02 09:32:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+28,1,depart,arrival_departure,1592.1151925172505,2024-08-02 09:32:06.911551,Fri,9,weekday,8,3,70,helicopter,17,91.0,Male
+30,1,CC72,resource_use,1607.9405412746746,2024-08-02 09:47:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+30,1,arrival,arrival_departure,1607.9405412746746,2024-08-02 09:47:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+30,1,HEMS call start,queue,1607.9405412746746,2024-08-02 09:47:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+30,1,HEMS allocated to call,queue,1609.9405412746746,2024-08-02 09:49:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+30,1,HEMS mobile,queue,1610.9405412746746,2024-08-02 09:50:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+29,1,HEMS on scene,queue,1613.6785021982316,2024-08-02 09:53:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,HEMS leaving scene,queue,1616.6785021982316,2024-08-02 09:56:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+30,1,HEMS on scene,queue,1619.9405412746746,2024-08-02 09:59:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+29,1,HEMS arrived destination,queue,1635.6785021982316,2024-08-02 10:15:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+31,1,CC70,resource_use,1635.7257900990046,2024-08-02 10:15:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,arrival,arrival_departure,1635.7257900990046,2024-08-02 10:15:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,HEMS call start,queue,1635.7257900990046,2024-08-02 10:15:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+32,1,H70,resource_use,1644.5669683346061,2024-08-02 10:24:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+32,1,arrival,arrival_departure,1644.5669683346061,2024-08-02 10:24:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+32,1,HEMS call start,queue,1644.5669683346061,2024-08-02 10:24:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+29,1,CC71,resource_use_end,1656.6785021982316,2024-08-02 10:36:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,HEMS clear,queue,1656.6785021982316,2024-08-02 10:36:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+29,1,depart,arrival_departure,1656.6785021982316,2024-08-02 10:36:40.710132,Fri,9,weekday,8,3,71,car,9,43.0,Female
+32,1,HEMS allocated to call,queue,1661.5669683346061,2024-08-02 10:41:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+32,1,HEMS mobile,queue,1666.5669683346061,2024-08-02 10:46:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+32,1,HEMS on scene,queue,1676.5669683346061,2024-08-02 10:56:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+31,1,HEMS allocated to call,queue,1677.7257900990046,2024-08-02 10:57:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,HEMS mobile,queue,1678.7257900990046,2024-08-02 10:58:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+30,1,HEMS landed but no patient contact,queue,1679.9405412746746,2024-08-02 10:59:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+32,1,HEMS landed but no patient contact,queue,1690.5669683346061,2024-08-02 11:10:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+30,1,CC72,resource_use_end,1691.9405412746746,2024-08-02 11:11:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+30,1,HEMS clear,queue,1691.9405412746746,2024-08-02 11:11:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+30,1,depart,arrival_departure,1691.9405412746746,2024-08-02 11:11:56.432476,Fri,9,weekday,8,3,72,car,17,18.0,Female
+31,1,HEMS on scene,queue,1692.7257900990046,2024-08-02 11:12:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,HEMS patient treated (not conveyed),queue,1695.7257900990046,2024-08-02 11:15:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,CC70,resource_use_end,1715.7257900990046,2024-08-02 11:35:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,HEMS clear,queue,1715.7257900990046,2024-08-02 11:35:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+31,1,depart,arrival_departure,1715.7257900990046,2024-08-02 11:35:43.547406,Fri,10,weekday,8,3,70,car,6,53.0,Male
+32,1,H70,resource_use_end,1757.5669683346061,2024-08-02 12:17:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+32,1,HEMS clear,queue,1757.5669683346061,2024-08-02 12:17:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+32,1,depart,arrival_departure,1757.5669683346061,2024-08-02 12:17:34.018100,Fri,10,weekday,8,3,70,helicopter,9,67.0,Female
+33,1,CC70,resource_use,1760.4946801721196,2024-08-02 12:20:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,arrival,arrival_departure,1760.4946801721196,2024-08-02 12:20:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,HEMS call start,queue,1760.4946801721196,2024-08-02 12:20:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,HEMS allocated to call,queue,1766.4946801721196,2024-08-02 12:26:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,HEMS mobile,queue,1767.4946801721196,2024-08-02 12:27:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,HEMS stand down en route,queue,1767.4946801721196,2024-08-02 12:27:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+34,1,CC72,resource_use,1774.6720868073576,2024-08-02 12:34:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,arrival,arrival_departure,1774.6720868073576,2024-08-02 12:34:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,HEMS call start,queue,1774.6720868073576,2024-08-02 12:34:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,HEMS allocated to call,queue,1780.6720868073576,2024-08-02 12:40:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,HEMS mobile,queue,1781.6720868073576,2024-08-02 12:41:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+33,1,CC70,resource_use_end,1792.4946801721196,2024-08-02 12:52:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,HEMS clear,queue,1792.4946801721196,2024-08-02 12:52:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+33,1,depart,arrival_departure,1792.4946801721196,2024-08-02 12:52:29.680810,Fri,12,weekday,8,3,70,car,9,61.0,Male
+34,1,HEMS on scene,queue,1797.6720868073576,2024-08-02 12:57:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,HEMS leaving scene,queue,1804.6720868073576,2024-08-02 13:04:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+35,1,CC70,resource_use,1806.9323251567118,2024-08-02 13:06:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,arrival,arrival_departure,1806.9323251567118,2024-08-02 13:06:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS call start,queue,1806.9323251567118,2024-08-02 13:06:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS allocated to call,queue,1812.9323251567118,2024-08-02 13:12:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS mobile,queue,1813.9323251567118,2024-08-02 13:13:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS on scene,queue,1830.9323251567118,2024-08-02 13:30:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS leaving scene,queue,1833.9323251567118,2024-08-02 13:33:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS arrived destination,queue,1863.9323251567118,2024-08-02 14:03:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+34,1,HEMS arrived destination,queue,1864.6720868073576,2024-08-02 14:04:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,CC72,resource_use_end,1874.6720868073576,2024-08-02 14:14:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,HEMS clear,queue,1874.6720868073576,2024-08-02 14:14:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+34,1,depart,arrival_departure,1874.6720868073576,2024-08-02 14:14:40.325208,Fri,12,weekday,8,3,72,car,14,62.0,Male
+35,1,CC70,resource_use_end,1883.9323251567118,2024-08-02 14:23:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,HEMS clear,queue,1883.9323251567118,2024-08-02 14:23:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+35,1,depart,arrival_departure,1883.9323251567118,2024-08-02 14:23:55.939509,Fri,13,weekday,8,3,70,car,27,21.0,Male
+36,1,CC71,resource_use,1938.2068492979697,2024-08-02 15:18:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,arrival,arrival_departure,1938.2068492979697,2024-08-02 15:18:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,HEMS call start,queue,1938.2068492979697,2024-08-02 15:18:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+37,1,CC72,resource_use,1949.512603712711,2024-08-02 15:29:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,arrival,arrival_departure,1949.512603712711,2024-08-02 15:29:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,HEMS call start,queue,1949.512603712711,2024-08-02 15:29:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,HEMS allocated to call,queue,1951.512603712711,2024-08-02 15:31:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,HEMS mobile,queue,1952.512603712711,2024-08-02 15:32:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,HEMS on scene,queue,1960.512603712711,2024-08-02 15:40:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+36,1,HEMS allocated to call,queue,1985.2068492979697,2024-08-02 16:05:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,HEMS mobile,queue,1986.2068492979697,2024-08-02 16:06:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,HEMS on scene,queue,1999.2068492979697,2024-08-02 16:19:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,HEMS landed but no patient contact,queue,2002.2068492979697,2024-08-02 16:22:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+38,1,CC70,resource_use,2009.7229209302245,2024-08-02 16:29:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,arrival,arrival_departure,2009.7229209302245,2024-08-02 16:29:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,HEMS call start,queue,2009.7229209302245,2024-08-02 16:29:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+36,1,CC71,resource_use_end,2027.2068492979697,2024-08-02 16:47:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,HEMS clear,queue,2027.2068492979697,2024-08-02 16:47:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+36,1,depart,arrival_departure,2027.2068492979697,2024-08-02 16:47:12.410958,Fri,15,weekday,8,3,71,car,30,90.0,Male
+38,1,HEMS allocated to call,queue,2044.7229209302245,2024-08-02 17:04:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,HEMS mobile,queue,2045.7229209302245,2024-08-02 17:05:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+37,1,HEMS patient treated (not conveyed),queue,2049.512603712711,2024-08-02 17:09:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+38,1,HEMS on scene,queue,2054.7229209302245,2024-08-02 17:14:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,HEMS patient treated (not conveyed),queue,2057.7229209302245,2024-08-02 17:17:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,CC70,resource_use_end,2075.7229209302245,2024-08-02 17:35:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,HEMS clear,queue,2075.7229209302245,2024-08-02 17:35:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+38,1,depart,arrival_departure,2075.7229209302245,2024-08-02 17:35:43.375256,Fri,16,weekday,8,3,70,car,9,57.0,Female
+39,1,H70,resource_use,2082.270429520645,2024-08-02 17:42:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+39,1,arrival,arrival_departure,2082.270429520645,2024-08-02 17:42:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+39,1,HEMS call start,queue,2082.270429520645,2024-08-02 17:42:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+40,1,CC71,resource_use,2088.373407912051,2024-08-02 17:48:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,arrival,arrival_departure,2088.373407912051,2024-08-02 17:48:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,HEMS call start,queue,2088.373407912051,2024-08-02 17:48:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+37,1,CC72,resource_use_end,2088.512603712711,2024-08-02 17:48:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,HEMS clear,queue,2088.512603712711,2024-08-02 17:48:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+37,1,depart,arrival_departure,2088.512603712711,2024-08-02 17:48:30.756223,Fri,15,weekday,8,3,72,car,29,29.0,Male
+40,1,HEMS allocated to call,queue,2098.373407912051,2024-08-02 17:58:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,HEMS mobile,queue,2099.373407912051,2024-08-02 17:59:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,HEMS on scene,queue,2109.373407912051,2024-08-02 18:09:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+39,1,HEMS allocated to call,queue,2128.270429520645,2024-08-02 18:28:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+39,1,HEMS mobile,queue,2129.270429520645,2024-08-02 18:29:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+23,1,HEMS mobile,queue,2147.9068380384215,2024-08-02 18:47:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+23,1,HEMS stand down en route,queue,2147.9068380384215,2024-08-02 18:47:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+39,1,HEMS on scene,queue,2149.270429520645,2024-08-02 18:49:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+39,1,HEMS landed but no patient contact,queue,2155.270429520645,2024-08-02 18:55:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+23,1,H71,resource_use_end,2160.9068380384215,2024-08-02 19:00:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+23,1,HEMS clear,queue,2160.9068380384215,2024-08-02 19:00:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+23,1,depart,arrival_departure,2160.9068380384215,2024-08-02 19:00:54.410282,Fri,7,weekday,8,3,71,helicopter,29,45.0,Male
+39,1,H70,resource_use_end,2164.270429520645,2024-08-02 19:04:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+39,1,HEMS clear,queue,2164.270429520645,2024-08-02 19:04:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+39,1,depart,arrival_departure,2164.270429520645,2024-08-02 19:04:16.225771,Fri,17,weekday,8,3,70,helicopter,30,40.0,Male
+41,1,H70,resource_use,2170.727538980734,2024-08-02 19:10:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,arrival,arrival_departure,2170.727538980734,2024-08-02 19:10:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,HEMS call start,queue,2170.727538980734,2024-08-02 19:10:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,HEMS allocated to call,queue,2178.727538980734,2024-08-02 19:18:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,HEMS mobile,queue,2180.727538980734,2024-08-02 19:20:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,HEMS stand down en route,queue,2180.727538980734,2024-08-02 19:20:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,H70,resource_use_end,2186.727538980734,2024-08-02 19:26:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,HEMS clear,queue,2186.727538980734,2024-08-02 19:26:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+41,1,depart,arrival_departure,2186.727538980734,2024-08-02 19:26:43.652339,Fri,19,weekday,8,3,70,helicopter,28,67.0,Female
+40,1,HEMS leaving scene,queue,2199.373407912051,2024-08-02 19:39:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,HEMS arrived destination,queue,2210.373407912051,2024-08-02 19:50:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+42,1,H70,resource_use,2223.4260615635367,2024-08-02 20:03:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+42,1,arrival,arrival_departure,2223.4260615635367,2024-08-02 20:03:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+42,1,HEMS call start,queue,2223.4260615635367,2024-08-02 20:03:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+40,1,CC71,resource_use_end,2228.373407912051,2024-08-02 20:08:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,HEMS clear,queue,2228.373407912051,2024-08-02 20:08:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+40,1,depart,arrival_departure,2228.373407912051,2024-08-02 20:08:22.404475,Fri,17,weekday,8,3,71,car,27,46.0,Male
+42,1,HEMS allocated to call,queue,2243.4260615635367,2024-08-02 20:23:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+42,1,HEMS mobile,queue,2249.4260615635367,2024-08-02 20:29:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+43,1,CC70,resource_use,2277.080091621917,2024-08-02 20:57:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+43,1,arrival,arrival_departure,2277.080091621917,2024-08-02 20:57:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+43,1,HEMS call start,queue,2277.080091621917,2024-08-02 20:57:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+43,1,HEMS allocated to call,queue,2283.080091621917,2024-08-02 21:03:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+42,1,HEMS on scene,queue,2283.4260615635367,2024-08-02 21:03:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+43,1,HEMS mobile,queue,2284.080091621917,2024-08-02 21:04:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+42,1,HEMS leaving scene,queue,2290.4260615635367,2024-08-02 21:10:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+43,1,HEMS on scene,queue,2294.080091621917,2024-08-02 21:14:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+43,1,HEMS leaving scene,queue,2309.080091621917,2024-08-02 21:29:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+42,1,HEMS arrived destination,queue,2317.4260615635367,2024-08-02 21:37:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+42,1,H70,resource_use_end,2332.4260615635367,2024-08-02 21:52:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+42,1,HEMS clear,queue,2332.4260615635367,2024-08-02 21:52:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+42,1,depart,arrival_departure,2332.4260615635367,2024-08-02 21:52:25.563694,Fri,20,weekday,8,3,70,helicopter,12,42.0,Female
+43,1,HEMS arrived destination,queue,2335.080091621917,2024-08-02 21:55:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+44,1,H70,resource_use,2336.9538077530256,2024-08-02 21:56:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+44,1,arrival,arrival_departure,2336.9538077530256,2024-08-02 21:56:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+44,1,HEMS call start,queue,2336.9538077530256,2024-08-02 21:56:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+44,1,HEMS allocated to call,queue,2342.9538077530256,2024-08-02 22:02:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+43,1,CC70,resource_use_end,2348.080091621917,2024-08-02 22:08:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+43,1,HEMS clear,queue,2348.080091621917,2024-08-02 22:08:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+43,1,depart,arrival_departure,2348.080091621917,2024-08-02 22:08:04.805497,Fri,20,weekday,8,3,70,car,17,64.0,Male
+44,1,HEMS mobile,queue,2348.9538077530256,2024-08-02 22:08:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+45,1,CC70,resource_use,2370.5837883392464,2024-08-02 22:30:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,arrival,arrival_departure,2370.5837883392464,2024-08-02 22:30:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,HEMS call start,queue,2370.5837883392464,2024-08-02 22:30:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,HEMS allocated to call,queue,2375.5837883392464,2024-08-02 22:35:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,HEMS mobile,queue,2381.5837883392464,2024-08-02 22:41:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,HEMS stand down en route,queue,2381.5837883392464,2024-08-02 22:41:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+44,1,HEMS on scene,queue,2391.9538077530256,2024-08-02 22:51:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+44,1,HEMS leaving scene,queue,2395.9538077530256,2024-08-02 22:55:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+46,1,arrival,arrival_departure,2396.315069336781,2024-08-02 22:56:18.904160,Fri,22,weekday,8,3,,,9,72.0,Male
+46,1,No HEMS available,queue,2396.315069336781,2024-08-02 22:56:18.904160,Fri,22,weekday,8,3,,,9,72.0,Male
+46,1,depart,arrival_departure,2396.315069336781,2024-08-02 22:56:18.904160,Fri,22,weekday,8,3,,,9,72.0,Male
+46,1,depart,arrival_departure,2396.315069336781,2024-08-02 22:56:18.904160,Fri,22,weekday,8,3,,,9,72.0,Male
+45,1,CC70,resource_use_end,2396.5837883392464,2024-08-02 22:56:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,HEMS clear,queue,2396.5837883392464,2024-08-02 22:56:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+45,1,depart,arrival_departure,2396.5837883392464,2024-08-02 22:56:35.027300,Fri,22,weekday,8,3,70,car,17,80.0,Male
+47,1,CC70,resource_use,2403.7887362338715,2024-08-02 23:03:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,arrival,arrival_departure,2403.7887362338715,2024-08-02 23:03:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,HEMS call start,queue,2403.7887362338715,2024-08-02 23:03:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+48,1,arrival,arrival_departure,2405.359069188561,2024-08-02 23:05:21.544151,Fri,23,weekday,8,3,,,9,79.0,Male
+48,1,No HEMS available,queue,2405.359069188561,2024-08-02 23:05:21.544151,Fri,23,weekday,8,3,,,9,79.0,Male
+48,1,depart,arrival_departure,2405.359069188561,2024-08-02 23:05:21.544151,Fri,23,weekday,8,3,,,9,79.0,Male
+48,1,depart,arrival_departure,2405.359069188561,2024-08-02 23:05:21.544151,Fri,23,weekday,8,3,,,9,79.0,Male
+44,1,HEMS arrived destination,queue,2418.9538077530256,2024-08-02 23:18:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+47,1,HEMS allocated to call,queue,2422.7887362338715,2024-08-02 23:22:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,HEMS mobile,queue,2423.7887362338715,2024-08-02 23:23:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,HEMS stand down en route,queue,2423.7887362338715,2024-08-02 23:23:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,CC70,resource_use_end,2437.7887362338715,2024-08-02 23:37:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,HEMS clear,queue,2437.7887362338715,2024-08-02 23:37:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+47,1,depart,arrival_departure,2437.7887362338715,2024-08-02 23:37:47.324174,Fri,23,weekday,8,3,70,car,9,45.0,Male
+49,1,CC70,resource_use,2472.1397081253485,2024-08-03 00:12:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,arrival,arrival_departure,2472.1397081253485,2024-08-03 00:12:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,HEMS call start,queue,2472.1397081253485,2024-08-03 00:12:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,HEMS allocated to call,queue,2480.1397081253485,2024-08-03 00:20:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,HEMS mobile,queue,2481.1397081253485,2024-08-03 00:21:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,HEMS stand down en route,queue,2481.1397081253485,2024-08-03 00:21:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+44,1,H70,resource_use_end,2486.9538077530256,2024-08-03 00:26:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+44,1,HEMS clear,queue,2486.9538077530256,2024-08-03 00:26:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+44,1,depart,arrival_departure,2486.9538077530256,2024-08-03 00:26:57.228465,Fri,21,weekday,8,3,70,helicopter,6,79.0,Female
+50,1,H70,resource_use,2489.4514735957514,2024-08-03 00:29:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+50,1,arrival,arrival_departure,2489.4514735957514,2024-08-03 00:29:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+50,1,HEMS call start,queue,2489.4514735957514,2024-08-03 00:29:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+51,1,arrival,arrival_departure,2493.071498682969,2024-08-03 00:33:04.289921,Sat,0,weekend,8,3,,,9,73.0,Male
+51,1,No HEMS available,queue,2493.071498682969,2024-08-03 00:33:04.289921,Sat,0,weekend,8,3,,,9,73.0,Male
+51,1,depart,arrival_departure,2493.071498682969,2024-08-03 00:33:04.289921,Sat,0,weekend,8,3,,,9,73.0,Male
+51,1,depart,arrival_departure,2493.071498682969,2024-08-03 00:33:04.289921,Sat,0,weekend,8,3,,,9,73.0,Male
+50,1,HEMS allocated to call,queue,2506.4514735957514,2024-08-03 00:46:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+50,1,HEMS mobile,queue,2510.4514735957514,2024-08-03 00:50:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+49,1,CC70,resource_use_end,2519.1397081253485,2024-08-03 00:59:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,HEMS clear,queue,2519.1397081253485,2024-08-03 00:59:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+49,1,depart,arrival_departure,2519.1397081253485,2024-08-03 00:59:08.382488,Sat,0,weekend,8,3,70,car,17,59.0,Male
+50,1,HEMS on scene,queue,2548.4514735957514,2024-08-03 01:28:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+52,1,CC70,resource_use,2552.2295093665557,2024-08-03 01:32:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+52,1,arrival,arrival_departure,2552.2295093665557,2024-08-03 01:32:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+52,1,HEMS call start,queue,2552.2295093665557,2024-08-03 01:32:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+50,1,HEMS leaving scene,queue,2559.4514735957514,2024-08-03 01:39:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+52,1,HEMS allocated to call,queue,2561.2295093665557,2024-08-03 01:41:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+52,1,HEMS mobile,queue,2564.2295093665557,2024-08-03 01:44:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+50,1,HEMS arrived destination,queue,2584.4514735957514,2024-08-03 02:04:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+50,1,H70,resource_use_end,2597.4514735957514,2024-08-03 02:17:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+50,1,HEMS clear,queue,2597.4514735957514,2024-08-03 02:17:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+50,1,depart,arrival_departure,2597.4514735957514,2024-08-03 02:17:27.088416,Sat,0,weekend,8,3,70,helicopter,17,37.0,Male
+52,1,HEMS on scene,queue,2601.2295093665557,2024-08-03 02:21:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+53,1,arrival,arrival_departure,2603.3662210952975,2024-08-03 02:23:21.973266,Sat,2,weekend,8,3,,,10,40.0,Male
+53,1,No HEMS available,queue,2603.3662210952975,2024-08-03 02:23:21.973266,Sat,2,weekend,8,3,,,10,40.0,Male
+53,1,depart,arrival_departure,2603.3662210952975,2024-08-03 02:23:21.973266,Sat,2,weekend,8,3,,,10,40.0,Male
+53,1,depart,arrival_departure,2603.3662210952975,2024-08-03 02:23:21.973266,Sat,2,weekend,8,3,,,10,40.0,Male
+52,1,HEMS patient treated (not conveyed),queue,2604.2295093665557,2024-08-03 02:24:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+52,1,CC70,resource_use_end,2619.2295093665557,2024-08-03 02:39:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+52,1,HEMS clear,queue,2619.2295093665557,2024-08-03 02:39:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+52,1,depart,arrival_departure,2619.2295093665557,2024-08-03 02:39:13.770562,Sat,1,weekend,8,3,70,car,17,87.0,Male
+54,1,arrival,arrival_departure,2778.8829094348694,2024-08-03 05:18:52.974566,Sat,5,weekend,8,3,,,30,110.0,Female
+54,1,No HEMS available,queue,2778.8829094348694,2024-08-03 05:18:52.974566,Sat,5,weekend,8,3,,,30,110.0,Female
+54,1,depart,arrival_departure,2778.8829094348694,2024-08-03 05:18:52.974566,Sat,5,weekend,8,3,,,30,110.0,Female
+54,1,depart,arrival_departure,2778.8829094348694,2024-08-03 05:18:52.974566,Sat,5,weekend,8,3,,,30,110.0,Female
+55,1,arrival,arrival_departure,2804.323242256302,2024-08-03 05:44:19.394535,Sat,5,weekend,8,3,,,30,29.0,Female
+55,1,No HEMS available,queue,2804.323242256302,2024-08-03 05:44:19.394535,Sat,5,weekend,8,3,,,30,29.0,Female
+55,1,depart,arrival_departure,2804.323242256302,2024-08-03 05:44:19.394535,Sat,5,weekend,8,3,,,30,29.0,Female
+55,1,depart,arrival_departure,2804.323242256302,2024-08-03 05:44:19.394535,Sat,5,weekend,8,3,,,30,29.0,Female
+56,1,arrival,arrival_departure,2877.27055937075,2024-08-03 06:57:16.233562,Sat,6,weekend,8,3,,,28,67.0,Female
+56,1,No HEMS available,queue,2877.27055937075,2024-08-03 06:57:16.233562,Sat,6,weekend,8,3,,,28,67.0,Female
+56,1,depart,arrival_departure,2877.27055937075,2024-08-03 06:57:16.233562,Sat,6,weekend,8,3,,,28,67.0,Female
+56,1,depart,arrival_departure,2877.27055937075,2024-08-03 06:57:16.233562,Sat,6,weekend,8,3,,,28,67.0,Female
+57,1,H70,resource_use,2994.7379337035304,2024-08-03 08:54:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+57,1,arrival,arrival_departure,2994.7379337035304,2024-08-03 08:54:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+57,1,HEMS call start,queue,2994.7379337035304,2024-08-03 08:54:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+57,1,HEMS allocated to call,queue,3000.7379337035304,2024-08-03 09:00:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+58,1,CC72,resource_use,3014.2288781163447,2024-08-03 09:14:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,arrival,arrival_departure,3014.2288781163447,2024-08-03 09:14:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,HEMS call start,queue,3014.2288781163447,2024-08-03 09:14:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,HEMS allocated to call,queue,3016.2288781163447,2024-08-03 09:16:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,HEMS mobile,queue,3020.2288781163447,2024-08-03 09:20:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+57,1,HEMS mobile,queue,3023.7379337035304,2024-08-03 09:23:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+57,1,HEMS stand down en route,queue,3023.7379337035304,2024-08-03 09:23:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+58,1,HEMS on scene,queue,3058.2288781163447,2024-08-03 09:58:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+57,1,H70,resource_use_end,3062.7379337035304,2024-08-03 10:02:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+57,1,HEMS clear,queue,3062.7379337035304,2024-08-03 10:02:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+57,1,depart,arrival_departure,3062.7379337035304,2024-08-03 10:02:44.276022,Sat,8,weekend,8,3,70,helicopter,6,47.0,Female
+59,1,H71,resource_use,3082.2790417719784,2024-08-03 10:22:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+59,1,arrival,arrival_departure,3082.2790417719784,2024-08-03 10:22:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+59,1,HEMS call start,queue,3082.2790417719784,2024-08-03 10:22:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+60,1,CC71,resource_use,3088.2364868773398,2024-08-03 10:28:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,arrival,arrival_departure,3088.2364868773398,2024-08-03 10:28:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,HEMS call start,queue,3088.2364868773398,2024-08-03 10:28:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,HEMS allocated to call,queue,3094.2364868773398,2024-08-03 10:34:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,HEMS mobile,queue,3095.2364868773398,2024-08-03 10:35:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+59,1,HEMS allocated to call,queue,3105.2790417719784,2024-08-03 10:45:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+59,1,HEMS mobile,queue,3110.2790417719784,2024-08-03 10:50:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+60,1,HEMS on scene,queue,3121.2364868773398,2024-08-03 11:01:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,HEMS leaving scene,queue,3124.2364868773398,2024-08-03 11:04:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+59,1,HEMS on scene,queue,3127.2790417719784,2024-08-03 11:07:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+60,1,HEMS arrived destination,queue,3145.2364868773398,2024-08-03 11:25:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+61,1,CC70,resource_use,3146.767857500873,2024-08-03 11:26:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,arrival,arrival_departure,3146.767857500873,2024-08-03 11:26:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,HEMS call start,queue,3146.767857500873,2024-08-03 11:26:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,HEMS allocated to call,queue,3150.767857500873,2024-08-03 11:30:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,HEMS mobile,queue,3151.767857500873,2024-08-03 11:31:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,HEMS on scene,queue,3162.767857500873,2024-08-03 11:42:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,HEMS patient treated (not conveyed),queue,3165.767857500873,2024-08-03 11:45:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+62,1,H70,resource_use,3166.5832333824974,2024-08-03 11:46:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+62,1,arrival,arrival_departure,3166.5832333824974,2024-08-03 11:46:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+62,1,HEMS call start,queue,3166.5832333824974,2024-08-03 11:46:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+62,1,HEMS allocated to call,queue,3173.5832333824974,2024-08-03 11:53:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+62,1,HEMS mobile,queue,3178.5832333824974,2024-08-03 11:58:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+59,1,HEMS leaving scene,queue,3186.2790417719784,2024-08-03 12:06:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+63,1,arrival,arrival_departure,3191.5725339057944,2024-08-03 12:11:34.352034,Sat,12,weekend,8,3,,,17,65.0,Female
+63,1,No HEMS available,queue,3191.5725339057944,2024-08-03 12:11:34.352034,Sat,12,weekend,8,3,,,17,65.0,Female
+63,1,depart,arrival_departure,3191.5725339057944,2024-08-03 12:11:34.352034,Sat,12,weekend,8,3,,,17,65.0,Female
+63,1,depart,arrival_departure,3191.5725339057944,2024-08-03 12:11:34.352034,Sat,12,weekend,8,3,,,17,65.0,Female
+60,1,CC71,resource_use_end,3193.2364868773398,2024-08-03 12:13:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,HEMS clear,queue,3193.2364868773398,2024-08-03 12:13:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+60,1,depart,arrival_departure,3193.2364868773398,2024-08-03 12:13:14.189213,Sat,10,weekend,8,3,71,car,9,77.0,Male
+62,1,HEMS on scene,queue,3201.5832333824974,2024-08-03 12:21:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+61,1,CC70,resource_use_end,3204.767857500873,2024-08-03 12:24:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,HEMS clear,queue,3204.767857500873,2024-08-03 12:24:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+61,1,depart,arrival_departure,3204.767857500873,2024-08-03 12:24:46.071450,Sat,11,weekend,8,3,70,car,29,16.0,Male
+59,1,HEMS arrived destination,queue,3208.2790417719784,2024-08-03 12:28:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+62,1,HEMS leaving scene,queue,3216.5832333824974,2024-08-03 12:36:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+64,1,CC71,resource_use,3232.6881629173254,2024-08-03 12:52:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,arrival,arrival_departure,3232.6881629173254,2024-08-03 12:52:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,HEMS call start,queue,3232.6881629173254,2024-08-03 12:52:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,HEMS allocated to call,queue,3238.6881629173254,2024-08-03 12:58:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,HEMS mobile,queue,3240.6881629173254,2024-08-03 13:00:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+62,1,HEMS arrived destination,queue,3255.5832333824974,2024-08-03 13:15:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+59,1,H71,resource_use_end,3258.2790417719784,2024-08-03 13:18:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+59,1,HEMS clear,queue,3258.2790417719784,2024-08-03 13:18:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+59,1,depart,arrival_departure,3258.2790417719784,2024-08-03 13:18:16.742506,Sat,10,weekend,8,3,71,helicopter,31,87.0,Male
+64,1,HEMS on scene,queue,3259.6881629173254,2024-08-03 13:19:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,HEMS leaving scene,queue,3262.6881629173254,2024-08-03 13:22:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+62,1,H70,resource_use_end,3267.5832333824974,2024-08-03 13:27:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+62,1,HEMS clear,queue,3267.5832333824974,2024-08-03 13:27:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+62,1,depart,arrival_departure,3267.5832333824974,2024-08-03 13:27:34.994003,Sat,11,weekend,8,3,70,helicopter,14,21.0,Male
+64,1,HEMS arrived destination,queue,3281.6881629173254,2024-08-03 13:41:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,CC71,resource_use_end,3295.6881629173254,2024-08-03 13:55:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,HEMS clear,queue,3295.6881629173254,2024-08-03 13:55:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+64,1,depart,arrival_departure,3295.6881629173254,2024-08-03 13:55:41.289775,Sat,12,weekend,8,3,71,car,12,35.0,Female
+65,1,H71,resource_use,3322.5341470587427,2024-08-03 14:22:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+65,1,arrival,arrival_departure,3322.5341470587427,2024-08-03 14:22:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+65,1,HEMS call start,queue,3322.5341470587427,2024-08-03 14:22:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+65,1,HEMS allocated to call,queue,3336.5341470587427,2024-08-03 14:36:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+66,1,CC70,resource_use,3338.0922864178187,2024-08-03 14:38:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+66,1,arrival,arrival_departure,3338.0922864178187,2024-08-03 14:38:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+66,1,HEMS call start,queue,3338.0922864178187,2024-08-03 14:38:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+66,1,HEMS allocated to call,queue,3340.0922864178187,2024-08-03 14:40:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+65,1,HEMS mobile,queue,3341.5341470587427,2024-08-03 14:41:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+65,1,HEMS stand down en route,queue,3341.5341470587427,2024-08-03 14:41:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+66,1,HEMS mobile,queue,3342.0922864178187,2024-08-03 14:42:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+66,1,HEMS stand down en route,queue,3342.0922864178187,2024-08-03 14:42:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+65,1,H71,resource_use_end,3361.5341470587427,2024-08-03 15:01:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+65,1,HEMS clear,queue,3361.5341470587427,2024-08-03 15:01:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+65,1,depart,arrival_departure,3361.5341470587427,2024-08-03 15:01:32.048824,Sat,14,weekend,8,3,71,helicopter,31,88.0,Female
+66,1,CC70,resource_use_end,3362.0922864178187,2024-08-03 15:02:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+66,1,HEMS clear,queue,3362.0922864178187,2024-08-03 15:02:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+66,1,depart,arrival_departure,3362.0922864178187,2024-08-03 15:02:05.537185,Sat,14,weekend,8,3,70,car,29,33.0,Male
+67,1,H70,resource_use,3439.6943131316307,2024-08-03 16:19:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+67,1,arrival,arrival_departure,3439.6943131316307,2024-08-03 16:19:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+67,1,HEMS call start,queue,3439.6943131316307,2024-08-03 16:19:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+68,1,CC71,resource_use,3441.14257213748,2024-08-03 16:21:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+68,1,arrival,arrival_departure,3441.14257213748,2024-08-03 16:21:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+68,1,HEMS call start,queue,3441.14257213748,2024-08-03 16:21:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+69,1,H71,resource_use,3455.480349690921,2024-08-03 16:35:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+69,1,arrival,arrival_departure,3455.480349690921,2024-08-03 16:35:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+69,1,HEMS call start,queue,3455.480349690921,2024-08-03 16:35:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+70,1,CC70,resource_use,3458.0632829647657,2024-08-03 16:38:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+70,1,arrival,arrival_departure,3458.0632829647657,2024-08-03 16:38:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+70,1,HEMS call start,queue,3458.0632829647657,2024-08-03 16:38:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+70,1,HEMS allocated to call,queue,3464.0632829647657,2024-08-03 16:44:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+70,1,HEMS mobile,queue,3465.0632829647657,2024-08-03 16:45:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+67,1,HEMS allocated to call,queue,3465.6943131316307,2024-08-03 16:45:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+69,1,HEMS allocated to call,queue,3468.480349690921,2024-08-03 16:48:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+67,1,HEMS mobile,queue,3471.6943131316307,2024-08-03 16:51:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+67,1,HEMS stand down en route,queue,3471.6943131316307,2024-08-03 16:51:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+69,1,HEMS mobile,queue,3473.480349690921,2024-08-03 16:53:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+71,1,arrival,arrival_departure,3481.636172969337,2024-08-03 17:01:38.170378,Sat,17,weekend,8,3,,,30,19.0,Female
+71,1,No HEMS available,queue,3481.636172969337,2024-08-03 17:01:38.170378,Sat,17,weekend,8,3,,,30,19.0,Female
+71,1,depart,arrival_departure,3481.636172969337,2024-08-03 17:01:38.170378,Sat,17,weekend,8,3,,,30,19.0,Female
+71,1,depart,arrival_departure,3481.636172969337,2024-08-03 17:01:38.170378,Sat,17,weekend,8,3,,,30,19.0,Female
+69,1,HEMS on scene,queue,3490.480349690921,2024-08-03 17:10:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+70,1,HEMS on scene,queue,3492.0632829647657,2024-08-03 17:12:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+68,1,HEMS allocated to call,queue,3494.14257213748,2024-08-03 17:14:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+69,1,HEMS leaving scene,queue,3494.480349690921,2024-08-03 17:14:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+70,1,HEMS landed but no patient contact,queue,3495.0632829647657,2024-08-03 17:15:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+68,1,HEMS mobile,queue,3495.14257213748,2024-08-03 17:15:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+68,1,HEMS stand down en route,queue,3495.14257213748,2024-08-03 17:15:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+67,1,H70,resource_use_end,3503.6943131316307,2024-08-03 17:23:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+67,1,HEMS clear,queue,3503.6943131316307,2024-08-03 17:23:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+67,1,depart,arrival_departure,3503.6943131316307,2024-08-03 17:23:41.658788,Sat,16,weekend,8,3,70,helicopter,17,45.0,Female
+70,1,CC70,resource_use_end,3509.0632829647657,2024-08-03 17:29:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+70,1,HEMS clear,queue,3509.0632829647657,2024-08-03 17:29:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+70,1,depart,arrival_departure,3509.0632829647657,2024-08-03 17:29:03.796978,Sat,16,weekend,8,3,70,car,17,35.0,Female
+68,1,CC71,resource_use_end,3515.14257213748,2024-08-03 17:35:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+68,1,HEMS clear,queue,3515.14257213748,2024-08-03 17:35:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+68,1,depart,arrival_departure,3515.14257213748,2024-08-03 17:35:08.554328,Sat,16,weekend,8,3,71,car,9,40.0,Male
+69,1,HEMS arrived destination,queue,3527.480349690921,2024-08-03 17:47:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+69,1,H71,resource_use_end,3565.480349690921,2024-08-03 18:25:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+69,1,HEMS clear,queue,3565.480349690921,2024-08-03 18:25:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+69,1,depart,arrival_departure,3565.480349690921,2024-08-03 18:25:28.820981,Sat,16,weekend,8,3,71,helicopter,17,84.0,Female
+72,1,H70,resource_use,3623.941783247185,2024-08-03 19:23:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,arrival,arrival_departure,3623.941783247185,2024-08-03 19:23:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,HEMS call start,queue,3623.941783247185,2024-08-03 19:23:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,HEMS allocated to call,queue,3657.941783247185,2024-08-03 19:57:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,HEMS mobile,queue,3662.941783247185,2024-08-03 20:02:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+73,1,CC70,resource_use,3672.0953361619772,2024-08-03 20:12:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+73,1,arrival,arrival_departure,3672.0953361619772,2024-08-03 20:12:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+73,1,HEMS call start,queue,3672.0953361619772,2024-08-03 20:12:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+72,1,HEMS on scene,queue,3675.941783247185,2024-08-03 20:15:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,HEMS leaving scene,queue,3679.941783247185,2024-08-03 20:19:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+73,1,HEMS allocated to call,queue,3706.0953361619772,2024-08-03 20:46:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+73,1,HEMS mobile,queue,3707.0953361619772,2024-08-03 20:47:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+72,1,HEMS arrived destination,queue,3726.941783247185,2024-08-03 21:06:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+73,1,HEMS on scene,queue,3750.0953361619772,2024-08-03 21:30:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+73,1,HEMS patient treated (not conveyed),queue,3753.0953361619772,2024-08-03 21:33:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+72,1,H70,resource_use_end,3754.941783247185,2024-08-03 21:34:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,HEMS clear,queue,3754.941783247185,2024-08-03 21:34:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+72,1,depart,arrival_departure,3754.941783247185,2024-08-03 21:34:56.506995,Sat,19,weekend,8,3,70,helicopter,12,77.0,Female
+73,1,CC70,resource_use_end,3763.0953361619772,2024-08-03 21:43:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+73,1,HEMS clear,queue,3763.0953361619772,2024-08-03 21:43:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+73,1,depart,arrival_departure,3763.0953361619772,2024-08-03 21:43:05.720170,Sat,20,weekend,8,3,70,car,27,36.0,Male
+74,1,CC70,resource_use,3779.75231189754,2024-08-03 21:59:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,arrival,arrival_departure,3779.75231189754,2024-08-03 21:59:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,HEMS call start,queue,3779.75231189754,2024-08-03 21:59:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,HEMS allocated to call,queue,3803.75231189754,2024-08-03 22:23:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,HEMS mobile,queue,3804.75231189754,2024-08-03 22:24:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,HEMS on scene,queue,3823.75231189754,2024-08-03 22:43:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,HEMS landed but no patient contact,queue,3826.75231189754,2024-08-03 22:46:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+75,1,H70,resource_use,3835.130205291566,2024-08-03 22:55:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,arrival,arrival_departure,3835.130205291566,2024-08-03 22:55:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,HEMS call start,queue,3835.130205291566,2024-08-03 22:55:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,HEMS allocated to call,queue,3840.130205291566,2024-08-03 23:00:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,HEMS mobile,queue,3845.130205291566,2024-08-03 23:05:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,HEMS stand down en route,queue,3845.130205291566,2024-08-03 23:05:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+74,1,CC70,resource_use_end,3845.75231189754,2024-08-03 23:05:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,HEMS clear,queue,3845.75231189754,2024-08-03 23:05:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+74,1,depart,arrival_departure,3845.75231189754,2024-08-03 23:05:45.138714,Sat,21,weekend,8,3,70,car,29,39.0,Male
+75,1,H70,resource_use_end,3866.130205291566,2024-08-03 23:26:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,HEMS clear,queue,3866.130205291566,2024-08-03 23:26:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+75,1,depart,arrival_departure,3866.130205291566,2024-08-03 23:26:07.812317,Sat,22,weekend,8,3,70,helicopter,31,38.0,Female
+76,1,H70,resource_use,3933.787051347333,2024-08-04 00:33:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,arrival,arrival_departure,3933.787051347333,2024-08-04 00:33:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,HEMS call start,queue,3933.787051347333,2024-08-04 00:33:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,HEMS allocated to call,queue,3946.787051347333,2024-08-04 00:46:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,HEMS mobile,queue,3949.787051347333,2024-08-04 00:49:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+77,1,CC70,resource_use,3957.718554366185,2024-08-04 00:57:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,arrival,arrival_departure,3957.718554366185,2024-08-04 00:57:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,HEMS call start,queue,3957.718554366185,2024-08-04 00:57:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,HEMS allocated to call,queue,3965.718554366185,2024-08-04 01:05:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,HEMS mobile,queue,3966.718554366185,2024-08-04 01:06:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,HEMS on scene,queue,3972.718554366185,2024-08-04 01:12:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,HEMS landed but no patient contact,queue,3978.718554366185,2024-08-04 01:18:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,CC70,resource_use_end,3984.718554366185,2024-08-04 01:24:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,HEMS clear,queue,3984.718554366185,2024-08-04 01:24:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+77,1,depart,arrival_departure,3984.718554366185,2024-08-04 01:24:43.113262,Sun,0,weekend,8,3,70,car,17,53.0,Male
+76,1,HEMS on scene,queue,3991.787051347333,2024-08-04 01:31:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,HEMS patient treated (not conveyed),queue,3995.787051347333,2024-08-04 01:35:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+78,1,CC70,resource_use,4015.0812679851992,2024-08-04 01:55:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,arrival,arrival_departure,4015.0812679851992,2024-08-04 01:55:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,HEMS call start,queue,4015.0812679851992,2024-08-04 01:55:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,HEMS allocated to call,queue,4021.0812679851992,2024-08-04 02:01:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,HEMS mobile,queue,4022.0812679851992,2024-08-04 02:02:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,HEMS stand down en route,queue,4022.0812679851992,2024-08-04 02:02:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,CC70,resource_use_end,4026.0812679851992,2024-08-04 02:06:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,HEMS clear,queue,4026.0812679851992,2024-08-04 02:06:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+78,1,depart,arrival_departure,4026.0812679851992,2024-08-04 02:06:04.876079,Sun,1,weekend,8,3,70,car,27,43.0,Female
+76,1,H70,resource_use_end,4026.787051347333,2024-08-04 02:06:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,HEMS clear,queue,4026.787051347333,2024-08-04 02:06:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+76,1,depart,arrival_departure,4026.787051347333,2024-08-04 02:06:47.223081,Sun,0,weekend,8,3,70,helicopter,27,34.0,Male
+79,1,arrival,arrival_departure,4034.4255929248743,2024-08-04 02:14:25.535575,Sun,2,weekend,8,3,,,10,59.0,Female
+79,1,No HEMS available,queue,4034.4255929248743,2024-08-04 02:14:25.535575,Sun,2,weekend,8,3,,,10,59.0,Female
+79,1,depart,arrival_departure,4034.4255929248743,2024-08-04 02:14:25.535575,Sun,2,weekend,8,3,,,10,59.0,Female
+79,1,depart,arrival_departure,4034.4255929248743,2024-08-04 02:14:25.535575,Sun,2,weekend,8,3,,,10,59.0,Female
+58,1,HEMS patient treated (not conveyed),queue,4180.228878116344,2024-08-04 04:40:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,CC72,resource_use_end,4185.228878116344,2024-08-04 04:45:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,HEMS clear,queue,4185.228878116344,2024-08-04 04:45:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+58,1,depart,arrival_departure,4185.228878116344,2024-08-04 04:45:13.732687,Sat,9,weekend,8,3,72,car,9,75.0,Female
+80,1,arrival,arrival_departure,4240.967358145032,2024-08-04 05:40:58.041489,Sun,5,weekend,8,3,,,17,67.0,Male
+80,1,No HEMS available,queue,4240.967358145032,2024-08-04 05:40:58.041489,Sun,5,weekend,8,3,,,17,67.0,Male
+80,1,depart,arrival_departure,4240.967358145032,2024-08-04 05:40:58.041489,Sun,5,weekend,8,3,,,17,67.0,Male
+80,1,depart,arrival_departure,4240.967358145032,2024-08-04 05:40:58.041489,Sun,5,weekend,8,3,,,17,67.0,Male
+81,1,arrival,arrival_departure,4296.902034211378,2024-08-04 06:36:54.122053,Sun,6,weekend,8,3,,,29,35.0,Male
+81,1,No HEMS available,queue,4296.902034211378,2024-08-04 06:36:54.122053,Sun,6,weekend,8,3,,,29,35.0,Male
+81,1,depart,arrival_departure,4296.902034211378,2024-08-04 06:36:54.122053,Sun,6,weekend,8,3,,,29,35.0,Male
+81,1,depart,arrival_departure,4296.902034211378,2024-08-04 06:36:54.122053,Sun,6,weekend,8,3,,,29,35.0,Male
+82,1,arrival,arrival_departure,4306.215369249172,2024-08-04 06:46:12.922155,Sun,6,weekend,8,3,,,12,62.0,Female
+82,1,No HEMS available,queue,4306.215369249172,2024-08-04 06:46:12.922155,Sun,6,weekend,8,3,,,12,62.0,Female
+82,1,depart,arrival_departure,4306.215369249172,2024-08-04 06:46:12.922155,Sun,6,weekend,8,3,,,12,62.0,Female
+82,1,depart,arrival_departure,4306.215369249172,2024-08-04 06:46:12.922155,Sun,6,weekend,8,3,,,12,62.0,Female
