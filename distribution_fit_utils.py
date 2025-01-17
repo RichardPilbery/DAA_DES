@@ -96,9 +96,9 @@ class DistributionFitUtils():
         self.df['quarter'] = self.df['inc_date'].dt.quarter   
 
         # This will be needed for other datasets, but has already been computed for DAA
-        # self.df['ampds_card'] = self.df['ampds_code'].str[:2]
+        self.df['ampds_card'] = self.df['ampds_code'].str[:2]
 
-        # get proportions of AMPDS card by hour of day
+        #get proportions of AMPDS card by hour of day
         self.hour_by_ampds_card_probs()
 
         # Determine 'best' distributions for time-based data
@@ -112,6 +112,12 @@ class DistributionFitUtils():
 
         # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
         self.inter_arrival_times()
+
+        # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
+        self.hourly_arrival_by_qtr_probs()
+
+        # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
+        self.incidents_per_day()
 
         # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
         self.callsign_group_by_ampds_card_and_hour_probs()
@@ -214,12 +220,12 @@ class DistributionFitUtils():
 
         age_df = self.df[["age", "ampds_card"]].dropna()
         ampds_cards = age_df['ampds_card'].unique()
+        print(ampds_cards)
 
         for card in ampds_cards:
             fit_ages = age_df[age_df['ampds_card'] == card]['age']
             best_fit = self.getBestFit(fit_ages, distr=self.sim_tools_distr_plus)
-            # Note that wrapping card in int() prevents JSON whinging about not supporting 64 bit floats...
-            return_dict = { "ampds_card": int(card), "best_fit": best_fit, "n": len(fit_ages)}
+            return_dict = { "ampds_card": str(card), "best_fit": best_fit, "n": len(fit_ages)}
             age_distr.append(return_dict)
 
         with open('distribution_data/age_distributions.txt', 'w+') as convert_file:
@@ -258,6 +264,53 @@ class DistributionFitUtils():
         ia_times_df.to_csv('distribution_data/inter_arrival_times.csv', mode='w+')
 
 
+    def incidents_per_day(self):
+        """
+        
+            Determine the best fitting distribution for incidents per
+            day stratified by quarter
+        
+        """
+
+        inc_df = self.df[['inc_date', 'date_only', 'quarter']].dropna()\
+            .drop_duplicates(subset="inc_date", keep="first")
+        
+        #print(inc_df.shape)
+        
+        jpd_df = inc_df.groupby(['date_only', 'quarter']).size().reset_index(name = 'jobs_per_day')
+
+        quarters = jpd_df['quarter'].unique()
+
+        jpd_distr = []
+
+        for q in quarters:
+            fit_quarter = jpd_df[jpd_df['quarter'] == q]['jobs_per_day']
+            best_fit = self.getBestFit(fit_quarter, distr=self.sim_tools_distr_plus )
+            return_dict = { "quarter": int(q), "best_fit": best_fit, "n": len(fit_quarter)}
+            jpd_distr.append(return_dict)
+            
+        with open('distribution_data/inc_per_day_distributions.txt', 'w+') as convert_file:
+            convert_file.write(json.dumps(jpd_distr))
+        convert_file.close()
+
+
+    def hourly_arrival_by_qtr_probs(self):
+        """
+        
+            Calculates the proportions of calls arriving in any given hour
+            stratified by yearly quarter
+        
+        """
+
+        ia_df = self.df[['quarter', 'hour']].dropna()
+
+        hourly_counts = ia_df.groupby(['hour', 'quarter']).size().reset_index(name='count')
+        total_counts = hourly_counts.groupby(['quarter'])['count'].transform('sum')
+        hourly_counts['proportion'] = round(hourly_counts['count'] / total_counts, 4)
+
+        hourly_counts.sort_values(by=['quarter', 'hour']).to_csv('distribution_data/hourly_arrival_by_qtr_probs.csv', mode="w+")
+
+
     def callsign_group_by_ampds_card_and_hour_probs(self):
         """
         
@@ -271,6 +324,7 @@ class DistributionFitUtils():
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv', mode = "w+")
+
 
     def vehicle_type_by_month_probs(self):
         """
