@@ -35,6 +35,7 @@ class Utils:
 
         # Load in mean inter_arrival_times
         self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
+        self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
         self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_ampds_card_probs.csv')
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
         self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
@@ -56,6 +57,13 @@ class Utils:
         inFile.close()
         self.activity_time_distr = activity_time_data
 
+        # Read in incident per day distribution data into a dictionary
+        activity_time_data = []
+        with open("distribution_data/inc_per_day_distributions.txt", "r") as inFile:
+            inc_per_day_data = ast.literal_eval(inFile.read())
+        inFile.close()
+        self.inc_per_day_distr = inc_per_day_data
+
 
     def current_time() -> str:
         """
@@ -64,7 +72,7 @@ class Utils:
         now = datetime.now()
         return now.strftime("%H:%M:%S")
 
-    def date_time_of_call(self, start_dt: str, elapsed_time: int) -> list[int, int, str, int, int, pd.Timestamp]:
+    def date_time_of_call(self, start_dt: str, elapsed_time: int) -> list[int, int, str, int, pd.Timestamp]:
         """
         Calculate a range of time-based parameters given a specific date-time
 
@@ -258,6 +266,26 @@ class Utils:
         sampled_time = self.sample_from_distribution(distribution)
 
         return sampled_time
+    
+    def inc_per_day(self, quarter: int) -> float:
+        """
+            This function will return a dictionary containing
+            the distribution and parameters for the distribution 
+            that match the provided HEMS vehicle type and time type
+
+        """
+
+        distribution = {}
+
+        for i in self.inc_per_day_distr:
+            #print(i)
+            if (i['quarter'] == quarter):
+                #print('Match')
+                distribution = i['best_fit']
+
+        sampled_inc_per_day = self.sample_from_distribution(distribution)
+
+        return sampled_inc_per_day
 
     def sample_from_distribution(self, distr: dict) -> float:
         """
