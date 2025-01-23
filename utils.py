@@ -234,12 +234,12 @@ class Utils:
 
         for i in self.age_distr:
             #print(i)
-            if i['ampds_card'] == ampds_card:
+            if i['ampds_card'] == str(ampds_card):
                 #print('Match')
                 distribution = i['best_fit']
 
-        # print(f"Getting age for {ampds_card}")
-        # print(distribution)
+        #print(f"Getting age for {ampds_card}")
+        #print(distribution)
 
         age = 100000
         while age > max_age:

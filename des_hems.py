@@ -103,7 +103,7 @@ class DES_HEMS:
         
         self.calls_today = int(self.utils.inc_per_day(quarter))
 
-        print(f"There are going to be {self.calls_today} calls today and the current hour is {current_hour}")
+        #print(f"There are going to be {self.calls_today} calls today and the current hour is {current_hour}")
 
         hourly_activity = self.utils.hourly_arrival_by_qtr_probs_df
         hourly_activity_for_qtr = hourly_activity[hourly_activity['quarter'] == quarter][['hour','proportion']]
@@ -164,7 +164,7 @@ class DES_HEMS:
                 if(self.new_day != current_dt.date):
                     self.new_day = current_dt.date
                     ia_list = self.predetermine_call_arrival(hod, qtr)
-                    print(ia_list)
+                    #print(ia_list)
 
                 if self.calls_today > 0:
                     # Work out how long until next incident
@@ -172,88 +172,74 @@ class DES_HEMS:
                         yield self.env.timeout(t)
                         [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
                         print(f"Creating new patient at {current_dt}")
+                        self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
 
                     # Now skip to tomorrow
                     print(current_dt.date())
                     tomorrow = datetime.combine(current_dt.date() + timedelta(days=1), time.min)
                     #print(f"Tomorrow is {tomorrow}")
                     if current_dt < tomorrow:
-                        print('Need to yield until tomorrow')
+                        #print('Need to yield until tomorrow')
                         time_to_tomorrow = math.ceil(pd.to_timedelta(tomorrow - current_dt).total_seconds() / 60)
                         #print(f"End of list Time to tomorrow is {time_to_tomorrow} minutes")
                         yield self.env.timeout(time_to_tomorrow)
                 else:
                     # Skip to next day
-                    print('Skip to tomorrow')
+                    #print('Skip to tomorrow')
                     tomorrow = datetime.combine(current_dt.date() + timedelta(days=1), time.min)
                     time_to_tomorrow = math.ceil(pd.to_timedelta(tomorrow - current_dt).total_seconds() / 60)
                     #print(f"Skipping Time to tomorrow is {time_to_tomorrow} minutes")
                     yield self.env.timeout(time_to_tomorrow)
 
 
+    def generate_patient(self, dow, hod, weekday, month, qtr, current_dt):
+        
+        self.patient_counter += 1
 
+        # Create a new caller/patient
+        pt = Patient(self.patient_counter)
 
+        # Update patient instance with time-based values so the current time is known
+        pt.day = dow
+        pt.hour = hod
+        pt.weekday = weekday
+        pt.month = month
+        pt.qtr = qtr
+        pt.current_dt = current_dt
 
-                
-                # self.patient_counter += 1
+        print(f"Patient {pt.id} incident date: {pt.current_dt}")
 
-                # # Create a new caller/patient
-                # pt = Patient(self.patient_counter)
+        # Update patient instance with age, sex, AMPDS card, whether they are a HEMS' patient and if so, the HEMS result,
+        pt.ampds_card = self.utils.ampds_code_selection(pt.hour)
+        print(f"AMPDS card is {pt.ampds_card}")
+        pt.age = self.utils.age_sampling(pt.ampds_card, 115)
+        pt.sex = self.utils.sex_selection(pt.ampds_card)
 
-                
+        if self.amb_data:
+            # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
+            # if ambulance data is being collected too.
+            print("Ambulance case")
+            pt.hems_case = 1 if uniform(0, 1) <= 0.5 else pt.hems_case == 0
+        else:
+            pt.hems_case = 1
 
-                # # Update patient instance with time-based values so the current time is known
-                # pt.day = dow
-                # pt.hour = hod
-                # pt.weekday = weekday
-                # pt.month = month
-                # pt.qtr = qtr
-                # pt.current_dt = current_dt
+        if pt.hems_case == 1:
+            #print(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
+            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
+            #print(f"Callsign is {pt.hems_pref_callsign_group}")
+            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
+            #print(f"Vehicle type is {pt.hems_pref_vehicle_type}")
 
-                # print(f"Patient {pt.id} incident date: {pt.current_dt}")
+            hems_allocation: HEMS = yield self.hems_resources.allocate_resource(pt)
 
-                # # Update patient instance with age, sex, AMPDS card, whether they are a HEMS' patient and if so, the HEMS result,
-                # pt.ampds_card = self.utils.ampds_code_selection(pt.hour)
-                # #print(f"AMPDS card is {pt.ampds_card}")
-                # pt.age = self.utils.age_sampling(pt.ampds_card, 115)
-                # pt.sex = self.utils.sex_selection(pt.ampds_card)
+            if hems_allocation is not None:
+                print(f"allocated {hems_allocation.callsign}")
+                self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
-                # if self.amb_data:
-                #     # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
-                #     # if ambulance data is being collected too.
-                #     print("Ambulance case")
-                #     pt.hems_case = 1 if uniform(0, 1) <= 0.5 else pt.hems_case == 0
-                # else:
-                #     pt.hems_case = 1
-
-                # if pt.hems_case == 1:
-                #     #print(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
-                #     pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
-                #     #print(f"Callsign is {pt.hems_pref_callsign_group}")
-                #     pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
-                #     #print(f"Vehicle type is {pt.hems_pref_vehicle_type}")
-
-                #     hems_allocation: HEMS = yield self.hems_resources.allocate_resource(pt)
-
-                #     if hems_allocation is not None:
-                #         print(f"allocated {hems_allocation.callsign}")
-                #         self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
-
-                #         self.env.process(self.patient_journey(hems_allocation, pt))
-                #     else:
-                #         print("No HEMS resource available - non-DAAT land crew sent")
-                #         self.env.process(self.patient_journey(None, pt))
-
-                #     # hems_allocation_event.callbacks.append(lambda event: self.log(event, pt))
-                #     # hems_allocation_event.callbacks.append(lambda event: self.patient_journey(event, pt))
-
-                # # Determine the interarrival time for the next patient by sampling from the exponential distrubution
-                # sampled_interarrival = self.calc_interarrival_time(pt)
-
-                # print(f"sampled interrarival time is {sampled_interarrival} mins")
-
-                # # Freeze function until interarrival time has elapsed
-                # yield self.env.timeout(sampled_interarrival)
+                self.env.process(self.patient_journey(hems_allocation, pt))
+            else:
+                print("No HEMS resource available - non-DAAT land crew sent")
+                self.env.process(self.patient_journey(None, pt))
 
 
     def patient_journey(self, hems_res: HEMS, patient: Patient):

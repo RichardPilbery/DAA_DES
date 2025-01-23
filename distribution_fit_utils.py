@@ -1,3 +1,4 @@
+from csv import QUOTE_ALL
 import numpy as np
 import pandas as pd
 import json
@@ -79,7 +80,7 @@ class DistributionFitUtils():
         """
 
         try:
-            df = pd.read_csv(self.file_path)
+            df = pd.read_csv(self.file_path, quoting=QUOTE_ALL)
             self.df = df
             
             # Perhaps run some kind of checking function here.
@@ -96,7 +97,7 @@ class DistributionFitUtils():
         self.df['quarter'] = self.df['inc_date'].dt.quarter   
 
         # This will be needed for other datasets, but has already been computed for DAA
-        self.df['ampds_card'] = self.df['ampds_code'].str[:2]
+        #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
 
         #get proportions of AMPDS card by hour of day
         self.hour_by_ampds_card_probs()
@@ -144,6 +145,8 @@ class DistributionFitUtils():
         category_counts = self.df.groupby(['hour', 'ampds_card']).size().reset_index(name='count')
         total_counts = category_counts.groupby('hour')['count'].transform('sum')
         category_counts['proportion'] = round(category_counts['count'] / total_counts, 4)
+
+        #category_counts['ampds_card'] = category_counts['ampds_card'].apply(lambda x: str(x).zfill(2))
 
         category_counts.to_csv('distribution_data/hour_by_ampds_card_probs.csv', mode="w+")
 
