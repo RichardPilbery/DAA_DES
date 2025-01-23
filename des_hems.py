@@ -92,16 +92,11 @@ class DES_HEMS:
             return expovariate(1.0 / inter_time)
         
 
-    def predetermine_call_arrival(self, current_hour: int, quarter: int) -> list:
+    def calls_per_hour(self, quarter: int) -> dict:
         """
-            Function to determine the number of calls in
-            24 hours and the inter-arrival rate for calls in that period
-            Returns a list of times that should be used in the yield timeout statement
-            in a patient generator
-
+            Function to return a dictionary of keys representing the hour of day
+            and value representing the number of calls in that hour
         """
-        
-        self.calls_today = int(self.utils.inc_per_day(quarter))
 
         #print(f"There are going to be {self.calls_today} calls today and the current hour is {current_hour}")
 
@@ -126,7 +121,21 @@ class DES_HEMS:
         for i in range(len(hours)):
             d[hours[i]] = counts[i]
 
-        #print(d)
+        return d
+    
+    def predetermine_call_arrival(self, current_hour: int, quarter: int) -> list:
+        """
+            Function to determine the number of calls in
+            24 hours and the inter-arrival rate for calls in that period
+            Returns a list of times that should be used in the yield timeout statement
+            in a patient generator
+
+        """
+        
+        hourly_activity = self.utils.hourly_arrival_by_qtr_probs_df
+        hourly_activity_for_qtr = hourly_activity[hourly_activity['quarter'] == quarter][['hour','proportion']]
+
+        d = self.calls_per_hour(quarter)
 
         ia_time = []
 
@@ -141,6 +150,45 @@ class DES_HEMS:
 
         return ia_time
 
+
+    def generate_calls_v2(self):
+        """
+            **Call generator**
+
+            Alternative methods to generate calls (and patients) until current time equals sim_duration + warm_up_duration
+
+        """
+        ia_list = []
+
+        while self.env.now < (self.sim_duration + self.warm_up_duration):
+            # Get current day of week and hour of day
+            [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
+            print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
+
+            self.calls_today = int(self.utils.inc_per_day(qtr))
+
+            ia_dict = {}
+
+            # If it is a new day, need to calculate how many calls
+            # in the next 24 hours
+            if(self.new_day != current_dt.date):
+                self.new_day = current_dt.date
+                ia_dict = self.calls_per_hour(qtr)
+                #print(ia_list)
+
+            if self.calls_today > 0:
+                # Work out how long until next incident
+                if hod in ia_dict.keys() and ia_dict[hod] > 0:
+                    for i in range(0, ia_dict[hod]):
+                        #print(f"Creating new patient at {current_dt}")
+                        self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+                        
+                next_hr = current_dt.floor('h') + pd.Timedelta('1h')
+                yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
+
+                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                
 
 
     def generate_calls(self):
@@ -158,6 +206,8 @@ class DES_HEMS:
                 [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
                 print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
+
+                self.calls_today = int(self.utils.inc_per_day(qtr))
 
                 # If it is a new day, need to calculate how many calls
                 # in the next 24 hours
@@ -539,7 +589,7 @@ class DES_HEMS:
         print(f"HEMS class initialised with the following: {self.run_number} {self.sim_duration} {self.warm_up_duration} {self.sim_start_date}")
 
         # Start entity generators
-        self.env.process(self.generate_calls())
+        self.env.process(self.generate_calls_v2())
 
         # Run simulation
         self.env.run(until=(self.sim_duration + self.warm_up_duration))
