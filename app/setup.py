@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from datetime import time
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
@@ -145,14 +146,66 @@ else:
 
 # st.write(final_fleet_df)
 
-updated_helo_df = st.data_editor(final_helo_df,
-                                 disabled=["vehicle_type"],
-                                 column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"]
-                                 )
+for time_col in ["summer_start", "summer_end", "winter_start", "winter_end"]:
+    final_helo_df[time_col] = final_helo_df[time_col].apply(lambda x: time(x, 0))
+    final_car_df[time_col] = final_car_df[time_col].apply(lambda x: time(x, 0))
 
-updated_car_df = st.data_editor(final_car_df,
+
+updated_helo_df = st.data_editor(
+    final_helo_df.reset_index(),
+    disabled=["vehicle_type"],
+    hide_index=True,
+    column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"],
+    column_config={
+        "vehicle_type": "Vehicle Type",
+        "callsign": "Callsign",
+        "category": st.column_config.SelectboxColumn(
+            "Care Type", options=["EC", "CC"]),
+            "model": st.column_config.SelectboxColumn(
+            "Model", options=["Airbus EC135", "Airbus H145"],
+        ),
+        "summer_start": st.column_config.TimeColumn(
+            "Summer Start", format="hh:mm"
+        ),
+        "summer_end": st.column_config.TimeColumn(
+            "Summer End", format="hh:mm"
+        ),
+        "winter_start": st.column_config.TimeColumn(
+            "Winter Start", format="hh:mm"
+        ),
+        "winter_end": st.column_config.TimeColumn(
+            "Winter End", format="hh:mm"
+        )
+        }
+    )
+
+updated_car_df = st.data_editor(final_car_df.reset_index(),
+                                hide_index=True,
                                  disabled=["vehicle_type"],
-                                 column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"]
+                                 column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"],
+                                 column_config={
+        "vehicle_type": "Vehicle Type",
+        "callsign": "Callsign",
+        "category": st.column_config.SelectboxColumn(
+            "Care Type", options=["EC", "CC"]
+        ),
+            "model": st.column_config.SelectboxColumn(
+            "Model", options=["Volvo XC90"],
+        ),
+        "summer_start": st.column_config.TimeColumn(
+            "Summer Start", format="hh:mm"
+        ),
+        "summer_end": st.column_config.TimeColumn(
+            "Summer End", format="hh:mm"
+        ),
+        "winter_start": st.column_config.TimeColumn(
+            "Winter Start", format="hh:mm"
+        ),
+        "winter_end": st.column_config.TimeColumn(
+            "Winter End", format="hh:mm"
+        )
+
+        }
                                  )
 
 st.divider()
