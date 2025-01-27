@@ -105,7 +105,8 @@ if num_helicopters >2:
         "summer_start"         : 7,
         "winter_start"         : 7,
         "summer_end"           : 19,
-        "winter_end"           : 17
+        "winter_end"           : 17,
+        "model"                : "Airbus H145"
     }
         )
 
@@ -120,7 +121,8 @@ if num_cars >1:
         "summer_start"         : 8,
         "winter_start"         : 8,
         "summer_end"           : 18,
-        "winter_end"           : 18
+        "winter_end"           : 18,
+        "model"                : "Volvo XC90"
     }
         )
 
@@ -129,9 +131,9 @@ if (num_helicopters > 2):
     final_helo_df = pd.concat(
         [default_helos,
         pd.DataFrame(fleet_additional_helo_list).set_index('callsign')]
-        )
+        ).drop(columns="callsign_count")
 else:
-    final_helo_df = default_helos
+    final_helo_df = default_helos.drop(columns="callsign_count")
 
 st.data_editor(final_helo_df)
 
@@ -139,9 +141,9 @@ if (num_cars > 1):
     final_car_df = pd.concat(
         [default_cars,
         pd.DataFrame(fleet_additional_car_list).set_index('callsign')]
-        )
+        ).drop(columns="callsign_count")
 else:
-    final_car_df = default_cars
+    final_car_df = default_cars.drop(columns="callsign_count")
 
 # st.write(final_fleet_df)
 
