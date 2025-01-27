@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
@@ -70,22 +71,26 @@ st.caption("☀️ Summer Rota runs from March to October")
 st.caption("❄️ Winter Rota runs from November to February")
 
 
-default_helos = Utils.HEMS_ROTA[Utils.HEMS_ROTA["vehicle_type"]=="helicopter"]
+original_rota = Utils.HEMS_ROTA
+original_rota["callsign_count"] = original_rota.groupby('callsign_group')['callsign_group'].transform('count')
 
-st.write(default_helos)
+default_helos = original_rota[original_rota["vehicle_type"]=="helicopter"]
+default_cars = original_rota[(original_rota["vehicle_type"]=="car") &
+                             (original_rota["callsign_count"] == 1)]
 
 fleet_makeup_list = []
 
-if num_helicopters > 2:
-    for helo_idx in range(num_helicopters-2):
-        st.write("Fly")
+if num_helicopters == 1:
+    fleet_makeup_list.append(default_helos.head(1))
+elif num_helicopters >= 2:
+    fleet_makeup_list.append(default_helos)
 
-st.subheader("Operating Hours")
+if num_cars >= 1:
+    fleet_makeup_list.append(default_cars)
 
+final_fleet_df = pd.concat(fleet_makeup_list).drop(columns=["callsign_count"])
 
-st.subheader("Servicing Parameters")
-
-
+st.data_editor(final_fleet_df)
 
 st.divider()
 
