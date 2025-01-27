@@ -22,7 +22,8 @@ class Utils:
         "summer_start"         : [7, 7, 7, 9, 8],
         "winter_start"         : [7, 7, 7, 7, 8],
         "summer_end"           : [2, 2, 19, 19, 18],
-        "winter_end"           : [2, 2, 17, 17, 18]
+        "winter_end"           : [2, 2, 17, 17, 18],
+        "model"                : ["Airbus EC135", "Volvo XC90", "Airbus H145", "Volvo XC90", "Volvo XC90"]
     })
     HEMS_ROTA.set_index("callsign", inplace=True)
 
@@ -76,14 +77,14 @@ class Utils:
         """
         Calculate a range of time-based parameters given a specific date-time
 
-        **Returns:**  
-            list(  
-                `dow`             : int  
-                `current_hour`    : int  
-                `weekday`         : str   
+        **Returns:**
+            list(
+                `dow`             : int
+                `current_hour`    : int
+                `weekday`         : str
                 `current_month`   : int
-                `current_quarter` : int  
-                `current_dt`      : datetime  
+                `current_quarter` : int
+                `current_dt`      : datetime
             )
 
         """
@@ -102,9 +103,9 @@ class Utils:
         current_month = current_dt.month
 
         current_quarter = current_dt.quarter
-        
+
         return [dow, current_hour, weekday, current_month, current_quarter, current_dt]
-    
+
 
     def inter_arrival_rate(self, hour: int, quarter: int) -> float:
         """
@@ -132,19 +133,19 @@ class Utils:
         """
 
         df = self.hour_by_ampds_df[self.hour_by_ampds_df['hour'] == hour]
-        
+
         return pd.Series.sample(df['ampds_card'], weights = df['proportion']).iloc[0]
-    
-    
+
+
     def is_time_in_range(self, current: int, start: int, end: int) -> bool:
         """
         Function to check if a given time is within a range of start and end times on a 24-hour clock.
-        
+
         Parameters:
         - current (datetime.time): The time to check.
         - start (datetime.time): The start time.
         - end (datetime.time): The end time.
-        
+
         """
 
         current = time(current, 0)
@@ -208,11 +209,11 @@ class Utils:
         #print(f"Hems result is {hems_result}")
 
         df = self.pt_outcome_by_hems_result_df[self.pt_outcome_by_hems_result_df['hems_result'] == hems_result]
-        
+
         #print(df)
         return pd.Series.sample(df['pt_outcome'], weights = df['proportion']).iloc[0]
 
-    def sex_selection(self, ampds_card: int) -> str:       
+    def sex_selection(self, ampds_card: int) -> str:
         """
             This function will allocate and return the patient sex
             based on allocated AMPDS card category
@@ -221,7 +222,7 @@ class Utils:
         prob_female = self.sex_by_ampds_df[self.sex_by_ampds_df['ampds_card'] == ampds_card]['proportion']
 
         return 'Female' if (random.uniform(0, 1) < prob_female.iloc[0]) else 'Male'
-    
+
     def age_sampling(self, ampds_card: int, max_age: int) -> float:
         """
             This function will return the patient's age based
@@ -244,13 +245,13 @@ class Utils:
         age = 100000
         while age > max_age:
             age = self.sample_from_distribution(distribution)
-        
+
         return age
 
     def activity_time(self, vehicle_type: str, time_type: str) -> float:
         """
             This function will return a dictionary containing
-            the distribution and parameters for the distribution 
+            the distribution and parameters for the distribution
             that match the provided HEMS vehicle type and time type
 
         """
@@ -266,11 +267,11 @@ class Utils:
         sampled_time = self.sample_from_distribution(distribution)
 
         return sampled_time
-    
+
     def inc_per_day(self, quarter: int) -> float:
         """
             This function will return a dictionary containing
-            the distribution and parameters for the distribution 
+            the distribution and parameters for the distribution
             that match the provided HEMS vehicle type and time type
 
         """
