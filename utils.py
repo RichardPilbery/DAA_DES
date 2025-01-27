@@ -23,7 +23,7 @@ class Utils:
         "winter_start"         : [7, 7, 7, 7, 8],
         "summer_end"           : [2, 2, 19, 19, 18],
         "winter_end"           : [2, 2, 17, 17, 18],
-        "model"                : ["Airbus EC135", "Volvo XC90", "Airbus H145", "Volvo XC90", "Volvo XC90"]
+        "model"                : ["Airbus H145", "Volvo XC90", "Airbus EC135", "Volvo XC90", "Volvo XC90"]
     })
     HEMS_ROTA.set_index("callsign", inplace=True)
 
