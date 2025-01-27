@@ -131,23 +131,29 @@ if (num_helicopters > 2):
     final_helo_df = pd.concat(
         [default_helos,
         pd.DataFrame(fleet_additional_helo_list).set_index('callsign')]
-        ).drop(columns="callsign_count")
+        ).drop(columns=["callsign_count", "callsign_group"])
 else:
-    final_helo_df = default_helos.drop(columns="callsign_count")
-
-st.data_editor(final_helo_df)
+    final_helo_df = default_helos.drop(columns=["callsign_count", "callsign_group"])
 
 if (num_cars > 1):
     final_car_df = pd.concat(
         [default_cars,
         pd.DataFrame(fleet_additional_car_list).set_index('callsign')]
-        ).drop(columns="callsign_count")
+        ).drop(columns=["callsign_count", "callsign_group"])
 else:
-    final_car_df = default_cars.drop(columns="callsign_count")
+    final_car_df = default_cars.drop(columns=["callsign_count", "callsign_group"])
 
 # st.write(final_fleet_df)
 
-st.data_editor(final_car_df)
+updated_helo_df = st.data_editor(final_helo_df,
+                                 disabled=["vehicle_type"],
+                                 column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"]
+                                 )
+
+updated_car_df = st.data_editor(final_car_df,
+                                 disabled=["vehicle_type"],
+                                 column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"]
+                                 )
 
 st.divider()
 
