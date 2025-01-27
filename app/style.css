@@ -18,6 +18,10 @@
     color: white
 }
 
+[data-testid="stNavSectionHeader"]  {
+    color: white
+}
+
 [data-testid="stSidebarNavLink"] span {
     color: white;
     font-family: "Poppins", sans-serif;
