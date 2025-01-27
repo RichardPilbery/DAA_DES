@@ -165,16 +165,16 @@ updated_helo_df = st.data_editor(
             "Model", options=["Airbus EC135", "Airbus H145"],
         ),
         "summer_start": st.column_config.TimeColumn(
-            "Summer Start", format="hh:mm"
+            "Summer Start", format="HH:mm"
         ),
         "summer_end": st.column_config.TimeColumn(
-            "Summer End", format="hh:mm"
+            "Summer End", format="HH:mm"
         ),
         "winter_start": st.column_config.TimeColumn(
-            "Winter Start", format="hh:mm"
+            "Winter Start", format="HH:mm"
         ),
         "winter_end": st.column_config.TimeColumn(
-            "Winter End", format="hh:mm"
+            "Winter End", format="HH:mm"
         )
         }
     )
@@ -193,16 +193,16 @@ updated_car_df = st.data_editor(final_car_df.reset_index(),
             "Model", options=["Volvo XC90"],
         ),
         "summer_start": st.column_config.TimeColumn(
-            "Summer Start", format="hh:mm"
+            "Summer Start", format="HH:mm"
         ),
         "summer_end": st.column_config.TimeColumn(
-            "Summer End", format="hh:mm"
+            "Summer End", format="HH:mm"
         ),
         "winter_start": st.column_config.TimeColumn(
-            "Winter Start", format="hh:mm"
+            "Winter Start", format="HH:mm"
         ),
         "winter_end": st.column_config.TimeColumn(
-            "Winter End", format="hh:mm"
+            "Winter End", format="HH:mm"
         )
 
         }
