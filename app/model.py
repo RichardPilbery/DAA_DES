@@ -38,30 +38,10 @@ with col2:
 # Inputs to the model are currently contained within a collapsible sidebar
 # We may wish to move these elsewhere when
 with st.sidebar:
-    st.subheader("Model Inputs")
+    st.subheader("Model Input Summary")
 
-    st.markdown("#### Simulation Run Settings")
-
-    amb_data = st.toggle("Model ambulance service data", value=False)
-
-    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 365, 7)
-
-    warm_up_duration =  st.slider("Warm-up Duration (hours)", 0, 24*10, 0)
-    st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
-
-    number_of_runs_input = st.slider("Number of Runs", 1, 30, 5)
-
-    sim_start_date_input = st.date_input(
-        "Enter the Simulation Start Date",
-        value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S')
-        )
-
-    sim_start_time_input = st.time_input(
-        "Enter the Simulations Start Time",
-        value=datetime.strptime("2024-08-01 07:00:00", '%Y-%m-%d %H:%M:%S')
-        )
-
-    create_animation_input = st.toggle("Create Animation", value=False)
+    if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
+        st.switch_page("setup.py")
 
 button_run_pressed = st.button("Run simulation")
 
@@ -77,21 +57,24 @@ if button_run_pressed:
             print("Running sequentially")
             results = []
 
-            for run in range(number_of_runs_input):
+            for run in range(st.session_state.number_of_runs_input):
                 run_results = runSim(
                         run = run,
-                        total_runs = number_of_runs_input,
-                        sim_duration = float(sim_duration_input * 24 * 60),
-                        warm_up_time = float(warm_up_duration * 60),
-                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input),
-                        amb_data=amb_data
+                        total_runs = st.session_state.number_of_runs_input,
+                        sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
+                        warm_up_time = float(st.session_state.warm_up_duration * 60),
+                        sim_start_date = datetime.combine(
+                            st.session_state.sim_start_date_input,
+                            st.session_state.sim_start_time_input
+                            ),
+                        amb_data=st.session_state.amb_data
                     )
 
                 results.append(
                     run_results
                     )
 
-                my_bar.progress((run+1)/number_of_runs_input, text=progress_text)
+                my_bar.progress((run+1)/st.session_state.number_of_runs_input, text=progress_text)
 
             # Turn into a single dataframe when all runs complete
             results_all_runs = pd.concat(results)
@@ -100,11 +83,13 @@ if button_run_pressed:
         else:
             print("Running in parallel")
             parallelProcessJoblib(
-                        total_runs = number_of_runs_input,
-                        sim_duration = float(sim_duration_input * 24 * 60),
-                        warm_up_time = float(warm_up_duration * 60),
-                        sim_start_date = datetime.combine(sim_start_date_input, sim_start_time_input),
-                        amb_data = amb_data
+                        total_runs = st.session_state.number_of_runs_input,
+                        sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
+                        warm_up_time = float(st.session_state.warm_up_duration * 60),
+                        sim_start_date = datetime.combine(
+                            st.session_state.sim_start_date_input,
+                            st.session_state.sim_start_time_input),
+                        amb_data = st.session_state.amb_data
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -117,7 +102,7 @@ if button_run_pressed:
              "Debugging Visualisations - Resources"
              ]
 
-        if create_animation_input:
+        if st.session_state.create_animation_input:
             tab_names.append("Animation")
             tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
@@ -195,7 +180,7 @@ if button_run_pressed:
                     )
 
             st.subheader("Event Counts")
-            st.write(f"Period: {sim_duration_input} days")
+            st.write(f"Period: {st.session_state.sim_duration_input} days")
 
             # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
 
@@ -243,7 +228,7 @@ if button_run_pressed:
 
                 patient_filter = st.selectbox("Select a patient", results_all_runs.P_ID.unique())
 
-                tab_list =  st.tabs([f"Run {i+1}" for i in range(number_of_runs_input)])
+                tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
 
                 for idx, tab in enumerate(tab_list):
                     tab.plotly_chart(
@@ -276,7 +261,7 @@ if button_run_pressed:
                 )
             )
 
-        if create_animation_input:
+        if st.session_state.create_animation_input:
             with tab5:
 
                 st.error("Warning - this is not yet working as intended")
