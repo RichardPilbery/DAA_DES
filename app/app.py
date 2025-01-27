@@ -13,9 +13,8 @@ pg = st.navigation(
             st.Page("model.py", title="Run Simulation"),
             ],
         "Model Information": [
-
+            st.Page("what_is.py", title="Introduction to Simulation"),
             st.Page("info.py", title="Model Information"),
-            st.Page("what_is.py", title="Introduction to Simulation")
             ]
 
     }
