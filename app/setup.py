@@ -219,44 +219,49 @@ demand_adjust_type_high_level = st.radio("Adjust High-level Demand",
 
 if demand_adjust_type_high_level == "Overall Demand Adjustment":
     overall_demand_mult = st.slider(
-        "Overall Demand Multiplier",
-        min_value=0.9,
-        max_value=2.0,
-        value=1.0,
+        "Overall Demand Adjustment",
+        min_value=90,
+        max_value=200,
+        value=100,
+        format="%d%%",
         key="overall_demand_mult"
         )
 elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
     season_demand_col_1, season_demand_col_2, season_demand_col_3, season_demand_col_4 = st.columns(4)
 
     spring_demand_mult = season_demand_col_1.slider(
-        "🌼 Spring Demand Multiplier",
-        min_value=0.9,
-        max_value=2.0,
-        value=1.0,
+        "🌼 Spring Demand Adjustment",
+        min_value=90,
+        max_value=200,
+        value=100,
+        format="%d%%",
         key="spring_demand_mult"
         )
 
     summer_demand_mult = season_demand_col_2.slider(
-        "☀️ Summer Demand Multiplier",
-        min_value=0.9,
-        max_value=2.0,
-        value=1.0,
+        "☀️ Summer Demand Adjustment",
+        min_value=90,
+        max_value=200,
+        value=100,
+        format="%d%%",
         key="summer_demand_mult"
         )
 
     autumn_demand_mult = season_demand_col_3.slider(
-        "🍂 Autumn Demand Multiplier",
-        min_value=0.9,
-        max_value=2.0,
-        value=1.0,
+        "🍂 Autumn Demand Adjustment",
+        min_value=90,
+        max_value=200,
+        value=100,
+        format="%d%%",
         key="autumn_demand_mult"
         )
 
     winter_demand_mult = season_demand_col_4.slider(
-        "❄️ Winter Demand Multiplier",
-        min_value=0.9,
-        max_value=2.0,
-        value=1.0,
+        "❄️ Winter Demand Adjustment",
+        min_value=90,
+        max_value=200,
+        value=100,
+        format="%d%%",
         key="winter_demand_mult"
         )
 
