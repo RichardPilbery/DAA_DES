@@ -82,15 +82,70 @@ fleet_makeup_list = []
 
 if num_helicopters == 1:
     fleet_makeup_list.append(default_helos.head(1))
+    defaul_helos = default_helos.head(1)
 elif num_helicopters >= 2:
     fleet_makeup_list.append(default_helos)
 
 if num_cars >= 1:
     fleet_makeup_list.append(default_cars)
 
-final_fleet_df = pd.concat(fleet_makeup_list).drop(columns=["callsign_count"])
+initial_fleet_df = pd.concat(fleet_makeup_list).drop(columns=["callsign_count"])
 
-st.data_editor(final_fleet_df)
+fleet_additional_car_list = []
+fleet_additional_helo_list = []
+
+if num_helicopters >2:
+    for i in range(1, num_helicopters-1):
+        fleet_additional_helo_list.append(
+            {
+        "callsign"             : f"H{initial_fleet_df['callsign_group'].astype('int').max()+i}",
+        "category"             : "CC",
+        "vehicle_type"         : "helicopter",
+        "callsign_group"       : initial_fleet_df['callsign_group'].astype('int').max()+i,
+        "summer_start"         : 7,
+        "winter_start"         : 7,
+        "summer_end"           : 19,
+        "winter_end"           : 17
+    }
+        )
+
+if num_cars >1:
+    for i in range(1, num_cars):
+        fleet_additional_car_list.append(
+            {
+        "callsign"             : f"CC{initial_fleet_df['callsign_group'].astype('int').max()+num_helicopters+i}",
+        "category"             : "CC",
+        "vehicle_type"         : "car",
+        "callsign_group"       : initial_fleet_df['callsign_group'].astype('int').max()+num_helicopters+i,
+        "summer_start"         : 8,
+        "winter_start"         : 8,
+        "summer_end"           : 18,
+        "winter_end"           : 18
+    }
+        )
+
+if (num_helicopters > 2):
+
+    final_helo_df = pd.concat(
+        [default_helos,
+        pd.DataFrame(fleet_additional_helo_list).set_index('callsign')]
+        )
+else:
+    final_helo_df = default_helos
+
+st.data_editor(final_helo_df)
+
+if (num_cars > 1):
+    final_car_df = pd.concat(
+        [default_cars,
+        pd.DataFrame(fleet_additional_car_list).set_index('callsign')]
+        )
+else:
+    final_car_df = default_cars
+
+# st.write(final_fleet_df)
+
+st.data_editor(final_car_df)
 
 st.divider()
 
