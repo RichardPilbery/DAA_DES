@@ -157,19 +157,18 @@ else:
 
 
             tab_names = [
-                "Summary Visualisations",
-                "Full Event Dataset",
-                "Debugging Visualisations - Patients",
-                "Debugging Visualisations - Resources"
+                "Simulation Results Summary",
+                "Visualisations",
+                "Debugging Visualisations",
                 ]
 
             if st.session_state.create_animation_input:
                 tab_names.append("Animation")
-                tab1, tab2, tab3, tab4, tab5 = st.tabs(
+                tab1, tab2, tab3, tab4 = st.tabs(
                     tab_names
                 )
             else:
-                tab1, tab2, tab3, tab4 = st.tabs(
+                tab1, tab2, tab3 = st.tabs(
                     tab_names
                 )
 
@@ -220,121 +219,123 @@ else:
                 st.write(results_all_runs)
 
             with tab3:
-                st.subheader("Event Overview")
+                tab_3_1, tab_3_2 = st.tabs(["Debug Events", "Debug Resources"])
+                with tab_3_1:
+                    st.subheader("Event Overview")
 
-                tab3a, tab3b = st.tabs(["By Event", "By Run"])
+                    tab3a, tab3b = st.tabs(["By Event", "By Run"])
 
-                with tab3a:
-                    fig = px.scatter(
-                            results_all_runs,
-                            x="timestamp_dt",
-                            y="run_number",
-                            facet_row="time_type",
-                            color="time_type",
-                            height=800,
-                            title="Events Over Time - By Run")
-                    fig.update_traces(marker=dict(size=3, opacity=0.5))
-                    st.plotly_chart(
-                        fig,
-                            use_container_width=True
-                        )
-
-                with tab3b:
-                    st.plotly_chart(
-                        px.line(
-                            results_all_runs[results_all_runs["time_type"]=="arrival"],
-                            x="timestamp_dt",
-                            y="P_ID",
-                            color="run_number",
-                            height=800,
-                            title="Cumulative Arrivals Per Run"),
-                            use_container_width=True
-                        )
-
-                st.subheader("Event Counts")
-                st.write(f"Period: {st.session_state.sim_duration_input} days")
-
-                # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
-
-                event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
-
-                st.plotly_chart(
-                        px.bar(
-                            event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
-                            x="run_number",
-                            y="value",
-                            facet_col="time_type",
-                            height=600
-                    )
-                )
-
-                hems_events = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile", "HEMS stood down en route", "HEMS on scene", "HEMS patient treated (not conveyed)", "HEMS leaving scene", "HEMS arrived destination", "HEMS clear"]
-
-                st.plotly_chart(
-                        px.funnel(
-                            event_counts_long[event_counts_long["time_type"].isin(hems_events)],
-                            facet_col="run_number",
-                            x="value",
-                            y="time_type",
-                            category_orders={"time_type": hems_events[::-1]}
-
-                    )
-                )
-
-                amb_events = ["arrival", "AMB call start", "AMB clear"]
-
-                st.plotly_chart(
-                        px.funnel(
-                            event_counts_long[event_counts_long["time_type"].isin(amb_events)],
-                            facet_col="run_number",
-                            x="value",
-                            y="time_type",
-                            category_orders={"time_type": amb_events[::-1]},
-
-                    )
-                )
-
-                @st.fragment
-                def patient_viz():
-                    st.subheader("Per-patient journey exploration")
-
-                    patient_filter = st.selectbox("Select a patient", results_all_runs.P_ID.unique())
-
-                    tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
-
-                    for idx, tab in enumerate(tab_list):
-                        tab.plotly_chart(
-                            px.scatter(
-                                results_all_runs[
-                                    (results_all_runs.P_ID==patient_filter) &
-                                    (results_all_runs.run_number==idx+1)],
+                    with tab3a:
+                        fig = px.scatter(
+                                results_all_runs,
                                 x="timestamp_dt",
-                                y="time_type",
-                                color="time_type"),
+                                y="run_number",
+                                facet_row="time_type",
+                                color="time_type",
+                                height=800,
+                                title="Events Over Time - By Run")
+                        fig.update_traces(marker=dict(size=3, opacity=0.5))
+                        st.plotly_chart(
+                            fig,
                                 use_container_width=True
+                            )
+
+                    with tab3b:
+                        st.plotly_chart(
+                            px.line(
+                                results_all_runs[results_all_runs["time_type"]=="arrival"],
+                                x="timestamp_dt",
+                                y="P_ID",
+                                color="run_number",
+                                height=800,
+                                title="Cumulative Arrivals Per Run"),
+                                use_container_width=True
+                            )
+
+                    st.subheader("Event Counts")
+                    st.write(f"Period: {st.session_state.sim_duration_input} days")
+
+                    # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
+
+                    event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
+
+                    st.plotly_chart(
+                            px.bar(
+                                event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
+                                x="run_number",
+                                y="value",
+                                facet_col="time_type",
+                                height=600
                         )
-
-                patient_viz()
-
-            with tab4:
-                st.subheader("Resource Use")
-
-                resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
-                with st.expander("Click here to see the timings of resource use"):
-                    st.dataframe(resource_use_events_only)
-                    st.dataframe(resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"))
-
-                st.plotly_chart(
-                    px.scatter(
-                    resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
-                    x="value",
-                    y="time_type",
-                    color="event_type"
                     )
-                )
+
+                    hems_events = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile", "HEMS stood down en route", "HEMS on scene", "HEMS patient treated (not conveyed)", "HEMS leaving scene", "HEMS arrived destination", "HEMS clear"]
+
+                    st.plotly_chart(
+                            px.funnel(
+                                event_counts_long[event_counts_long["time_type"].isin(hems_events)],
+                                facet_col="run_number",
+                                x="value",
+                                y="time_type",
+                                category_orders={"time_type": hems_events[::-1]}
+
+                        )
+                    )
+
+                    amb_events = ["arrival", "AMB call start", "AMB clear"]
+
+                    st.plotly_chart(
+                            px.funnel(
+                                event_counts_long[event_counts_long["time_type"].isin(amb_events)],
+                                facet_col="run_number",
+                                x="value",
+                                y="time_type",
+                                category_orders={"time_type": amb_events[::-1]},
+
+                        )
+                    )
+
+                    @st.fragment
+                    def patient_viz():
+                        st.subheader("Per-patient journey exploration")
+
+                        patient_filter = st.selectbox("Select a patient", results_all_runs.P_ID.unique())
+
+                        tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
+
+                        for idx, tab in enumerate(tab_list):
+                            tab.plotly_chart(
+                                px.scatter(
+                                    results_all_runs[
+                                        (results_all_runs.P_ID==patient_filter) &
+                                        (results_all_runs.run_number==idx+1)],
+                                    x="timestamp_dt",
+                                    y="time_type",
+                                    color="time_type"),
+                                    use_container_width=True
+                            )
+
+                    patient_viz()
+
+                with tab_3_2:
+                    st.subheader("Resource Use")
+
+                    resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
+                    with st.expander("Click here to see the timings of resource use"):
+                        st.dataframe(resource_use_events_only)
+                        st.dataframe(resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"))
+
+                    st.plotly_chart(
+                        px.scatter(
+                        resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
+                        x="value",
+                        y="time_type",
+                        color="event_type"
+                        )
+                    )
 
             if st.session_state.create_animation_input:
-                with tab5:
+                with tab4:
 
                     st.error("Warning - this is not yet working as intended")
                     event_position_df = pd.DataFrame([
