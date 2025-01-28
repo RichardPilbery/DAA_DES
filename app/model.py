@@ -24,6 +24,8 @@ from utils import Utils
 
 from _state_control import setup_state
 
+from streamlit_extras.stylable_container import stylable_container
+
 st.set_page_config(layout="wide")
 
 with open("app/style.css") as css:
@@ -34,7 +36,7 @@ setup_state()
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
-    st.title("Devon Air Ambulance Simulation")
+    st.title("Run a Simulation")
 
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
@@ -42,11 +44,22 @@ with col2:
 # Inputs to the model are currently contained within a collapsible sidebar
 # We may wish to move these elsewhere when
 with st.sidebar:
+    st.divider()
     if 'number_of_runs_input' in st.session_state:
         st.subheader("Model Input Summary")
 
-        if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
-            st.switch_page("setup.py")
+
+        with stylable_container(
+            css_styles="""
+                    button {
+                            background-color: green;
+                            color: white;
+                        }
+                        """,
+            key="green_buttons"
+            ):
+            if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
+                st.switch_page("setup.py")
 
 if not st.session_state["visited_setup_page"]:
     st.warning("You haven't set up any parameters!")
