@@ -19,8 +19,8 @@ DEFAULT_INPUTS = {
     "warm_up_duration": 0,
     "number_of_runs_input": 5,
     "create_animation_input": False,
-    "start_date_input": datetime.today().strftime('%Y-%m-%d'),
-    "start_time_input": "08:00"
+    "sim_start_date_input": datetime.today().strftime('%Y-%m-%d'),
+    "sim_start_time_input": "08:00"
 }
 
 # def setup_state():
