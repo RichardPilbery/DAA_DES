@@ -343,18 +343,18 @@ with st.expander("Click here to set advanced model parameters"):
         key="key_warm_up_duration"
         )
 
-    start_date_input = st.date_input(
+    sim_start_date_input = st.date_input(
         "Select the starting day for the simulation",
-        value=st.session_state.start_date_input,
-        on_change=lambda: setattr(st.session_state, 'start_date_input', st.session_state.key_start_date_input),
-        key="key_start_date_input"
+        value=st.session_state.sim_start_date_input,
+        on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
+        key="key_sim_start_date_input"
         )
 
-    start_time_input = st.time_input(
+    sim_start_time_input = st.time_input(
         "Select the starting time for the simulation",
-        value=st.session_state.start_date_input,
-        on_change=lambda: setattr(st.session_state, 'start_time_input', st.session_state.key_start_time_input),
-        key="key_start_time_input"
+        value=st.session_state.sim_start_time_input,
+        on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
+        key="key_sim_start_time_input"
         )
 
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")

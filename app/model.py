@@ -122,8 +122,8 @@ else:
                             sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
                             warm_up_time = float(st.session_state.warm_up_duration * 60),
                             sim_start_date = datetime.combine(
-                                st.session_state.sim_start_date_input,
-                                st.session_state.sim_start_time_input
+                                datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
+                                datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                                 ),
                             amb_data=st.session_state.amb_data
                         )
@@ -145,8 +145,9 @@ else:
                             sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
                             warm_up_time = float(st.session_state.warm_up_duration * 60),
                             sim_start_date = datetime.combine(
-                                st.session_state.sim_start_date_input,
-                                st.session_state.sim_start_time_input),
+                                datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
+                                datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
+                                ),
                             amb_data = st.session_state.amb_data
                 )
                 collateRunResults()
