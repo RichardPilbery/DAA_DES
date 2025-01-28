@@ -6,6 +6,8 @@ from datetime import time, datetime
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+from _state_control import setup_state, reset_to_defaults, \
+                            set_scenario_1_params, set_scenario_2_params
 from streamlit_extras.stylable_container import stylable_container
 
 from utils import Utils
@@ -18,6 +20,14 @@ with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 st.session_state["visited_setup_page"] = True
+
+col1, col2 = st.columns([0.7, 0.3])
+
+with col1:
+    st.title("Model Setup")
+
+with col2:
+    st.image("app/assets/daa-logo.svg", width=300)
 
 help_helicopters = """
 This parameter relates to the number of helicopters that will be present.
@@ -35,11 +45,12 @@ Do not include cars that are used by a helicopter crew in the case of helicopter
 (due to servicing, inclement weather, etc.)
 """
 
-st.title("Model Setup")
-
-st.write("Welcome to the model setup page. Here, you can enter the ")
+st.caption("""
+On this page you can set up the parameters for the simulated world to use, including the number of resources, their operating hours, and more.
+""")
 
 with st.expander("Want to set up the model parameters from a template? Click here."):
+    st.caption("To save time when you want to use similar parameters frequently, you can save and load parameters from a file.")
     col_template_1, col_template_2 = st.columns(2)
 
     with col_template_1:
@@ -52,9 +63,14 @@ with st.expander("Want to set up the model parameters from a template? Click her
                            label="Download Excel Template for Model Parameters",
                            file_name="daa_simulation_model_parameters_TEMPLATE.xlsx")
 
+st.divider()
+
 # TODO - make this operational
-st.button("Return Model to Current DAA Operational Parameters", type="primary",
-          on_click=reset_to_defaults)
+st.button("Return Model to Current DAA Operational Parameters",
+          type="primary",
+          on_click=reset_to_defaults,
+          icon=":material/history:")
+st.caption("WARNING: Clicking this button will lose all changes you've made on this page")
 
 st.divider()
 
