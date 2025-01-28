@@ -61,6 +61,39 @@ with st.sidebar:
             if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
                 st.switch_page("setup.py")
 
+        st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
+        st.write(f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}")
+
+        if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
+            if st.session_state.overall_demand_mult == 100:
+                st.write(f"Demand is based on historically observed demand")
+            elif st.session_state.overall_demand_mult < 100:
+                st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand")
+            elif st.session_state.overall_demand_mult > 100:
+                st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand")
+
+        # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
+        if st.session_state.demand_adjust_type == "Seasonal Demand Adjustment":
+            pass
+
+        st.divider()
+
+        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {st.session_state.start_date_input}")
+
+        if st.session_state.create_animation_input:
+            st.write("An animated output will be created.")
+            st.info("Turn off this option if the model is running very slowly!")
+        else:
+            st.write("No animated output will be created.")
+
+        if st.session_state.amb_data:
+            st.write("SWAST Ambulance Activity will be modelled")
+        else:
+            st.write("SWAST Ambulance Activity will not be modelled")
+
+
+
+
 if not st.session_state["visited_setup_page"]:
     st.warning("You haven't set up any parameters!")
 
