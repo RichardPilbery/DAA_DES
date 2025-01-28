@@ -23,8 +23,10 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
+from _app_utils import iconMetricContainer
 
 from streamlit_extras.stylable_container import stylable_container
+from streamlit_extras.metric_cards import style_metric_cards
 
 st.set_page_config(layout="wide")
 
@@ -172,14 +174,25 @@ else:
                 )
 
             with tab1:
-                t1_col1, t1_col2 = st.columns(2)
-                with t1_col1:
-                    st.subheader("Unmet Demand")
-                    st.write("Placeholder")
 
-                with t1_col2:
-                    st.subheader("Helicopter Utilisation")
-                    st.write("Placeholder")
+                st.button("Click here to download these results as a file")
+
+                t1_col1, t1_col2 = st.columns(2)
+
+
+                t1_col3, t1_col4 = st.columns(2)
+                with t1_col3:
+                    with iconMetricContainer(key="nonattend_metric", icon_unicode="e0b0"):
+                        st.metric("Number of Calls DAAT Resource Couldn't Attend",
+                                "47 of 1203 (3.9%)",
+                                border=True)
+
+                with t1_col4:
+                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
+                        st.metric("Overall Helicopter Utilisation",
+                                "78%",
+                                border=True)
+
 
 
             with tab2:
