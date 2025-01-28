@@ -1,4 +1,5 @@
 from streamlit_extras.stylable_container import stylable_container
+import streamlit as st
 
 def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', family="filled", type="icons"):
     """Function that returns a CSS styled container for adding a Material Icon to a Streamlit st.metric value
@@ -52,3 +53,6 @@ def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', famil
                 css_styles=css_style_icon
             )
     return iconMetric
+
+def file_download_confirm():
+    st.toast("File Downloaded", icon=":material/download:")
