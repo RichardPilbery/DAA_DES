@@ -8,7 +8,7 @@ with open("app/style.css") as css:
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
-    st.title("Welcome to the Devon Air Ambulance Simulation")
+    st.title("Welcome to the Devon Air Ambulance Simulation Model")
 
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
