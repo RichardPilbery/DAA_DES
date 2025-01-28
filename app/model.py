@@ -73,15 +73,22 @@ hr {
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
             if st.session_state.overall_demand_mult == 100:
-                st.write(f"Demand is based on historically observed demand")
+                st.write(f"Demand is based on historically observed demand with no adjustments")
             elif st.session_state.overall_demand_mult < 100:
                 st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand")
             elif st.session_state.overall_demand_mult > 100:
                 st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand")
 
         # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
-        if st.session_state.demand_adjust_type == "Seasonal Demand Adjustment":
+        elif st.session_state.demand_adjust_type == "Per Season Demand Adjustment":
             pass
+
+        elif st.session_state.demand_adjust_type == "Per AMPDS Code Demand Adjustment":
+            pass
+
+        else:
+            st.error("TELL A DEVELOPER: Check Conditional Code for demand modifier in model.py")
+
 
         with stylable_container(css_styles="""
 hr {
