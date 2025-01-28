@@ -38,3 +38,15 @@ def setup_state():
 def reset_to_defaults():
     for session_state_key, session_state_default_value in DEFAULT_INPUTS.items():
             st.session_state[session_state_key] = session_state_default_value
+    st.toast("All parameters have been reset to the default values",
+             icon=":material/history:")
+
+# TODO: Implement action
+def set_scenario_1_params():
+    st.toast("Scenario 1 has been set up to use the current parameters",
+             icon=":material/looks_one:")
+
+# TODO: Implement action
+def set_scenario_2_params():
+    st.toast("Scenario 2 has been set up to use the current parameters",
+             icon=":material/looks_two:")
