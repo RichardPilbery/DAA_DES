@@ -52,11 +52,16 @@ if st.session_state.scenario_2_set:
             else:
                 st.success("Default scenario")
 
+            # TODO: Remove hardcoding and add logic
+            st.metric("Metrics Better in This Scenario", value="1 of 5")
+
+            st.divider()
+
             with iconMetricContainer(key="nonattend_metric", icon_unicode="e0b0"):
                     st.metric("Number of Calls DAAT Resource Couldn't Attend",
                             "184 of 1203 (15.3%)",
                             border=True)
-                    st.write(":red[Fewer calls were attended in this scenario]")
+                    st.write(":red[BAD: Fewer calls were attended in this scenario]")
 
                     st.caption("""
 These are the 'missed' calls where no DAAT resource was available.
@@ -72,13 +77,18 @@ This could be due to
             # TODO: Remove hardcoding and add logic
             st.info("User defined scenario: +1 helicopters")
 
+            # TODO: Remove hardcoding and add logic
+            st.metric("Metrics Better in This Scenario", value="4 of 5")
+
+            st.divider()
+
             with iconMetricContainer(key="nonattend_metric", icon_unicode="e0b0"):
                     st.metric("Number of Calls DAAT Resource Couldn't Attend",
                             "47 of 1203 (3.9%)",
                             delta="-11.4% (137 more calls attended)",
                             delta_color="inverse",
                             border=True)
-                    st.write(":green[More calls were attended in this scenario]")
+                    st.write(":green[GOOD: More calls were attended in this scenario]")
                     st.caption("""
 These are the 'missed' calls where no DAAT resource was available.
 This could be due to
