@@ -11,12 +11,14 @@ pg = st.navigation(
     {
 
         "Model Setup": [
+            st.Page("welcome.py", title="Welcome"),
             st.Page("setup.py", title="Choose Model Parameters")
         ],
 
         "Model Outputs": [
 
             st.Page("model.py", title="Run Simulation"),
+            st.Page("compare_scenarios.py", title="Scenario Comparison")
             ],
         "Model Information": [
             st.Page("what_is.py", title="Introduction to Simulation"),
