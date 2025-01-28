@@ -43,13 +43,18 @@ with col1:
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
 
-# Inputs to the model are currently contained within a collapsible sidebar
-# We may wish to move these elsewhere when
 with st.sidebar:
-    st.divider()
+    with stylable_container(css_styles="""
+hr {
+    border-color: #a6093d;
+    background-color: #a6093d;
+    color: #a6093d;
+    height: 1px;
+  }
+""", key="hr"):
+        st.divider()
     if 'number_of_runs_input' in st.session_state:
         st.subheader("Model Input Summary")
-
 
         with stylable_container(
             css_styles="""
@@ -78,9 +83,17 @@ with st.sidebar:
         if st.session_state.demand_adjust_type == "Seasonal Demand Adjustment":
             pass
 
-        st.divider()
+        with stylable_container(css_styles="""
+hr {
+    border-color: #a6093d;
+    background-color: #a6093d;
+    color: #a6093d;
+    height: 1px;
+  }
+""", key="hr"):
+            st.divider()
 
-        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {st.session_state.start_date_input}")
+        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {st.session_state.sim_start_date_input}")
 
         if st.session_state.create_animation_input:
             st.write("An animated output will be created.")
@@ -97,12 +110,12 @@ with st.sidebar:
 
 
 if not st.session_state["visited_setup_page"]:
-    st.warning("You haven't set up any parameters!")
+    st.warning("You haven't set up any parameters - default parameters will be used!")
 
     if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
                  type="primary"):
             st.switch_page("setup.py")
-else:
+
     button_run_pressed = st.button("Run simulation")
 
     if button_run_pressed:
