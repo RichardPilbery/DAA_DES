@@ -23,6 +23,7 @@ pg = st.navigation(
         "Model Information": [
             st.Page("what_is.py", title="Introduction to Simulation"),
             st.Page("info.py", title="Model Information"),
+            st.Page("glossary.py", title="Glossary of Terms"),
             ]
 
     }
