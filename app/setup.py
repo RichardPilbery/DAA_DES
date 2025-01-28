@@ -175,6 +175,8 @@ for time_col in ["summer_start", "summer_end", "winter_start", "winter_end"]:
     final_helo_df[time_col] = final_helo_df[time_col].apply(lambda x: time(x, 0))
     final_car_df[time_col] = final_car_df[time_col].apply(lambda x: time(x, 0))
 
+final_helo_df["vehicle_type"] = final_helo_df["vehicle_type"].apply(lambda x: x.title())
+
 # Create an editable dataframe for people to modify the parameters in
 updated_helo_df = st.data_editor(
     final_helo_df.reset_index(),
@@ -204,6 +206,8 @@ updated_helo_df = st.data_editor(
         )
         }
     )
+
+final_car_df["vehicle_type"] = final_car_df["vehicle_type"].apply(lambda x: x.title())
 
 updated_car_df = st.data_editor(final_car_df.reset_index(),
                                 hide_index=True,
