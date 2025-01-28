@@ -316,73 +316,9 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         key="key_winter_demand_mult"
         )
 
+st.divider()
 
-with st.expander("Click here to set advanced model parameters"):
-    amb_data = st.toggle(
-        "Model ambulance service data",
-        value=st.session_state.amb_data,
-        on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
-        key="key_amb_data"
-        )
-
-    sim_duration_input =  st.slider(
-        "Simulation Duration (days)",
-        min_value=1,
-        max_value=365,
-        value=st.session_state.sim_duration_input,
-        on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
-        key="key_sim_duration_input"
-        )
-
-    warm_up_duration =  st.slider(
-        "Warm-up Duration (hours)",
-        min_value=0,
-        max_value=24*10,
-        value=st.session_state.warm_up_duration,
-        on_change= lambda: setattr(st.session_state, 'warm_up_duration', st.session_state.key_warm_up_duration),
-        key="key_warm_up_duration"
-        )
-
-    sim_start_date_input = st.date_input(
-        "Select the starting day for the simulation",
-        value=st.session_state.sim_start_date_input,
-        on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
-        key="key_sim_start_date_input"
-        )
-
-    sim_start_time_input = st.time_input(
-        "Select the starting time for the simulation",
-        value=st.session_state.sim_start_time_input,
-        on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
-        key="key_sim_start_time_input"
-        )
-
-    st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
-
-    number_of_runs_input = st.slider(
-        "Number of Runs",
-        min_value=1,
-        max_value=30,
-        value=st.session_state.number_of_runs_input,
-        on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
-        key="key_number_of_runs_input"
-        )
-
-    create_animation_input = st.toggle(
-        "Create Animation",
-        value=st.session_state.create_animation_input,
-        on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
-        key="key_create_animation_input"
-        )
-
-
-# TODO - This just currently redownloads the blank template
-# Will need to populate this
-st.download_button(data="parameter_template.xlsx",
-                    label="Save Your Parameters to a File",
-                    type="primary",
-                    file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
-)
+st.subheader("Scenario Setup")
 
 # TODO: Make these do something more than just display a notification!
 st.caption("""
@@ -421,6 +357,86 @@ with scenario_2_button_col:
         type="primary",
         on_click=set_scenario_2_params
         )
+
+st.divider()
+
+st.header("Advanced Parameters")
+
+st.caption("""
+    These additional parameters can be set if you are experienced with this tool
+    """)
+
+with st.expander("Click here to set advanced model parameters"):
+    number_of_runs_input = st.slider(
+        "Number of Runs",
+        min_value=1,
+        max_value=30,
+        value=st.session_state.number_of_runs_input,
+        on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
+        key="key_number_of_runs_input"
+        )
+
+    sim_duration_input =  st.slider(
+        "Simulation Duration (days)",
+        min_value=1,
+        max_value=365,
+        value=st.session_state.sim_duration_input,
+        on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
+        key="key_sim_duration_input"
+        )
+
+    warm_up_duration =  st.slider(
+        "Warm-up Duration (hours)",
+        min_value=0,
+        max_value=24*10,
+        value=st.session_state.warm_up_duration,
+        on_change= lambda: setattr(st.session_state, 'warm_up_duration', st.session_state.key_warm_up_duration),
+        key="key_warm_up_duration"
+        )
+
+    st.caption(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
+
+    sim_start_date_input = st.date_input(
+        "Select the starting day for the simulation",
+        value=st.session_state.sim_start_date_input,
+        on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
+        key="key_sim_start_date_input"
+        )
+
+    sim_start_time_input = st.time_input(
+        "Select the starting time for the simulation",
+        value=st.session_state.sim_start_time_input,
+        on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
+        key="key_sim_start_time_input"
+        )
+
+    create_animation_input = st.toggle(
+        "Create Animation",
+        value=st.session_state.create_animation_input,
+        on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
+        key="key_create_animation_input"
+        )
+
+    amb_data = st.toggle(
+        "Model ambulance service data",
+        value=st.session_state.amb_data,
+        on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
+        key="key_amb_data"
+        )
+
+st.divider()
+
+st.subheader("Parameter Reuse")
+
+st.caption("Want to save these parameters so you can easily use them again later?")
+
+# TODO - This just currently redownloads the blank template
+# Will need to populate this
+st.download_button(data="parameter_template.xlsx",
+                    label="Click to Download the Parameter File",
+                    type="primary",
+                    file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
+)
 
 st.divider()
 
