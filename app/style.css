@@ -1,5 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons|Material+Icons+Outlined|Material+Symbols+Outlined');
 
 [data-testid="stSidebar"] h1,
 [data-testid="stSidebar"] h2,
@@ -11,7 +12,7 @@
 }
 
 [data-testid="stSidebar"] {
-    background-color: rgb(0, 32, 91) ;
+    background-color: #00205b ;
 }
 
 [data-testid="stSidebarNavViewButton"]  {
@@ -32,7 +33,6 @@
     color: white;
     font-family: "Poppins", sans-serif;
 }
-
 
 * {
     font-family: "Poppins", sans-serif;
