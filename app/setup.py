@@ -6,10 +6,13 @@ from datetime import time, datetime
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
+from _state_control import setup_state, reset_to_defaults
 
 from utils import Utils
 
 st.set_page_config(layout="wide")
+
+setup_state()
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
@@ -50,11 +53,13 @@ with st.expander("Want to set up the model parameters from a template? Click her
                            file_name="daa_simulation_model_parameters_TEMPLATE.xlsx")
 
 # TODO - make this operational
-st.button("Return Model to Current DAA Operational Parameters", type="primary")
+st.button("Return Model to Current DAA Operational Parameters", type="primary",
+          on_click=reset_to_defaults)
 
 st.divider()
 
 st.header("Fleet Setup")
+
 
 col_1_fleet_setup, col_2_fleet_setup, blank_col_fleet_setup = st.columns(3)
 
@@ -63,9 +68,10 @@ with col_1_fleet_setup:
         "🚁 Set the number of helicopters",
         min_value=1,
         max_value=5,
-        # value=2,
+        value=st.session_state.num_helicopters,
         help=help_helicopters,
-        key="num_helicopters"
+        on_change= lambda: setattr(st.session_state, 'num_helicopters', st.session_state.key_num_helicopters),
+        key="key_num_helicopters"
         )
 
 with col_2_fleet_setup:
@@ -73,9 +79,10 @@ with col_2_fleet_setup:
         "🚗 Set the number of additional cars",
         min_value=0,
         max_value=5,
-        # value=1,
+        value=st.session_state.num_cars,
         help=help_cars,
-        key="num_cars"
+        on_change= lambda: setattr(st.session_state, 'num_cars', st.session_state.key_num_cars),
+        key="key_num_cars"
         )
 
 st.subheader("Fleet Makeup")
@@ -92,13 +99,13 @@ default_cars = original_rota[(original_rota["vehicle_type"]=="car") &
 
 fleet_makeup_list = []
 
-if num_helicopters == 1:
+if st.session_state.num_helicopters == 1:
     fleet_makeup_list.append(default_helos.head(1))
     defaul_helos = default_helos.head(1)
-elif num_helicopters >= 2:
+elif st.session_state.num_helicopters >= 2:
     fleet_makeup_list.append(default_helos)
 
-if num_cars >= 1:
+if st.session_state.num_cars >= 1:
     fleet_makeup_list.append(default_cars)
 
 initial_fleet_df = pd.concat(fleet_makeup_list).drop(columns=["callsign_count"])
@@ -108,8 +115,8 @@ fleet_additional_helo_list = []
 
 # For any helicopters over and above the real helicopters that already exist,
 # populate the dataframe with a default helicopter and a plausible callsign
-if num_helicopters >2:
-    for i in range(1, num_helicopters-1):
+if st.session_state.num_helicopters >2:
+    for i in range(1, st.session_state.num_helicopters-1):
         fleet_additional_helo_list.append(
             {
         "callsign"             : f"H{initial_fleet_df['callsign_group'].astype('int').max()+i}",
@@ -129,14 +136,14 @@ if num_helicopters >2:
 # NOTE - this is only for cars that don't have an associated helicopter
 # We will need to add car backups within the same callsign for any helicopter
 # that is created
-if num_cars >1:
-    for i in range(1, num_cars):
+if st.session_state.num_cars >1:
+    for i in range(1, st.session_state.num_cars):
         fleet_additional_car_list.append(
             {
-        "callsign"             : f"CC{initial_fleet_df['callsign_group'].astype('int').max()+num_helicopters+i}",
+        "callsign"             : f"CC{initial_fleet_df['callsign_group'].astype('int').max()+st.session_state.num_helicopters+i}",
         "category"             : "CC",
         "vehicle_type"         : "car",
-        "callsign_group"       : initial_fleet_df['callsign_group'].astype('int').max()+num_helicopters+i,
+        "callsign_group"       : initial_fleet_df['callsign_group'].astype('int').max()+st.session_state.num_helicopters+i,
         "summer_start"         : 8,
         "winter_start"         : 8,
         "summer_end"           : 18,
@@ -145,7 +152,7 @@ if num_cars >1:
     }
         )
 
-if (num_helicopters > 2):
+if (st.session_state.num_helicopters > 2):
 
     final_helo_df = pd.concat(
         [default_helos,
@@ -154,7 +161,7 @@ if (num_helicopters > 2):
 else:
     final_helo_df = default_helos.drop(columns=["callsign_count", "callsign_group"])
 
-if (num_cars > 1):
+if (st.session_state.num_cars > 1):
     final_car_df = pd.concat(
         [default_cars,
         pd.DataFrame(fleet_additional_car_list).set_index('callsign')]
@@ -241,9 +248,10 @@ if demand_adjust_type_high_level == "Overall Demand Adjustment":
         "Overall Demand Adjustment",
         min_value=90,
         max_value=200,
-        # value=100,
+        value=st.session_state.overall_demand_mult,
         format="%d%%",
-        key="overall_demand_mult"
+        on_change= lambda: setattr(st.session_state, 'overall_demand_mult', st.session_state.key_overall_demand_mult),
+        key="key_overall_demand_mult"
         )
 elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
     season_demand_col_1, season_demand_col_2, season_demand_col_3, season_demand_col_4 = st.columns(4)
@@ -252,60 +260,67 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         "🌼 Spring Demand Adjustment",
         min_value=90,
         max_value=200,
-        # value=100,
+        value=st.session_state.spring_demand_mult,
         format="%d%%",
-        key="spring_demand_mult"
+        on_change= lambda: setattr(st.session_state, 'spring_demand_mult', st.session_state.key_spring_demand_mult),
+        key="key_spring_demand_mult"
         )
 
     summer_demand_mult = season_demand_col_2.slider(
         "☀️ Summer Demand Adjustment",
         min_value=90,
         max_value=200,
-        # value=100,
+        value=st.session_state.summer_demand_mult,
         format="%d%%",
-        key="summer_demand_mult"
+        on_change= lambda: setattr(st.session_state, 'summer_demand_mult', st.session_state.key_summer_demand_mult),
+        key="key_summer_demand_mult"
         )
 
     autumn_demand_mult = season_demand_col_3.slider(
         "🍂 Autumn Demand Adjustment",
         min_value=90,
         max_value=200,
-        # value=100,
+        value=st.session_state.autumn_demand_mult,
         format="%d%%",
-        key="autumn_demand_mult"
+        on_change= lambda: setattr(st.session_state, 'autumn_demand_mult', st.session_state.key_autumn_demand_mult),
+        key="key_autumn_demand_mult"
         )
 
     winter_demand_mult = season_demand_col_4.slider(
         "❄️ Winter Demand Adjustment",
         min_value=90,
         max_value=200,
-        # value=100,
+        value=st.session_state.winter_demand_mult,
         format="%d%%",
-        key="winter_demand_mult"
+        on_change= lambda: setattr(st.session_state, 'winter_demand_mult', st.session_state.key_winter_demand_mult),
+        key="key_winter_demand_mult"
         )
 
 
 with st.expander("Click here to set advanced model parameters"):
     amb_data = st.toggle(
         "Model ambulance service data",
-        # value=False,
-        key="amb_data"
+        value=st.session_state.amb_data,
+        on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
+        key="key_amb_data"
         )
 
     sim_duration_input =  st.slider(
         "Simulation Duration (days)",
         min_value=1,
         max_value=365,
-        # value=7,
-        key="sim_duration_input"
+        value=st.session_state.sim_duration_input,
+        on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
+        key="key_sim_duration_input"
         )
 
     warm_up_duration =  st.slider(
         "Warm-up Duration (hours)",
         min_value=0,
         max_value=24*10,
-        # value=0,
-        key="warm_up_duration"
+        value=st.session_state.warm_up_duration,
+        on_change= lambda: setattr(st.session_state, 'warm_up_duration', st.session_state.key_warm_up_duration),
+        key="key_warm_up_duration"
         )
 
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
@@ -314,14 +329,16 @@ with st.expander("Click here to set advanced model parameters"):
         "Number of Runs",
         min_value=1,
         max_value=30,
-        # value=5,
-        key="number_of_runs_input"
+        value=st.session_state.number_of_runs_input,
+        on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
+        key="key_number_of_runs_input"
         )
 
     create_animation_input = st.toggle(
         "Create Animation",
-        # value=False,
-        key="create_animation_input"
+        value=st.session_state.create_animation_input,
+        on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
+        key="key_create_animation_input"
         )
 
 
@@ -329,5 +346,6 @@ with st.expander("Click here to set advanced model parameters"):
 # Will need to populate this
 st.download_button(data="parameter_template.xlsx",
                     label="Save Your Parameters to a File",
+                    type="primary",
                     file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
 )

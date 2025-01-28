@@ -22,10 +22,14 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 from des_parallel_process import runSim, parallelProcessJoblib, collateRunResults
 from utils import Utils
 
+from _state_control import setup_state
+
 st.set_page_config(layout="wide")
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
+setup_state()
 
 col1, col2 = st.columns([0.7, 0.3])
 
