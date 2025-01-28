@@ -44,10 +44,11 @@ with st.sidebar:
         if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
             st.switch_page("setup.py")
 
-if 'number_of_runs_input' not in st.session_state:
+if not st.session_state["visited_setup_page"]:
     st.warning("You haven't set up any parameters!")
 
-    if st.button("Click here to go to the parameter page", type="primary"):
+    if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
+                 type="primary"):
             st.switch_page("setup.py")
 else:
     button_run_pressed = st.button("Run simulation")
