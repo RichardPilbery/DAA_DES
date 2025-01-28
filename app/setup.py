@@ -258,12 +258,14 @@ st.divider()
 
 st.header("Demand Parameters")
 
-demand_adjust_type_high_level = st.radio("Adjust High-level Demand",
+# TODO: Add to session state
+demand_adjust_type = st.radio("Adjust High-level Demand",
          ["Overall Demand Adjustment",
-          "Per Season Demand Adjustment"],
+          "Per Season Demand Adjustment",
+          "Per AMPDS Code Demand Adjustment"],
           key="demand_adjust_type")
 
-if demand_adjust_type_high_level == "Overall Demand Adjustment":
+if demand_adjust_type == "Overall Demand Adjustment":
     overall_demand_mult = st.slider(
         "Overall Demand Adjustment",
         min_value=90,
@@ -273,7 +275,7 @@ if demand_adjust_type_high_level == "Overall Demand Adjustment":
         on_change= lambda: setattr(st.session_state, 'overall_demand_mult', st.session_state.key_overall_demand_mult),
         key="key_overall_demand_mult"
         )
-elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
+elif demand_adjust_type == "Per Season Demand Adjustment":
     season_demand_col_1, season_demand_col_2, season_demand_col_3, season_demand_col_4 = st.columns(4)
 
     spring_demand_mult = season_demand_col_1.slider(
@@ -315,6 +317,12 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         on_change= lambda: setattr(st.session_state, 'winter_demand_mult', st.session_state.key_winter_demand_mult),
         key="key_winter_demand_mult"
         )
+
+elif demand_adjust_type == "Per AMPDS Code Demand Adjustment":
+    st.write("Coming Soon!")
+
+else:
+    st.error("TELL A DEVELOPER: Check Conditional Code for demand modifier in setup.py")
 
 st.divider()
 
