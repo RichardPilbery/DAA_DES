@@ -6,7 +6,7 @@ from datetime import time, datetime
 from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
-from _state_control import setup_state, reset_to_defaults
+from streamlit_extras.stylable_container import stylable_container
 
 from utils import Utils
 
@@ -349,3 +349,60 @@ st.download_button(data="parameter_template.xlsx",
                     type="primary",
                     file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
 )
+
+# TODO: Make these do something more than just display a notification!
+st.caption("""
+If you want to compare multiple scenarios, set up each scenario using the sliders below
+or by importing a completed parameter template file, then click on the relevant button.
+""")
+scenario_1_button_col, scenario_2_button_col = st.columns(2)
+
+with scenario_1_button_col:
+    with stylable_container(
+        css_styles="""
+                button {
+                        background-color: #00205b;
+                        color: white;
+                    }
+                    """,
+        key="blue_buttons"
+        ):
+        st.button(
+            "Set Scenario 1 to Current Parameters",
+            on_click=set_scenario_1_params
+            )
+
+with scenario_2_button_col:
+    with stylable_container(
+        css_styles="""
+                button {
+                        background-color: #00205b;
+                        color: white;
+                    }
+                    """,
+        key="blue_buttons"
+        ):
+        st.button(
+        "Set Scenario 2 to Current Parameters",
+        type="primary",
+        on_click=set_scenario_2_params
+        )
+
+st.divider()
+
+with st.sidebar:
+    with stylable_container(
+        css_styles="""
+                button {
+                        background-color: green;
+                        color: white;
+                    }
+                    """,
+        key="green_buttons"
+        ):
+        if st.button("Finished Setting Up Parameters? Click here to go to the model page",
+                     icon=":material/play_circle:"):
+            st.switch_page("model.py")
+        if st.button("Set up two scenarios you want to compare? Click here to go to the scenario comparison page",
+                     icon=":material/compare:"):
+            st.switch_page("compare_scenarios.py")
