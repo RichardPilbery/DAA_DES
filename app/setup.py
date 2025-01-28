@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from datetime import time
+from datetime import time, datetime
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
@@ -13,6 +13,8 @@ st.set_page_config(layout="wide")
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
+st.session_state["visited_setup_page"] = True
 
 help_helicopters = """
 This parameter relates to the number of helicopters that will be present.
@@ -57,20 +59,29 @@ st.header("Fleet Setup")
 col_1_fleet_setup, col_2_fleet_setup, blank_col_fleet_setup = st.columns(3)
 
 with col_1_fleet_setup:
-    num_helicopters = st.number_input("🚁 Set the number of helicopters",
-                    1, 5, value=2,
-                    help=help_helicopters, key="num_helicopters")
+    num_helicopters = st.number_input(
+        "🚁 Set the number of helicopters",
+        min_value=1,
+        max_value=5,
+        # value=2,
+        help=help_helicopters,
+        key="num_helicopters"
+        )
 
 with col_2_fleet_setup:
-    num_cars = st.number_input("🚗 Set the number of additional cars",
-                    0, 5, value=1,
-                    help=help_cars, key="num_cars")
+    num_cars = st.number_input(
+        "🚗 Set the number of additional cars",
+        min_value=0,
+        max_value=5,
+        # value=1,
+        help=help_cars,
+        key="num_cars"
+        )
 
 st.subheader("Fleet Makeup")
 
 st.caption("☀️ Summer Rota runs from March to October")
 st.caption("❄️ Winter Rota runs from November to February")
-
 
 original_rota = Utils.HEMS_ROTA
 original_rota["callsign_count"] = original_rota.groupby('callsign_group')['callsign_group'].transform('count')
@@ -95,6 +106,8 @@ initial_fleet_df = pd.concat(fleet_makeup_list).drop(columns=["callsign_count"])
 fleet_additional_car_list = []
 fleet_additional_helo_list = []
 
+# For any helicopters over and above the real helicopters that already exist,
+# populate the dataframe with a default helicopter and a plausible callsign
 if num_helicopters >2:
     for i in range(1, num_helicopters-1):
         fleet_additional_helo_list.append(
@@ -111,6 +124,11 @@ if num_helicopters >2:
     }
         )
 
+# For any cars over and above the real cars that already exist,
+# populate the dataframe with a default car and a plausible callsign
+# NOTE - this is only for cars that don't have an associated helicopter
+# We will need to add car backups within the same callsign for any helicopter
+# that is created
 if num_cars >1:
     for i in range(1, num_cars):
         fleet_additional_car_list.append(
@@ -150,12 +168,13 @@ for time_col in ["summer_start", "summer_end", "winter_start", "winter_end"]:
     final_helo_df[time_col] = final_helo_df[time_col].apply(lambda x: time(x, 0))
     final_car_df[time_col] = final_car_df[time_col].apply(lambda x: time(x, 0))
 
-
+# Create an editable dataframe for people to modify the parameters in
 updated_helo_df = st.data_editor(
     final_helo_df.reset_index(),
     disabled=["vehicle_type"],
     hide_index=True,
-    column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"],
+    column_order=["vehicle_type", "callsign", "category", "model",
+                  "summer_start", "summer_end", "winter_start", "winter_end"],
     column_config={
         "vehicle_type": "Vehicle Type",
         "callsign": "Callsign",
@@ -222,7 +241,7 @@ if demand_adjust_type_high_level == "Overall Demand Adjustment":
         "Overall Demand Adjustment",
         min_value=90,
         max_value=200,
-        value=100,
+        # value=100,
         format="%d%%",
         key="overall_demand_mult"
         )
@@ -233,7 +252,7 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         "🌼 Spring Demand Adjustment",
         min_value=90,
         max_value=200,
-        value=100,
+        # value=100,
         format="%d%%",
         key="spring_demand_mult"
         )
@@ -242,7 +261,7 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         "☀️ Summer Demand Adjustment",
         min_value=90,
         max_value=200,
-        value=100,
+        # value=100,
         format="%d%%",
         key="summer_demand_mult"
         )
@@ -251,7 +270,7 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         "🍂 Autumn Demand Adjustment",
         min_value=90,
         max_value=200,
-        value=100,
+        # value=100,
         format="%d%%",
         key="autumn_demand_mult"
         )
@@ -260,20 +279,55 @@ elif demand_adjust_type_high_level == "Per Season Demand Adjustment":
         "❄️ Winter Demand Adjustment",
         min_value=90,
         max_value=200,
-        value=100,
+        # value=100,
         format="%d%%",
         key="winter_demand_mult"
         )
 
 
 with st.expander("Click here to set advanced model parameters"):
-    amb_data = st.toggle("Model ambulance service data", value=False, key="amb_data")
+    amb_data = st.toggle(
+        "Model ambulance service data",
+        # value=False,
+        key="amb_data"
+        )
 
-    sim_duration_input =  st.slider("Simulation Duration (days)", 1, 365, 7, key="sim_duration_input")
+    sim_duration_input =  st.slider(
+        "Simulation Duration (days)",
+        min_value=1,
+        max_value=365,
+        # value=7,
+        key="sim_duration_input"
+        )
 
-    warm_up_duration =  st.slider("Warm-up Duration (hours)", 0, 24*10, 0, key="warm_up_duration")
+    warm_up_duration =  st.slider(
+        "Warm-up Duration (hours)",
+        min_value=0,
+        max_value=24*10,
+        # value=0,
+        key="warm_up_duration"
+        )
+
     st.markdown(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
 
-    number_of_runs_input = st.slider("Number of Runs", 1, 30, 5, key="number_of_runs_input")
+    number_of_runs_input = st.slider(
+        "Number of Runs",
+        min_value=1,
+        max_value=30,
+        # value=5,
+        key="number_of_runs_input"
+        )
 
-    create_animation_input = st.toggle("Create Animation", value=False, key="create_animation_input")
+    create_animation_input = st.toggle(
+        "Create Animation",
+        # value=False,
+        key="create_animation_input"
+        )
+
+
+# TODO - This just currently redownloads the blank template
+# Will need to populate this
+st.download_button(data="parameter_template.xlsx",
+                    label="Save Your Parameters to a File",
+                    file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
+)
