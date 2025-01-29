@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 
 st.set_page_config(layout="wide")
 
@@ -13,4 +14,8 @@ with col1:
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
 
-st.write("Coming Soon!")
+st.dataframe(
+    pd.read_csv("app/glossary.csv"),
+    use_container_width=True,
+    hide_index=True,
+)
