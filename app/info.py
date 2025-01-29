@@ -1,4 +1,6 @@
 import streamlit as st
+from _app_utils import create_logic_diagram
+import streamlit as st
 
 st.set_page_config(layout="wide")
 
@@ -14,7 +16,10 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=300)
 
 
-tab_demand_data,tab_activity_durations, tab_stand_downs = st.tabs(["Demand Data", "Activity Durations", "Stand-downs"])
+tab_model_logic, tab_demand_data,tab_activity_durations, tab_stand_downs = st.tabs(["Summary of Model Logic", "Demand Data", "Activity Durations", "Stand-downs"])
+
+with tab_model_logic:
+    st.image(create_logic_diagram())
 
 with tab_demand_data:
     st.header("How has the data for demand been calculated?")

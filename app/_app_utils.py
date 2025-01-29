@@ -1,5 +1,16 @@
 from streamlit_extras.stylable_container import stylable_container
 import streamlit as st
+## logic_diagram.py
+import schemdraw
+from schemdraw import flow
+import streamlit as st
+
+# Set default flowchart box fill colors
+flow.Box.defaults['fill'] = '#eeffff'
+flow.Start.defaults['fill'] = '#ffeeee'
+flow.Decision.defaults['fill'] = '#ffffee'
+flow.Circle.defaults['fill'] = '#eeeeee'
+
 
 def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', family="filled", type="icons"):
     """Function that returns a CSS styled container for adding a Material Icon to a Streamlit st.metric value
@@ -56,3 +67,22 @@ def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', famil
 
 def file_download_confirm():
     st.toast("File Downloaded", icon=":material/download:")
+
+def create_logic_diagram(number_labels = False, session_data = None):
+    """
+    Credit to Dom Rowney
+
+    https://github.com/DomRowney/Project_Toy_MECC/blob/main/streamlit_app/logic_diagram.py
+    """
+    ## create a drawing class
+    with schemdraw.Drawing() as d:
+
+        label_call = "Call Arrives \n at SWAST"
+
+        call = flow.Circle(r=d.unit/2).label(label_call).drop("S")
+        flow.Arrow().at(call.S).down(d.unit/2)
+
+        ## Save the drawing to a temporary file
+        img_path = "logic_diagram.png"
+        d.save(img_path)
+        return img_path

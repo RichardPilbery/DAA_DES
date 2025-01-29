@@ -15,3 +15,4 @@ sim-tools==0.6.1
 vidigi==0.0.3
 joblib==1.4.2
 streamlit-extras==0.5.0
+schemdraw==0.19
