@@ -13,4 +13,18 @@ with col1:
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
 
-st.write("Coming Soon!")
+
+tab_intro, tab_benefits, tab_limitations = st.tabs(
+    "An Introduction to Simulation Modelling",
+    "Benefits of Simulation Modelling",
+    "Limitations of Simulation Modelling"
+)
+
+with tab_intro:
+    st.write("Coming Soon!")
+
+with tab_benefits:
+    st.write("Coming Soon!")
+
+with tab_limitations:
+    st.write("Coming Soon!")
