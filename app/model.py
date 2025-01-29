@@ -249,7 +249,65 @@ for response.
             tab_2_1, tab_2_2 = st.tabs(["Summary Graphs", "Per-Run Breakdowns"])
             with tab_2_1:
                 st.header("Summary Graphs")
-                st.write("Placeholder")
+
+                tab_2_1_col_1, tab_2_1_col_2 = st.columns(2)
+
+                with tab_2_1_col_1:
+                    st.subheader("Utilisation by Callsign")
+
+                    heli_util_df_dummy = pd.DataFrame([
+                        {"Vehicle": "H70/CC70",
+                        "Average Utilisation": 89},
+                        {"Vehicle": "H71/CC71",
+                        "Average Utilisation": 61},
+                        {"Vehicle": "CC72",
+                         "Average Utilisation": 71}
+                        ]
+                    )
+
+                    util_fig_simple = px.bar(heli_util_df_dummy,
+                            x="Average Utilisation",
+                            y="Vehicle",
+                            orientation="h",
+                            height=300
+                            ).update_xaxes(ticksuffix = "%", range=[0, 105])
+
+                    # Add optimum range
+                    util_fig_simple.add_vrect(x0=65, x1=85,
+                                            fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
+                    # Add extreme range (above)
+                    util_fig_simple.add_vrect(x0=85, x1=100,
+                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
+                    # Add suboptimum range (below)
+                    util_fig_simple.add_vrect(x0=40, x1=65,
+                                            fillcolor="#FDD049", opacity=0.25, line_width=0)
+                    # Add extreme range (below)
+                    util_fig_simple.add_vrect(x0=0, x1=40,
+                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
+
+                    st.plotly_chart(
+                        util_fig_simple
+                    )
+
+                with tab_2_1_col_2:
+                    st.subheader("Utilisation Split")
+
+                    # heli_util_df_dummy = pd.DataFrame([
+                    #     {"Helicopter": "H70",
+                    #     "Average Utilisation": 89},
+                    #     {"Helicopter": "H71",
+                    #     "Average Utilisation": 61},
+                    #     ]
+                    # )
+
+                    # st.plotly_chart(
+                    #     px.bar(heli_util_df_dummy,
+                    #         x="Average Utilisation",
+                    #         y="Helicopter",
+                    #         orientation="h",
+                    #         height=300
+                    #         ).update_layout(xaxis=dict(ticksuffix = "%", ))
+                    # )
 
             with tab_2_2:
                 st.header("Per-run Breakdowns")
