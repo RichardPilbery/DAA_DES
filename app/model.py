@@ -205,10 +205,8 @@ if button_run_pressed:
 
             t1_col1, t1_col2 = st.columns(2)
 
-
-            t1_col3, t1_col4 = st.columns(2)
-            with t1_col3:
-                with iconMetricContainer(key="nonattend_metric", icon_unicode="e0b0"):
+            with t1_col1:
+                with iconMetricContainer(key="nonattend_metric", icon_unicode="e61f", family="outline"):
                     st.metric("Number of Calls DAAT Resource Couldn't Attend",
                             "47 of 1203 (3.9%)",
                             border=True)
@@ -219,7 +217,7 @@ This could be due to
 - all resources being tasked to other jobs at the time of the call
 """)
 
-            with t1_col4:
+            with t1_col2:
                 with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
                     st.metric("Overall Helicopter Utilisation",
                             "78%",
@@ -234,13 +232,37 @@ For reference, the helicopter was unable to fly for 5.3% of on-shift hours on av
                 """)
 
 
+            t1_col3, t1_col4 = st.columns(2)
+
+            with t1_col3:
+                with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
+                    st.metric("Preferred Resource Allocated",
+                            "907 of 1203 (75.4%)",
+                            border=True)
+                    st.caption("""
+This is the percentage of time where the 'preferred' resource was available at the time of the call
+for response.
+""")
+
 
         with tab2:
-            st.write("Placeholder")
+            tab_2_1, tab_2_2 = st.tabs(["Summary Graphs", "Per-Run Breakdowns"])
+            with tab_2_1:
+                st.header("Summary Graphs")
+                st.write("Placeholder")
+
+            with tab_2_2:
+                st.header("Per-run Breakdowns")
+                st.write("Placeholder")
 
         with tab3:
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4 = st.tabs(["Counts", "Logs", "Debug Events", "Debug Resources"])
+            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
+                "Comparisons with Real-World Data", "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
+                ])
             with tab_3_1:
+                st.write("Placeholder")
+
+            with tab_3_2:
                 st.subheader("Observed Event Types")
 
                 event_counts_df =  (pd.DataFrame(
@@ -259,12 +281,12 @@ For reference, the helicopter was unable to fly for 5.3% of on-shift hours on av
                         .pivot(index="run_number", columns="callsign_group", values="count")
                         )
 
-            with tab_3_2:
+            with tab_3_3:
                 st.subheader("Full Event Log")
 
                 st.write(results_all_runs)
 
-            with tab_3_3:
+            with tab_3_4:
                 st.subheader("Event Overview")
 
                 tab3a, tab3b = st.tabs(["By Event", "By Run"])
@@ -361,7 +383,7 @@ For reference, the helicopter was unable to fly for 5.3% of on-shift hours on av
 
                 patient_viz()
 
-            with tab_3_4:
+            with tab_3_5:
                 st.subheader("Resource Use")
 
                 resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
@@ -377,6 +399,10 @@ For reference, the helicopter was unable to fly for 5.3% of on-shift hours on av
                     color="event_type"
                     )
                 )
+
+            with tab_3_6:
+                st.write("Placeholder")
+
 
         if st.session_state.create_animation_input:
             with tab4:
