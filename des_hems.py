@@ -183,7 +183,7 @@ class DES_HEMS:
                     for i in range(0, ia_dict[hod]):
                         #print(f"Creating new patient at {current_dt}")
                         self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-                        
+
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
 
@@ -320,7 +320,6 @@ class DES_HEMS:
 
             patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
 
-            
             # Check if HEMS result indicates no leaving scene/at hospital times
             no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
 
@@ -528,6 +527,8 @@ class DES_HEMS:
             "ampds_card"        : patient.ampds_card,
             "age"               : patient.age,
             "sex"               : patient.sex,
+            "hems_result"       : patient.hems_result,
+            "outcome"           : patient.pt_outcome
         }
 
         #print(results)
