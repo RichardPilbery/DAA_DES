@@ -11,23 +11,9 @@ class Utils:
     ALL_RESULTS_CSV = f'{RESULTS_FOLDER}/all_results.csv'
     RUN_RESULTS_CSV = f'{RESULTS_FOLDER}/run_results.csv'
 
-    # Based on summer Apr-Sept and winter Oct-Mar
-    # This rota is going to be split into vehicle (car/helicopter) and personnel
-    # Each row will only have two sets of start/end times (one pair for summer and one for winter)
-    HEMS_ROTA = pd.DataFrame({
-        "callsign"             : ["H70", "CC70", "H71", "CC71", "CC72"],
-        "category"             : ["CC", "CC", "EC", "EC", "CC"],
-        "vehicle_type"         : ["helicopter", "car", "helicopter", "car", "car"],
-        "callsign_group"       : ["70", "70", "71", "71", "72"],
-        "summer_start"         : [7, 7, 7, 9, 8],
-        "winter_start"         : [7, 7, 7, 7, 8],
-        "summer_end"           : [2, 2, 19, 19, 18],
-        "winter_end"           : [2, 2, 17, 17, 18],
-        "model"                : ["Airbus H145", "Volvo XC90", "Airbus EC135", "Volvo XC90", "Volvo XC90"]
-    })
-    HEMS_ROTA.set_index("callsign", inplace=True)
-
-    # TODO: Add servicing based on dates and typical servicing durations
+    # External file containing details of resources
+    # hours of operation and servicing schedules
+    HEMS_ROTA = pd.read_csv('actual_data/HEMS_ROTA.csv')
 
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 

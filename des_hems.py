@@ -155,7 +155,9 @@ class DES_HEMS:
         """
             **Call generator**
 
-            Alternative methods to generate calls (and patients) until current time equals sim_duration + warm_up_duration
+            Alternative methods to generate calls (and patients) until current time equals sim_duration + warm_up_duration.
+            This method calculates number of calls per day and then distributes them according to distributions determined
+            from historic data
 
         """
         ia_list = []
@@ -164,7 +166,7 @@ class DES_HEMS:
             # Get current day of week and hour of day
             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
-            print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
+            #print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
 
             self.calls_today = int(self.utils.inc_per_day(qtr))
 

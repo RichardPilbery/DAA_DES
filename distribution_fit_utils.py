@@ -378,6 +378,7 @@ class DistributionFitUtils():
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
     test = DistributionFitUtils('external_data/clean_daa_import.csv')
+    #test = DistributionFitUtils('external_data/clean_daa_import-2023.csv')
     test.import_and_wrangle()
 
 # Testing ----------

@@ -1,3 +1,4 @@
+from typing import Any, Generator
 from class_patient import Patient
 from utils import Utils
 import pandas as pd
@@ -23,10 +24,13 @@ class HEMSAvailability():
         self.store = FilterStore(env)
 
         # Populate the store with HEMS resources
+        self.calculate_service_schedule_and_populate_store()
+
+
+    def calculate_service_schedule_and_populate_store(self):
         for index, row in self.utilityClass.HEMS_ROTA.iterrows():
             print(f"Populating resource store: HEMS({index})")
             self.store.put(HEMS(index, resource_id=index))
-
 
 
     def add_hems(self):
@@ -86,7 +90,7 @@ class HEMSAvailability():
 
 
 
-    def allocate_resource(self, pt: Patient):
+    def allocate_resource(self, pt: Patient) -> Any | Event:
         """
         Attempt to allocate a resource from the preferred group.
         """
@@ -104,8 +108,8 @@ class HEMSAvailability():
 
         resource_event: Event = self.env.event()
 
-        def process():
-            def resource_filter(resource: HEMS, pref_res: HEMS):
+        def process() -> Generator[Any, Any, None]:
+            def resource_filter(resource: HEMS, pref_res: HEMS) -> bool:
                 """
                 Checks whether the resource the incident wants is available in the
                 simpy FilterStore
@@ -117,7 +121,7 @@ class HEMSAvailability():
                 #print(f"Resource filter with hour {hour} and qtr {qtr}")
 
                 # If the resource **is not currently in use** AND **is currently on shift**...
-                if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr):
+                if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr) and not resource.being_serviced:
                     # Check whether the resource is the preferred resource
                     if pref_res != None:
                         if resource.callsign == pref_res.callsign:
@@ -154,9 +158,6 @@ class HEMSAvailability():
 
 
     def return_resource(self, resource):
-        #print(f"Returning resource {resource.callsign}")
-        #print(f"Current store length is {len(self.store.items)}")
         resource.in_use = False
         self.store.put(resource)
-        #print(f"Current store length is {len(self.store.items)}")
 
