@@ -3,6 +3,9 @@
 These check specific parts of the simulation and code, ensuring they work
 correctly and as expected.
 
+Many tests inspired by list here:
+https://github.com/pythonhealthdatascience/rap_template_python_des/blob/main/tests/test_unittest_model.py
+
 Planned tests are listed below with a [].
 Implemented tests are listed below with a [x].
 
@@ -16,6 +19,7 @@ Implemented tests are listed below with a [x].
 [] Results dataframe is longer when model conducts more runs
 [] Results differ across multiple runs
 [] Arrivals differ across multiple runs
+[] Test running the model sequentially and in parallel produce identical results when seeds set
 
 ## Seeds
 
@@ -25,18 +29,26 @@ Implemented tests are listed below with a [x].
 
 [] Data is not present in results dataframe for warm-up period
 
+## Arrivals
+
+[] All patients who arrive outside of the warm-up period have an entry in the results dataframe
+[] Number of arrivals increase if parameter adjusted
+[] Number of arrivals decrease if parameter adjusted
+
 ## Sensible Resource Use
 
 [] All provided resources get at least some utilisation in a model that
    runs for a sufficient length of time with sufficient demand
 [] Utilisation never exceeds 100%
 [] Utilisation never drops below 0%
+[] No one waits in the model for a resource to become availabile - they leave and are recorded as missed
+[] Resources are used in the expected order determined within the model
 
 ## Activity during inactive periods
 
-[] Calls do not generate activity if they arrive during times the resource is meant to be off shift
 [] Resources do not respond during times they are meant to be off shift
-
+[] Calls do not generate activity if they arrive during times the resource is meant to be off shift
+[] Inactive periods correctly change across seasons if set to do so
 
 ## Expected responses of metrics under different conditions
 
@@ -55,7 +67,7 @@ Implemented tests are listed below with a [x].
 
 ## Failure to run under nonsensical conditions
 
-[] Model does not run with a negative number of resource
+[] Model does not run with a negative number of resources
 [] Model does not run with negative average demand parameter
 
 """
