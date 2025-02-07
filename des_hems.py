@@ -178,6 +178,7 @@ class DES_HEMS:
                 self.new_day = current_dt.date
                 ia_dict = self.calls_per_hour(qtr)
                 #print(ia_list)
+                # Also run scripts to check HEMS resources to see whether they are starting/finishing service
 
             if self.calls_today > 0:
                 # Work out how long until next incident

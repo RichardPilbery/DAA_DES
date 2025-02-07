@@ -1,9 +1,10 @@
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 import random
 import numpy as np
 import pandas as pd
 import ast
 import scipy
+import calendar
 
 class Utils:
 
@@ -296,3 +297,152 @@ class Utils:
                 break
 
         return sampled_value
+
+    def get_nth_weekday(year: int, month: int, weekday: int, n: int):
+
+        """
+            Calculate  date of the nth occurrence of a weekday in a given month and year.
+        """
+
+        first_day = datetime(year, month, 1)
+        first_weekday = first_day.weekday()
+        days_until_weekday = (weekday - first_weekday + 7) % 7
+        first_occurrence = first_day + timedelta(days=days_until_weekday)
+
+        return first_occurrence + timedelta(weeks = n - 1)
+
+    def get_last_weekday(year, month, weekday):
+        """
+            Return the date of the last occurrence of a weekday in a given month and year.
+        """
+
+        last_day = datetime(year, month, calendar.monthrange(year, month)[1])
+        last_weekday = last_day.weekday()
+        days_since_weekday = (last_weekday - weekday + 7) % 7
+
+        return last_day - timedelta(days = days_since_weekday)
+
+    def calculate_term_holidays(self, year):
+
+        holidays = []
+
+        # Jan to Easter
+        start_date = datetime(year, 1, 1)
+
+        first_mon_of_year = self.get_nth_weekday(year, 1, calendar.MONDAY, 1)
+
+        jan_term_start = first_mon_of_year
+
+        if start_date.weekday() in [0, 6]:
+            print(f"1st jan is {start_date.weekday()}")
+            # 1st Jan is a a weekday
+            jan_term_start += timedelta(days = 1)
+        else:
+            print("1st jan is weekday")
+
+        print(f"Year {year} - start_date: {start_date} and term_start is {jan_term_start}")
+
+        holidays.append({'start_date': start_date, 'end_date' : jan_term_start - timedelta(days = 1)})
+
+        # Spring half-term
+
+        spring_half_term_start = self.get_nth_weekday(year, 2, calendar.MONDAY, 2)
+        spring_half_term_end = spring_half_term_start + timedelta(days = 4)
+
+        holidays.append({'start_date': spring_half_term_start, 'end_date' : spring_half_term_end})
+
+        # Easter hols
+
+        # Calculate Good Friday
+        easter_sunday = self.calculate_easter(year)
+
+        print(f"Easter Sunday is {easter_sunday}")
+        good_friday = easter_sunday - timedelta(days = 2)
+
+        # If ES is in March, 1st two weeks of Apri
+        # Otherwise, Monday of ES week + 1 week
+        start_date = easter_sunday - timedelta(days = 6)
+        end_date = start_date + timedelta(days = 13)
+
+        if easter_sunday.month == 3 or (easter_sunday.month == 4 and easter_sunday >= self.get_nth_weekday(year, 4, calendar.SUNDAY, 2)):
+            start_date = self.get_nth_weekday(year, 4, calendar.MONDAY, 1)
+            if  easter_sunday.month == 4 and easter_sunday >= self.get_nth_weekday(year, 4, calendar.SUNDAY, 2):
+                # Will also likely be a late Easter Monday
+                end_date = start_date + timedelta(days = 14)
+            else:
+                end_date = start_date + timedelta(days = 13)
+            
+        holidays.append({
+            'start_date': start_date,
+            'end_date' : end_date
+        })
+
+        # Summer half-term
+
+        summer_half_term_start = self.get_last_weekday(year, 5, calendar.MONDAY)
+        summer_half_term_end = summer_half_term_start + timedelta(days = 6)
+
+        holidays.append({
+            'start_date': summer_half_term_start,
+            'end_date' : summer_half_term_end
+        })
+
+        # Summer Holidays
+
+        summer_start = self.get_last_weekday(year, 7, calendar.MONDAY)
+        summer_end = self.get_nth_weekday(year, 9, calendar.MONDAY, 1)
+
+        holidays.append({
+            'start_date': summer_start,
+            'end_date' : summer_end
+        })
+
+        # Autumn Term
+
+        autumn_half_term_start = summer_end + timedelta(weeks = 8)
+
+        if summer_end.day >= 4:
+            autumn_half_term_start = summer_end + timedelta(weeks = 7)
+
+        autumn_half_term_end = autumn_half_term_start + timedelta(days = 6)
+
+        holidays.append({
+            'start_date': autumn_half_term_start,
+            'end_date' : autumn_half_term_end 
+        })   
+
+        # Christmas Hols
+
+        start_date = self.get_last_weekday(year, 12, calendar.MONDAY) - timedelta(days = 7)
+
+        holidays.append({
+            'start_date': start_date,
+            'end_date' : datetime(year, 12, 31)
+        })   
+
+
+        return pd.DataFrame(holidays)
+
+    def calculate_easter(year):
+
+        """
+            Calculate the date of Easter Sunday for a given year using the Anonymous Gregorian algorithm.
+            Converted to Python from this SO answer: https://stackoverflow.com/a/49558298/3650230
+        """
+
+        a = year % 19
+        b = year // 100
+        c = year % 100
+        d = b // 4
+        e = b % 4
+        f = (b + 8) // 25
+        g = (b - f + 1) // 3
+        h = (19 * a + b - d - g + 15) % 30
+        k = c % 4
+        i = (c - k) // 4
+        l = (32 + 2 * e + 2 * i - h - k) % 7
+        m = (a + 11 * h + 22 * l) // 451
+        month = (h + l - 7 * m + 114) // 31
+        day = ((h + l - 7 * m + 114) % 31) + 1
+
+        return datetime(year, month, day)

@@ -15,10 +15,14 @@ class HEMSAvailability():
     
     """
 
-    def __init__(self, env):
+    def __init__(self, env, servicing_overlap_allowed = False, servicing_buffer_weeks = 4):
        
         self.env = env
         self.utilityClass = Utils()
+
+        # Adding options to set servicing parameters.
+        self.servicing_overlap_allowed = servicing_overlap_allowed
+        self.serviing_buffer_weeks = servicing_buffer_weeks
 
         # Create a store for HEMS resources
         self.store = FilterStore(env)
@@ -29,6 +33,21 @@ class HEMSAvailability():
 
     def calculate_service_schedule_and_populate_store(self):
         for index, row in self.utilityClass.HEMS_ROTA.iterrows():
+            # Identify resources who have a servicing schedule > 0
+
+            # Send them off together to a function to calculate when they are going to be serviced
+            
+            # return new dataframe with details of servicing start and end dates
+
+            # Create new HEMS resource with resource_id and put it into the store
+
+            # HEMS resources will need to determine whether they are being serviced when call
+            # for resource is made.
+
+            # Also need to check every day for HEMS resources being service/no longer services
+            # Could probably go in the Generator
+
+            # Last step
             print(f"Populating resource store: HEMS({index})")
             self.store.put(HEMS(index, resource_id=index))
 
