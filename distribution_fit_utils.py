@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import json
 from fitter import Fitter, get_common_distributions
+from datetime import timedelta
+from utils import Utils
 
 class DistributionFitUtils():
     """
@@ -18,11 +20,16 @@ class DistributionFitUtils():
   
     """
 
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, calculate_school_holidays = False, school_holidays_years = 5):
        
         self.file_path = file_path
         self.df = pd.DataFrame()
-
+        
+        # The number of additional years of school holidays
+        # that will be calculated over that maximum date in the provided dataset
+        self.school_holidays_years = school_holidays_years 
+        self.calculate_school_holidays = calculate_school_holidays 
+        
         self.times_to_fit = [
             {"hems_result": "Patient Treated (not conveyed)", 
             "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear']},
@@ -131,6 +138,10 @@ class DistributionFitUtils():
 
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         self.vehicle_type_by_month_probs()
+
+        # Calculate school holidays since servicing schedules typically avoid these dates
+        if self.calculate_school_holidays:
+            self.school_holidays()
             
 
     def hour_by_ampds_card_probs(self):
@@ -375,9 +386,30 @@ class DistributionFitUtils():
 
         po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_probs.csv', mode = "w+")
 
+    def school_holidays(self):
+
+        min_date = self.df.inc_date.min()
+        max_date = self.df.inc_date.max() + timedelta(weeks = (52 * self.school_holidays_years ))
+
+        u = Utils()
+
+        years_of_holidays_list = u.years_between(min_date, max_date)
+
+        sh = pd.DataFrame(columns=['start_date', 'end_date'])
+
+        for i, year in enumerate(years_of_holidays_list):
+            tmp = u.calculate_term_holidays(year)
+
+            if i == 0:
+                sh = tmp
+            else:
+                sh = pd.concat([sh, tmp])
+
+        sh.to_csv('actual_data/school_holidays.csv', index = False)
+
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
-    test = DistributionFitUtils('external_data/clean_daa_import.csv')
+    test = DistributionFitUtils('external_data/clean_daa_import.csv', True)
     #test = DistributionFitUtils('external_data/clean_daa_import-2023.csv')
     test.import_and_wrangle()
 

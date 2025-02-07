@@ -298,7 +298,7 @@ class Utils:
 
         return sampled_value
 
-    def get_nth_weekday(year: int, month: int, weekday: int, n: int):
+    def get_nth_weekday(self, year: int, month: int, weekday: int, n: int):
 
         """
             Calculate  date of the nth occurrence of a weekday in a given month and year.
@@ -311,7 +311,7 @@ class Utils:
 
         return first_occurrence + timedelta(weeks = n - 1)
 
-    def get_last_weekday(year, month, weekday):
+    def get_last_weekday(self, year, month, weekday):
         """
             Return the date of the last occurrence of a weekday in a given month and year.
         """
@@ -334,13 +334,11 @@ class Utils:
         jan_term_start = first_mon_of_year
 
         if start_date.weekday() in [0, 6]:
-            print(f"1st jan is {start_date.weekday()}")
+            #print(f"1st jan is {start_date.weekday()}")
             # 1st Jan is a a weekday
             jan_term_start += timedelta(days = 1)
-        else:
-            print("1st jan is weekday")
 
-        print(f"Year {year} - start_date: {start_date} and term_start is {jan_term_start}")
+        #print(f"Year {year} - start_date: {start_date} and term_start is {jan_term_start}")
 
         holidays.append({'start_date': start_date, 'end_date' : jan_term_start - timedelta(days = 1)})
 
@@ -356,7 +354,7 @@ class Utils:
         # Calculate Good Friday
         easter_sunday = self.calculate_easter(year)
 
-        print(f"Easter Sunday is {easter_sunday}")
+        #print(f"Easter Sunday is {easter_sunday}")
         good_friday = easter_sunday - timedelta(days = 2)
 
         # If ES is in March, 1st two weeks of Apri
@@ -420,14 +418,15 @@ class Utils:
             'end_date' : datetime(year, 12, 31)
         })   
 
-
         return pd.DataFrame(holidays)
 
-    def calculate_easter(year):
+
+    def calculate_easter(self, year):
 
         """
             Calculate the date of Easter Sunday for a given year using the Anonymous Gregorian algorithm.
             Converted to Python from this SO answer: https://stackoverflow.com/a/49558298/3650230
+            Really interesting rabbit hole to go down about this in the whole thread: https://stackoverflow.com/questions/2192533/function-to-return-date-of-easter-for-the-given-year
         """
 
         a = year % 19
@@ -446,3 +445,7 @@ class Utils:
         day = ((h + l - 7 * m + 114) % 31) + 1
 
         return datetime(year, month, day)
+    
+
+    def years_between(self, start_date, end_date):
+        return list(range(start_date.year, end_date.year + 1))
