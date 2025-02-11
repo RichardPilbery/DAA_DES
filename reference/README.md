@@ -1,10 +1,10 @@
 This folder contains diagrams describing the model.
 
-**daa_des_model_logic**
+## daa_des_model_logic
 
 This diagram is designed to describe how the model makes 'decisions', and what historical data it is basing these decisions on.
 
-**daa_des_model_structure**
+## daa_des_model_structure
 
 This diagram is more focussed on the underlying class structure.
 
