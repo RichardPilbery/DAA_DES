@@ -43,6 +43,8 @@ Implemented tests are listed below with a [x].
 [] Utilisation never drops below 0%
 [] No one waits in the model for a resource to become availabile - they leave and are recorded as missed
 [] Resources are used in the expected order determined within the model
+[] Resources belonging to the same callsign group don't get sent on jobs at the same time
+[] Changing helicopter type results in different unavailability results being generated
 
 ## Activity during inactive periods
 
