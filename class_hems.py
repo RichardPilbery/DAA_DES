@@ -22,7 +22,7 @@ class HEMS(Ambulance):
         self.callsign = callsign
         self.callsign_group = df['callsign_group']
         self.available = 1
-        self.being_serviced = 0
+        self.being_serviced = False
         self.flying_time = 0
         self.vehicle_type = df['vehicle_type'].iloc[0]
         self.category = df['category'].iloc[0]
@@ -31,32 +31,28 @@ class HEMS(Ambulance):
         self.summer_end = df["summer_end"].iloc[0]
         self.winter_end = df["winter_end"].iloc[0]
 
-        # NOTE: HEMS_ROTA is indexed on callsign
-        self.servicing_frequency_hours = 100
-        self.servicing_duration_weeks = 4
-        # This will need revising once we've settled on how to keep track of service start and end times
-        self.service_start_date = 0
-        self.service_end_date = 0
+        # Pre-determine the servicing schedule when the resource is created
+        self.servicing_schedule = pd.DataFrame(columns=['year', 'service_start_date', 'service_end_date'])
 
         self.in_use = False
         self.resource_id = resource_id
 
 
-    def operational_after_service(self, current_time):
+    def unavailable_due_to_service(self, current_dt: pd.Timestamp) -> bool:
         """
-            Update service status of HEMS' resources
-
-            This function will periodically check to see whether HEMS' resources have
-            now completed the service interval and can be returned to operational use
-
-            CURRENTLY NOT IN USE
+            Returns logical value denoting whether the HEMS resource is currently
+            unavailable due to being serviced
 
         """
-        if self.vehicle_type == "helicopter" and (current_time >= self.service_end_date):
-            self.being_serviced = 0
-            self.flying_time = 0
 
-    def hems_resource_on_shift(self, hour: int, season: int):
+        curr_year_servicing_schedule = self.servicing_schedule[self.servicing_schedule['year'] == current_dt.year]
+
+        if curr_year_servicing_schedule['service_start_date'] >= current_dt.date <= curr_year_servicing_schedule['service_end_date']:
+            return True
+        
+        return False
+
+    def hems_resource_on_shift(self, hour: int, season: int) -> bool:
 
         """
             Function to determine whether the HEMS resource is within
