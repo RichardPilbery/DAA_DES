@@ -1,12 +1,12 @@
 <mxfile host="65bd71144e">
     <diagram id="Uhb_bpezcjr28JnNViiC" name="Page-1">
-        <mxGraphModel dx="806" dy="663" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2440" dy="1020" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <UserObject label="Ambulance" tooltip="This class defines an 'Ambulance'; effectively any resource that responds to a patient/incident. This includes HEMS, which is a child class of Ambulance." id="2">
                     <mxCell style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-                        <mxGeometry x="170" y="50" width="160" height="174" as="geometry"/>
+                        <mxGeometry x="40" y="50" width="160" height="174" as="geometry"/>
                     </mxCell>
                 </UserObject>
                 <mxCell id="3" value="+ mobile: str&#10;+ as_scene: str&#10;+ leaving_scene: str&#10;+ at_hospital: str&#10;+ stood_down: str&#10;+ ambulance_type: str&#10;+ callsign: str" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="2">
@@ -20,7 +20,7 @@
                 </mxCell>
                 <UserObject label="HEMS" tooltip="This class defines a HEMS resource" id="6">
                     <mxCell style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-                        <mxGeometry x="160" y="420" width="380" height="290" as="geometry"/>
+                        <mxGeometry x="30" y="420" width="380" height="290" as="geometry"/>
                     </mxCell>
                 </UserObject>
                 <mxCell id="7" value="+ callsign_group: str&#10;+ available: int = 1&#10;+ being_serviced: bool = False&#10;+ flying_time: int = 0&#10;+ vehicle_type: str&#10;+ category: str&#10;+ summer_start: int&#10;+ winter_start: int&#10;+ summer_end: int&#10;+ winter_end: int&#10;+ servicing_schedule: pd.DataFrame&#10;+ in_use: bool = False&#10;+ resource_id: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="6">
@@ -32,12 +32,12 @@
                 <mxCell id="9" value="+ unavailable_due_to_service(current_df: pd.Timestamp): bool&#10;+ hems_resource_on_shift(hour: int, season: int): bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="6">
                     <mxGeometry y="238" width="380" height="52" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;rounded=0;startArrow=block;startFill=0;" edge="1" parent="1" source="3" target="6">
+                <mxCell id="10" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.435;exitY=1.026;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;endArrow=none;endFill=0;rounded=0;startArrow=block;startFill=0;exitPerimeter=0;" edge="1" parent="1" source="5" target="6">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <UserObject label="HEMSAvailability" tooltip="This class is a filter store which can provide HEMS resources based on the time of day and servicing schedule" id="11">
                     <mxCell style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-                        <mxGeometry x="450" y="20" width="360" height="230" as="geometry"/>
+                        <mxGeometry x="425" y="40" width="360" height="230" as="geometry"/>
                     </mxCell>
                 </UserObject>
                 <mxCell id="12" value="+ env: simpy.Environment&#10;+ utilityClass: Custom class Utils&#10;+ servicing_overlap_allowed: bool = False&#10;+ servicing_buffer_weeks: int = 4&#10;+ store = simpy.FilterStore&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="11">
@@ -50,7 +50,7 @@
                     <mxGeometry y="128" width="360" height="102" as="geometry"/>
                 </mxCell>
                 <mxCell id="15" value="Patient" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
-                    <mxGeometry x="880" y="10" width="310" height="624" as="geometry"/>
+                    <mxGeometry x="560" y="320" width="310" height="624" as="geometry"/>
                 </mxCell>
                 <mxCell id="16" value="+ id: int&#10;&#10;+ ampds_card: str = &quot;&quot;&#10;&#10;+ postcode: str = &quot;&quot;&#10;+ lat: str = &quot;&quot;&#10;+ long: str = &quot;&quot;&#10;&#10;+ age: int = 0&#10;+ sex: str = &quot;female&quot;&#10;&#10;+ time_in_sim: int&#10;&#10;+ hour: int = 0&#10;+ day: str = &quot;Mon&quot;&#10;+ month: int = 1&#10;+ qtr: int = 1&#10;+ weekday: str = &quot;weekday&quot;&#10;+ current_dt: None = None&#10;&#10;+ time_to_cc: int = 0&#10;+ cc_conveyed = 0&#10;+ cc_flown = 0&#10;+ cc_travelled_with: int = 0&#10;+ hems_case: int bool flag = -1&#10;+ hems: int bool flag = -1&#10;+ hems_result: str = &quot;&quot;&#10;+ hems_pref_vehicle_type: str = &quot;&quot;&#10;+ hems_pref_callsign_group: str = &quot;&quot;&#10;+ hems_vehicle_type: str = &quot;&quot;&#10;+ hems_callsign_group: str = &quot;&quot;&#10;&#10;+ pt_outcome: str = &quot;&quot;&#10;&#10;+ cc_desk: int = 0&#10;&#10;+ dispatcher_intervention: int = 0&#10;&#10;+ time_to_first_response: int = 0" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="15">
                     <mxGeometry y="26" width="310" height="564" as="geometry"/>
@@ -60,6 +60,102 @@
                 </mxCell>
                 <mxCell id="18" value="NO Methods" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" vertex="1" parent="15">
                     <mxGeometry y="598" width="310" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="20" value="DES_HEMS" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="910" y="20" width="470" height="648" as="geometry"/>
+                </mxCell>
+                <mxCell id="21" value="+ run_number: int&#10;+ sim_duration: int&#10;+ warm_up_duration: int&#10;+ sim_start_date: int&#10;&#10;+ amb_data: int&#10;&#10;+ utils: Instance of Utils Class&#10;&#10;+ all_results_location: str&#10;+ run_results_location: str&#10;&#10;+ env: simpy.Environment = simpy.Environment() &#10;+ patient_counter: int = 0&#10;+ calls_today: int = 0&#10;+ new_day: Date = 1900-01-01&#10;&#10;+ hems_resources: Instance of HEMSAvailability Class = HEMSAvailability(self.env)&#10;&#10;+ results_list: list = []&#10;&#10;+ results_df: None = None&#10;&#10;+ inter_arrival_times: pd.DataFrame" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="20">
+                    <mxGeometry y="26" width="470" height="364" as="geometry"/>
+                </mxCell>
+                <mxCell id="22" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="20">
+                    <mxGeometry y="390" width="470" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="23" value="+ calc_interarrival_time(hour: int, qtr: int, NSPPThin: bool): float&#10;+ calls_per_hour(quarter: int): dict&#10;+ predetermine_call_arrival(current_hour: int, quarter: int): list&#10;+ generate_calls_v2()&#10;+ generate_calls()&#10;&#10;+ generate_patient(dow: int, hod: int, weekday: str, month: int, qtr: int, current_dt: date)&#10;+ patient_journey(hems_res: HEMS, patient: Patient)&#10;&#10;+ add_patient_result_row(patient: Patient, time_type: str, event_type: str, **kwargs)&#10;+ store_patient_results(results: dict): None&#10;+ convert_results_to_df(results: dict): None&#10;+ write_all_results(): None&#10;+ write_run_results(): None&#10;&#10;+ run(): None" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="20">
+                    <mxGeometry y="398" width="470" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="28" value="Utils" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="-950" y="50" width="470" height="650" as="geometry"/>
+                </mxCell>
+                <mxCell id="29" value="+ inter_arrival_rate_df: pd.DataFrame()&#10;+ hourly_arrival_by_qtr_probs_df: pd.DataFrame()&#10;+ hour_by_ampds_df: pd.DataFrame()&#10;+ sex_by_ampds_df: pd.DataFrame()&#10;+ callsign_by_ampds_and_hour_df: pd.DataFrame()&#10;+ vehicle_type_by_month_df: pd.DataFrame()&#10;+ hems_result_by_callsign_group_and_vehicle_type_df: pd.DataFrame()&#10;+ pt_outcome_by_hems_result_df: pd.DataFrame()&#10;&#10;+ age_distr: dict&#10;+ activity_time_distr: dict&#10;+ inc_per_day_distr: dict&#10;&#10;" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="28">
+                    <mxGeometry y="26" width="470" height="194" as="geometry"/>
+                </mxCell>
+                <mxCell id="30" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="28">
+                    <mxGeometry y="220" width="470" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="31" value="+ current_time(): str&#10;+ date_time_of_call(start_df: str, elapsed_time: int): list[int, int, str, int, pd.Timestamp]&#10;&#10;+ inter_arrival_rate(hour: int, quarter: int): float&#10;&#10;+ ampds_code_selection(hour: int): int&#10;&#10;+ is_time_in_range(current: int, start: int, end: int): bool&#10;&#10;+ callsign_group_selection(hour: int, ampds_card: str): int&#10;+ vehicle_type_selection(month: int, callsign_group: str) : int&#10;+ pt_outcome_selection(hems_result: str): int&#10;+ sex_seelction(ampds_card: int): str&#10;+ age_sampling(ampds_card: int, max_age: int): float&#10;&#10;+ activity_time(vehicle_type: str, time_type: str): float&#10;+ inc_per_day(quarter: int): float&#10;&#10;+ sample_from_distribution(distr: dict): float&#10;&#10;+ get_nth_weekday(year: int, month: int, weekday: int, n: int): datetime.datetime&#10;+ get_last_weekday(year: int, month: int, weekday: int, n: int): datetime.datetime&#10;&#10;+ calculate_term_holidays(year: int): pd.DataFrame&#10;+ calculate_easter(year: int): datetime&#10;&#10;+ years_between(start_date: datetime, end_date: datetime): list" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="28">
+                    <mxGeometry y="228" width="470" height="422" as="geometry"/>
+                </mxCell>
+                <mxCell id="32" value="DistributionFitUtils" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="-450" y="46" width="440" height="86" as="geometry"/>
+                </mxCell>
+                <mxCell id="33" value="+ field: type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="32">
+                    <mxGeometry y="26" width="440" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="34" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="32">
+                    <mxGeometry y="52" width="440" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="35" value="+ method(type): type" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="32">
+                    <mxGeometry y="60" width="440" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="40" value="&lt;&lt;function&gt;&gt; runSim" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="1665" y="7" width="160" height="164" as="geometry"/>
+                </mxCell>
+                <mxCell id="41" value="+ run: int&#10;+ total_runs: int&#10;+ sim_duration: int&#10;+ warm_up_time: int&#10;+ sim_start_date: datetime&#10;+ amb_data: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="40">
+                    <mxGeometry y="26" width="160" height="104" as="geometry"/>
+                </mxCell>
+                <mxCell id="42" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="40">
+                    <mxGeometry y="130" width="160" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="43" value="returns: pd.DataFrame" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="40">
+                    <mxGeometry y="138" width="160" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="44" value="&lt;&lt;function&gt;&gt; parallelProcess" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="1640" y="239" width="210" height="94" as="geometry"/>
+                </mxCell>
+                <mxCell id="45" value="+ nprocess: int" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="44">
+                    <mxGeometry y="26" width="210" height="34" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="44">
+                    <mxGeometry y="60" width="210" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="47" value="returns: None" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="44">
+                    <mxGeometry y="68" width="210" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="48" value="&lt;&lt;function&gt;&gt; collateRunResults" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="1640" y="388" width="210" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="49" value="No inputs" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" vertex="1" parent="48">
+                    <mxGeometry y="26" width="210" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="50" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="48">
+                    <mxGeometry y="50" width="210" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="51" value="returns: None" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="48">
+                    <mxGeometry y="58" width="210" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="52" value="&lt;&lt;function&gt;&gt; removeExistingResults" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="1640" y="485" width="240" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="53" value="No inputs" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;fontStyle=2" vertex="1" parent="52">
+                    <mxGeometry y="26" width="240" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="54" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="52">
+                    <mxGeometry y="50" width="240" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="55" value="returns: None" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="52">
+                    <mxGeometry y="58" width="240" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="56" value="&lt;&lt;function&gt;&gt; parallelProcessJoblib" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;" vertex="1" parent="1">
+                    <mxGeometry x="1620" y="650" width="280" height="164" as="geometry"/>
+                </mxCell>
+                <mxCell id="57" value="+ total_runs: int&#10;+ sim_duration: int&#10;+ warm_up_time: int&#10;+ sim_start_date: datetime&#10;+ amb_data: bool" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="56">
+                    <mxGeometry y="26" width="280" height="104" as="geometry"/>
+                </mxCell>
+                <mxCell id="58" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" vertex="1" parent="56">
+                    <mxGeometry y="130" width="280" height="8" as="geometry"/>
+                </mxCell>
+                <mxCell id="59" value="returns: None" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;" vertex="1" parent="56">
+                    <mxGeometry y="138" width="280" height="26" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
