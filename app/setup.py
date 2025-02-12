@@ -12,9 +12,13 @@ from streamlit_extras.stylable_container import stylable_container
 
 from utils import Utils
 
+from _app_utils import get_text, get_text_sheet
+
 st.set_page_config(layout="wide")
 
 setup_state()
+
+text_df=get_text_sheet("setup")
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
@@ -28,12 +32,6 @@ with col1:
 
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
-
-help_helicopters = """
-This parameter relates to the number of helicopters that will be present.
-
-You can set the helicopter type, crew type and operational hours in the next step.
-"""
 
 help_cars = """
 This parameter relates to the number of *additional* critical care cars that exist as an entity
@@ -85,7 +83,7 @@ with col_1_fleet_setup:
         min_value=1,
         max_value=5,
         value=st.session_state.num_helicopters,
-        help=help_helicopters,
+        help=get_text("help_helicopters", text_df),
         on_change= lambda: setattr(st.session_state, 'num_helicopters', st.session_state.key_num_helicopters),
         key="key_num_helicopters"
         )
