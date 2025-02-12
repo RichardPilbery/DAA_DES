@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="cqooIp5l22o7zoIYBhxo" name="Page-1">
-        <mxGraphModel dx="2298" dy="1726" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="2197" dy="1377" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -13,11 +13,8 @@
                 <mxCell id="5" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=8;" edge="1" parent="1" source="2" target="4">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="&lt;b&gt;A new patient is generated&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="100" y="100" width="230" height="60" as="geometry"/>
-                </mxCell>
-                <mxCell id="3" value="&lt;b&gt;&lt;i&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;The patient object records the current day, hour, month, and quarter, as well as the simulation date in datetime format and whether the day was a weekday&lt;/font&gt;&lt;/i&gt;&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="355" y="100" width="225" height="50" as="geometry"/>
+                <mxCell id="2" value="&lt;b&gt;A new patient is generated&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="40" width="230" height="60" as="geometry"/>
                 </mxCell>
                 <mxCell id="9" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;fontSize=8;" edge="1" parent="1" source="4" target="7">
                     <mxGeometry relative="1" as="geometry"/>
@@ -130,7 +127,7 @@
                 <mxCell id="29" value="If&amp;nbsp; the callsign group consists of&amp;nbsp; a helicopter + a car&lt;br&gt;&lt;br&gt;[FILL IN]" style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;strokeColor=#1EA1C2;" vertex="1" parent="1">
                     <mxGeometry x="660" y="740" width="150" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="30" value="&lt;i&gt;CHECK IF THIS IS WORKING AS INTENDED&lt;br&gt;&lt;br&gt;I STARTED TO WRITE OUT WHAT i THINK SHOULD BE HAPPENING HERE FROM MY UNDERSTANDING, BUT NEEDS DISCUSSION&lt;br&gt;&lt;/i&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fontSize=8;fillColor=#FFB366;fontColor=#0d0d0d;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="30" value="&lt;i&gt;THIS SECTION IS UNFINISHED&lt;br&gt;&lt;/i&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fontSize=8;fillColor=#FFB366;fontColor=#0d0d0d;fontStyle=1" vertex="1" parent="1">
                     <mxGeometry x="700" y="610" width="120" height="130" as="geometry"/>
                 </mxCell>
                 <mxCell id="33" value="If&amp;nbsp; the callsign group consists of just a car&lt;br&gt;&lt;br&gt;[FILL IN]" style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;strokeColor=#1EA1C2;" vertex="1" parent="1">
@@ -612,6 +609,68 @@
                 </mxCell>
                 <mxCell id="205" value="If a subsequent step doesn't take place due to the nature of the call, the process will move on to calculating the 'time to clear'" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#FFFFFF;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="710" y="1590" width="990" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="218" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;fillColor=#eeeeee;" edge="1" parent="1" source="206" target="207">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="206" value="&lt;b&gt;The simulation begins&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="-390" width="230" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="215" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#1EA1C2;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="207" target="210">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="220" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="207" target="219">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="207" value="&lt;b&gt;The simulation looks at historical data and samples how many incidents should take place in a single day&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="-280" width="230" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="216" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#1EA1C2;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="210" target="214">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="210" value="Historical data on the age of calls per day took place across a two year period is accessed" style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;strokeColor=#1EA1C2;" vertex="1" parent="1">
+                    <mxGeometry x="460" y="-280" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="217" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;strokeColor=#1EA1C2;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="214" target="207">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="214" value="We then randomly decidehow many calls took place on this simulated day.&lt;br&gt;&lt;br&gt;This is putting an large collection of numbered balls into a bag, with more balls with a given number on them if we historically had a large number ofdays with that number of calls received. &lt;br&gt;&lt;br&gt;We then reach in and randomly pick out one of the balls, and use the number on it as the number of calls received in the day." style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;strokeColor=#1EA1C2;" vertex="1" parent="1">
+                    <mxGeometry x="560" y="-210" width="200" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="234" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="219" target="2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="219" value="&lt;b&gt;The simulation refers back to historical data per quarter and randomly allocates the number of calls that will take place in each hour of the day, accounting for historical trends in the timing of calls&lt;br&gt;&lt;/b&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="100" y="-180" width="230" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="225" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="222" target="206">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="222" value="How long to run the simulation for" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-158.75" y="-450" width="120" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="226" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="223" target="206">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="223" value="How long to 'warm up' the simulation before recording results" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-158.75" y="-385" width="130" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="227" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="224" target="206">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="60" y="-340" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="224" value="How many times to repeat the simulation with slight variations in calls/patients/unplanned unavailability etc." style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-158.75" y="-320" width="128.75" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="229" value="Fed in" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontColor=#FFFFFF;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="-205" y="-490" width="195" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="231" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="230" target="206">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="230" value="Historical data on calls, patients, servicing etc." style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-158.75" y="-260" width="128.75" height="50" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
