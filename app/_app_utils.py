@@ -88,8 +88,10 @@ def create_logic_diagram(number_labels = False, session_data = None):
         d.save(img_path)
         return img_path
 
+@st.cache_data
 def get_text_sheet(sheet):
     return pd.read_excel("app/assets/text.xlsx", sheet_name=sheet)
 
+@st.cache_data
 def get_text(reference, text_df):
     return text_df[text_df["reference"] == reference]['text'].values[0]
