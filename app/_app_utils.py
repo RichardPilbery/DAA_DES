@@ -89,7 +89,7 @@ def create_logic_diagram(number_labels = False, session_data = None):
         return img_path
 
 def get_text_sheet(sheet):
-    return pd.read_excel("app/assets/text.ods", engine="odf", sheet_name=sheet)
+    return pd.read_excel("app/assets/text.xlsx", sheet_name=sheet)
 
 def get_text(reference, text_df):
     return text_df[text_df["reference"] == reference]['text'].values[0]
