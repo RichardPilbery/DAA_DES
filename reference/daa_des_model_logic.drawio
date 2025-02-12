@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="cqooIp5l22o7zoIYBhxo" name="Page-1">
-        <mxGraphModel dx="2197" dy="1377" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+        <mxGraphModel dx="3501" dy="1684" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -64,7 +64,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="8" value="&lt;b&gt;The callsign group for the patient is generated&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;&lt;br&gt;&lt;i style=&quot;&quot;&gt;&lt;font style=&quot;&quot;&gt;The callsign is based on the hour of day and the AMPDS card of the patient&lt;/font&gt;&lt;/i&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="8" value="&lt;b&gt;The callsign group for the patient is generated&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;&lt;br&gt;&lt;i style=&quot;&quot;&gt;&lt;font style=&quot;&quot;&gt;The callsign group is based on the hour of day and the AMPDS card of the patient&lt;/font&gt;&lt;/i&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="100" y="450" width="230" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="17" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=8;" edge="1" parent="1" source="14" target="16">
@@ -142,13 +142,13 @@
                 <mxCell id="36" value="If the preferred resource in the desired callsign group is unavailable but another resource within the callsign group is available, select that resource" style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;strokeColor=#1EA1C2;" vertex="1" parent="1">
                     <mxGeometry x="420" y="850" width="220" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="42" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=8;fontColor=#0d0d0d;strokeColor=#6600CC;strokeWidth=3;" edge="1" parent="1" source="38" target="41">
+                <mxCell id="42" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=8;fontColor=#637585;strokeColor=#637585;strokeWidth=3;" edge="1" parent="1" source="38" target="41">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="38" value="If no resource is available from any callsign group, the call cannot be fulfilled and a standard land ambulance from outside of the air ambulance trust's provision is sent." style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;strokeColor=#1EA1C2;" vertex="1" parent="1">
                     <mxGeometry x="420" y="960" width="220" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="41" value="Patient exits the system" style="rhombus;whiteSpace=wrap;html=1;fontSize=12;fontColor=#0d0d0d;fillColor=#297EFF;fontStyle=1" vertex="1" parent="1">
+                <mxCell id="41" value="Patient exits &lt;br&gt;the system" style="rhombus;whiteSpace=wrap;html=1;fontSize=14;fontColor=#E3E3E3;fillColor=#637585;fontStyle=1" vertex="1" parent="1">
                     <mxGeometry x="960" y="935" width="130" height="120" as="geometry"/>
                 </mxCell>
                 <mxCell id="63" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;dashed=1;dashPattern=1 1;fontSize=8;fontColor=#0d0d0d;" edge="1" parent="1" source="46" target="48">
@@ -218,13 +218,13 @@
                 <mxCell id="68" value="" style="rounded=0;whiteSpace=wrap;html=1;fontSize=8;" vertex="1" parent="1">
                     <mxGeometry x="-150" y="439" width="160" height="140" as="geometry"/>
                 </mxCell>
-                <mxCell id="69" value="70" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fillColor=#595d5f;strokeColor=#10739e;" vertex="1" parent="1">
+                <mxCell id="69" value="70&lt;br&gt;&lt;i&gt;Helicopter + backup car&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fillColor=#595d5f;strokeColor=#10739e;" vertex="1" parent="1">
                     <mxGeometry x="-130" y="450" width="120" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="70" value="71" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fillColor=#595d5f;strokeColor=#10739e;" vertex="1" parent="1">
+                <mxCell id="70" value="71&lt;br&gt;&lt;i&gt;Helicopter + backup car&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fillColor=#595d5f;strokeColor=#10739e;" vertex="1" parent="1">
                     <mxGeometry x="-130" y="490" width="120" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="71" value="72" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fillColor=#595d5f;strokeColor=#10739e;" vertex="1" parent="1">
+                <mxCell id="71" value="72&lt;br&gt;&lt;i&gt;Car only&lt;/i&gt;" style="rounded=1;whiteSpace=wrap;html=1;fontSize=8;fillColor=#595d5f;strokeColor=#10739e;" vertex="1" parent="1">
                     <mxGeometry x="-130" y="530" width="120" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="72" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;fontSize=8;fontColor=#0d0d0d;dashed=1;dashPattern=1 1;entryX=1;entryY=0.25;entryDx=0;entryDy=0;" edge="1" parent="1" source="8" target="68">
@@ -430,17 +430,6 @@
                 <mxCell id="151" value="&lt;b&gt;The length of time the resource will spend &lt;br&gt;&lt;font color=&quot;#ffff66&quot;&gt;being allocated to the job&lt;/font&gt; &lt;br&gt;is calculated&lt;br&gt;&lt;/b&gt;&lt;font style=&quot;font-size: 8px;&quot;&gt;&lt;br&gt;&lt;i&gt;This is based on the vehicle type&lt;/i&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
                     <mxGeometry x="280" y="1455" width="170" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="167" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#6600cc;strokeWidth=3;fontSize=12;fontColor=#FFFFFF;" edge="1" parent="1" source="154" target="41">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="570" y="1485"/>
-                            <mxPoint x="570" y="1320"/>
-                            <mxPoint x="830" y="1320"/>
-                            <mxPoint x="830" y="1055"/>
-                            <mxPoint x="960" y="1055"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
                 <mxCell id="171" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#66FF66;strokeWidth=3;fontSize=12;fontColor=#8000FF;dashed=1;" edge="1" parent="1" source="154" target="156">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
@@ -480,32 +469,21 @@
                     <mxGeometry x="84" y="1020" width="270" height="30" as="geometry"/>
                 </mxCell>
                 <mxCell id="165" value="The resource is unavailable for use by any other patient for as long as the patient remains in the system&lt;br&gt;&lt;br&gt;If a resource from within a callsign group is in use, all other resources from the callsign group are also considered to be unavailable&lt;br&gt;(e.g. the critical care car from callsign group 71 is not available if helicopter H71 is engaged in a call, even though the car itself is sitting idle - but the crew required to staff it are on H71)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#FFFFFF;fontStyle=2" vertex="1" parent="1">
-                    <mxGeometry x="520" y="1770" width="1080" height="90" as="geometry"/>
+                    <mxGeometry x="600" y="1630" width="1080" height="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="168" value="Time elapses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#FFFFFF;fontStyle=3;dashed=1;" vertex="1" parent="1">
                     <mxGeometry x="420" y="1486" width="160" height="14" as="geometry"/>
                 </mxCell>
-                <mxCell id="169" value="If the outcome is 'stand down before mobile', patient journey ends" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#8000FF;fontStyle=3" vertex="1" parent="1">
+                <mxCell id="169" value="If the outcome is 'stand down before mobile', patient journey ends" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#637585;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="570" y="1280" width="250" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="170" value="If no resources available, patient journey ends" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#8000FF;fontStyle=3" vertex="1" parent="1">
+                <mxCell id="170" value="If no resources available, patient journey ends" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#637585;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="750" y="940" width="180" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="172" value="Time elapses" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#FFFFFF;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="716" y="1486" width="160" height="14" as="geometry"/>
                 </mxCell>
-                <mxCell id="174" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;strokeColor=#6600cc;strokeWidth=3;fontSize=12;fontColor=#FFFFFF;" edge="1" parent="1" source="156" target="41">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="880" y="1405" as="sourcePoint"/>
-                        <mxPoint x="1260" y="915" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="840" y="1485"/>
-                            <mxPoint x="840" y="1240"/>
-                            <mxPoint x="993" y="1240"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="175" value="If the outcome is 'stand down en route', patient journey ends" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#8000FF;fontStyle=3" vertex="1" parent="1">
+                <mxCell id="175" value="If the outcome is 'stand down en route', patient journey ends" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#637585;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="840" y="1240" width="170" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="176" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#66FF66;strokeWidth=3;fontSize=12;fontColor=#8000FF;dashed=1;" edge="1" parent="1" source="156" target="157">
@@ -566,36 +544,13 @@
                 <mxCell id="190" value="&lt;i&gt;Stand-down en route currently leads to no time elapsing for tts - should we sample some amount of expected time? Or do we have separate distribution we could call upon?&lt;br&gt;&lt;/i&gt;" style="shape=callout;whiteSpace=wrap;html=1;perimeter=calloutPerimeter;fontSize=8;fillColor=#FFB366;fontColor=#0d0d0d;fontStyle=1" vertex="1" parent="1">
                     <mxGeometry x="980" y="805" width="120" height="130" as="geometry"/>
                 </mxCell>
-                <mxCell id="191" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.002;exitY=0.153;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;strokeColor=#6600cc;strokeWidth=3;fontSize=12;fontColor=#FFFFFF;exitPerimeter=0;" edge="1" parent="1" source="158">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="921.93" y="1480" as="sourcePoint"/>
-                        <mxPoint x="1062.43" y="1020" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="1440" y="1460"/>
-                            <mxPoint x="1380" y="1460"/>
-                            <mxPoint x="1380" y="1235"/>
-                            <mxPoint x="1090" y="1235"/>
-                            <mxPoint x="1090" y="1020"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="192" value="If the job result is&amp;nbsp;&quot;Stand Down Before Mobile&quot;, &quot;Stand Down En Route&quot;, &quot;Landed but no patient contact&quot;, or &quot;Patient Treated (not conveyed)&quot;,&lt;br&gt;patient journey ends&amp;nbsp;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#8000FF;fontStyle=3" vertex="1" parent="1">
+                <mxCell id="192" value="If the job result is&amp;nbsp;&quot;Stand Down Before Mobile&quot;, &quot;Stand Down En Route&quot;, &quot;Landed but no patient contact&quot;, or &quot;Patient Treated (not conveyed)&quot;,&lt;br&gt;patient journey ends&amp;nbsp;" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#637585;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="1102" y="1140" width="280" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="193" value="The handover time at the hospital is not included due to data being unavailable for this step" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#FFFFFF;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="1465" y="1270" width="410" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="196" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#6600cc;strokeWidth=3;fontSize=12;fontColor=#FFFFFF;" edge="1" parent="1" target="41">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="2060" y="1320" as="sourcePoint"/>
-                        <mxPoint x="1616.0400000000004" y="896.64" as="targetPoint"/>
-                        <Array as="points">
-                            <mxPoint x="2060" y="1090"/>
-                            <mxPoint x="2060" y="995"/>
-                        </Array>
-                    </mxGeometry>
-                </mxCell>
-                <mxCell id="197" value="If the patient journey has not ended prior to this point, it will end here" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#8000FF;fontStyle=3" vertex="1" parent="1">
+                <mxCell id="197" value="If the patient journey has not ended prior to this point, it will end here" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#637585;fontStyle=3" vertex="1" parent="1">
                     <mxGeometry x="1200" y="985" width="680" height="55" as="geometry"/>
                 </mxCell>
                 <mxCell id="203" style="edgeStyle=orthogonalEdgeStyle;html=1;strokeColor=#66FF66;strokeWidth=3;fontSize=12;fontColor=#8000FF;" edge="1" parent="1">
@@ -644,33 +599,157 @@
                     <mxGeometry x="100" y="-180" width="230" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="225" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="222" target="206">
-                    <mxGeometry relative="1" as="geometry"/>
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="40" y="-535"/>
+                            <mxPoint x="40" y="-360"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="222" value="How long to run the simulation for" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
-                    <mxGeometry x="-158.75" y="-450" width="120" height="50" as="geometry"/>
+                <mxCell id="222" value="How long to run &lt;br&gt;the simulation for" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-190" y="-560" width="158.75" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="226" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="223" target="206">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="223" value="How long to 'warm up' the simulation before recording results" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
-                    <mxGeometry x="-158.75" y="-385" width="130" height="50" as="geometry"/>
+                <mxCell id="223" value="How long to 'warm up' &lt;br&gt;the simulation before &lt;br&gt;recording results" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-180" y="-495" width="158.75" height="50" as="geometry"/>
                 </mxCell>
                 <mxCell id="227" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="224" target="206">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="60" y="-340" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="224" value="How many times to repeat the simulation with slight variations in calls/patients/unplanned unavailability etc." style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
-                    <mxGeometry x="-158.75" y="-320" width="128.75" height="50" as="geometry"/>
+                <mxCell id="224" value="How many times to &lt;br&gt;repeat the simulation with &lt;br&gt;slight variations in calls/patients/unplanned unavailability etc." style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-180" y="-430" width="157.5" height="70" as="geometry"/>
                 </mxCell>
                 <mxCell id="229" value="Fed in" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=14;fontColor=#FFFFFF;fontStyle=1" vertex="1" parent="1">
-                    <mxGeometry x="-205" y="-490" width="195" height="30" as="geometry"/>
+                    <mxGeometry x="-197.5" y="-600" width="195" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="231" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="230" target="206">
+                <mxCell id="247" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="235" target="245">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="230" value="Historical data on calls, patients, servicing etc." style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
-                    <mxGeometry x="-158.75" y="-260" width="128.75" height="50" as="geometry"/>
+                <mxCell id="235" value="Missed HEMS Calls&lt;br&gt;(during HEMS desk offline times)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#994C00;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-295" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="240" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="236" target="238">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="241" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="236" target="235">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="242" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="236" target="239">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="236" value="Historical call data" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-518.75" y="-300" width="128.75" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="251" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="237" target="250">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="237" value="Historical operational &lt;br&gt;data" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-518.75" y="-175" width="128.75" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="246" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="238" target="245">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="238" value="Calls attended by HEMS" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-343" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="248" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="239" target="245">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="239" value="Missed HEMS Calls&lt;br&gt;(during HEMS desk offline times)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#994C00;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-250" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="249" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="245" target="206">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="245" value="Processed to allow &lt;br&gt;generation of &lt;br&gt;representative &lt;br&gt;'new' calls" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-180" y="-310" width="160" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="254" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="250" target="253">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="250" value="Servicing overruns" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#FFFF66;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-170" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="255" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FFFFFF;strokeWidth=1;fontSize=10;fontColor=#FFFF66;" edge="1" parent="1" source="253" target="206">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="253" value="Processed to determine &lt;br&gt;chance of this event &lt;br&gt;happening" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-180" y="-185" width="160" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="260" value="If the patient journey has not ended prior to this point, it will end here" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=12;fontColor=#637585;fontStyle=3" vertex="1" parent="1">
+                    <mxGeometry x="1200" y="985" width="680" height="55" as="geometry"/>
+                </mxCell>
+                <mxCell id="261" style="edgeStyle=orthogonalEdgeStyle;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#637585;strokeWidth=3;fontSize=12;fontColor=#637585;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2060" y="1320.0000000000005" as="sourcePoint"/>
+                        <mxPoint x="1090" y="995" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="2060" y="1090"/>
+                            <mxPoint x="2060" y="995"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="262" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=8;fontColor=#637585;strokeColor=#637585;strokeWidth=3;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="530" y="1031" as="sourcePoint"/>
+                        <mxPoint x="960.0000000000009" y="996.0000000000005" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="263" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#637585;strokeWidth=3;fontSize=12;fontColor=#637585;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="580" y="1485.9699999999996" as="sourcePoint"/>
+                        <mxPoint x="960" y="995.97" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="570" y="1485.97"/>
+                            <mxPoint x="570" y="1320.97"/>
+                            <mxPoint x="830" y="1320.97"/>
+                            <mxPoint x="830" y="1055.97"/>
+                            <mxPoint x="960" y="1055.97"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="264" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;strokeColor=#637585;strokeWidth=3;fontSize=12;fontColor=#637585;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="852" y="1484.9699999999996" as="sourcePoint"/>
+                        <mxPoint x="992.5" y="1024.97" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="840" y="1484.97"/>
+                            <mxPoint x="840" y="1239.97"/>
+                            <mxPoint x="993" y="1239.97"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="265" style="edgeStyle=orthogonalEdgeStyle;html=1;exitX=0.002;exitY=0.153;exitDx=0;exitDy=0;entryX=0;entryY=1;entryDx=0;entryDy=0;strokeColor=#637585;strokeWidth=3;fontSize=12;fontColor=#637585;exitPerimeter=0;" edge="1" parent="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1440" y="1476.9999999999998" as="sourcePoint"/>
+                        <mxPoint x="1062.0900000000001" y="1023.64" as="targetPoint"/>
+                        <Array as="points">
+                            <mxPoint x="1439.6599999999999" y="1463.64"/>
+                            <mxPoint x="1379.6599999999999" y="1463.64"/>
+                            <mxPoint x="1379.6599999999999" y="1238.64"/>
+                            <mxPoint x="1089.6599999999999" y="1238.64"/>
+                            <mxPoint x="1089.6599999999999" y="1023.64"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="266" value="Historical call data" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-518.75" y="-300" width="128.75" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="267" value="Historical operational &lt;br&gt;data" style="shape=step;perimeter=stepPerimeter;whiteSpace=wrap;html=1;fixedSize=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-518.75" y="-175" width="128.75" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="268" value="Servicing overruns" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#004C99;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-170" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="269" value="Missed HEMS Calls&lt;br&gt;(during HEMS desk offline times)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#994C00;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-250" width="120" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="270" value="Missed HEMS Calls&lt;br&gt;(during HEMS desk offline times)" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#1EA1C2;fontSize=10;fontColor=#E3E3E3;fillColor=#994C00;" vertex="1" parent="1">
+                    <mxGeometry x="-350" y="-295" width="120" height="40" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
