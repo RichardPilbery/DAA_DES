@@ -164,8 +164,8 @@ class Utils:
 
     def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
         """
-            This function will allocate and return an callsign group
-            based on the hour of day and AMPDS card
+            This function will allocate and return a vehicle type
+            based on the month and callsign group
         """
 
         df = self.vehicle_type_by_month_df[
@@ -189,8 +189,8 @@ class Utils:
 
     def pt_outcome_selection(self, hems_result: str) -> int:
         """
-            This function will allocate and return an AMPDS card category
-            based on the hour of day
+            This function will allocate and return an patient outcome
+            based on the HEMS result
         """
 
         #print(f"Hems result is {hems_result}")
@@ -340,14 +340,14 @@ class Utils:
 
         #print(f"Year {year} - start_date: {start_date} and term_start is {jan_term_start}")
 
-        holidays.append({'start_date': start_date, 'end_date' : jan_term_start - timedelta(days = 1)})
+        holidays.append({'year': int(year), 'start_date': start_date, 'end_date' : jan_term_start - timedelta(days = 1)})
 
         # Spring half-term
 
         spring_half_term_start = self.get_nth_weekday(year, 2, calendar.MONDAY, 2)
         spring_half_term_end = spring_half_term_start + timedelta(days = 4)
 
-        holidays.append({'start_date': spring_half_term_start, 'end_date' : spring_half_term_end})
+        holidays.append({'year': int(year), 'start_date': spring_half_term_start, 'end_date' : spring_half_term_end})
 
         # Easter hols
 
@@ -371,6 +371,7 @@ class Utils:
                 end_date = start_date + timedelta(days = 13)
             
         holidays.append({
+            'year': int(year), 
             'start_date': start_date,
             'end_date' : end_date
         })
@@ -381,6 +382,7 @@ class Utils:
         summer_half_term_end = summer_half_term_start + timedelta(days = 6)
 
         holidays.append({
+            'year': int(year), 
             'start_date': summer_half_term_start,
             'end_date' : summer_half_term_end
         })
@@ -391,6 +393,7 @@ class Utils:
         summer_end = self.get_nth_weekday(year, 9, calendar.MONDAY, 1)
 
         holidays.append({
+            'year': int(year), 
             'start_date': summer_start,
             'end_date' : summer_end
         })
@@ -405,6 +408,7 @@ class Utils:
         autumn_half_term_end = autumn_half_term_start + timedelta(days = 6)
 
         holidays.append({
+            'year': int(year), 
             'start_date': autumn_half_term_start,
             'end_date' : autumn_half_term_end 
         })   
@@ -414,6 +418,7 @@ class Utils:
         start_date = self.get_last_weekday(year, 12, calendar.MONDAY) - timedelta(days = 7)
 
         holidays.append({
+            'year': int(year), 
             'start_date': start_date,
             'end_date' : datetime(year, 12, 31)
         })   

@@ -20,7 +20,7 @@ class DistributionFitUtils():
   
     """
 
-    def __init__(self, file_path: str, calculate_school_holidays = False, school_holidays_years = 5):
+    def __init__(self, file_path: str, calculate_school_holidays = False, school_holidays_years = 0):
        
         self.file_path = file_path
         self.df = pd.DataFrame()
@@ -389,13 +389,13 @@ class DistributionFitUtils():
     def school_holidays(self):
 
         min_date = self.df.inc_date.min()
-        max_date = self.df.inc_date.max() + timedelta(weeks = (52 * self.school_holidays_years ))
+        max_date = self.df.inc_date.max() + timedelta(weeks = (52 * self.school_holidays_years))
 
         u = Utils()
 
         years_of_holidays_list = u.years_between(min_date, max_date)
 
-        sh = pd.DataFrame(columns=['start_date', 'end_date'])
+        sh = pd.DataFrame(columns=['year', 'start_date', 'end_date'])
 
         for i, year in enumerate(years_of_holidays_list):
             tmp = u.calculate_term_holidays(year)
@@ -406,6 +406,7 @@ class DistributionFitUtils():
                 sh = pd.concat([sh, tmp])
 
         sh.to_csv('actual_data/school_holidays.csv', index = False)
+
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
