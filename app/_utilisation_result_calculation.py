@@ -64,6 +64,30 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
 
 
     # Calculage averge utilisation across simulation,
+    # stratified by callsign group
+    utilisation_df_per_run_by_csg = (
+        resource_use_wide.groupby(['callsign_group'])
+        [["resource_use_duration"]]
+        .sum()
+        )
+
+    utilisation_df_per_run_by_csg["resource_use_duration"] = (
+        utilisation_df_per_run_by_csg["resource_use_duration"] /
+        n_runs
+        )
+
+    # TODO: !! This calculation is currently wrong!!
+    # It's looking at the whole sim duration, not the hours they were on shift
+    utilisation_df_per_run_by_csg["perc_time_in_use"] = (
+        utilisation_df_per_run_by_csg["resource_use_duration"].astype(float) /
+        float(_processing_functions.get_param("sim_duration", params_df))
+        )
+
+    utilisation_df_per_run_by_csg["PRINT_perc"] = utilisation_df_per_run_by_csg["perc_time_in_use"].apply(
+        lambda x: f"{x:.1%}"
+        )
+
+    # Calculage averge utilisation across simulation,
     # stratified by callsign and vehicle type (car/helicopter)
     utilisation_df_overall = (
         utilisation_df_per_run.groupby(['callsign', 'vehicle_type'])
@@ -87,7 +111,7 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
         )
 
     # Return tuple of values
-    return (resource_use_wide, utilisation_df_overall, utilisation_df_per_run)
+    return (resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg)
 
 
 def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run):
@@ -127,7 +151,9 @@ def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run):
     utilisation_df_per_run = utilisation_df_per_run.reset_index()
     utilisation_df_per_run["vehicle_type"] = utilisation_df_per_run["vehicle_type"].str.title()
 
-    return (px.box(utilisation_df_per_run,
+
+
+    fig = (px.box(utilisation_df_per_run,
         x="perc_time_in_use",
         y="callsign",
         color="vehicle_type",
@@ -143,6 +169,9 @@ def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run):
                     xaxis={
                         "tickformat": ".0%"  # Formats as percentage with no decimal places
                     }))
+
+    # TODO: Add indications of good/bad territory for utilisation levels
+    return fig
 
 def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall):
     """
@@ -181,7 +210,7 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall):
     utilisation_df_overall = utilisation_df_overall.reset_index()
     utilisation_df_overall["vehicle_type"] = utilisation_df_overall["vehicle_type"].str.title()
 
-    return (px.bar(utilisation_df_overall,
+    fig = (px.bar(utilisation_df_overall,
                     y="perc_time_in_use",
                     x="callsign",
                     color="vehicle_type",
@@ -198,6 +227,8 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall):
                     "tickformat": ".0%"  # Formats as percentage with no decimal places
                 })
                 )
+    # TODO: Add indications of good/bad territory for utilisation levels
+    return fig
 
 def make_RWC_utilisation_dataframe(utilisation_df):
     pass
