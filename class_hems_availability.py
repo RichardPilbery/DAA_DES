@@ -43,6 +43,11 @@ class HEMSAvailability():
         # Populate the store with HEMS resources
         self.populate_store()
 
+    def daily_servicing_check(self, current_dt: datetime):
+        for h in self.store.items:
+            h.unavailable_due_to_service(current_dt)
+
+
     def prep_HEMS_resources(self):
 
         schedule = []
@@ -116,6 +121,7 @@ class HEMSAvailability():
         preferred = False
 
         # Iterates through items **available** in store at the time the function is called
+        h: HEMS
         for h in self.store.items:
 
             # If callsign group is preferred group AND is preferred vehicle type, returns that item at that point
@@ -123,7 +129,7 @@ class HEMSAvailability():
             # this condition is met
             # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
             # so return)
-            if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+            if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
                 return h
 
             # If it's the preferred group but not the preferred vehicle type, the variable
@@ -185,7 +191,7 @@ class HEMSAvailability():
                 """
                 #print(f"Resource filter with hour {hour} and qtr {qtr}")
 
-                # If the resource **is not currently in use** AND **is currently on shift**...
+                # If the resource **is not currently in use** AND **is currently on shift** AND not being serviced
                 if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr) and not resource.unavailable_due_to_service(pt.current_dt):
                     # Check whether the resource is the preferred resource
                     if pref_res != None:

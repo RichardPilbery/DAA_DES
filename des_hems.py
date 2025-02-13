@@ -160,13 +160,11 @@ class DES_HEMS:
             from historic data
 
         """
-        ia_list = []
+
 
         while self.env.now < (self.sim_duration + self.warm_up_duration):
             # Get current day of week and hour of day
             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
-
-            #print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
 
             self.calls_today = int(self.utils.inc_per_day(qtr))
 
@@ -177,8 +175,8 @@ class DES_HEMS:
             if(self.new_day != current_dt.date):
                 self.new_day = current_dt.date
                 ia_dict = self.calls_per_hour(qtr)
-                #print(ia_list)
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
+                self.hems_resources.daily_servicing_check(current_dt)
 
             if self.calls_today > 0:
                 # Work out how long until next incident
