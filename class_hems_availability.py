@@ -27,7 +27,12 @@ class HEMSAvailability():
         self.serviing_buffer_weeks = servicing_buffer_weeks
         self.servicing_preferred_month = servicing_preferred_month
         self.sim_start_date = sim_start_date
-        self.sim_end_date = sim_start_date + timedelta(minutes=sim_duration)
+
+        print(f"Sim start date {self.sim_start_date}")
+        # For belts and braces, add an additional year to
+        # calculate the service schedules since service dates can be walked back to the 
+        # previous year
+        self.sim_end_date = sim_start_date + timedelta(minutes=sim_duration + (1*365*24*60)) 
 
         # School holidays
         self.school_holidays = pd.read_csv('actual_data/school_holidays.csv')
@@ -56,13 +61,13 @@ class HEMSAvailability():
         HEMS_ROTA = pd.read_csv('actual_data/HEMS_rota.csv')
 
         for index, row in HEMS_ROTA.iterrows():
+            current_resource_service_dates = []
             # Check if service date provided
             if not pd.isna(row['last_service']):
-                print(f"Checking {row['callsign']} with previous service date of {row['last_service']}")
+                #print(f"Checking {row['callsign']} with previous service date of {row['last_service']}")
                 last_service = datetime.strptime(row['last_service'], "%Y-%m-%d")
                 service_date = last_service
-                current_resource_service_dates = []
-
+                
                 while last_service < self.sim_end_date:
 
                     end_date = last_service + timedelta(weeks = int(row['service_duration_weeks'])) + timedelta(weeks=self.serviing_buffer_weeks)
@@ -77,28 +82,30 @@ class HEMSAvailability():
                     #print(service_dates)
                     last_service = service_date
 
-                # Create new HEMS resource and add to HEMS_resource_list
-                #pd.DataFrame(columns=['year', 'service_start_date', 'service_end_date'])
-                hems = HEMS(
-                    callsign            = row['callsign'],
-                    callsign_group      = row['callsign_group'],
-                    vehicle_type        = row['vehicle_type'],
-                    category            = row['category'],
-                    summer_start        = row['summer_start'],
-                    winter_start        = row['winter_start'],
-                    summer_end          = row['summer_end'],
-                    winter_end          = row['winter_end'],
-                    servicing_schedule  = pd.DataFrame(current_resource_service_dates),
-                    resource_id         = row['callsign']
-                )
+            # Create new HEMS resource and add to HEMS_resource_list
+            #pd.DataFrame(columns=['year', 'service_start_date', 'service_end_date'])
+            hems = HEMS(
+                callsign            = row['callsign'],
+                callsign_group      = row['callsign_group'],
+                vehicle_type        = row['vehicle_type'],
+                category            = row['category'],
+                summer_start        = row['summer_start'],
+                winter_start        = row['winter_start'],
+                summer_end          = row['summer_end'],
+                winter_end          = row['winter_end'],
+                servicing_schedule  = pd.DataFrame(current_resource_service_dates),
+                resource_id         = row['callsign']
+            )
 
-                self.HEMS_resources_list.append(hems)
+            self.HEMS_resources_list.append(hems)
 
-                print(self.HEMS_resources_list)
+                #print(self.HEMS_resources_list)
 
     def populate_store(self):
+        h: HEMS
         for h in self.HEMS_resources_list:
             print(f"Populating resource store: HEMS({h.callsign})")
+            print(h.servicing_schedule)
             self.store.put(h)
 
     def add_hems(self):
@@ -110,15 +117,19 @@ class HEMSAvailability():
         pass
 
 
-    def preferred_group_available(self, preferred_group: int, preferred_vehicle_type: str) -> HEMS | None:
+    def preferred_group_available(self, preferred_group: int, preferred_vehicle_type: str) -> list[HEMS | None, int, bool]:
         """
-            Check whether the preferred resource group is available and respond accordingly
+            Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None, 
+            an indication as to whether the resource was available, or another resource in the same callsign_group, and
+            the service status of the preferred resource.
         """
 
         # Initialise object HEMS as a placeholder object
         hems = HEMS
         # Initialise variable 'preferred' to False
-        preferred = False
+        preferred = 0
+        # Initialise variable 'service_status' to indicate whether resource is currently being serviced
+        service_status = False
 
         # Iterates through items **available** in store at the time the function is called
         h: HEMS
@@ -129,8 +140,15 @@ class HEMSAvailability():
             # this condition is met
             # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
             # so return)
+
+            if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+                # if h.being_serviced:
+                #     print(f"Preferred resource service status {h.being_serviced}")
+                service_status = h.being_serviced
+
             if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
-                return h
+                hems = h
+                preferred = 1
 
             # If it's the preferred group but not the preferred vehicle type, the variable
             # hems becomes the HEMS resource object that we are currently looking at in the store
@@ -145,26 +163,26 @@ class HEMSAvailability():
 
             elif h.callsign_group == preferred_group:
                 hems = h
-                preferred = True
+                preferred = 2
 
         # If we have not found an exact match for preferred callsign and vehicle type out of the
         # resources currently available in our store, we will then reach this code
-        # If the preferred variable was set to True at any point, we will refer HEMS
+        # If the preferred variable was set to True at any point, we will return HEMS
         # Note that this will be the last resource that met the condition h.callsign_group == preferred_group
         # which may be relevant if there is more than one other resource within that callsign group
         # (though this is not currently a situation that occurs within the naming conventions at DAAT)
 
-        if preferred:
-            return hems
+        if preferred in [1, 2]:
+            return [hems, preferred, service_status]
         else:
-            return None
+            return [None, preferred, service_status]
 
     def allocate_resource(self, pt: Patient) -> Any | Event:
         """
             Attempt to allocate a resource from the preferred group.
         """
 
-        print(f"Attempting to allocate resource with callsign group {pt.hems_pref_callsign_group} and preferred vehicle type {pt.hems_pref_vehicle_type}")
+        #print(f"Attempting to allocate resource with callsign group {pt.hems_pref_callsign_group} and preferred vehicle type {pt.hems_pref_vehicle_type}")
 
         # Pref Res will be either
         # - a HEMS resource object if the preferred callsign group+vehicle is available
@@ -178,7 +196,7 @@ class HEMSAvailability():
 
         resource_event: Event = self.env.event()
 
-        def process() -> Generator[Any, Any, None]:
+        def process(pres_res: list[HEMS, int, bool]) -> Generator[Any, Any, None]:
             def resource_filter(resource: HEMS, pref_res: HEMS) -> bool:
                 """
                 Checks whether the resource the incident wants is available in the
@@ -196,10 +214,10 @@ class HEMSAvailability():
                     # Check whether the resource is the preferred resource
                     if pref_res != None:
                         if resource.callsign == pref_res.callsign:
-                            print(f"Preferred resource {pref_res.callsign} available")
+                            #print(f"Preferred resource {pref_res.callsign} available")
                             return True
                     else:
-                        print("Other (non-preferred) resource available")
+                        #print("Other (non-preferred) resource available")
                         return True
                 else:
                     # If neither of these are available, return 'False'
@@ -207,21 +225,21 @@ class HEMSAvailability():
                     return False
 
 
-            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as request:
+            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res[0])) as request:
                 resource = yield request | self.env.timeout(0.1)
 
                 if request in resource:
-                    print(f"Allocating HEMS resource at time {self.env.now:.3f}")
+                    #print(f"Allocating HEMS resource at time {self.env.now:.3f}")
                     resource.in_use = True
                     pt.hems_callsign_group = resource[request].callsign_group
                     pt.hems_vehicle_type = resource[request].vehicle_type
 
-                    resource_event.succeed(resource[request])
+                    resource_event.succeed([resource[request], pref_res[1], pref_res[2]])
                 else:
-                    print(f"No HEMS (helimed or ccc) resource available; using Non-DAAT land ambulance")
-                    resource_event.succeed()
+                    #print(f"No HEMS (helimed or ccc) resource available; using Non-DAAT land ambulance")
+                    resource_event.succeed([None, pref_res[1], pref_res[2]])
 
-        self.env.process(process())
+        self.env.process(process(pref_res))
     
         return resource_event
 
