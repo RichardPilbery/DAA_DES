@@ -372,7 +372,6 @@ class DistributionFitUtils():
 
         hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+")
 
-
     def pt_outcome_by_hems_result_probs(self):
         """
         

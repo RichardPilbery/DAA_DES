@@ -425,7 +425,6 @@ class Utils:
 
         return pd.DataFrame(holidays)
 
-
     def calculate_easter(self, year):
 
         """
@@ -451,6 +450,4 @@ class Utils:
 
         return datetime(year, month, day)
     
-
-    def years_between(self, start_date, end_date):
-        return list(range(start_date.year, end_date.year + 1))
+    

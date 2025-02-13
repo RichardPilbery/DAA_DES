@@ -47,7 +47,7 @@ class DES_HEMS:
         self.calls_today = 0
         self.new_day = pd.to_datetime("1900-01-01").date
 
-        self.hems_resources = HEMSAvailability(self.env)
+        self.hems_resources = HEMSAvailability(self.env, sim_start_date, sim_duration)
 
         # Set up empty list to store results prior to conversion to dataframe
         self.results_list = []
@@ -317,7 +317,7 @@ class DES_HEMS:
 
         if hems_res != None:
 
-            patient.hems_callsign_group = hems_res.callsign_group.iloc[0]
+            patient.hems_callsign_group = hems_res.callsign_group
             #print(f"Patient csg is {patient.hems_callsign_group}")
             patient.hems_vehicle_type = hems_res.vehicle_type
 

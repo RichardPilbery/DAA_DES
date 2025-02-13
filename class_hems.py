@@ -12,27 +12,38 @@ class HEMS(Ambulance):
 
     """
 
-    def __init__(self, callsign: str, resource_id=None):
+    def __init__(
+            self, 
+            callsign: str, 
+            callsign_group: str, 
+            vehicle_type: str, 
+            category: str, 
+            summer_start: str,
+            winter_start: str,
+            summer_end: str,
+            winter_end: str,
+            servicing_schedule: pd.DataFrame, 
+            resource_id: str = None
+        ):
         # Inherit all parent class functions
         super().__init__(ambulance_type = "HEMS")
+
         self.utilityClass = Utils()
 
-        df = self.utilityClass.HEMS_ROTA[self.utilityClass.HEMS_ROTA.index == callsign]
-
         self.callsign = callsign
-        self.callsign_group = df['callsign_group']
+        self.callsign_group = callsign_group
         self.available = 1
         self.being_serviced = False
         self.flying_time = 0
-        self.vehicle_type = df['vehicle_type'].iloc[0]
-        self.category = df['category'].iloc[0]
-        self.summer_start = df["summer_start"].iloc[0]
-        self.winter_start = df["winter_start"].iloc[0]
-        self.summer_end = df["summer_end"].iloc[0]
-        self.winter_end = df["winter_end"].iloc[0]
+        self.vehicle_type = vehicle_type
+        self.category = category
+        self.summer_start = summer_start
+        self.winter_start = winter_start
+        self.summer_end = summer_end
+        self.winter_end = winter_end
 
         # Pre-determine the servicing schedule when the resource is created
-        self.servicing_schedule = pd.DataFrame(columns=['year', 'service_start_date', 'service_end_date'])
+        self.servicing_schedule = servicing_schedule
 
         self.in_use = False
         self.resource_id = resource_id
@@ -58,17 +69,11 @@ class HEMS(Ambulance):
             Function to determine whether the HEMS resource is within
             its operational hours
         """
-
-        #print(f"on shift callsign {self.callsign}, hour {hour}, season {season} with summer_start {self.summer_start} and winter_start = {self.winter_start}")
         
         # Assuming summer hours are quarters 2 and 3 i.e. April-September
         # Can be modified if required.
         start = self.summer_start if season in [2, 3] else self.winter_start
         end = self.summer_end if season in [2, 3] else self.winter_end
-
-        #print(f"Start is {start} and end is {end} and current hour is {hour}")
-
-        #print(f"Is time in range: {self.utilityClass.is_time_in_range(int(hour), int(start), int(end))}")
 
         return self.utilityClass.is_time_in_range(int(hour), int(start), int(end))
 

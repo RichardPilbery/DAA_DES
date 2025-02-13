@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from typing import Any, Generator
 from class_patient import Patient
 from utils import Utils
@@ -15,7 +17,7 @@ class HEMSAvailability():
     
     """
 
-    def __init__(self, env, servicing_overlap_allowed = False, servicing_buffer_weeks = 4):
+    def __init__(self, env, sim_start_date, sim_duration, servicing_overlap_allowed = False, servicing_buffer_weeks = 4, servicing_preferred_month = 1):
        
         self.env = env
         self.utilityClass = Utils()
@@ -23,34 +25,77 @@ class HEMSAvailability():
         # Adding options to set servicing parameters.
         self.servicing_overlap_allowed = servicing_overlap_allowed
         self.serviing_buffer_weeks = servicing_buffer_weeks
+        self.servicing_preferred_month = servicing_preferred_month
+        self.sim_start_date = sim_start_date
+        self.sim_end_date = sim_start_date + timedelta(minutes=sim_duration)
+
+        # School holidays
+        self.school_holidays = pd.read_csv('actual_data/school_holidays.csv')
+
+        self.HEMS_resources_list = []
 
         # Create a store for HEMS resources
         self.store = FilterStore(env)
 
+        # Prepare HEMS resources for ingesting into store
+        self.prep_HEMS_resources()
+
         # Populate the store with HEMS resources
-        self.calculate_service_schedule_and_populate_store()
+        self.populate_store()
+
+    def prep_HEMS_resources(self):
+
+        schedule = []
+        service_dates = []
+
+        HEMS_ROTA = pd.read_csv('actual_data/HEMS_rota.csv')
+
+        for index, row in HEMS_ROTA.iterrows():
+            # Check if service date provided
+            if not pd.isna(row['last_service']):
+                print(f"Checking {row['callsign']} with previous service date of {row['last_service']}")
+                last_service = datetime.strptime(row['last_service'], "%Y-%m-%d")
+                service_date = last_service
+                current_resource_service_dates = []
+
+                while last_service < self.sim_end_date:
+
+                    end_date = last_service + timedelta(weeks = int(row['service_duration_weeks'])) + timedelta(weeks=self.serviing_buffer_weeks)
+
+                    service_date, end_date = self.find_next_service_date(last_service, row["service_schedule_months"], service_dates, row['service_duration_weeks'])
+                    
+                    schedule.append((row['callsign'], service_date))
+                    #print(service_date)
+                    service_dates.append({'service_start_date': service_date, 'service_end_date': end_date})
+
+                    current_resource_service_dates.append({'service_start_date': service_date, 'service_end_date': end_date})
+                    #print(service_dates)
+                    last_service = service_date
+
+                # Create new HEMS resource and add to HEMS_resource_list
+                #pd.DataFrame(columns=['year', 'service_start_date', 'service_end_date'])
+                hems = HEMS(
+                    callsign            = row['callsign'],
+                    callsign_group      = row['callsign_group'],
+                    vehicle_type        = row['vehicle_type'],
+                    category            = row['category'],
+                    summer_start        = row['summer_start'],
+                    winter_start        = row['winter_start'],
+                    summer_end          = row['summer_end'],
+                    winter_end          = row['winter_end'],
+                    servicing_schedule  = pd.DataFrame(current_resource_service_dates),
+                    resource_id         = row['callsign']
+                )
+
+                self.HEMS_resources_list.append(hems)
+
+                print(self.HEMS_resources_list)
 
 
-    def calculate_service_schedule_and_populate_store(self):
-        for index, row in self.utilityClass.HEMS_ROTA.iterrows():
-            # Identify resources who have a servicing schedule > 0
-
-            # Send them off together to a function to calculate when they are going to be serviced
-            
-            # return new dataframe with details of servicing start and end dates
-
-            # Create new HEMS resource with resource_id and put it into the store
-
-            # HEMS resources will need to determine whether they are being serviced when call
-            # for resource is made.
-
-            # Also need to check every day for HEMS resources being service/no longer services
-            # Could probably go in the Generator
-
-            # Last step
-            print(f"Populating resource store: HEMS({index})")
-            self.store.put(HEMS(index, resource_id=index))
-
+    def populate_store(self):
+        for h in self.HEMS_resources_list:
+            print(f"Populating resource store: HEMS({h.callsign})")
+            self.store.put(h)
 
     def add_hems(self):
         """
@@ -82,7 +127,7 @@ class HEMSAvailability():
             # this condition is met
             # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
             # so return)
-            if int(h.callsign_group.iloc[0]) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+            if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
                 return h
 
             # If it's the preferred group but not the preferred vehicle type, the variable
@@ -92,7 +137,7 @@ class HEMSAvailability():
             # SR note 13/1/25 - double check this logic - as we would send a critical care car over
             # a different available helicopter if I'm interpreting this correctly. Just need to confirm
             # this was the order of priority agreed on.
-            elif h.callsign_group.iloc[0] == preferred_group:
+            elif h.callsign_group == preferred_group:
                 hems = h
                 preferred = True
 
@@ -106,8 +151,6 @@ class HEMSAvailability():
             return hems
         else:
             return None
-
-
 
     def allocate_resource(self, pt: Patient) -> Any | Event:
         """
@@ -163,7 +206,7 @@ class HEMSAvailability():
                     # print(request)
                     # print(resource)
                     resource.in_use = True
-                    pt.hems_callsign_group = resource[request].callsign_group.iloc[0]
+                    pt.hems_callsign_group = resource[request].callsign_group
                     pt.hems_vehicle_type = resource[request].vehicle_type
 
                     resource_event.succeed(resource[request])
@@ -175,8 +218,58 @@ class HEMSAvailability():
     
         return resource_event
 
-
     def return_resource(self, resource):
         resource.in_use = False
         self.store.put(resource)
 
+    def years_between(self, start_date, end_date):
+        return list(range(start_date.year, end_date.year + 1))
+    
+    def do_ranges_overlap(self, start1: datetime, end1: datetime, start2: datetime, end2: datetime) -> bool:
+        return max(start1, start2) <= min(end1, end2)
+    
+    def is_during_school_holidays(self, start_date, end_date):
+
+        for index, row in self.school_holidays.iterrows():
+            
+            #if pd.to_datetime(row['start_date']) <= start_date <= pd.to_datetime(row['end_date']):
+            if self.do_ranges_overlap(pd.to_datetime(row['start_date']), pd.to_datetime(row['end_date']), start_date, end_date):
+                return True
+
+        return False
+
+    def is_other_resource_being_serviced(self, start_date, end_date, service_dates):
+
+        for sd in service_dates:
+            #if pd.to_datetime(row['start_date']) <= start_date <= pd.to_datetime(row['end_date']):
+            if self.do_ranges_overlap(sd['service_start_date'], sd['service_end_date'], start_date, end_date):
+                return True
+
+        return False
+
+    def find_next_service_date(self, last_service_date, interval_months, service_dates, service_duration):
+
+        next_due_date = last_service_date + relativedelta(months = interval_months) # Approximate month length
+        end_date = next_due_date + timedelta(weeks = service_duration) 
+
+        preferred_date = datetime(next_due_date.year, self.servicing_preferred_month , 2)
+        preferred_end_date = preferred_date + timedelta(weeks = service_duration) 
+
+        if next_due_date.month > preferred_date.month:
+            preferred_date += relativedelta(years = 1)
+
+        # print(f"Next due: {next_due_date} with end date {end_date} and preferred_date is {preferred_date} with pref end {preferred_end_date}")
+        
+        # If preferred date is valid, use it
+        if preferred_date <= next_due_date and not self.is_during_school_holidays(preferred_date, preferred_end_date):
+            next_due_date = preferred_date
+        
+        while True:
+            if self.is_during_school_holidays(next_due_date, end_date) or self.is_other_resource_being_serviced(next_due_date, end_date, service_dates):    
+                next_due_date -= timedelta(days = 1)
+                end_date = next_due_date + timedelta(weeks = service_duration)
+                continue
+            else:
+                break
+            
+        return [next_due_date, end_date]
