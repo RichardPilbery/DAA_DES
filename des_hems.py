@@ -341,7 +341,13 @@ class DES_HEMS:
 
         # Add boolean to determine whether the patient is still within the simulation warm-up
         # period. If so, then we will not record the patient progress
-        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
+        # SR NOTE: I changed this from strictly less than to <= as it was causing odd behaviour
+        # if the first call came in at the start of the simulation in a scenario with 0 warm up
+        # time. Alternative could be reverting it to stricly less check but then adding an or check
+        # leading to not_in_warm_up_period being True if the warm-up duration is exactly 0.
+        # SR NOTE 2 - there is also a check implemented directly in the method add_patient_result_row
+        # so I'm not sure the additional check in this instance is actually necessary
+        not_in_warm_up_period = False if self.env.now <= self.warm_up_duration else True
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
@@ -540,7 +546,11 @@ class DES_HEMS:
         for key, value in kwargs.items():
              results[key] = value
 
-        if self.env.now > self.warm_up_duration:
+        # SR NOTE: I changed this from strictly less than to <= as it was causing odd behaviour
+        # if the first call came in at the start of the simulation in a scenario with 0 warm up
+        # time. Alternative could be reverting it to stricly less check but then adding an or check
+        # leading to not_in_warm_up_period being True if the warm-up duration is exactly 0.
+        if self.env.now >= self.warm_up_duration:
             self.store_patient_results(results)
 
 
