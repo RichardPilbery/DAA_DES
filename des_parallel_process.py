@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import logging
 import time
 import glob
@@ -9,16 +9,53 @@ from des_hems import DES_HEMS
 import multiprocessing as mp
 from joblib import Parallel, delayed
 
+def write_run_params(model) -> None:
+        """
+        Writes the parameters used for the model to a csv file
+
+        SR NOTE: this is likely to be expanded further in the future to
+
+        SR NOTE: It would also be good to add some sort of identifier to both the run results csv
+        and this csv so you can confirm that they came from the same model execution (to avoid
+        issues with calculations being incorrect if e.g. it was not possible to write one of the
+        outputs due to an error, write protection, etc.)
+        """
+
+
+        # Ensure sim_start_date is a datetime object
+        sim_start_date = model.sim_start_date
+        if isinstance(sim_start_date, str):
+            sim_start_date = datetime.fromisoformat(sim_start_date)  # Convert string to datetime
+
+        sim_end_date = sim_start_date + timedelta(minutes=model.sim_duration)
+        warm_up_end_date = sim_start_date + timedelta(minutes=model.warm_up_duration)
+
+        params_df = pd.DataFrame.from_dict({
+            'sim_duration': [model.sim_duration],
+            'warm_up_duration': [model.warm_up_duration],
+            'sim_start_date': [sim_start_date],
+            'sim_end_date': [sim_end_date],
+            'warm_up_end_date': [warm_up_end_date],
+            'amb_data': [model.amb_data],
+            'model_exec_time': [datetime.now()]
+
+        }, orient='index', columns=['value'])
+
+        params_df.index.name = "parameter"
+
+        params_df.to_csv(f"{Utils.RESULTS_FOLDER}/run_params_used.csv", header='column_names')
+
 try:
      __file__
-except NameError: 
+except NameError:
     __file__ = sys.argv[0]
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 
-def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool):
+def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
+           sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
 
     start = time.process_time()
@@ -32,6 +69,10 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int, sim_
     print(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
     logging.debug(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
 
+    # SR NOTE: This could cause issues if we decide to use 1 as the starting number of runs
+    if (run==0) and (save_params_csv):
+        write_run_params(daa_model)
+
     return daa_model.results_df
 
 def parallelProcess(nprocess = mp.cpu_count() - 1):
@@ -40,7 +81,7 @@ def parallelProcess(nprocess = mp.cpu_count() - 1):
     number_of_runs = 2
     sim_duration = 2 * 24 * 60
     warm_up_time = 8 * 60
-    sim_start_date =  datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S") 
+    sim_start_date =  datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S")
     amb_data = False
 
     pool = mp.Pool(processes = nprocess)
