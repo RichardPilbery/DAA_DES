@@ -39,6 +39,10 @@ The model generates a CSV file containing raw data, which can then be wrangled a
 | dispatcher_intevention    | Integer indicating whether the ambulance service dispatcher activated HEMS for a called which did not meet auto-dispatch criteria (1 or 0) |
 
 
+## API Documentation
+
+[https://richardpilbery.github.io/DAA_DES/](https://richardpilbery.github.io/DAA_DES/)
+
 ## Web App
 
 The web app can be run using the command
