@@ -95,3 +95,15 @@ def get_text_sheet(sheet):
 @st.cache_data
 def get_text(reference, text_df):
     return text_df[text_df["reference"] == reference]['text'].values[0]
+
+DAA_COLORSCHEME = {
+    "red": "#D50032",
+    "navy": "#00205B",
+    "blue": "#1D428A",
+    "teal": "#00B0B9",
+    "lightblue": "#C0F0F2",
+    "verylightblue": "#D5F5F6",
+    "lightgrey": "#CCCCCC",
+    "darkgrey": "#4D4D4D",
+    "charcoal": "#1F1F1F"
+}
