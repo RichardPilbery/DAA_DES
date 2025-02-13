@@ -63,6 +63,7 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
     print (f"{Utils.current_time()}: Run {run+1} of {total_runs}")
     logging.debug(f"{Utils.current_time()}: Run {run+1} of {total_runs}")
 
+    #print(f"Sim start date is {sim_start_date}")
     daa_model = DES_HEMS(run, sim_duration, warm_up_time, sim_start_date, amb_data)
     daa_model.run()
 
@@ -74,29 +75,6 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
         write_run_params(daa_model)
 
     return daa_model.results_df
-
-def parallelProcess(nprocess = mp.cpu_count() - 1):
-    logging.debug('Model called')
-
-    number_of_runs = 2
-    sim_duration = 2 * 24 * 60
-    warm_up_time = 8 * 60
-    sim_start_date =  datetime.strptime("2024-08-01 07:00:00", "%Y-%m-%d %H:%M:%S")
-    amb_data = False
-
-    pool = mp.Pool(processes = nprocess)
-    pool.starmap(runSim, zip(
-        list(range(0, number_of_runs)),
-            [number_of_runs] * number_of_runs,
-            [sim_duration] * number_of_runs,
-            [warm_up_time] * number_of_runs,
-            [sim_start_date] * number_of_runs,
-            [amb_data] * number_of_runs
-        )
-    )
-
-    logging.debug('Reached end of script')
-    logging.shutdown()
 
 def collateRunResults() -> None:
         """
@@ -130,7 +108,7 @@ def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
 
 if __name__ == "__main__":
     removeExistingResults()
-    parallelProcessJoblib(4, (1*365*24*60), (0*60), datetime.strptime("2022-07-24 09:19:00", "%Y-%m-%d %H:%M:%S"), False)
+    parallelProcessJoblib(1, (2*365*24*60), (0*60), datetime.strptime("2022-07-24 09:19:00", "%Y-%m-%d %H:%M:%S"), False)
     #parallelProcessJoblib(5, (1*365*24*60), (0*60), datetime.strptime("2023-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"), False)
 
 # Testing ----------

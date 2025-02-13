@@ -35,7 +35,7 @@ class DES_HEMS:
 
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
-        print(f"Ambulance data values is {self.amb_data}")
+        #print(f"Ambulance data values is {self.amb_data}")
 
         self.utils = Utils()
 
@@ -47,7 +47,7 @@ class DES_HEMS:
         self.calls_today = 0
         self.new_day = pd.to_datetime("1900-01-01").date
 
-        self.hems_resources = HEMSAvailability(self.env)
+        self.hems_resources = HEMSAvailability(self.env, sim_start_date, sim_duration)
 
         # Set up empty list to store results prior to conversion to dataframe
         self.results_list = []
@@ -160,13 +160,11 @@ class DES_HEMS:
             from historic data
 
         """
-        ia_list = []
+
 
         while self.env.now < (self.sim_duration + self.warm_up_duration):
             # Get current day of week and hour of day
             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
-
-            #print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
 
             self.calls_today = int(self.utils.inc_per_day(qtr))
 
@@ -177,8 +175,8 @@ class DES_HEMS:
             if(self.new_day != current_dt.date):
                 self.new_day = current_dt.date
                 ia_dict = self.calls_per_hour(qtr)
-                #print(ia_list)
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
+                self.hems_resources.daily_servicing_check(current_dt)
 
             if self.calls_today > 0:
                 # Work out how long until next incident
@@ -260,13 +258,15 @@ class DES_HEMS:
         pt.qtr = qtr
         pt.current_dt = current_dt
 
-        print(f"Patient {pt.id} incident date: {pt.current_dt}")
+        #print(f"Patient {pt.id} incident date: {pt.current_dt}")
 
         # Update patient instance with age, sex, AMPDS card, whether they are a HEMS' patient and if so, the HEMS result,
         pt.ampds_card = self.utils.ampds_code_selection(pt.hour)
-        print(f"AMPDS card is {pt.ampds_card}")
+        #print(f"AMPDS card is {pt.ampds_card}")
         pt.age = self.utils.age_sampling(pt.ampds_card, 115)
         pt.sex = self.utils.sex_selection(pt.ampds_card)
+
+        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
         if self.amb_data:
             # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
@@ -283,15 +283,35 @@ class DES_HEMS:
             pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
             #print(f"Vehicle type is {pt.hems_pref_vehicle_type}")
 
-            hems_allocation: HEMS = yield self.hems_resources.allocate_resource(pt)
+            self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
+            self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
+
+            hems_res_list: list[HEMS|None, int, bool] = yield self.hems_resources.allocate_resource(pt)
+            hems_allocation = hems_res_list[0]
+
+            if not_in_warm_up_period:
+                msg = "No resource in group available"
+                if hems_res_list[1] == 1:
+                    msg = "Preferred resource available and allocated"
+                elif hems_res_list[1] == 2:
+                    msg = "Preferred resource not and available but other resource in same group allocated"
+
+                self.add_patient_result_row(pt, msg, "resource_preferred_outcome")
+
+                if hems_res_list[0] != None:
+                    if hems_res_list[2]:
+                        self.add_patient_result_row(pt, f"{"H" if pt.hems_pref_vehicle_type == "helicopter" else "CC"}{pt.hems_pref_callsign_group}", "resource_preferred_service")
+
+            # if hems_res_list[2]:
+            #     print(f"Back from allocate resource with {hems_res_list[1]} and {hems_res_list[2]}")
 
             if hems_allocation is not None:
-                print(f"allocated {hems_allocation.callsign}")
+                #print(f"allocated {hems_allocation.callsign}")
                 self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
                 self.env.process(self.patient_journey(hems_allocation, pt))
             else:
-                print("No HEMS resource available - non-DAAT land crew sent")
+                #print("No HEMS resource available - non-DAAT land crew sent")
                 self.env.process(self.patient_journey(None, pt))
 
 
@@ -300,8 +320,8 @@ class DES_HEMS:
             Send patient on their journey!
         """
 
-        print(f"Patient journey triggered for {patient.id}")
-        print(f"patient journey Time: {self.env.now}")
+        #print(f"Patient journey triggered for {patient.id}")
+        #print(f"patient journey Time: {self.env.now}")
         # print(hems_res.callsign)
 
         patient_enters_sim = self.env.now
@@ -317,7 +337,7 @@ class DES_HEMS:
 
         if hems_res != None:
 
-            patient.hems_callsign_group = hems_res.callsign_group.iloc[0]
+            patient.hems_callsign_group = hems_res.callsign_group
             #print(f"Patient csg is {patient.hems_callsign_group}")
             patient.hems_vehicle_type = hems_res.vehicle_type
 
@@ -331,7 +351,7 @@ class DES_HEMS:
             #print(f"Patient outcome is {patient.pt_outcome}")
 
         else:
-            print("No HEMS available")
+            #print("No HEMS available")
             self.add_patient_result_row(patient, "No HEMS available", "queue")
             self.add_patient_result_row(patient, "depart", "arrival_departure")
 
@@ -367,7 +387,7 @@ class DES_HEMS:
             yield self.env.timeout(allocation_time)
 
         if self.amb_data:
-                print('Ambulance allocation time')
+                #print('Ambulance allocation time')
                 yield self.env.timeout(180)
 
         patient.time_in_sim = self.env.now - patient_enters_sim
@@ -380,7 +400,7 @@ class DES_HEMS:
                     self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
 
             if self.amb_data:
-                print('Ambulance time to allocation')
+                #print('Ambulance time to allocation')
                 yield self.env.timeout(5)
 
 
@@ -394,7 +414,7 @@ class DES_HEMS:
         if self.amb_data:
                 # Determine allocation time for ambulance
                 # Yield until done
-                print('Ambulance time to going mobile')
+                #print('Ambulance time to going mobile')
                 yield self.env.timeout(1)
 
         patient.time_in_sim = self.env.now - patient_enters_sim
@@ -415,7 +435,7 @@ class DES_HEMS:
         if self.amb_data:
                 # Determine allocation time for ambulance
                 # Yield until done
-                print('Ambulance time to scene')
+                #print('Ambulance time to scene')
                 yield self.env.timeout(20)
 
         patient.time_in_sim = self.env.now - patient_enters_sim
@@ -438,7 +458,7 @@ class DES_HEMS:
             yield self.env.timeout(tos_time)
 
         if self.amb_data:
-            print('Ambulance on scene duration')
+            #print('Ambulance on scene duration')
             yield self.env.timeout(120)
 
         patient.time_in_sim = self.env.now - patient_enters_sim
@@ -461,7 +481,7 @@ class DES_HEMS:
             yield self.env.timeout(travel_time)
 
         if self.amb_data:
-            print('Ambulance travel time')
+            #print('Ambulance travel time')
             yield self.env.timeout(30)
 
         patient.time_in_sim = self.env.now - patient_enters_sim
@@ -486,12 +506,12 @@ class DES_HEMS:
             yield self.env.timeout(clear_time)
 
             if hems_res != None:
-                print(f"Returning resource {hems_res.callsign}")
+               # print(f"Returning resource {hems_res.callsign}")
                 self.hems_resources.return_resource(hems_res)
                 self.add_patient_result_row(patient, hems_res.callsign, "resource_use_end")
 
         if self.amb_data:
-            print('Ambulance clear time')
+            #print('Ambulance clear time')
             yield self.env.timeout(60)
 
         patient.time_in_sim = self.env.now - patient_enters_sim
