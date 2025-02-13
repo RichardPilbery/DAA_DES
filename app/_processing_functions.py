@@ -36,3 +36,6 @@ def calculate_time_difference(df, col1, col2, unit='minutes'):
         return time_diff.dt.total_seconds() / 86400
     else:
         raise ValueError("Invalid unit. Choose from 'seconds', 'minutes', 'hours', or 'days'.")
+
+def get_param(parameter, params_df):
+    return params_df[params_df["parameter"] == parameter]['value'].values[0]
