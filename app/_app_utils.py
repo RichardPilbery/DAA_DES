@@ -90,7 +90,7 @@ def create_logic_diagram(number_labels = False, session_data = None):
 
 @st.cache_data
 def get_text_sheet(sheet):
-    return pd.read_excel("app/assets/text.xlsx", sheet_name=sheet)
+    return pd.read_excel("app/assets/text.xlsx", sheet_name=sheet, engine="calamine")
 
 @st.cache_data
 def get_text(reference, text_df):
