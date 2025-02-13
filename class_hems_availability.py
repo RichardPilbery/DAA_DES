@@ -91,7 +91,6 @@ class HEMSAvailability():
 
                 print(self.HEMS_resources_list)
 
-
     def populate_store(self):
         for h in self.HEMS_resources_list:
             print(f"Populating resource store: HEMS({h.callsign})")
@@ -106,10 +105,11 @@ class HEMSAvailability():
         pass
 
 
-    def preferred_group_available(self, preferred_group, preferred_vehicle_type):
+    def preferred_group_available(self, preferred_group: int, preferred_vehicle_type: str) -> HEMS | None:
         """
-        Check whether the preferred resource group is available and respond accordingly
+            Check whether the preferred resource group is available and respond accordingly
         """
+
         # Initialise object HEMS as a placeholder object
         hems = HEMS
         # Initialise variable 'preferred' to False
@@ -117,10 +117,6 @@ class HEMSAvailability():
 
         # Iterates through items **available** in store at the time the function is called
         for h in self.store.items:
-            # print(f"pref group is {preferred_group} and pref_veh is {preferred_vehicle_type} and h vehicle is {h.vehicle_type} and h callsign group is {h.callsign_group.iloc[0]}")
-            #print(int(h.callsign_group.iloc[0]) == int(preferred_group))
-            # print(f"int(h.callsign_group.iloc[0]): {int(h.callsign_group.iloc[0])}")
-            # print(f"int(preferred_group): {int(preferred_group)}")
 
             # If callsign group is preferred group AND is preferred vehicle type, returns that item at that point
             # Rest of code will not be reached as the return statement will terminate this for loop as soon as
@@ -137,6 +133,10 @@ class HEMSAvailability():
             # SR note 13/1/25 - double check this logic - as we would send a critical care car over
             # a different available helicopter if I'm interpreting this correctly. Just need to confirm
             # this was the order of priority agreed on.
+            # RP note 13/02/2025 - Based on discussions with despatcher, sounds like closest free resource
+            # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
+            # Perhaps a TODO?
+
             elif h.callsign_group == preferred_group:
                 hems = h
                 preferred = True
@@ -144,9 +144,10 @@ class HEMSAvailability():
         # If we have not found an exact match for preferred callsign and vehicle type out of the
         # resources currently available in our store, we will then reach this code
         # If the preferred variable was set to True at any point, we will refer HEMS
-        # Note that this will be the last resource that met the condition h.callsign_group.iloc[0] == preferred_group
+        # Note that this will be the last resource that met the condition h.callsign_group == preferred_group
         # which may be relevant if there is more than one other resource within that callsign group
         # (though this is not currently a situation that occurs within the naming conventions at DAAT)
+
         if preferred:
             return hems
         else:
@@ -154,7 +155,7 @@ class HEMSAvailability():
 
     def allocate_resource(self, pt: Patient) -> Any | Event:
         """
-        Attempt to allocate a resource from the preferred group.
+            Attempt to allocate a resource from the preferred group.
         """
 
         print(f"Attempting to allocate resource with callsign group {pt.hems_pref_callsign_group} and preferred vehicle type {pt.hems_pref_vehicle_type}")
@@ -163,10 +164,11 @@ class HEMSAvailability():
         # - a HEMS resource object if the preferred callsign group+vehicle is available
         # - OR if some vehicle from the preferred callsign group is available even if the preferred vehicle is not
         # - OR None if neither of those conditions are met
+
         pref_res = self.preferred_group_available(
             preferred_group=pt.hems_pref_callsign_group,
             preferred_vehicle_type=pt.hems_pref_vehicle_type
-            )
+        )
 
         resource_event: Event = self.env.event()
 
@@ -178,12 +180,13 @@ class HEMSAvailability():
                 Returns True if resource is
                 - not in use
                 - on shift
+                - not being serviced
                 Otherwise, returns False
                 """
                 #print(f"Resource filter with hour {hour} and qtr {qtr}")
 
                 # If the resource **is not currently in use** AND **is currently on shift**...
-                if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr) and not resource.being_serviced:
+                if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr) and not resource.unavailable_due_to_service(pt.current_dt):
                     # Check whether the resource is the preferred resource
                     if pref_res != None:
                         if resource.callsign == pref_res.callsign:
@@ -203,8 +206,6 @@ class HEMSAvailability():
 
                 if request in resource:
                     print(f"Allocating HEMS resource at time {self.env.now:.3f}")
-                    # print(request)
-                    # print(resource)
                     resource.in_use = True
                     pt.hems_callsign_group = resource[request].callsign_group
                     pt.hems_vehicle_type = resource[request].vehicle_type

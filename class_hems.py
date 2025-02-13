@@ -56,10 +56,10 @@ class HEMS(Ambulance):
 
         """
 
-        curr_year_servicing_schedule = self.servicing_schedule[self.servicing_schedule['year'] == current_dt.year]
-
-        if curr_year_servicing_schedule['service_start_date'] >= current_dt.date <= curr_year_servicing_schedule['service_end_date']:
-            return True
+        for index, row in self.servicing_schedule.iterrows():
+            
+            if row['service_start_date'] <= current_dt <= row['service_end_date']:
+                return True
         
         return False
 
