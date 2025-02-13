@@ -39,3 +39,18 @@ def calculate_time_difference(df, col1, col2, unit='minutes'):
 
 def get_param(parameter, params_df):
     return params_df[params_df["parameter"] == parameter]['value'].values[0]
+
+def fill_missing_values(df, column, value):
+    """
+    Replaces missing (NaN) values in a specified column with a given value.
+
+    Args:
+        df (pd.DataFrame): The DataFrame containing the column.
+        column (str): The name of the column to process.
+        value (any): The value to replace NaN values with.
+
+    Returns:
+        pd.DataFrame: The modified DataFrame with NaNs replaced.
+    """
+    df[column] = df[column].fillna(value)
+    return df
