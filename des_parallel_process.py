@@ -37,13 +37,19 @@ def write_run_params(model) -> None:
             'sim_end_date': [sim_end_date],
             'warm_up_end_date': [warm_up_end_date],
             'amb_data': [model.amb_data],
-            'model_exec_time': [datetime.now()]
-
+            'model_exec_time': [datetime.now()],
+             # Assuming summer hours are quarters 2 and 3 i.e. April-September
+             # This is defined in class_hems and will need updating here too
+            'summer_start_date': [f'{sim_start_date.year}-04-01'],
+            'winter_start_date':  [f'{sim_start_date.year}-10-01'],
         }, orient='index', columns=['value'])
 
         params_df.index.name = "parameter"
 
-        params_df.to_csv(f"{Utils.RESULTS_FOLDER}/run_params_used.csv", header='column_names')
+        params_df.to_csv(f"{Utils.RESULTS_FOLDER}/run_params_used.csv", header="column_names")
+
+        # TODO: This will need adjusting for this being changeable in the frontend
+        model.utils.HEMS_ROTA.to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
 
 try:
      __file__
