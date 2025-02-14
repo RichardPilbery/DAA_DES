@@ -300,7 +300,7 @@ class DES_HEMS:
 
                 if hems_res_list[0] != None:
                     if hems_res_list[2]:
-                        self.add_patient_result_row(pt, f"{"H" if pt.hems_pref_vehicle_type == "helicopter" else "CC"}{pt.hems_pref_callsign_group}", "resource_preferred_service")
+                        self.add_patient_result_row(pt, f"{'H' if pt.hems_pref_vehicle_type == 'helicopter' else 'CC'}{pt.hems_pref_callsign_group}", "resource_preferred_service")
 
             # if hems_res_list[2]:
             #     print(f"Back from allocate resource with {hems_res_list[1]} and {hems_res_list[2]}")
