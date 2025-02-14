@@ -38,8 +38,6 @@ def make_job_count_df(path="../data/run_results.csv",
     # TODO - see what we can do about any instances where these columns remain NA
     # Think this is likely to relate to instances where there was no resource available?
     # Would be good to populate these columns with a relevant indicator if that's the case
-
-
     call_df = df[df["time_type"] == "arrival"].drop(columns=['time_type', "event_type"])
     return call_df
 
@@ -51,7 +49,7 @@ def get_AVERAGE_calls_per_run(call_df):
 
 def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour=False,
                             bar_colour="teal", title="Calls Per Hour", use_poppins=False,
-                            error_bar_colour="charcoal"):
+                            error_bar_colour="charcoal", show_error_bars_bar=True):
     hourly_calls_per_run = call_df.groupby(['hour', 'run_number'])[['P_ID']].count().reset_index().rename(columns={"P_ID": "count"})
 
     if box_plot:
@@ -60,7 +58,7 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
             fig = px.box(hourly_calls_per_run,
                           x="hour", y="average_per_day",
                           color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                          labels={"average_per_day": "Average Calls Per Hour Across Simulation",
+                          labels={"average_per_day": "Average Daily Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
                                   "hour": "Hour"},
                           title=title).update_xaxes(dtick=1)
 
@@ -68,7 +66,7 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
             fig = px.box(hourly_calls_per_run,
                           x="hour", y="count",
                           color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                          labels={"count": "Total Calls Per Hour Across Simulation",
+                          labels={"count": "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
                         "hour": "Hour"},
                           title=title).update_xaxes(dtick=1)
 
@@ -77,6 +75,11 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
             mean_count=("count", "mean"),
             std_count=("count", "std")
         ).reset_index()
+
+        if show_error_bars_bar:
+                error_y = "std_count"
+        else:
+            error_y=None
 
         if average_per_hour:
             aggregated_data['mean_count'] = aggregated_data['mean_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
@@ -87,8 +90,8 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
                 x="hour",
                 y="mean_count",
                 color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                error_y="std_count",
-                labels={"mean_count": "Total Calls Across Simulation",
+                error_y=error_y,
+                labels={"mean_count": "Average Daily Calls Across Simulation<br>Averaged Across Simulation Runs",
                         "hour": "Hour"},
                 title=title
             ).update_xaxes(dtick=1)
@@ -99,8 +102,8 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
                 x="hour",
                 y="mean_count",
                 color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                error_y="std_count",
-                labels={"mean_count": "Average Calls Per Hour Across Simulation",
+                error_y=error_y,
+                labels={"mean_count": "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
                         "hour": "Hour"},
                 title=title
             ).update_xaxes(dtick=1)
