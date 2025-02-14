@@ -75,6 +75,8 @@ class HEMS(Ambulance):
         
         # Assuming summer hours are quarters 2 and 3 i.e. April-September
         # Can be modified if required.
+        # SR NOTE: If changing these, please also modify in
+        # write_run_params() function in des_parallel_process
         start = self.summer_start if season in [2, 3] else self.winter_start
         end = self.summer_end if season in [2, 3] else self.winter_end
 
