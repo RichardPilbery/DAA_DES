@@ -128,3 +128,13 @@ def resource_allocation_outcomes_run_variation(event_log_df):
         .round(0).astype('int').rename(columns={'time_type': 'Count'})
         .reset_index().rename(columns={'time_type': 'Resource Allocation Attempt Outcome', 'run_number': "Run"})
     )
+
+def get_perc_unattended_string(event_log_df):
+    df = resource_allocation_outcomes(event_log_df)
+    num_unattendable = df[df["Resource Allocation Attempt Outcome"] =="No resource in group available"]['Count'].values[0]
+    total_calls = df['Count'].sum()
+    perc_unattendable = num_unattendable/total_calls
+    if perc_unattendable < 0.01:
+        return f"{num_unattendable} of {total_calls} (< 0.1%)"
+    else:
+        return f"{num_unattendable} of {total_calls} ({perc_unattendable:.1%})"

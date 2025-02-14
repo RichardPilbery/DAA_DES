@@ -12,6 +12,8 @@ import plotly.express as px
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
 import _job_count_calculation
+import _vehicle_calculation
+import _utilisation_result_calculation
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -213,13 +215,11 @@ if button_run_pressed:
             with t1_col1:
                 with iconMetricContainer(key="nonattend_metric", icon_unicode="e61f", family="outline"):
                     st.metric("Number of Calls DAAT Resource Couldn't Attend",
-                            "47 of 1203 (3.9%)",
+                            _vehicle_calculation.get_perc_unattended_string(results_all_runs),
                             border=True)
                     st.caption("""
 These are the 'missed' calls where no DAAT resource was available.
-This could be due to
-- no resource being on shift
-- all resources being tasked to other jobs at the time of the call
+This could be due to no resource being on shift, or all resources being tasked to other jobs at the time of the call.
 """)
 
             with t1_col2:
@@ -239,15 +239,15 @@ For reference, the helicopter was unable to fly for 5.3% of on-shift hours on av
 
             t1_col3, t1_col4 = st.columns(2)
 
-            with t1_col3:
-                with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
-                    st.metric("Preferred Resource Allocated",
-                            "907 of 1203 (75.4%)",
-                            border=True)
-                    st.caption("""
-This is the percentage of time where the 'preferred' resource was available at the time of the call
-for response.
-""")
+#             with t1_col3:
+#                 with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
+#                     st.metric("Preferred Resource Allocated",
+#                             "907 of 1203 (75.4%)",
+#                             border=True)
+#                     st.caption("""
+# This is the percentage of time where the 'preferred' resource was available at the time of the call
+# for response.
+# """)
 
 
         with tab2:
