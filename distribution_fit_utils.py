@@ -372,6 +372,7 @@ class DistributionFitUtils():
 
         hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+")
 
+
     def pt_outcome_by_hems_result_probs(self):
         """
         
@@ -385,7 +386,13 @@ class DistributionFitUtils():
 
         po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_probs.csv', mode = "w+")
 
-    def school_holidays(self):
+
+    def school_holidays(self) -> None:
+        """"
+            Function to generate a CSV file containing schoole holiday
+            start and end dates for a given year. The Year range is determined
+            by the submitted data (plus a year at the end of the study for good measure)
+        """
 
         min_date = self.df.inc_date.min()
         max_date = self.df.inc_date.max() + timedelta(weeks = (52 * self.school_holidays_years))
