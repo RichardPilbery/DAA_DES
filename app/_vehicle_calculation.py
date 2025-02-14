@@ -109,3 +109,22 @@ def calculate_available_hours(params_df, rota_path="../data/hems_rota_used.csv")
     total_avail_minutes = total_avail_minutes.rename(columns={'total_available_hours_in_sim': 'total_available_minutes_in_sim'})
 
     return (daily_available_hours, total_avail_hours, total_avail_minutes)
+
+def resource_allocation_outcomes(event_log_df):
+    n_runs = len(event_log_df["run_number"].unique())
+    return (
+        (event_log_df[event_log_df['event_type']=="resource_preferred_outcome"]
+         .groupby(['time_type'])[['time_type']].count()/n_runs)
+         .round(0).astype('int')
+         .rename(columns={'time_type': 'Count'})
+         .reset_index().rename(columns={'time_type': 'Resource Allocation Attempt Outcome'})
+    )
+
+def resource_allocation_outcomes_run_variation(event_log_df):
+    n_runs = len(event_log_df["run_number"].unique())
+    return (
+        (event_log_df[event_log_df['event_type']=="resource_preferred_outcome"]
+        .groupby(['time_type', 'run_number'])[['time_type']].count()/n_runs)
+        .round(0).astype('int').rename(columns={'time_type': 'Count'})
+        .reset_index().rename(columns={'time_type': 'Resource Allocation Attempt Outcome', 'run_number': "Run"})
+    )

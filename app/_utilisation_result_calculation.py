@@ -282,8 +282,34 @@ def make_RWC_utilisation_dataframe(utilisation_df):
 def make_RWC_utilisation_plot():
     pass
 
-def make_SIMULATION_utilisation_headline_figure(callsign):
-    pass
+def make_SIMULATION_utilisation_headline_figure(vehicle_type, utilisation_df_overall):
+    """
+    Options:
+        - helicopter
+        - solo car
+        - helicopter backup car
+    """
 
-def make_SIMULATION_fleet_utilisation_headline_figure():
+    if vehicle_type == "helicopter":
+        return utilisation_df_overall[utilisation_df_overall["vehicle_type"] == "helicopter"].mean(numeric_only=True)['perc_time_in_use']
+
+    else:
+        # assume anything with >= 1 entries in a callsign group is helicopter + backup car
+        # NOTE: This assumption may not hold forever! It assumes
+        vehicles_per_callsign_group = utilisation_df_overall.groupby('callsign_group').count()[['callsign']]
+
+        if vehicle_type == "solo car":
+            car_only = vehicles_per_callsign_group[vehicles_per_callsign_group['callsign'] == 1]
+            return utilisation_df_overall[utilisation_df_overall["callsign_group"].isin(car_only.reset_index().callsign_group.values)].mean(numeric_only=True)['perc_time_in_use']
+
+        elif vehicle_type == "helicopter backup car":
+            backupcar_only = vehicles_per_callsign_group[vehicles_per_callsign_group['callsign'] == 2]
+            utilisation_df_overall = utilisation_df_overall[utilisation_df_overall["vehicle_type"] == "car"]
+            return utilisation_df_overall[utilisation_df_overall["callsign_group"].isin(backupcar_only.reset_index().callsign_group.values)].mean(numeric_only=True)['perc_time_in_use']
+
+        else:
+            print("Invalid vehicle type entered. Please use 'helicopter', 'solo car' or 'helicopter backup car'")
+
+
+def make_SIMULATION_fleet_utilisation_headline_figure(vehicle_type, utilisation_df_overall):
     pass
