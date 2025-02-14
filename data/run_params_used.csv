@@ -1,0 +1,10 @@
+parameter,value
+sim_duration,525600.0
+warm_up_duration,0.0
+sim_start_date,2025-02-14 08:00:00
+sim_end_date,2026-02-14 08:00:00
+warm_up_end_date,2025-02-14 08:00:00
+amb_data,False
+model_exec_time,2025-02-14 08:42:29.863301
+summer_start_date,2025-04-01
+winter_start_date,2025-10-01

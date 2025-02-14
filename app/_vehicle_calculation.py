@@ -13,6 +13,8 @@ Covers variation within the simulation, and comparison with real world data.
 import _processing_functions
 from datetime import datetime
 import pandas as pd
+import re
+
 
 def calculate_available_hours(params_df, rota_path="../data/hems_rota_used.csv"):
     warm_up_end = _processing_functions.get_param("warm_up_end_date", params_df)
@@ -85,4 +87,25 @@ def calculate_available_hours(params_df, rota_path="../data/hems_rota_used.csv")
 
         return df
 
-    return update_availability(df, hems_rota)
+    daily_available_hours = update_availability(df, rota=hems_rota)
+
+    total_avail_hours = daily_available_hours.drop(columns=['is_summer']).sum(axis=0, numeric_only=True)
+
+    total_avail_hours = pd.DataFrame(total_avail_hours)
+
+    total_avail_hours.index.name = "callsign"
+
+    # TODO: There is a mismatch here and need to investigate further where it's actually occurring
+    # Fixing here for now, but will need to remove this if it's sorted elsewhere
+    total_avail_hours.index = total_avail_hours.index.str.replace("CC", "C")
+
+    total_avail_hours.columns = ["total_available_hours_in_sim"]
+
+    total_avail_hours = total_avail_hours.reset_index()
+    total_avail_hours["callsign_group"] = total_avail_hours["callsign"].apply(lambda x: re.sub('\D', '', x))
+
+    total_avail_minutes = total_avail_hours.copy()
+    total_avail_minutes['total_available_hours_in_sim'] = total_avail_minutes['total_available_hours_in_sim'] * 60
+    total_avail_minutes = total_avail_minutes.rename(columns={'total_available_hours_in_sim': 'total_available_minutes_in_sim'})
+
+    return (daily_available_hours, total_avail_hours, total_avail_minutes)
