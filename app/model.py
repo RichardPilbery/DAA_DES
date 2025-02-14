@@ -11,6 +11,7 @@ import re
 import plotly.express as px
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
+import _job_count_calculation
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -41,7 +42,7 @@ with col1:
     st.title("Run a Simulation")
 
 with col2:
-    st.image("app/assets/daa-logo.svg", width=300)
+    st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
     with stylable_container(css_styles="""
@@ -113,14 +114,16 @@ hr {
         else:
             st.write("SWAST Ambulance Activity will not be modelled")
 
-if not st.session_state["visited_setup_page"]:
-    st.warning("You haven't set up any parameters - default parameters will be used!")
-
-    if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
-                 type="primary"):
-            st.switch_page("setup.py")
 
 button_run_pressed = st.button("Run simulation")
+
+if not st.session_state["visited_setup_page"]:
+    if not button_run_pressed:
+        st.warning("You haven't set up any parameters - default parameters will be used!")
+    if not button_run_pressed:
+        if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
+                    type="primary"):
+                st.switch_page("setup.py")
 
 if button_run_pressed:
     progress_text = "Simulation in progress. Please wait."
@@ -178,6 +181,8 @@ if button_run_pressed:
             "Visualisations",
             "Debugging Visualisations",
             ]
+
+        my_bar.empty()
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
@@ -319,6 +324,8 @@ for response.
                     st.plotly_chart(util_split_fig_simple)
 
 
+
+
                 with tab_2_2:
 
                     st.header("Per-run Breakdowns")
@@ -401,10 +408,39 @@ for response.
 
         with tab3:
             tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
-                "Comparisons with Real-World Data", "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
+                "Jobs", "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
                 ])
             with tab_3_1:
-                st.write("Placeholder")
+                @st.cache_data
+                def get_job_count_df():
+                    return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
+                                                                    path="data/run_results.csv")
+
+                @st.cache_data
+                def get_params_df():
+                    return pd.read_csv("data/run_params_used.csv")
+
+                @st.fragment
+                def plot_jobs_per_hour():
+                    call_df = get_job_count_df()
+                    params_df = get_params_df()
+                    jph_1, jph_2, jph_3 = st.columns(3)
+                    average_per_hour =jph_1.toggle("Dispay Average Calls Per Hour", False)
+                    display_advanced = jph_2.toggle("Display Advanced Plot", value=False)
+                    if not display_advanced:
+                        display_error_bars_bar = jph_3.toggle("Display Variation")
+                    else:
+                        display_error_bars_bar = False
+
+                    st.plotly_chart(_job_count_calculation.plot_hourly_call_counts(
+                        call_df, params_df,
+                        average_per_hour=average_per_hour,
+                        box_plot=display_advanced,
+                        show_error_bars_bar=display_error_bars_bar,
+                        use_poppins=True
+                        ))
+
+                plot_jobs_per_hour()
 
             with tab_3_2:
                 st.subheader("Observed Event Types")
