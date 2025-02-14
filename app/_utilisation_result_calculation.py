@@ -5,7 +5,8 @@ from _app_utils import DAA_COLORSCHEME
 import _vehicle_calculation
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
-                                     params_path="../data/run_params_used.csv"):
+                                     params_path="../data/run_params_used.csv",
+                                     rota_path="../data/hems_rota_used.csv"):
     df = pd.read_csv(path)
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
@@ -14,7 +15,7 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
     # TODO: Incorporate servicing unavailability into this
     daily_availability, total_avail_hours, total_avail_minutes = (
         _vehicle_calculation.calculate_available_hours(
-            params_df, rota_path="../data/hems_rota_used.csv"
+            params_df, rota_path=rota_path
         )
     )
 
@@ -159,7 +160,10 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
             utilisation_df_per_run, utilisation_df_per_run_by_csg)
 
 
-def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run):
+def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run,
+                                               car_colour="blue",
+                                               helicopter_colour="red",
+                                               use_poppins=False):
     """
     Creates a box plot to visualize the variation in resource utilization
     across all simulation runs.
@@ -208,17 +212,24 @@ def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run):
                      "perc_time_in_use": "Average Percentage of Available<br>Time Spent in Use",
                      "vehicle_type": "Vehicle Type"
                  },
-                 color_discrete_map={'Car': DAA_COLORSCHEME["blue"],
-                                     "Helicopter": DAA_COLORSCHEME["red"]})
+                 color_discrete_map={'Car': DAA_COLORSCHEME[car_colour],
+                                     "Helicopter": DAA_COLORSCHEME[helicopter_colour]})
         .update_layout(
                     xaxis={
                         "tickformat": ".0%"  # Formats as percentage with no decimal places
                     }))
 
     # TODO: Add indications of good/bad territory for utilisation levels
-    return fig
 
-def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall):
+    if use_poppins:
+        return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
+    else:
+        return fig
+
+def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall,
+                                               car_colour="blue",
+                                               helicopter_colour="red",
+                                               use_poppins=False):
     """
     Creates a bar plot to summarize the average resource utilization
     across all simulation runs.
@@ -265,15 +276,19 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall):
                      "perc_time_in_use": "Average Percentage of Available<br>Time Spent in Use",
                      "vehicle_type": "Vehicle Type"
                  },
-                 color_discrete_map={'Car': DAA_COLORSCHEME["blue"],
-                                     "Helicopter": DAA_COLORSCHEME["red"]})
+                 color_discrete_map={'Car': DAA_COLORSCHEME[car_colour],
+                                     "Helicopter": DAA_COLORSCHEME[helicopter_colour]})
             .update_layout(
                 yaxis={
                     "tickformat": ".0%"  # Formats as percentage with no decimal places
                 })
                 )
     # TODO: Add indications of good/bad territory for utilisation levels
-    return fig
+
+    if use_poppins:
+        return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
+    else:
+        return fig
 
 def make_RWC_utilisation_dataframe(utilisation_df):
     pass

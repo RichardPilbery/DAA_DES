@@ -59,14 +59,13 @@ hr {
     if 'number_of_runs_input' in st.session_state:
         st.subheader("Model Input Summary")
 
-        with stylable_container(
+        with stylable_container(key="green_buttons",
             css_styles="""
                     button {
                             background-color: green;
                             color: white;
                         }
-                        """,
-            key="green_buttons"
+                        """
             ):
             if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
                 st.switch_page("setup.py")
@@ -103,7 +102,7 @@ hr {
 """, key="hr"):
             st.divider()
 
-        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {st.session_state.sim_start_date_input}")
+        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}")
 
         if st.session_state.create_animation_input:
             st.write("An animated output will be created.")
@@ -214,26 +213,35 @@ if button_run_pressed:
 
             with t1_col1:
                 with iconMetricContainer(key="nonattend_metric", icon_unicode="e61f", family="outline"):
-                    st.metric("Number of Calls DAAT Resource Couldn't Attend",
+                    st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
                             _vehicle_calculation.get_perc_unattended_string(results_all_runs),
                             border=True)
                     st.caption("""
 These are the 'missed' calls where no DAAT resource was available.
+
 This could be due to no resource being on shift, or all resources being tasked to other jobs at the time of the call.
 """)
 
             with t1_col2:
-                with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                    st.metric("Overall Helicopter Utilisation",
-                            "78%",
-                            border=True)
+                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
+                    path="data/run_results.csv", params_path="data/run_params_used.csv",
+                    rota_path="data/hems_rota_used.csv"
+                )
+                t1_col_2_a, t1_col_2_b = st.columns(2)
+                with t1_col_2_a:
+                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
+                        st.metric("Average H70 Utilisation",
+                                utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0],
+                                border=True)
 
-                    st.caption("""
-This is how much of the available time (where a helicopter is on shift and able to fly) the helicopter
-was in use for.
+                with t1_col_2_b:
+                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
+                        st.metric("Average H71 Utilisation",
+                                utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0],
+                                border=True)
 
-Time where the helicopter was unable to fly due to weather conditions is not counted as available time here.
-For reference, the helicopter was unable to fly for 5.3% of on-shift hours on average (range 3.4% to 7.6%)
+                st.caption("""
+This is how much of the available time (where a helicopter is on shift) the helicopter was in use for.
                 """)
 
 
