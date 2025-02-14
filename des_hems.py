@@ -151,11 +151,11 @@ class DES_HEMS:
         return ia_time
 
 
-    def generate_calls_v2(self):
+    def generate_calls(self):
         """
             **Call generator**
 
-            Alternative methods to generate calls (and patients) until current time equals sim_duration + warm_up_duration.
+            Generate calls (and patients) until current time equals sim_duration + warm_up_duration.
             This method calculates number of calls per day and then distributes them according to distributions determined
             from historic data
 
@@ -188,60 +188,8 @@ class DES_HEMS:
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
 
-                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                # [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
                 
-
-
-    def generate_calls(self):
-            """
-            **Call generator**
-
-            Keeps generating calls (and patients) until current time equals sim_duration + warm_up_duration
-
-            """
-
-            ia_list = []
-
-            while self.env.now < (self.sim_duration + self.warm_up_duration):
-                # Get current day of week and hour of day
-                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
-
-                print(f"Sim duration is {self.sim_duration} and current time is {current_dt}")
-
-                self.calls_today = int(self.utils.inc_per_day(qtr))
-
-                # If it is a new day, need to calculate how many calls
-                # in the next 24 hours
-                if(self.new_day != current_dt.date):
-                    self.new_day = current_dt.date
-                    ia_list = self.predetermine_call_arrival(hod, qtr)
-                    #print(ia_list)
-
-                if self.calls_today > 0:
-                    # Work out how long until next incident
-                    for t in ia_list:
-                        yield self.env.timeout(t)
-                        [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
-                        print(f"Creating new patient at {current_dt}")
-                        self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-
-                    # Now skip to tomorrow
-                    print(current_dt.date())
-                    tomorrow = datetime.combine(current_dt.date() + timedelta(days=1), time.min)
-                    #print(f"Tomorrow is {tomorrow}")
-                    if current_dt < tomorrow:
-                        #print('Need to yield until tomorrow')
-                        time_to_tomorrow = math.ceil(pd.to_timedelta(tomorrow - current_dt).total_seconds() / 60)
-                        #print(f"End of list Time to tomorrow is {time_to_tomorrow} minutes")
-                        yield self.env.timeout(time_to_tomorrow)
-                else:
-                    # Skip to next day
-                    #print('Skip to tomorrow')
-                    tomorrow = datetime.combine(current_dt.date() + timedelta(days=1), time.min)
-                    time_to_tomorrow = math.ceil(pd.to_timedelta(tomorrow - current_dt).total_seconds() / 60)
-                    #print(f"Skipping Time to tomorrow is {time_to_tomorrow} minutes")
-                    yield self.env.timeout(time_to_tomorrow)
-
 
     def generate_patient(self, dow, hod, weekday, month, qtr, current_dt):
         
@@ -334,7 +282,6 @@ class DES_HEMS:
   
         hems_avail = True if hems_res != None else False
 
-
         if hems_res != None:
 
             patient.hems_callsign_group = hems_res.callsign_group
@@ -342,6 +289,9 @@ class DES_HEMS:
             patient.hems_vehicle_type = hems_res.vehicle_type
 
             patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
+
+            # Check if HEMS result indicates that resource stodd down before going mobile or en route
+            no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False
 
             # Check if HEMS result indicates no leaving scene/at hospital times
             no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
@@ -428,7 +378,7 @@ class DES_HEMS:
 
         # On scene ---------------
 
-        if (patient.hems_case == 1 and hems_avail) and (patient.hems_result != "Stand Down En Route"):
+        if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
             tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene')
             yield self.env.timeout(tts_time)
 
@@ -453,7 +403,7 @@ class DES_HEMS:
 
         # Leaving scene ------------
 
-        if (patient.hems_case == 1 and hems_avail) and (patient.hems_result != "Stand Down En Route"):
+        if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
             tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene')
             yield self.env.timeout(tos_time)
 
@@ -464,7 +414,7 @@ class DES_HEMS:
         patient.time_in_sim = self.env.now - patient_enters_sim
 
         if not_in_warm_up_period:
-            if (patient.hems_case == 1 and hems_avail) and (patient.hems_result != "Stand Down En Route"):
+            if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
                 if no_HEMS_hospital == False:
                     self.add_patient_result_row(patient, "HEMS leaving scene", "queue")
                 else:
@@ -623,7 +573,7 @@ class DES_HEMS:
         print(f"HEMS class initialised with the following: {self.run_number} {self.sim_duration} {self.warm_up_duration} {self.sim_start_date}")
 
         # Start entity generators
-        self.env.process(self.generate_calls_v2())
+        self.env.process(self.generate_calls())
 
         # Run simulation
         self.env.run(until=(self.sim_duration + self.warm_up_duration))

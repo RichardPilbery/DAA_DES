@@ -48,12 +48,25 @@ class HEMSAvailability():
         # Populate the store with HEMS resources
         self.populate_store()
 
-    def daily_servicing_check(self, current_dt: datetime):
+    def daily_servicing_check(self, current_dt: datetime) -> None:
+        """
+            Function to iterate through the store and trigger the service check
+            function in the HEMS class
+        """
+        h: HEMS
         for h in self.store.items:
             h.unavailable_due_to_service(current_dt)
 
 
-    def prep_HEMS_resources(self):
+    def prep_HEMS_resources(self) -> None:
+        """
+            This function ingests HEMS resource data from a user-supplied CSV file
+            and populates a list of HEMS class objects. The key activity here is
+            the calculation of service schedules for each HEMS object, taking into account a
+            user-specified preferred month of servicing, service duration, and a buffer period 
+            following a service to allow for over-runs and school holidays
+
+        """
 
         schedule = []
         service_dates = []
@@ -99,14 +112,19 @@ class HEMSAvailability():
 
             self.HEMS_resources_list.append(hems)
 
-                #print(self.HEMS_resources_list)
 
     def populate_store(self):
+        """
+            Function to populate the filestore with HEMS class objects
+            contained in a class list
+        """
+
         h: HEMS
         for h in self.HEMS_resources_list:
             print(f"Populating resource store: HEMS({h.callsign})")
             print(h.servicing_schedule)
             self.store.put(h)
+
 
     def add_hems(self):
         """
@@ -177,6 +195,7 @@ class HEMSAvailability():
         else:
             return [None, preferred, service_status]
 
+
     def allocate_resource(self, pt: Patient) -> Any | Event:
         """
             Attempt to allocate a resource from the preferred group.
@@ -243,36 +262,62 @@ class HEMSAvailability():
     
         return resource_event
 
-    def return_resource(self, resource):
+
+    def return_resource(self, resource: HEMS) -> None:
+        """
+            Class to return HEMS class object back to the filestore
+        """
         resource.in_use = False
         self.store.put(resource)
 
-    def years_between(self, start_date, end_date):
+
+    def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
+        """
+            Function to return a list of years between given start and end date
+        """
         return list(range(start_date.year, end_date.year + 1))
-    
+
+
     def do_ranges_overlap(self, start1: datetime, end1: datetime, start2: datetime, end2: datetime) -> bool:
+        """
+            Function to determine whether two sets of datetimes overlap
+        """
         return max(start1, start2) <= min(end1, end2)
-    
-    def is_during_school_holidays(self, start_date, end_date):
+
+
+    def is_during_school_holidays(self, start_date: datetime, end_date: datetime) -> bool:
+        """
+            Function to calculate whether given start and end date time period falls within
+            a school holiday
+        """
 
         for index, row in self.school_holidays.iterrows():
             
-            #if pd.to_datetime(row['start_date']) <= start_date <= pd.to_datetime(row['end_date']):
             if self.do_ranges_overlap(pd.to_datetime(row['start_date']), pd.to_datetime(row['end_date']), start_date, end_date):
                 return True
 
         return False
 
+
     def is_other_resource_being_serviced(self, start_date, end_date, service_dates):
+        """
+            Function to determine whether any resource is being services between a
+            given start and end date period.
+        """
 
         for sd in service_dates:
-            #if pd.to_datetime(row['start_date']) <= start_date <= pd.to_datetime(row['end_date']):
             if self.do_ranges_overlap(sd['service_start_date'], sd['service_end_date'], start_date, end_date):
                 return True
 
         return False
 
-    def find_next_service_date(self, last_service_date, interval_months, service_dates, service_duration):
+
+    def find_next_service_date(self, last_service_date: datetime, interval_months: int, service_dates: list, service_duration: int) -> list[datetime]:
+        """
+            Function to determine the next service date for a resource. The date is determine by
+            the servicing schedule for the resource, the preferred month of servicing, and to 
+            avoid dates that fall in either school holidays or when other resources are being serviced.
+        """
 
         next_due_date = last_service_date + relativedelta(months = interval_months) # Approximate month length
         end_date = next_due_date + timedelta(weeks = service_duration) 
