@@ -12,9 +12,13 @@ from streamlit_extras.stylable_container import stylable_container
 
 from utils import Utils
 
+from _app_utils import get_text, get_text_sheet
+
 st.set_page_config(layout="wide")
 
 setup_state()
+
+text_df=get_text_sheet("setup")
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
@@ -24,87 +28,69 @@ st.session_state["visited_setup_page"] = True
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
-    st.title("Model Setup")
+    st.title(get_text("page_title", text_df))
 
 with col2:
     st.image("app/assets/daa-logo.svg", width=300)
 
-help_helicopters = """
-This parameter relates to the number of helicopters that will be present.
+st.caption(get_text("page_description", text_df))
 
-You can set the helicopter type, crew type and operational hours in the next step.
-"""
-
-help_cars = """
-This parameter relates to the number of *additional* critical care cars that exist as an entity
-separate from the helicopters.
-
-You can set the operational hours and crew type of each car separately in the next step.
-
-Do not include cars that are used by a helicopter crew in the case of helicopter unavailability
-(due to servicing, inclement weather, etc.)
-"""
-
-st.caption("""
-On this page you can set up the parameters for the simulated world to use, including the number of resources, their operating hours, and more.
-""")
-
-with st.expander("Want to set up the model parameters from a template? Click here."):
-    st.caption("To save time when you want to use similar parameters frequently, you can save and load parameters from a file.")
+with st.expander(get_text("expander_title_template", text_df)):
+    st.caption(get_text("expander_description_template", text_df))
     col_template_1, col_template_2 = st.columns(2)
 
     with col_template_1:
-        st.file_uploader("Click here to upload parameters from a template file", type="xlsx")
+        st.file_uploader(get_text("file_uploader_button", text_df), type="xlsx")
 
 
     with col_template_2:
-        st.write("Not used the template before? Click here to download it.")
+        st.write(get_text("file_template_download_hint", text_df))
         st.download_button(data="parameter_template.xlsx",
-                           label="Download Excel Template for Model Parameters",
+                           label=get_text("file_template_download_button", text_df),
                            file_name="daa_simulation_model_parameters_TEMPLATE.xlsx")
 
 st.divider()
 
 # TODO - make this operational
-st.button("Return Model to Current DAA Operational Parameters",
+st.button(get_text("reset_parameters_button", text_df),
           type="primary",
           on_click=reset_to_defaults,
           icon=":material/history:")
-st.caption("WARNING: Clicking this button will lose all changes you've made on this page")
+st.caption(get_text("reset_parameters_warning", text_df))
 
 st.divider()
 
-st.header("Fleet Setup")
+st.header(get_text("header_fleet_setup", text_df))
 
 
 col_1_fleet_setup, col_2_fleet_setup, blank_col_fleet_setup = st.columns(3)
 
 with col_1_fleet_setup:
     num_helicopters = st.number_input(
-        "🚁 Set the number of helicopters",
+        get_text("set_num_helicopters", text_df),
         min_value=1,
         max_value=5,
         value=st.session_state.num_helicopters,
-        help=help_helicopters,
+        help=get_text("help_helicopters", text_df),
         on_change= lambda: setattr(st.session_state, 'num_helicopters', st.session_state.key_num_helicopters),
         key="key_num_helicopters"
         )
 
 with col_2_fleet_setup:
     num_cars = st.number_input(
-        "🚗 Set the number of additional cars",
+        get_text("set_num_additional_cars", text_df),
         min_value=0,
         max_value=5,
         value=st.session_state.num_cars,
-        help=help_cars,
+        help=get_text("help_cars", text_df),
         on_change= lambda: setattr(st.session_state, 'num_cars', st.session_state.key_num_cars),
         key="key_num_cars"
         )
 
-st.subheader("Fleet Makeup")
+st.subheader(get_text("header_fleet_makeup", text_df))
 
-st.caption("☀️ Summer Rota runs from March to October")
-st.caption("❄️ Winter Rota runs from November to February")
+st.caption(get_text("summer_rota_help", text_df))
+st.caption(get_text("winter_rota_help", text_df))
 
 original_rota = Utils.HEMS_ROTA
 original_rota["callsign_count"] = original_rota.groupby('callsign_group')['callsign_group'].transform('count')
@@ -326,13 +312,10 @@ else:
 
 st.divider()
 
-st.subheader("Scenario Setup")
+st.subheader(get_text("header_scenario", text_df))
 
 # TODO: Make these do something more than just display a notification!
-st.caption("""
-If you want to compare multiple scenarios, set up each scenario using the sliders below
-or by importing a completed parameter template file, then click on the relevant button.
-""")
+st.caption(get_text("scenario_comparison_help", text_df))
 scenario_1_button_col, scenario_2_button_col = st.columns(2)
 
 with scenario_1_button_col:
@@ -368,13 +351,11 @@ with scenario_2_button_col:
 
 st.divider()
 
-st.header("Advanced Parameters")
+st.header(get_text("additional_params_header", text_df))
 
-st.caption("""
-    These additional parameters can be set if you are experienced with this tool
-    """)
+st.caption(get_text("additional_params_help", text_df))
 
-with st.expander("Click here to set advanced model parameters"):
+with st.expander(get_text("additional_params_expander_title", text_df)):
     number_of_runs_input = st.slider(
         "Number of Runs",
         min_value=1,
@@ -434,9 +415,9 @@ with st.expander("Click here to set advanced model parameters"):
 
 st.divider()
 
-st.subheader("Parameter Reuse")
+st.subheader(get_text("header_params_reuse", text_df))
 
-st.caption("Want to save these parameters so you can easily use them again later?")
+st.caption(get_text("params_reuse_description", text_df))
 
 # TODO - This just currently redownloads the blank template
 # Will need to populate this
