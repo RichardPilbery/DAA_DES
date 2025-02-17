@@ -456,18 +456,38 @@ if button_run_pressed:
             with tab_3_1a:
                 @st.fragment
                 def plot_monthly_jobs():
-                    mj_1, mj_2 = st.columns(2)
                     call_df = get_job_count_df()
+
+                    mj_1, mj_2 = st.columns(2)
+
                     show_real_data = mj_1.toggle(
-                        "(Coming Soon!) Compare with Real Data",
-                        value=True,
-                        disabled=True)
+                        "Compare with Real Data",
+                        value=False,
+                        disabled=False)
+
                     show_individual_runs = mj_2.toggle("Show Individual Runs", value=False)
+
+                    if show_real_data:
+                        historical_view_method = st.radio(
+                            "Choose Historical Data Display Method",
+                            ["Range", "Individual Lines"],
+                            horizontal=True
+                            )
+                        if historical_view_method == "Range":
+                            show_historical_individual_years = False
+                        else:
+                            show_historical_individual_years = True
+                    else:
+                        show_historical_individual_years = False
+
                     return st.plotly_chart(
                         _job_count_calculation.plot_monthly_calls(
                             call_df,
                             show_individual_runs=show_individual_runs,
-                            use_poppins=False
+                            use_poppins=False,
+                            show_historical=show_real_data,
+                            show_historical_individual_years=show_historical_individual_years,
+                            historical_monthly_job_data_path="actual_data/historical_jobs_per_month.csv"
                             )
                     )
                 plot_monthly_jobs()

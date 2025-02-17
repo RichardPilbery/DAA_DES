@@ -167,3 +167,4 @@ external_data
 app/assets/~$text.xlsx
 app/func_development_jobs.ipynb
 app/func_development_util.ipynb
+actual_data/historical_jobs_per_month.csv

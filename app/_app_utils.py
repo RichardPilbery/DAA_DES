@@ -105,5 +105,9 @@ DAA_COLORSCHEME = {
     "verylightblue": "#D5F5F6",
     "lightgrey": "#CCCCCC",
     "darkgrey": "#4D4D4D",
-    "charcoal": "#1F1F1F"
+    "charcoal": "#1F1F1F",
+    "green": "#56E39F",
+    "darkgreen": "#264027",
+    "yellow": "#F8C630",
+    "orange": "#FFA400"
 }

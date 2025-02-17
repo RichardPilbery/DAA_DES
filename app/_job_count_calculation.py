@@ -20,6 +20,7 @@ import plotly.express as px
 from _app_utils import DAA_COLORSCHEME
 import plotly.graph_objects as go
 import numpy as np
+import datetime
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):
@@ -125,7 +126,10 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
         return fig
 
 
-def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False):
+def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
+                       show_historical=False,
+                       historical_monthly_job_data_path="../actual_data/historical_jobs_per_month.csv",
+                       show_historical_individual_years=False):
     call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
 
@@ -163,7 +167,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False):
                 go.Scatter(
                     x=run_data["month_start"], y=run_data["P_ID"],
                     mode="lines", line=dict(color="gray", width=2, dash='dot'),
-                    opacity=0.6, name=f"Run {run}", showlegend=True,
+                    opacity=0.6, name=f"Simulation Run {run}", showlegend=True,
                 )
             )
 
@@ -178,12 +182,62 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False):
             line=dict(width=0), fillcolor="rgba(0, 176, 185, 0.3)",
             # fillcolor=DAA_COLORSCHEME['verylightblue'],
             # opacity=0.1,
-            showlegend=True, name="95% Range"
+            showlegend=True, name="95% Range Across Simulation Runs"
         )
     ])
 
 
     fig = fig.update_yaxes({'range': (0, call_counts_monthly["P_ID"].max()*1.1)})
+
+    if show_historical:
+        historical_jobs_per_month = pd.read_csv(historical_monthly_job_data_path, parse_dates=False)
+        historical_jobs_per_month["Month"] = pd.to_datetime(historical_jobs_per_month['Month'])
+        historical_jobs_per_month["Month_Numeric"] = historical_jobs_per_month["Month"].apply(lambda x: x.month)
+        historical_jobs_per_month["Year_Numeric"] = historical_jobs_per_month["Month"].apply(lambda x: x.year)
+        historical_jobs_per_month["New_Date"] = historical_jobs_per_month["Month"].apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
+
+        if (historical_jobs_per_month["Jobs"].max() * 1.1) > (call_counts_monthly["P_ID"].max()*1.1):
+            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["Jobs"].max() * 1.1)})
+
+        if show_historical_individual_years:
+            for idx, year  in enumerate(historical_jobs_per_month["Year_Numeric"].unique()):
+                # Filter the data for the current year
+                year_data = historical_jobs_per_month[historical_jobs_per_month["Year_Numeric"] == year]
+
+                # Add the trace for the current year
+                fig.add_trace(go.Scatter(
+                    x=year_data["New_Date"],
+                    y=year_data["Jobs"],
+                    mode='lines',
+                    name=str(year),  # Using the year as the trace name
+                    line=dict(
+                        color=list(DAA_COLORSCHEME.values())[idx]
+                              )  # Default to gray if no specific color found
+                ))
+        else:
+            # Now, add the filled range showing the entire historical range
+            min_jobs = historical_jobs_per_month.groupby('New_Date')['Jobs'].min()  # Minimum Jobs for each date
+            max_jobs = historical_jobs_per_month.groupby('New_Date')['Jobs'].max()  # Maximum Jobs for each date
+
+            # Add a filled range (shaded area) for the historical range
+            fig.add_trace(go.Scatter(
+                x=max_jobs.index,
+                y=max_jobs.values,
+                mode='lines',
+                showlegend=False,
+                line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
+            ))
+
+            fig.add_trace(go.Scatter(
+                x=min_jobs.index,
+                y=min_jobs.values,
+                mode='lines',
+                name='Historical Range',
+                line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
+                fill='tonexty',  # Fill the area between this and the next trace
+                fillcolor='rgba(255, 164, 0, 0.3)',  # Semi-transparent fill color
+            ))
+
 
 
     if use_poppins:
