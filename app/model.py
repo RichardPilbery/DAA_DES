@@ -411,8 +411,10 @@ if button_run_pressed:
 
 
         with tab3:
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
-                "Jobs", "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
+            tab_3_1, tab_3_1a, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
+                "Jobs per Hour",
+                "Jobs per Month",
+                "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
                 ])
             with tab_3_1:
                 @st.cache_data
@@ -428,8 +430,13 @@ if button_run_pressed:
                 def plot_jobs_per_hour():
                     call_df = get_job_count_df()
                     params_df = get_params_df()
+                    help_jph = get_text("help_jobs_per_hour", text_df)
                     jph_1, jph_2, jph_3 = st.columns(3)
-                    average_per_hour =jph_1.toggle("Dispay Average Calls Per Hour", False)
+                    average_per_hour =jph_1.toggle(
+                        "Dispay Average Calls Per Hour",
+                        value=False,
+                        help= help_jph
+                        )
                     display_advanced = jph_2.toggle("Display Advanced Plot", value=False)
                     if not display_advanced:
                         display_error_bars_bar = jph_3.toggle("Display Variation")
