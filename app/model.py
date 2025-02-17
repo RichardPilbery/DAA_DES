@@ -26,7 +26,7 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
-from _app_utils import iconMetricContainer, file_download_confirm
+from _app_utils import iconMetricContainer, file_download_confirm, get_text, get_text_sheet
 
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
@@ -37,6 +37,8 @@ with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 setup_state()
+
+text_df=get_text_sheet("model")
 
 col1, col2 = st.columns([0.7, 0.3])
 
@@ -179,8 +181,8 @@ if button_run_pressed:
 
         tab_names = [
             "Simulation Results Summary",
-            "Visualisations",
-            "Debugging Visualisations",
+            "Key Visualisations",
+            "Additional Outputs",
             ]
 
         my_bar.empty()
@@ -200,9 +202,10 @@ if button_run_pressed:
             def download_button_quarto():
                 # st.download_button(
                 st.button(
-                    "Click here to download these results as a file",
+                    "(COMING SOON!) Click here to download these results as a file",
                     on_click=file_download_confirm,
-                    icon=":material/download:"
+                    icon=":material/download:",
+                    disabled=True
                     )
 
             download_button_quarto()
@@ -216,11 +219,7 @@ if button_run_pressed:
                     st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
                             _vehicle_calculation.get_perc_unattended_string(results_all_runs),
                             border=True)
-                    st.caption("""
-These are the 'missed' calls where no DAAT resource was available.
-
-This could be due to no resource being on shift, or all resources being tasked to other jobs at the time of the call.
-""")
+                    st.caption(get_text("missed_calls_description", text_df))
 
             with t1_col2:
                 resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
@@ -240,9 +239,7 @@ This could be due to no resource being on shift, or all resources being tasked t
                                 utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0],
                                 border=True)
 
-                st.caption("""
-This is how much of the available time (where a helicopter is on shift) the helicopter was in use for.
-                """)
+                st.caption(get_text("helicopter_utilisation_description", text_df))
 
 
             t1_col3, t1_col4 = st.columns(2)
@@ -259,7 +256,7 @@ This is how much of the available time (where a helicopter is on shift) the heli
 
 
         with tab2:
-            tab_2_1, tab_2_2 = st.tabs(["Simulation Summary Graphs", "Per-Run Simulation Breakdowns"])
+            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "Jobs Per Month"])
             with tab_2_1:
                 st.header("Summary Graphs")
 
