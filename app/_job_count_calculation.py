@@ -125,7 +125,10 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
         return fig
 
 
-def plot_monthly_calls(call_df, use_poppins=False):
+def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False):
+    call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
+    call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
+
     call_counts_monthly = call_df.groupby(['run_number', 'month_start'])[['P_ID']].count().reset_index()
 
     # Identify first and last month in the dataset
@@ -147,6 +150,23 @@ def plot_monthly_calls(call_df, use_poppins=False):
                         "month_start": "Month"},
                 title="Number of Monthly Calls Received in Simulation")
 
+    if show_individual_runs:
+        # Get and reverse the list of runs as plotting in reverse will give a more logical
+        # legend at the end
+        run_numbers = list(call_counts_monthly["run_number"].unique())
+        run_numbers.sort()
+        run_numbers.reverse()
+
+        for run in run_numbers:
+            run_data = call_counts_monthly[call_counts_monthly["run_number"] == run]
+            fig.add_trace(
+                go.Scatter(
+                    x=run_data["month_start"], y=run_data["P_ID"],
+                    mode="lines", line=dict(color="gray", width=2, dash='dot'),
+                    opacity=0.6, name=f"Run {run}", showlegend=True,
+                )
+            )
+
     # Add confidence interval as a shaded region
     fig.add_traces([
         go.Scatter(
@@ -155,12 +175,13 @@ def plot_monthly_calls(call_df, use_poppins=False):
         ),
         go.Scatter(
             x=summary["month_start"], y=summary["ci95_lo"], mode="lines", fill="tonexty",
-            line=dict(width=0), fillcolor="rgba(0, 176, 185, 0.4)",
+            line=dict(width=0), fillcolor="rgba(0, 176, 185, 0.3)",
             # fillcolor=DAA_COLORSCHEME['verylightblue'],
             # opacity=0.1,
             showlegend=True, name="95% Range"
         )
     ])
+
 
     fig = fig.update_yaxes({'range': (0, call_counts_monthly["P_ID"].max()*1.1)})
 

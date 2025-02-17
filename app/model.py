@@ -453,6 +453,25 @@ if button_run_pressed:
 
                 plot_jobs_per_hour()
 
+            with tab_3_1a:
+                @st.fragment
+                def plot_monthly_jobs():
+                    mj_1, mj_2 = st.columns(2)
+                    call_df = get_job_count_df()
+                    show_real_data = mj_1.toggle(
+                        "(Coming Soon!) Compare with Real Data",
+                        value=True,
+                        disabled=True)
+                    show_individual_runs = mj_2.toggle("Show Individual Runs", value=False)
+                    return st.plotly_chart(
+                        _job_count_calculation.plot_monthly_calls(
+                            call_df,
+                            show_individual_runs=show_individual_runs,
+                            use_poppins=False
+                            )
+                    )
+                plot_monthly_jobs()
+
             with tab_3_2:
                 st.subheader("Observed Event Types")
 
