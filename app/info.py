@@ -29,7 +29,7 @@ tab_model_logic, tab_demand_data,tab_activity_durations, tab_stand_downs = st.ta
 with tab_model_logic:
     st.caption(get_text("tab_1_content", text_df))
     # st.image(create_logic_diagram())
-    st.image("https://raw.githubusercontent.com/RichardPilbery/DAA_DES/refs/heads/model-logic-diagram/reference/daa_des_model_logic.svg",
+    st.image("https://raw.githubusercontent.com/RichardPilbery/DAA_DES/refs/heads/main/reference/daa_des_model_logic.png",
              width=1200, use_container_width=True)
 
 
