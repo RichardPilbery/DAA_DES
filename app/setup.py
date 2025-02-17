@@ -40,14 +40,16 @@ with st.expander(get_text("expander_title_template", text_df)):
     col_template_1, col_template_2 = st.columns(2)
 
     with col_template_1:
-        st.file_uploader(get_text("file_uploader_button", text_df), type="xlsx")
+        st.file_uploader(get_text("file_uploader_button", text_df), type="xlsx",
+                         disabled=True)
 
 
     with col_template_2:
         st.write(get_text("file_template_download_hint", text_df))
         st.download_button(data="parameter_template.xlsx",
                            label=get_text("file_template_download_button", text_df),
-                           file_name="daa_simulation_model_parameters_TEMPLATE.xlsx")
+                           file_name="daa_simulation_model_parameters_TEMPLATE.xlsx",
+                           disabled=True)
 
 st.divider()
 
@@ -70,6 +72,7 @@ with col_1_fleet_setup:
         get_text("set_num_helicopters", text_df),
         min_value=1,
         max_value=5,
+        disabled=True,
         value=st.session_state.num_helicopters,
         help=get_text("help_helicopters", text_df),
         on_change= lambda: setattr(st.session_state, 'num_helicopters', st.session_state.key_num_helicopters),
@@ -81,6 +84,7 @@ with col_2_fleet_setup:
         get_text("set_num_additional_cars", text_df),
         min_value=0,
         max_value=5,
+        disabled=True,
         value=st.session_state.num_cars,
         help=get_text("help_cars", text_df),
         on_change= lambda: setattr(st.session_state, 'num_cars', st.session_state.key_num_cars),
@@ -188,23 +192,33 @@ updated_helo_df = st.data_editor(
                   "summer_start", "summer_end", "winter_start", "winter_end"],
     column_config={
         "vehicle_type": "Vehicle Type",
-        "callsign": "Callsign",
+        "callsign": st.column_config.TextColumn(
+            "Callsign", disabled=True
+            ),
         "category": st.column_config.SelectboxColumn(
-            "Care Type", options=["EC", "CC"]),
-            "model": st.column_config.SelectboxColumn(
-            "Model", options=["Airbus EC135", "Airbus H145"],
+            "Care Type",
+            options=["EC", "CC"],
+            disabled=True
+            ),
+        "model": st.column_config.SelectboxColumn(
+            "Model",
+            options=["Airbus EC135", "Airbus H145"],
         ),
         "summer_start": st.column_config.TimeColumn(
-            "Summer Start", format="HH:mm"
+            "Summer Start", format="HH:mm",
+            disabled=True
         ),
         "summer_end": st.column_config.TimeColumn(
-            "Summer End", format="HH:mm"
+            "Summer End", format="HH:mm",
+            disabled=True
         ),
         "winter_start": st.column_config.TimeColumn(
-            "Winter Start", format="HH:mm"
+            "Winter Start", format="HH:mm",
+            disabled=True
         ),
         "winter_end": st.column_config.TimeColumn(
-            "Winter End", format="HH:mm"
+            "Winter End", format="HH:mm",
+            disabled=True
         )
         }
     )
@@ -217,24 +231,32 @@ updated_car_df = st.data_editor(final_car_df.reset_index(),
                                  column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"],
                                  column_config={
         "vehicle_type": "Vehicle Type",
-        "callsign": "Callsign",
+        "callsign": st.column_config.TextColumn(
+            "Callsign", disabled=True
+            ),
         "category": st.column_config.SelectboxColumn(
-            "Care Type", options=["EC", "CC"]
+            "Care Type", options=["EC", "CC"],
+            disabled=True
         ),
             "model": st.column_config.SelectboxColumn(
             "Model", options=["Volvo XC90"],
+            disabled=True
         ),
         "summer_start": st.column_config.TimeColumn(
-            "Summer Start", format="HH:mm"
+            "Summer Start", format="HH:mm",
+            disabled=True
         ),
         "summer_end": st.column_config.TimeColumn(
-            "Summer End", format="HH:mm"
+            "Summer End", format="HH:mm",
+            disabled=True
         ),
         "winter_start": st.column_config.TimeColumn(
-            "Winter Start", format="HH:mm"
+            "Winter Start", format="HH:mm",
+            disabled=True
         ),
         "winter_end": st.column_config.TimeColumn(
-            "Winter End", format="HH:mm"
+            "Winter End", format="HH:mm",
+            disabled=True
         )
 
         }
@@ -249,7 +271,10 @@ demand_adjust_type = st.radio("Adjust High-level Demand",
          ["Overall Demand Adjustment",
           "Per Season Demand Adjustment",
           "Per AMPDS Code Demand Adjustment"],
-          key="demand_adjust_type")
+          key="demand_adjust_type",
+          horizontal=True,
+          disabled=True
+          )
 
 if demand_adjust_type == "Overall Demand Adjustment":
     overall_demand_mult = st.slider(
@@ -330,7 +355,8 @@ with scenario_1_button_col:
         ):
         st.button(
             "Set Scenario 1 to Current Parameters",
-            on_click=set_scenario_1_params
+            on_click=set_scenario_1_params,
+            disabled=True
             )
 
 with scenario_2_button_col:
@@ -346,6 +372,7 @@ with scenario_2_button_col:
         st.button(
         "Set Scenario 2 to Current Parameters",
         type="primary",
+        disabled=True,
         on_click=set_scenario_2_params
         )
 
@@ -403,14 +430,16 @@ with st.expander(get_text("additional_params_expander_title", text_df)):
         "Create Animation",
         value=st.session_state.create_animation_input,
         on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
-        key="key_create_animation_input"
+        key="key_create_animation_input",
+        disabled=True
         )
 
     amb_data = st.toggle(
         "Model ambulance service data",
         value=st.session_state.amb_data,
         on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
-        key="key_amb_data"
+        key="key_amb_data",
+        disabled=True
         )
 
 st.divider()
@@ -424,6 +453,7 @@ st.caption(get_text("params_reuse_description", text_df))
 st.download_button(data="parameter_template.xlsx",
                     label="Click to Download the Parameter File",
                     type="primary",
+                    disabled=True,
                     file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
 )
 
