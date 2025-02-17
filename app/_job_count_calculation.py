@@ -1,15 +1,15 @@
 """
 File containing all calculations and visualisations relating to the number of jobs undertaken
 in the simulation.
-- Total number of jobs
-- Total number of jobs by callsign
-- Total number of jobs by vehicle type
-- Total number of jobs by callsign group
-- Jobs attended of those received (missed jobs)
-- Day/night job split
-- Jobs across the course of the year
-- Jobs across the course of the day
-- Jobs by day of the week
+[ ] Total number of jobs
+[ ] Total number of jobs by callsign
+[ ] Total number of jobs by vehicle type
+[ ] Total number of jobs by callsign group
+[ ] Jobs attended of those received (missed jobs)
+[ ] Day/night job split
+[ ] Jobs across the course of the year
+[x] Jobs across the course of the day
+[ ] Jobs by day of the week
 
 Covers variation within the simulation, and comparison with real world data.
 """
@@ -18,6 +18,8 @@ import pandas as pd
 import _processing_functions
 import plotly.express as px
 from _app_utils import DAA_COLORSCHEME
+import plotly.graph_objects as go
+import numpy as np
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):
@@ -42,9 +44,15 @@ def make_job_count_df(path="../data/run_results.csv",
     return call_df
 
 def get_calls_per_run(call_df):
+    """
+    Returns a series of the calls per simulation run
+    """
     return call_df.groupby('run_number')[['P_ID']].count().reset_index()
 
 def get_AVERAGE_calls_per_run(call_df):
+    """
+    Returns a count of the calls per run, averaged across all runs
+    """
     return call_df.groupby('run_number')[['P_ID']].count().reset_index().mean()['P_ID'].round(2)
 
 def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour=False,
@@ -110,6 +118,52 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
 
     if not box_plot:
         fig = fig.update_traces(error_y_color=DAA_COLORSCHEME[error_bar_colour])
+
+    if use_poppins:
+        return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
+    else:
+        return fig
+
+
+def plot_monthly_calls(call_df, use_poppins=False):
+    call_counts_monthly = call_df.groupby(['run_number', 'month_start'])[['P_ID']].count().reset_index()
+
+    # Identify first and last month in the dataset
+    first_month = call_counts_monthly["month_start"].min()
+    last_month = call_counts_monthly["month_start"].max()
+
+    # Filter out the first and last month
+    call_counts_monthly = call_counts_monthly[(call_counts_monthly["month_start"] != first_month) & (call_counts_monthly["month_start"] != last_month)]
+
+    # Compute statistics
+    summary = call_counts_monthly.groupby("month_start")["P_ID"].agg(["mean", "std", "count"]).reset_index()
+    summary["ci95_hi"] = summary["mean"] + 1.96 * (summary["std"] / np.sqrt(summary["count"]))
+    summary["ci95_lo"] = summary["mean"] - 1.96 * (summary["std"] / np.sqrt(summary["count"]))
+
+    # Create the plot
+    fig = px.line(summary, x="month_start", y="mean",
+                markers=True,
+                labels={"mean": "Average Calls Per Month",
+                        "month_start": "Month"},
+                title="Number of Monthly Calls Received in Simulation")
+
+    # Add confidence interval as a shaded region
+    fig.add_traces([
+        go.Scatter(
+            x=summary["month_start"], y=summary["ci95_hi"], mode="lines", line=dict(width=0),
+            showlegend=False
+        ),
+        go.Scatter(
+            x=summary["month_start"], y=summary["ci95_lo"], mode="lines", fill="tonexty",
+            line=dict(width=0), fillcolor="rgba(0, 176, 185, 0.4)",
+            # fillcolor=DAA_COLORSCHEME['verylightblue'],
+            # opacity=0.1,
+            showlegend=True, name="95% Range"
+        )
+    ])
+
+    fig = fig.update_yaxes({'range': (0, call_counts_monthly["P_ID"].max()*1.1)})
+
 
     if use_poppins:
         return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
