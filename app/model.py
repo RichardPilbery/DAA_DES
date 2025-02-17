@@ -328,87 +328,86 @@ if button_run_pressed:
 
                     st.plotly_chart(util_split_fig_simple)
 
+                st.header("Per-run Breakdowns")
 
+                st.subheader("Variation in Vehicle Utilisation per Run")
+                heli_util_df_dummy = pd.DataFrame([
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 89,
+                    "Run": 1},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 85,
+                    "Run": 2},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 83,
+                    "Run": 3},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 91,
+                    "Run": 4},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 82,
+                    "Run": 5},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 61,
+                    "Run": 1},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 64,
+                    "Run": 2},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 63,
+                    "Run": 3},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 59,
+                    "Run": 4},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 68,
+                    "Run": 5},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 71,
+                        "Run": 1},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 72,
+                        "Run": 2},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 73,
+                        "Run": 3},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 68,
+                        "Run": 4},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 74,
+                        "Run": 5}
+                    ]
+                )
 
+                util_fig_advanced = px.box(heli_util_df_dummy,
+                        x="Utilisation",
+                        y="Vehicle",
+                        orientation="h",
+                        height=300,
+                        points="all"
+                        ).update_xaxes(ticksuffix = "%", range=[0, 105])
+
+                # Add optimum range
+                util_fig_advanced.add_vrect(x0=65, x1=85,
+                                        fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
+                # Add extreme range (above)
+                util_fig_advanced.add_vrect(x0=85, x1=100,
+                                        fillcolor="#D45E5E", opacity=0.25, line_width=0)
+                # Add suboptimum range (below)
+                util_fig_advanced.add_vrect(x0=40, x1=65,
+                                        fillcolor="#FDD049", opacity=0.25, line_width=0)
+                # Add extreme range (below)
+                util_fig_advanced.add_vrect(x0=0, x1=40,
+                                        fillcolor="#D45E5E", opacity=0.25, line_width=0)
+
+                st.plotly_chart(
+                    util_fig_advanced
+                )
 
                 with tab_2_2:
 
-                    st.header("Per-run Breakdowns")
-
-                    st.subheader("Variation in Vehicle Utilisation per Run")
-                    heli_util_df_dummy = pd.DataFrame([
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 89,
-                        "Run": 1},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 85,
-                        "Run": 2},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 83,
-                        "Run": 3},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 91,
-                        "Run": 4},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 82,
-                        "Run": 5},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 61,
-                        "Run": 1},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 64,
-                        "Run": 2},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 63,
-                        "Run": 3},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 59,
-                        "Run": 4},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 68,
-                        "Run": 5},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 71,
-                         "Run": 1},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 72,
-                         "Run": 2},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 73,
-                         "Run": 3},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 68,
-                         "Run": 4},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 74,
-                         "Run": 5}
-                        ]
-                    )
-
-                    util_fig_advanced = px.box(heli_util_df_dummy,
-                            x="Utilisation",
-                            y="Vehicle",
-                            orientation="h",
-                            height=300,
-                            points="all"
-                            ).update_xaxes(ticksuffix = "%", range=[0, 105])
-
-                    # Add optimum range
-                    util_fig_advanced.add_vrect(x0=65, x1=85,
-                                            fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
-                    # Add extreme range (above)
-                    util_fig_advanced.add_vrect(x0=85, x1=100,
-                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
-                    # Add suboptimum range (below)
-                    util_fig_advanced.add_vrect(x0=40, x1=65,
-                                            fillcolor="#FDD049", opacity=0.25, line_width=0)
-                    # Add extreme range (below)
-                    util_fig_advanced.add_vrect(x0=0, x1=40,
-                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
-
-                    st.plotly_chart(
-                        util_fig_advanced
-                    )
+                    st.subheader("Placeholder")
 
 
         with tab3:
