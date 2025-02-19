@@ -54,7 +54,26 @@ def get_AVERAGE_calls_per_run(call_df):
     """
     Returns a count of the calls per run, averaged across all runs
     """
-    return call_df.groupby('run_number')[['P_ID']].count().reset_index().mean()['P_ID'].round(2)
+    calls_per_run = get_calls_per_run(call_df)
+    return calls_per_run.mean()['P_ID'].round(2)
+
+def get_UNATTENDED_calls_per_run(call_df):
+    return call_df[call_df['callsign'].isna()].groupby('run_number')[['P_ID']].count().reset_index()
+
+def get_AVERAGE_UNATTENDED_calls_per_run(call_df):
+    unattended_calls_per_run = get_UNATTENDED_calls_per_run(call_df)
+    return unattended_calls_per_run.mean()['P_ID'].round(2)
+
+def display_UNTATTENDED_calls_per_run(call_df):
+    """
+    Alternative to get_perc_unattended_string()
+
+    This approach looks at calls that never got a callsign assigned
+    """
+    total_calls = get_AVERAGE_calls_per_run(call_df)
+    unattended_calls = get_AVERAGE_UNATTENDED_calls_per_run(call_df)
+
+    return f"{unattended_calls:.0f} of {total_calls:.0f} ({(unattended_calls/total_calls):.1%})"
 
 def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour=False,
                             bar_colour="teal", title="Calls Per Hour", use_poppins=False,

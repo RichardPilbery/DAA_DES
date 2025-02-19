@@ -130,6 +130,12 @@ def resource_allocation_outcomes_run_variation(event_log_df):
     )
 
 def get_perc_unattended_string(event_log_df):
+    """
+    Alternative to display_UNTATTENDED_calls_per_run
+
+    This approach looks at instances where the resource allocation attempt outcome was
+    'no resource in group available'
+    """
     df = resource_allocation_outcomes(event_log_df)
     num_unattendable = df[df["Resource Allocation Attempt Outcome"] =="No resource in group available"]['Count'].values[0]
     total_calls = df['Count'].sum()
