@@ -412,53 +412,22 @@ if button_run_pressed:
 
 
         with tab3:
-            tab_3_1, tab_3_1a = st.tabs([
-                "Jobs per Hour",
-                "Jobs per Month"
-                ])
-            with tab_3_1:
-                @st.cache_data
-                def get_job_count_df():
-                    return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
+            @st.cache_data
+            def get_job_count_df():
+                return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
                                                                     path="data/run_results.csv")
 
-                @st.cache_data
-                def get_params_df():
-                    return pd.read_csv("data/run_params_used.csv")
+            @st.cache_data
+            def get_params_df():
+                return pd.read_csv("data/run_params_used.csv")
 
-                @st.fragment
-                def plot_jobs_per_hour():
-                    call_df = get_job_count_df()
-                    params_df = get_params_df()
-                    help_jph = get_text("help_jobs_per_hour", text_df)
-                    jph_1, jph_2, jph_3, jph_4 = st.columns(4)
+            tab_3_1, tab_3_2 = st.tabs([
+                "Jobs per Month",
+                "Jobs per Hour",
 
-                    display_historic_jph = jph_1.toggle(
-                        "Dispay Historic Data",
-                        value=True
-                        )
-                    average_per_hour = jph_2.toggle(
-                        "Dispay Average Calls Per Hour",
-                        value=False,
-                        help= help_jph
-                        )
-                    display_advanced = jph_3.toggle("Display Advanced Plot", value=False)
-                    if not display_advanced:
-                        display_error_bars_bar = jph_4.toggle("Display Variation")
-                    else:
-                        display_error_bars_bar = False
+                ])
 
-                    st.plotly_chart(_job_count_calculation.plot_hourly_call_counts(
-                        call_df, params_df,
-                        average_per_hour=average_per_hour,
-                        box_plot=display_advanced,
-                        show_error_bars_bar=display_error_bars_bar,
-                        use_poppins=True
-                        ))
-
-                plot_jobs_per_hour()
-
-            with tab_3_1a:
+            with tab_3_1:
                 @st.fragment
                 def plot_monthly_jobs():
                     call_df = get_job_count_df()
@@ -501,6 +470,45 @@ if button_run_pressed:
 Note that only full months in the simulation are included in this plot.
 Partial months are excluded for ease of interpretation.
                            """)
+
+            with tab_3_2:
+
+                @st.fragment
+                def plot_jobs_per_hour():
+                    call_df = get_job_count_df()
+                    params_df = get_params_df()
+                    help_jph = get_text("help_jobs_per_hour", text_df)
+                    jph_1, jph_2, jph_3, jph_4 = st.columns(4)
+
+                    display_historic_jph = jph_1.toggle(
+                        "Display Historic Data",
+                        value=True
+                        )
+                    average_per_month = jph_2.toggle(
+                        "Display Average Calls Per Month",
+                        value=True,
+                        help= help_jph
+                        )
+
+                    display_advanced = jph_3.toggle("Display Advanced Plot", value=False)
+
+                    if not display_advanced:
+                        display_error_bars_bar = jph_4.toggle("Display Variation")
+                    else:
+                        display_error_bars_bar = False
+
+                    st.plotly_chart(_job_count_calculation.plot_hourly_call_counts(
+                        call_df, params_df,
+                        average_per_month=average_per_month,
+                        box_plot=display_advanced,
+                        show_error_bars_bar=display_error_bars_bar,
+                        use_poppins=True,
+                        show_historical=display_historic_jph,
+                        historical_data_path="actual_data/jobs_by_hour.csv"
+                        ))
+
+                plot_jobs_per_hour()
+
 
         with tab4:
 

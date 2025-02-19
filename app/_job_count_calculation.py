@@ -21,6 +21,15 @@ from _app_utils import DAA_COLORSCHEME
 import plotly.graph_objects as go
 import numpy as np
 import datetime
+from calendar import monthrange
+
+# 90th Percentile
+def q90(x):
+    return x.quantile(0.9)
+
+# 90th Percentile
+def q10(x):
+    return x.quantile(0.1)
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):
@@ -75,30 +84,112 @@ def display_UNTATTENDED_calls_per_run(call_df):
 
     return f"{unattended_calls:.0f} of {total_calls:.0f} ({(unattended_calls/total_calls):.1%})"
 
-def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour=False,
+def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_month=False,
                             bar_colour="teal", title="Calls Per Hour", use_poppins=False,
-                            error_bar_colour="charcoal", show_error_bars_bar=True):
+                            error_bar_colour="charcoal", show_error_bars_bar=True,
+                            show_historical=True,
+                            historical_data_path="../actual_data/jobs_by_hour.csv"):
     hourly_calls_per_run = call_df.groupby(['hour', 'run_number'])[['P_ID']].count().reset_index().rename(columns={"P_ID": "count"})
 
-    if box_plot:
-        if average_per_hour:
-            hourly_calls_per_run['average_per_day'] = hourly_calls_per_run['count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
-            fig = px.box(hourly_calls_per_run,
-                          x="hour", y="average_per_day",
-                          color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                          labels={"average_per_day": "Average Daily Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
-                                  "hour": "Hour"},
-                          title=title).update_xaxes(dtick=1)
+    fig = go.Figure()
 
+    if show_historical:
+        jobs_per_hour_historic = pd.read_csv(historical_data_path)
+
+        jobs_per_hour_historic['month'] = pd.to_datetime(jobs_per_hour_historic['month'],dayfirst=True)
+        jobs_per_hour_historic['year_numeric'] = jobs_per_hour_historic['month'].apply(lambda x: x.year)
+        jobs_per_hour_historic['month_numeric'] = jobs_per_hour_historic['month'].apply(lambda x: x.month)
+        jobs_per_hour_historic_long = jobs_per_hour_historic.melt(id_vars=['month','month_numeric', 'year_numeric'])
+        jobs_per_hour_historic_long["hour"] = jobs_per_hour_historic_long['variable'].str.extract(r"(\d+)\s")
+        jobs_per_hour_historic_long["hour"] = jobs_per_hour_historic_long["hour"].astype('int')
+        jobs_per_hour_historic_long = jobs_per_hour_historic_long[~jobs_per_hour_historic_long['value'].isna()]
+
+        if not average_per_month:
+            jobs_per_hour_historic_long['value'] = jobs_per_hour_historic_long['value'] * (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
+
+        jobs_per_hour_historic_agg = (
+            jobs_per_hour_historic_long.groupby(['hour'])['value']
+            .agg(['min','max', q10, q90])
+            ).reset_index()
+
+        fig.add_trace(go.Bar(
+            x=jobs_per_hour_historic_agg["hour"],
+            y=jobs_per_hour_historic_agg["max"] - jobs_per_hour_historic_agg["min"],  # The range
+            base=jobs_per_hour_historic_agg["min"],  # Starts from the minimum
+            name="Historical Range",
+            marker_color="rgba(100, 100, 255, 0.2)",  # Light blue with transparency
+            hoverinfo="skip",  # Hide hover info for clarity
+            showlegend=True,
+            width=1.0,  # Wider bars to make them contiguous
+            offsetgroup="historical"  # Grouping ensures alignment
+        ))
+
+        fig.add_trace(go.Bar(
+            x=jobs_per_hour_historic_agg["hour"],
+            y=jobs_per_hour_historic_agg["q90"] - jobs_per_hour_historic_agg["q10"],  # The range
+            base=jobs_per_hour_historic_agg["q10"],  # Starts from the minimum
+            name="Historical 80% Range",
+            marker_color="rgba(100, 100, 255, 0.3)",  # Light blue with transparency
+            hoverinfo="skip",  # Hide hover info for clarity
+            showlegend=True,
+            width=1.0,  # Wider bars to make them contiguous
+            offsetgroup="historical"  # Grouping ensures alignment
+        ))
+
+        fig.update_layout(
+            xaxis=dict(dtick=1),
+            barmode="overlay",  # Ensures bars overlay instead of stacking
+            title="Comparison of Simulated and Historical Call Counts"
+        )
+
+    if box_plot:
+
+
+        if average_per_month:
+            hourly_calls_per_run['average_per_day'] = hourly_calls_per_run['count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24 / 30)
+            # hourly_calls_per_run['average_per_day'] = hourly_calls_per_run['count'] / 30
+            # fig = px.box(hourly_calls_per_run,
+            #               x="hour", y="average_per_day",
+            #               color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
+            #               labels={"average_per_day": "Average Monthly Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
+            #                       "hour": "Hour"},
+            #               title=title).update_xaxes(dtick=1)
+            y_column = "average_per_day"
+            y_label = "Average Monthly Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs"
         else:
-            fig = px.box(hourly_calls_per_run,
-                          x="hour", y="count",
-                          color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                          labels={"count": "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
-                        "hour": "Hour"},
-                          title=title).update_xaxes(dtick=1)
+            y_column = "count"
+            y_label = "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs"
+
+
+        # Add box plot trace
+        fig.add_trace(go.Box(
+            x=hourly_calls_per_run["hour"],
+            y=hourly_calls_per_run[y_column],
+            name="Simulated Mean",
+            width=0.4,
+            marker=dict(color=DAA_COLORSCHEME[bar_colour]),
+            showlegend=True,
+            boxpoints="outliers",  # Show all data points
+            # jitter=0.3,  # Spread out points slightly for visibility
+            # pointpos=-1.8  # Offset points to avoid overlap with the box
+        ))
+
+        # Update layout
+        fig.update_layout(
+            title=title,
+            xaxis=dict(title="Hour", dtick=1),
+            yaxis=dict(title=y_label)
+        )
+            # fig = px.box(hourly_calls_per_run,
+            #               x="hour", y="count",
+            #               color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
+            #               labels={"count": "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
+            #             "hour": "Hour"},
+            #               title=title).update_xaxes(dtick=1)
 
     else:
+
+        # Create required dataframe for simulation output display
         aggregated_data = hourly_calls_per_run.groupby("hour").agg(
             mean_count=("count", "mean"),
             std_count=("count", "std")
@@ -109,35 +200,67 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_hour
         else:
             error_y=None
 
-        if average_per_hour:
-            aggregated_data['mean_count'] = aggregated_data['mean_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
-            aggregated_data['std_count'] = aggregated_data['std_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
+        if average_per_month:
+            # aggregated_data['mean_count'] = aggregated_data['mean_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
+            # aggregated_data['std_count'] = aggregated_data['std_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
 
-            fig =  px.bar(
-                aggregated_data,
-                x="hour",
-                y="mean_count",
-                color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                error_y=error_y,
-                labels={"mean_count": "Average Daily Calls Across Simulation<br>Averaged Across Simulation Runs",
-                        "hour": "Hour"},
-                title=title
-            ).update_xaxes(dtick=1)
+            aggregated_data['mean_count'] = aggregated_data['mean_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
+            aggregated_data['std_count'] = aggregated_data['std_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
+
+
+            fig.add_trace(go.Bar(
+                x=aggregated_data["hour"],
+                y=aggregated_data["mean_count"],
+                name="Simulated Mean",
+                marker=dict(color=DAA_COLORSCHEME[bar_colour]),  # Use your color scheme
+                error_y=dict(
+                    type="data",
+                    array=error_y,
+                    visible=True
+                ) if error_y is not None else None,
+                width=0.4,  # Narrower bars in front
+                offsetgroup="simulated"
+            ))
+
+            fig.update_layout(
+                xaxis=dict(dtick=1),
+                barmode="overlay",  # Ensures bars overlay instead of stacking
+                title=title,
+                yaxis_title="Average Monthly Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
+                xaxis_title="Hour"
+            )
+
 
         else:
-            fig = px.bar(
-                aggregated_data,
-                x="hour",
-                y="mean_count",
-                color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-                error_y=error_y,
-                labels={"mean_count": "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
-                        "hour": "Hour"},
-                title=title
-            ).update_xaxes(dtick=1)
+            fig.add_trace(go.Bar(
+                x=aggregated_data["hour"],
+                y=aggregated_data["mean_count"],
+                name="Simulated Mean",
+                marker=dict(color=DAA_COLORSCHEME[bar_colour]),  # Use your color scheme
+                error_y=dict(
+                    type="data",
+                    array=error_y,
+                    visible=True
+                ) if error_y is not None else None,
+                width=0.4,  # Narrower bars in front
+                offsetgroup="simulated"
+            ))
+
+            fig.update_layout(
+                xaxis=dict(dtick=1),
+                barmode="overlay",  # Ensures bars overlay instead of stacking
+                title=title,
+                yaxis_title="Total Calls Per Hour Across Simulation",
+                xaxis_title="Hour"
+            )
+
+
+
 
     if not box_plot:
         fig = fig.update_traces(error_y_color=DAA_COLORSCHEME[error_bar_colour])
+
+
 
     if use_poppins:
         return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
@@ -169,13 +292,6 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
     )
 
     # Compute mean of number of patients, standard deviation, and total number of monthly calls
-    # 90th Percentile
-    def q90(x):
-        return x.quantile(0.9)
-
-    # 90th Percentile
-    def q10(x):
-        return x.quantile(0.1)
 
     summary = (
             call_counts_monthly.groupby("month_start")["monthly_calls"]
