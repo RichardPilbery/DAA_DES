@@ -183,9 +183,6 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
             .reset_index()
             )
 
-    # summary["ci95_hi"] = summary["mean"] + 1.96 * (summary["std"] / np.sqrt(summary["count"]))
-    # summary["ci95_lo"] = summary["mean"] - 1.96 * (summary["std"] / np.sqrt(summary["count"]))
-
     # Create the plot
     fig = px.line(summary, x="month_start", y="mean",
                 markers=True,
@@ -193,7 +190,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                         "month_start": "Month"},
                 title="Number of Monthly Calls Received in Simulation",
                 color_discrete_sequence=[DAA_COLORSCHEME["navy"]]
-                )
+                ).update_traces(line=dict(width=2.5))
 
     if show_individual_runs:
         # Get and reverse the list of runs as plotting in reverse will give a more logical
@@ -221,8 +218,6 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         go.Scatter(
             x=summary["month_start"], y=summary["min"], mode="lines", fill="tonexty",
             line=dict(width=0), fillcolor="rgba(0, 176, 185, 0.15)",
-            # fillcolor=DAA_COLORSCHEME['verylightblue'],
-            # opacity=0.1,
             showlegend=True, name="Full Range Across Simulation Runs"
         )
     ])
@@ -236,23 +231,46 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         go.Scatter(
             x=summary["month_start"], y=summary["q10"], mode="lines", fill="tonexty",
             line=dict(width=0), fillcolor="rgba(0, 176, 185, 0.3)",
-            # fillcolor=DAA_COLORSCHEME['verylightblue'],
-            # opacity=0.1,
             showlegend=True, name="80% Range Across Simulation Runs"
         )
     ])
 
 
-
-
-    fig = fig.update_yaxes({'range': (0, call_counts_monthly["monthly_calls"].max()*1.1)})
+    # Increase upper y limit to be sightly bigger than the max number of calls observed in a month
+    # Ensure lower y limit is 0
+    fig = fig.update_yaxes({'range': (0, call_counts_monthly["monthly_calls"].max() * 1.1)})
 
     if show_historical:
         historical_jobs_per_month = pd.read_csv(historical_monthly_job_data_path, parse_dates=False)
+        # Convert to datetime
+        # (using 'parse_dates=True' in read_csv isn't reliably doing that, so make it explicit here)
         historical_jobs_per_month["Month"] = pd.to_datetime(historical_jobs_per_month['Month'])
-        historical_jobs_per_month["Month_Numeric"] = historical_jobs_per_month["Month"].apply(lambda x: x.month)
-        historical_jobs_per_month["Year_Numeric"] = historical_jobs_per_month["Month"].apply(lambda x: x.year)
-        historical_jobs_per_month["New_Date"] = historical_jobs_per_month["Month"].apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
+
+        historical_jobs_per_month["Month_Numeric"] = (
+            historical_jobs_per_month["Month"].apply(lambda x: x.month)
+            )
+
+        historical_jobs_per_month["Year_Numeric"] = (
+            historical_jobs_per_month["Month"]
+            .apply(lambda x: x.year)
+            )
+
+        historical_summary = (
+            historical_jobs_per_month
+            .groupby('Month_Numeric')['Jobs']
+            .agg(["max","min"])
+            .reset_index()
+            .rename(columns={"max": "historic_max", "min": "historic_min"})
+            )
+
+        call_counts_monthly["Month_Numeric"] = (
+                call_counts_monthly["month_start"].apply(lambda x: x.month)
+                )
+
+        # historical_jobs_per_month["New_Date"] = (
+        #     historical_jobs_per_month["Month"]
+        #     .apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
+        #     )
 
         if (historical_jobs_per_month["Jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
             fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["Jobs"].max() * 1.1)})
@@ -262,11 +280,17 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                 # Filter the data for the current year
                 year_data = historical_jobs_per_month[historical_jobs_per_month["Year_Numeric"] == year]
 
+                new_df = (
+                    call_counts_monthly.drop_duplicates('month_start')
+                    .merge(year_data, on="Month_Numeric", how="left")
+                    )
+
                 # Add the trace for the current year
                 fig.add_trace(go.Scatter(
-                    x=year_data["New_Date"],
-                    y=year_data["Jobs"],
-                    mode='lines',
+                    x=new_df["month_start"],
+                    y=new_df["Jobs"],
+                    mode='lines+markers',
+                    opacity=0.7,
                     name=str(year),  # Using the year as the trace name
                     line=dict(
                         color=list(DAA_COLORSCHEME.values())[idx],
@@ -274,22 +298,25 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                         )  # Default to gray if no specific color found
                 ))
         else:
-            # Now, add the filled range showing the entire historical range
-            min_jobs = historical_jobs_per_month.groupby('New_Date')['Jobs'].min()  # Minimum Jobs for each date
-            max_jobs = historical_jobs_per_month.groupby('New_Date')['Jobs'].max()  # Maximum Jobs for each date
+            # Add a filled range showing the entire historical range
+            call_counts_monthly = call_counts_monthly.merge(
+                historical_summary, on="Month_Numeric",
+                how="left"
+                )
+
 
             # Add a filled range (shaded area) for the historical range
             fig.add_trace(go.Scatter(
-                x=max_jobs.index,
-                y=max_jobs.values,
+                x=call_counts_monthly["month_start"],
+                y=call_counts_monthly["historic_max"],
                 mode='lines',
                 showlegend=False,
                 line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
             ))
 
             fig.add_trace(go.Scatter(
-                x=min_jobs.index,
-                y=min_jobs.values,
+                x=call_counts_monthly["month_start"],
+                y=call_counts_monthly["historic_min"],
                 mode='lines',
                 name='Historical Range',
                 line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)

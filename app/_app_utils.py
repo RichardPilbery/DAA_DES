@@ -102,12 +102,12 @@ DAA_COLORSCHEME = {
     "blue": "#1D428A",
     "teal": "#00B0B9",
     "lightblue": "#C0F0F2",
+    "green": "#56E39F",
+    "orange": "#FFA400",
+    "yellow": "#F8C630",
+    "darkgreen": "#264027",
     "verylightblue": "#D5F5F6",
     "lightgrey": "#CCCCCC",
     "darkgrey": "#4D4D4D",
     "charcoal": "#1F1F1F",
-    "green": "#56E39F",
-    "darkgreen": "#264027",
-    "yellow": "#F8C630",
-    "orange": "#FFA400"
 }

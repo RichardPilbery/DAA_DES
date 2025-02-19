@@ -257,7 +257,7 @@ if button_run_pressed:
 
 
         with tab2:
-            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "Jobs Per Month"])
+            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "Coming Soon"])
             with tab_2_1:
                 st.header("Summary Graphs")
 
@@ -470,7 +470,7 @@ if button_run_pressed:
                         value=True,
                         disabled=False)
 
-                    show_individual_runs = mj_2.toggle("Show Individual Runs", value=False)
+                    show_individual_runs = mj_2.toggle("Show Individual Simulation Runs", value=False)
 
                     if show_real_data:
                         historical_view_method = st.radio(
