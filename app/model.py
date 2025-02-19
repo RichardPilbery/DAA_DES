@@ -182,6 +182,7 @@ if button_run_pressed:
         tab_names = [
             "Simulation Results Summary",
             "Key Visualisations",
+            "Comparing Model with Historic Data",
             "Additional Outputs",
             ]
 
@@ -189,11 +190,11 @@ if button_run_pressed:
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
             )
         else:
-            tab1, tab2, tab3 = st.tabs(
+            tab1, tab2, tab3, tab4 = st.tabs(
                 tab_names
             )
 
@@ -411,10 +412,9 @@ if button_run_pressed:
 
 
         with tab3:
-            tab_3_1, tab_3_1a, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
+            tab_3_1, tab_3_1a = st.tabs([
                 "Jobs per Hour",
-                "Jobs per Month",
-                "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
+                "Jobs per Month"
                 ])
             with tab_3_1:
                 @st.cache_data
@@ -431,15 +431,20 @@ if button_run_pressed:
                     call_df = get_job_count_df()
                     params_df = get_params_df()
                     help_jph = get_text("help_jobs_per_hour", text_df)
-                    jph_1, jph_2, jph_3 = st.columns(3)
-                    average_per_hour =jph_1.toggle(
+                    jph_1, jph_2, jph_3, jph_4 = st.columns(4)
+
+                    display_historic_jph = jph_1.toggle(
+                        "Dispay Historic Data",
+                        value=True
+                        )
+                    average_per_hour = jph_2.toggle(
                         "Dispay Average Calls Per Hour",
                         value=False,
                         help= help_jph
                         )
-                    display_advanced = jph_2.toggle("Display Advanced Plot", value=False)
+                    display_advanced = jph_3.toggle("Display Advanced Plot", value=False)
                     if not display_advanced:
-                        display_error_bars_bar = jph_3.toggle("Display Variation")
+                        display_error_bars_bar = jph_4.toggle("Display Variation")
                     else:
                         display_error_bars_bar = False
 
@@ -462,7 +467,7 @@ if button_run_pressed:
 
                     show_real_data = mj_1.toggle(
                         "Compare with Real Data",
-                        value=False,
+                        value=True,
                         disabled=False)
 
                     show_individual_runs = mj_2.toggle("Show Individual Runs", value=False)
@@ -490,54 +495,35 @@ if button_run_pressed:
                             historical_monthly_job_data_path="actual_data/historical_jobs_per_month.csv"
                             )
                     )
+
                 plot_monthly_jobs()
+                st.caption("""
+Note that only full months in the simulation are included in this plot.
+Partial months are excluded for ease of interpretation.
+                           """)
 
-            with tab_3_2:
-                st.subheader("Observed Event Types")
+        with tab4:
 
-                event_counts_df =  (pd.DataFrame(
-                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
-                        .pivot(index="run_number", columns="time_type", values="count")
-                )
-                st.write(
-                event_counts_df
-                        )
+            tab_4_1, tab_4_2 = st.tabs(["Debug Events", "Debug Resources"])
 
-                st.subheader("Observed Callsigns")
-
-                st.write(
-                    pd.DataFrame(
-                        results_all_runs[["run_number", "callsign_group"]].value_counts()).reset_index()
-                        .pivot(index="run_number", columns="callsign_group", values="count")
-                        )
-
-            with tab_3_3:
-                st.subheader("Full Event Log")
-
-                st.write(results_all_runs)
-
-            with tab_3_4:
+            with tab_4_1:
                 st.subheader("Event Overview")
 
-                tab3a, tab3b = st.tabs(["By Event", "By Run"])
+                fig = px.scatter(
+                        results_all_runs,
+                        x="timestamp_dt",
+                        y="run_number",
+                        facet_row="time_type",
+                        color="time_type",
+                        height=800,
+                        title="Events Over Time - By Run")
+                fig.update_traces(marker=dict(size=3, opacity=0.5))
+                st.plotly_chart(
+                    fig,
+                        use_container_width=True
+                    )
 
-                with tab3a:
-                    fig = px.scatter(
-                            results_all_runs,
-                            x="timestamp_dt",
-                            y="run_number",
-                            facet_row="time_type",
-                            color="time_type",
-                            height=800,
-                            title="Events Over Time - By Run")
-                    fig.update_traces(marker=dict(size=3, opacity=0.5))
-                    st.plotly_chart(
-                        fig,
-                            use_container_width=True
-                        )
-
-                with tab3b:
-                    st.plotly_chart(
+                st.plotly_chart(
                         px.line(
                             results_all_runs[results_all_runs["time_type"]=="arrival"],
                             x="timestamp_dt",
@@ -551,8 +537,10 @@ if button_run_pressed:
                 st.subheader("Event Counts")
                 st.write(f"Period: {st.session_state.sim_duration_input} days")
 
-                # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
-
+                event_counts_df =  (pd.DataFrame(
+                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
+                        .pivot(index="run_number", columns="time_type", values="count")
+                )
                 event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
 
                 st.plotly_chart(
@@ -613,7 +601,7 @@ if button_run_pressed:
 
                 patient_viz()
 
-            with tab_3_5:
+            with tab_4_2:
                 st.subheader("Resource Use")
 
                 resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
@@ -629,157 +617,3 @@ if button_run_pressed:
                     color="event_type"
                     )
                 )
-
-            with tab_3_6:
-                st.write("Placeholder")
-
-
-        if st.session_state.create_animation_input:
-            with tab4:
-
-                st.error("Warning - this is not yet working as intended")
-                event_position_df = pd.DataFrame([
-
-                    {'event': 'HEMS call start',
-                    'x':  10, 'y': 600, 'label': "HEMS Call Start"},
-
-                    {'event': 'HEMS allocated to call',
-                    'x':  180, 'y': 550, 'label': "HEMS Allocated"},
-
-                    {'event': 'HEMS mobile',
-                    'x':  300, 'y': 500, 'label': "HEMS Mobile"},
-
-                    {'event': 'HEMS on scene',
-                    'x':  400, 'y': 450, 'label': "HEMS On Scene"},
-
-                    {'event': "HEMS stood down en route",
-                    'x':  400, 'y': 425, 'label': "HEMS Stood Down"},
-
-                    {'event': 'HEMS leaving scene',
-                    'x':  530, 'y': 400, 'label': "HEMS Leaving Scene"},
-
-                    {'event': 'HEMS arrived destination',
-                    'x':  700, 'y': 350, 'label': "HEMS Arrived Destination"},
-
-                    {'event': 'HEMS clear',
-                    'x':  900, 'y': 300, 'label': "HEMS Clear"},
-
-                    # {'event': 'AMB call start',
-                    # 'x':  160, 'y': 100, 'label': "Ambulance Call Start"},
-
-                    # {'event': 'AMB arrival at hospital',
-                    # 'x':  360, 'y': 100, 'label': "Ambulance Arrive at Hospital"},
-
-                    # {'event': 'AMB clear',
-                    # 'x':  660, 'y': 100, 'label': "Ambulance Clear"},
-
-                    # {'event': 'HEMS to AMB handover',
-                    # 'x':  360, 'y': 300, 'label': "HEMS to AMB handover"},
-
-                    ]
-                )
-
-                event_log = results_all_runs.reset_index().rename(
-                                columns = {"timestamp":"time",
-                                "P_ID": "patient",
-                                # "time_type": "event",
-                                "callsign_group": "pathway"}
-                                )
-
-                event_log['pathway'] = event_log['pathway'].fillna('Shared')
-                event_log['resource_id'] = 1
-
-                #print(event_log.head(50))
-                event_log['callsign'] = event_log['vehicle_type'].str[0].str.upper() + event_log['pathway'].astype(str)
-
-                event_log['event'] = event_log.apply(lambda row:
-                    row['time_type'] if row['time_type'] in ['arrival', 'depart'] else row['callsign'],
-                    axis=1)
-
-
-                with st.expander("See final event log"):
-                    st.dataframe(event_log[event_log["run_number"]==1])
-
-                event_position_df = pd.DataFrame([
-                    {'event': 'arrival',
-                    'x':  50, 'y': 400,
-                    'label': "Arrival" },
-
-                    {'event': 'H70',
-                    'x':  150, 'y': 275,
-                    'resource':'n_H70',
-                    'label': "H70 Attending"},
-
-                    {'event': 'CC70',
-                    'x':  150, 'y': 175,
-                    'resource':'n_CC70',
-                    'label': "CC70 Attending"},
-
-                {'event': 'H71',
-                    'x':  325, 'y': 275,
-                    'resource':'n_H71',
-                    'label': "H71 Attending"},
-
-                    {'event': 'CC71',
-                    'x':  325, 'y': 175,
-                    'resource':'n_CC71',
-                    'label': "CC71 Attending"},
-
-                    {'event': 'CC72',
-                    'x':  475, 'y': 175,
-                    'resource':'n_CC72',
-                    'label': "CC72 Attending"},
-
-                    {'event': 'exit',
-                    'x':  270, 'y': 70,
-                    'label': "Exit"}
-
-                ])
-
-                class g():
-                    n_H70 = 1
-                    n_CC70 = 1
-                    n_H71 = 1
-                    n_CC71 = 1
-                    n_CC72 = 1
-
-                full_patient_df = reshape_for_animations(
-                    event_log[event_log["run_number"]==1],
-                    every_x_time_units=5,
-                    limit_duration=60*24*sim_duration_input,
-                    debug_mode=True
-                )
-
-                with st.expander("See step 1 animation dataframe"):
-                    st.dataframe(full_patient_df)
-
-                full_patient_df_with_position = generate_animation_df(full_patient_df=full_patient_df, event_position_df=event_position_df)
-
-                with st.expander("See step 2 animation dataframe"):
-                    st.dataframe(full_patient_df_with_position)
-
-                st.plotly_chart(
-                    generate_animation(
-                        full_patient_df_plus_pos=full_patient_df_with_position,
-                        event_position_df=event_position_df,
-                        scenario=g(),
-                        plotly_height=750,
-                        # start_date=datetime.combine(sim_start_date_input, sim_start_time_input),
-                        # time_display_units="dhm"
-
-                                    )
-                )
-
-                # st.plotly_chart(
-                #     animate_activity_log(
-                #             event_log = event_log[event_log["run_number"]==1],
-                #             event_position_df=event_position_df,
-                #             scenario=g(),
-                #             setup_mode=True,
-                #             debug_mode=True,
-                #             every_x_time_units=10,
-                #             display_stage_labels=True,
-                #             limit_duration=60*24*sim_duration_input,
-                #             time_display_units="dhm"
-                #     )
-                # )
