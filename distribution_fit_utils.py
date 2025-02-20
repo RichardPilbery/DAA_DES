@@ -482,9 +482,15 @@ class DistributionFitUtils():
             Calculate the median time for each of the job cycle phases stratified by month and vehicle type
         """
 
-        median_df = self.df
+        median_df = self.df[['first_day_of_month', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+        
         median_df['total_job_time'] = median_df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].sum(axis=1)
 
+        # Replacing zeros with NaN to exclude from median calculation
+        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
+        median_df.replace(0, np.nan, inplace=True)
+
+        # Grouping by month and resource_type, calculating medians
         median_times = median_df.groupby(['first_day_of_month', 'vehicle_type']).median(numeric_only=True).reset_index()
 
         pivot_data = median_times.pivot_table(
@@ -495,8 +501,6 @@ class DistributionFitUtils():
 
         pivot_data.columns = [f"median_{col[1]}_{col[0]}" for col in pivot_data.columns]
         pivot_data = pivot_data.reset_index()
-
-        #print(pivot_data.head())
 
         pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
     
