@@ -522,6 +522,13 @@ Partial months are excluded for ease of interpretation.
                     )
 
                 create_utilisation_rwc_plot()
+                st.caption("""
+This plot shows the split within a callsign group of resources that are sent on jobs.
+Bars within a callsign group will sum to 100%.
+
+Dotted lines indicate the average historical allocation seen of resources within a callsign group,
+averaged over 24 months.
+                """)
 
         with tab4:
 

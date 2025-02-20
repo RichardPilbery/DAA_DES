@@ -418,11 +418,15 @@ def create_UTIL_rwc_plot(call_df,
             y=filtered_data["percentage_of_group"],
             x=filtered_data["callsign_group"],
             name=f"Simulated - {vehicle}",
-            # orientation='h',
             marker=dict(
             color=list(DAA_COLORSCHEME.values())[idx]),
             width=0.3,
-            opacity=0.6  # Same opacity for consistency
+            opacity=0.6,  # Same opacity for consistency
+            text=["Simulated: {:.1f}".format(val) for val in filtered_data["percentage_of_group"]],  # Correct way            textposition="inside",  # Places text just above the x-axis
+            insidetextanchor="start",  # Anchors text inside the bottom of the bar
+            textfont=dict(
+                        color='white'
+                    ),
         ))
 
         fig.update_layout(
@@ -442,32 +446,43 @@ def create_UTIL_rwc_plot(call_df,
 
         if filtered_data["callsign_group"].values[0] in ["70", "71"]:
 
-            if filtered_data["vehicle_type"].values[0] == "car":
-                fig.add_trace(
-                    go.Scatter(
-                        x = [float(filtered_data["callsign_group"].values[0])-0.4, float(filtered_data["callsign_group"].values[0])],
-                        y = [filtered_data['percentage_of_group'].values[0] - 1, filtered_data['percentage_of_group'].values[0] - 1],  # Width of the "line"
-                        # base = [filtered_data['percentage_of_group'].values[0] - 1] ,
-                        mode="lines",
-                        name=f"Expected Level - {callsign}",
-                        show_legend=False,
-                        hoverinfo="all",
-                        line=dict(dash='dash', color=DAA_COLORSCHEME['charcoal'])
-                    )
-                )
+            expected_x = float(filtered_data["callsign_group"].values[0])
+            y_value = filtered_data['percentage_of_group'].values[0]
+            expected_y =y_value - 1  # Position for the line
 
+            if filtered_data["vehicle_type"].values[0] == "car":
+                x_start = expected_x - 0.4
+                x_end = expected_x
             else:
-                fig.add_trace(
-                    go.Scatter(
-                        x = [float(filtered_data["callsign_group"].values[0]), float(filtered_data["callsign_group"].values[0])+0.4],
-                        y = [filtered_data['percentage_of_group'].values[0] - 1, filtered_data['percentage_of_group'].values[0] - 1],  # Width of the "line"
-                        # base = [filtered_data['percentage_of_group'].values[0] - 1] ,
-                        mode="lines",
-                        name=f"Expected Level - {callsign}",
-                        hoverinfo="all",
-                        line=dict(dash='dash', color=DAA_COLORSCHEME['charcoal'])
-                    )
+                x_start = expected_x
+                x_end = expected_x + 0.4
+
+            # Add dashed line
+            fig.add_trace(
+                go.Scatter(
+                    x=[x_start, x_end],
+                    y=[expected_y, expected_y],
+                    mode="lines",
+                    name=f"Expected Level - {callsign}",
+                    showlegend=False,
+                    hoverinfo="all",
+                    line=dict(dash='dash', color=DAA_COLORSCHEME['charcoal'])
                 )
+            )
+
+            # Add text annotation above the line
+            fig.add_trace(
+                go.Scatter(
+                    x=[(x_start + x_end) / 2],  # Center the text horizontally
+                    y=[expected_y *1.05],  # Slightly above the line
+                    text=[f"Historical: {y_value:.1f}"],
+                    mode="text",
+                    textfont=dict(
+                        color='black'
+                    ),
+                    showlegend=False  # Don't show in legend
+                )
+            )
 
     min_x = min(sim_averages["callsign_group"].astype('int').values)
     max_x = max(sim_averages["callsign_group"].astype('int').values)
