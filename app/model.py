@@ -150,7 +150,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
-                        amb_data=st.session_state.amb_data
+                        amb_data=st.session_state.amb_data,
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
                     )
 
                 results.append(
@@ -165,6 +166,8 @@ if button_run_pressed:
         # If running locally, use parallel processing function to speed up execution significantly
         else:
             print("Running in parallel")
+            print(f"st.session_state.overall_demand_mult: {st.session_state.overall_demand_mult}")
+            print(f"st.session_state.sim_duration_input: {st.session_state.sim_duration_input}")
             parallelProcessJoblib(
                         total_runs = st.session_state.number_of_runs_input,
                         sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
@@ -173,7 +176,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
-                        amb_data = st.session_state.amb_data
+                        amb_data = st.session_state.amb_data,
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -198,12 +202,12 @@ if button_run_pressed:
                 tab_names
             )
 
-        @st.cache_data
+        # @st.cache_data
         def get_job_count_df():
             return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
-                                                                path="data/run_results.csv")
+                                                            path="data/run_results.csv")
 
-        @st.cache_data
+        # @st.cache_data
         def get_params_df():
             return pd.read_csv("data/run_params_used.csv")
 

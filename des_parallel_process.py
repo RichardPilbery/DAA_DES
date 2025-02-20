@@ -61,7 +61,8 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 
 def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
-           sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True, demand_increase_percent: float):
+           sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True,
+           demand_increase_percent: float = 1.0):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
 
     print(f'{Utils.current_time()}: Demand increase set to {demand_increase_percent*100}%')
@@ -73,7 +74,12 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
     logging.debug(f"{Utils.current_time()}: Run {run+1} of {total_runs}")
 
     #print(f"Sim start date is {sim_start_date}")
-    daa_model = DES_HEMS(run, sim_duration, warm_up_time, sim_start_date, amb_data, demand_increase_percent)
+    daa_model = DES_HEMS(run_number=run,
+                        sim_duration=sim_duration,
+                        warm_up_duration=warm_up_time,
+                        sim_start_date=sim_start_date,
+                        amb_data=amb_data,
+                        demand_increase_percent=demand_increase_percent)
     daa_model.run()
 
     print(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
@@ -87,7 +93,7 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
 
 def collateRunResults() -> None:
         """
-            Collates results from a series of runs into a single csv
+        Collates results from a series of runs into a single csv
         """
         matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
@@ -111,9 +117,11 @@ def removeExistingResults() -> None:
         if os.path.isfile(all_results_file_path):
             os.unlink(all_results_file_path)
 
-def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool, demand_increase_percent: float):
+def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
+                        sim_start_date: datetime, amb_data: bool,
+                        save_params_csv: bool = True, demand_increase_percent: float = 1.0):
 
-    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data, demand_increase_percent) for run in range(total_runs))
+    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data, save_params_csv, demand_increase_percent) for run in range(total_runs))
 
 if __name__ == "__main__":
     removeExistingResults()
