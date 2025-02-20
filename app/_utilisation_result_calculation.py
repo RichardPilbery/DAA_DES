@@ -332,6 +332,71 @@ def make_SIMULATION_fleet_utilisation_headline_figure(vehicle_type, utilisation_
     pass
 
 
+def prep_util_df_from_call_df(call_df):
+    call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
+    call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
+
+    jobs_counts_by_callsign_monthly_sim = (
+        call_df
+        .groupby(['run_number', 'month_start', 'callsign', 'callsign_group', 'vehicle_type'])['P_ID']
+        .count().reset_index().rename(columns={'P_ID': 'jobs'})
+        )
+
+    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim[~jobs_counts_by_callsign_monthly_sim['callsign'].isna()]
+
+    all_combinations = pd.MultiIndex.from_product([
+        jobs_counts_by_callsign_monthly_sim["month_start"].unique(),
+        jobs_counts_by_callsign_monthly_sim["run_number"].unique(),
+        jobs_counts_by_callsign_monthly_sim["callsign"].unique()
+    ], names=["month_start", "run_number", "callsign"])
+
+    # Reindex the dataframe to include missing callsigns
+    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim.set_index(
+        ["month_start", "run_number", "callsign"]
+    ).reindex(all_combinations, fill_value=0).reset_index()
+
+    jobs_counts_by_callsign_monthly_sim['callsign_group'] = jobs_counts_by_callsign_monthly_sim['callsign'].str.extract(r'(\d+)')
+    jobs_counts_by_callsign_monthly_sim['vehicle_type'] = jobs_counts_by_callsign_monthly_sim['callsign'].apply(lambda x: 'car' if "C" in x else 'helicopter')
+
+    # Compute total jobs per callsign_group per month
+    jobs_counts_by_callsign_monthly_sim["total_jobs_per_group"] = jobs_counts_by_callsign_monthly_sim.groupby(["month_start", "callsign_group", "run_number"])["jobs"].transform("sum")
+
+    # Compute percentage of calls per row
+    jobs_counts_by_callsign_monthly_sim["percentage_of_group"] = (jobs_counts_by_callsign_monthly_sim["jobs"] / jobs_counts_by_callsign_monthly_sim["total_jobs_per_group"]) * 100
+
+    # Handle potential division by zero (if total_jobs_per_group is 0)
+    jobs_counts_by_callsign_monthly_sim["percentage_of_group"] = jobs_counts_by_callsign_monthly_sim["percentage_of_group"].fillna(0)
+
+    sim_averages = jobs_counts_by_callsign_monthly_sim.groupby(["callsign_group", "callsign", "vehicle_type"])[["percentage_of_group"]].mean().reset_index()
+
+    return sim_averages
+
+
+def make_SIMULATION_stacked_callsign_util_plot(call_df):
+    sim_averages = prep_util_df_from_call_df(call_df)
+
+    fig = px.bar(
+        sim_averages,
+        x="percentage_of_group",
+        y="callsign_group",
+        color="callsign",
+        height=300
+    )
+
+    # Update axis labels and legend title
+    fig.update_layout(
+        yaxis=dict(
+            title="Callsign Group",
+            tickmode="linear",  # Ensures ticks appear at regular intervals
+            dtick=1  # Set tick spacing to 1 unit
+        ),
+        xaxis=dict(
+            title="Utilisation % within Callsign Group"
+        ),
+        legend_title="Callsign"
+    )
+
+    return fig
 
 def create_UTIL_rwc_plot(call_df,
                         real_data_path="../actual_data/jobs_by_callsign.csv"):
@@ -372,41 +437,7 @@ def create_UTIL_rwc_plot(call_df,
     # Prep sim data
     ###############
 
-    call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
-    call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
-
-    jobs_counts_by_callsign_monthly_sim = (
-        call_df
-        .groupby(['run_number', 'month_start', 'callsign', 'callsign_group', 'vehicle_type'])['P_ID']
-        .count().reset_index().rename(columns={'P_ID': 'jobs'})
-        )
-
-    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim[~jobs_counts_by_callsign_monthly_sim['callsign'].isna()]
-
-    all_combinations = pd.MultiIndex.from_product([
-        jobs_counts_by_callsign_monthly_sim["month_start"].unique(),
-        jobs_counts_by_callsign_monthly_sim["run_number"].unique(),
-        jobs_counts_by_callsign_monthly_sim["callsign"].unique()
-    ], names=["month_start", "run_number", "callsign"])
-
-    # Reindex the dataframe to include missing callsigns
-    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim.set_index(
-        ["month_start", "run_number", "callsign"]
-    ).reindex(all_combinations, fill_value=0).reset_index()
-
-    jobs_counts_by_callsign_monthly_sim['callsign_group'] = jobs_counts_by_callsign_monthly_sim['callsign'].str.extract(r'(\d+)')
-    jobs_counts_by_callsign_monthly_sim['vehicle_type'] = jobs_counts_by_callsign_monthly_sim['callsign'].apply(lambda x: 'car' if "C" in x else 'helicopter')
-
-    # Compute total jobs per callsign_group per month
-    jobs_counts_by_callsign_monthly_sim["total_jobs_per_group"] = jobs_counts_by_callsign_monthly_sim.groupby(["month_start", "callsign_group", "run_number"])["jobs"].transform("sum")
-
-    # Compute percentage of calls per row
-    jobs_counts_by_callsign_monthly_sim["percentage_of_group"] = (jobs_counts_by_callsign_monthly_sim["jobs"] / jobs_counts_by_callsign_monthly_sim["total_jobs_per_group"]) * 100
-
-    # Handle potential division by zero (if total_jobs_per_group is 0)
-    jobs_counts_by_callsign_monthly_sim["percentage_of_group"] = jobs_counts_by_callsign_monthly_sim["percentage_of_group"].fillna(0)
-
-    sim_averages = jobs_counts_by_callsign_monthly_sim.groupby(["callsign_group", "callsign", "vehicle_type"])[["percentage_of_group"]].mean().reset_index()
+    sim_averages = prep_util_df_from_call_df(call_df)
 
     fig = go.Figure()
 
