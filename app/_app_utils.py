@@ -111,3 +111,18 @@ DAA_COLORSCHEME = {
     "darkgrey": "#4D4D4D",
     "charcoal": "#1F1F1F",
 }
+
+# 90th Percentile
+def q90(x):
+    return x.quantile(0.9)
+
+# 90th Percentile
+def q10(x):
+    return x.quantile(0.1)
+
+def q75(x):
+    return x.quantile(0.75)
+
+# 90th Percentile
+def q25(x):
+    return x.quantile(0.25)

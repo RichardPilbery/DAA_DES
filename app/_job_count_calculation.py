@@ -22,14 +22,8 @@ import plotly.graph_objects as go
 import numpy as np
 import datetime
 from calendar import monthrange
+from _app_utils import q10, q90
 
-# 90th Percentile
-def q90(x):
-    return x.quantile(0.9)
-
-# 90th Percentile
-def q10(x):
-    return x.quantile(0.1)
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):
