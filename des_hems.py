@@ -26,12 +26,14 @@ class DES_HEMS:
 
     """
 
-    def __init__(self, run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str, amb_data: bool):
+    def __init__(self, run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str, amb_data: bool, demand_increase_percent: float = 1.0):
 
         self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
         self.sim_duration = sim_duration
         self.warm_up_duration = warm_up_duration
         self.sim_start_date = sim_start_date
+
+        self.demand_increase_percent = demand_increase_percent
 
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
@@ -166,7 +168,7 @@ class DES_HEMS:
             # Get current day of week and hour of day
             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
-            self.calls_today = int(self.utils.inc_per_day(qtr))
+            self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
 
             ia_dict = {}
 
@@ -242,7 +244,7 @@ class DES_HEMS:
                 if hems_res_list[1] == 1:
                     msg = "Preferred resource available and allocated"
                 elif hems_res_list[1] == 2:
-                    msg = "Preferred resource not and available but other resource in same group allocated"
+                    msg = "Preferred resource not available but other resource in same group allocated"
 
                 self.add_patient_result_row(pt, msg, "resource_preferred_outcome")
 

@@ -164,4 +164,5 @@ cython_debug/
 .DS_Store
 
 external_data
+data
 app/assets/~$text.xlsx
