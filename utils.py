@@ -450,4 +450,5 @@ class Utils:
 
         return datetime(year, month, day)
     
-    
+    def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
+        return list(range(start_date.year, end_date.year + 1))
