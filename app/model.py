@@ -421,10 +421,10 @@ if button_run_pressed:
             def get_params_df():
                 return pd.read_csv("data/run_params_used.csv")
 
-            tab_3_1, tab_3_2 = st.tabs([
+            tab_3_1, tab_3_2, tab_3_3 = st.tabs([
                 "Jobs per Month",
                 "Jobs per Hour",
-
+                "Utilisation Comparison"
                 ])
 
             with tab_3_1:
@@ -509,6 +509,19 @@ Partial months are excluded for ease of interpretation.
 
                 plot_jobs_per_hour()
 
+            with tab_3_3:
+                @st.fragment
+                def create_utilisation_rwc_plot():
+                    call_df = get_job_count_df()
+
+                    st.plotly_chart(
+                        _utilisation_result_calculation.create_UTIL_rwc_plot(
+                        call_df,
+                        real_data_path="actual_data/jobs_by_callsign.csv"
+                        )
+                    )
+
+                create_utilisation_rwc_plot()
 
         with tab4:
 

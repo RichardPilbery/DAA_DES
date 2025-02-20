@@ -3,6 +3,8 @@ import pandas as pd
 import plotly.express as px
 from _app_utils import DAA_COLORSCHEME
 import _vehicle_calculation
+import _job_count_calculation
+import plotly.graph_objects as go
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",
@@ -328,3 +330,156 @@ def make_SIMULATION_utilisation_headline_figure(vehicle_type, utilisation_df_ove
 
 def make_SIMULATION_fleet_utilisation_headline_figure(vehicle_type, utilisation_df_overall):
     pass
+
+
+
+def create_UTIL_rwc_plot(call_df,
+                        real_data_path="../actual_data/jobs_by_callsign.csv"):
+
+    #############
+    # Prep real-world data
+    #############
+    jobs_by_callsign = pd.read_csv(real_data_path)
+    jobs_by_callsign["month"] = pd.to_datetime(jobs_by_callsign["month"], dayfirst=True)
+
+    jobs_by_callsign_long = jobs_by_callsign.melt(id_vars="month").rename(columns={"variable":"callsign", "value":"jobs"})
+
+    all_combinations = pd.MultiIndex.from_product([
+        jobs_by_callsign_long["month"].unique(),
+        jobs_by_callsign_long["callsign"].unique()
+    ], names=["month", "callsign"])
+
+    # Reindex the dataframe to include missing callsigns
+    jobs_by_callsign_long = jobs_by_callsign_long.set_index(
+        ["month", "callsign"]
+    ).reindex(all_combinations, fill_value=0).reset_index()
+
+    jobs_by_callsign_long["callsign_group"] = jobs_by_callsign_long["callsign"].str.extract(r"(\d+)")
+    jobs_by_callsign_long = jobs_by_callsign_long[~jobs_by_callsign_long["callsign_group"].isna()]
+    jobs_by_callsign_long["vehicle_type"] = jobs_by_callsign_long["callsign"].apply(lambda x: "car" if "CC" in x else "helicopter")
+
+    # Compute total jobs per callsign_group per month
+    jobs_by_callsign_long["total_jobs_per_group"] = jobs_by_callsign_long.groupby(["month", "callsign_group"])["jobs"].transform("sum")
+
+    # Compute percentage of calls per row
+    jobs_by_callsign_long["percentage_of_group"] = (jobs_by_callsign_long["jobs"] / jobs_by_callsign_long["total_jobs_per_group"]) * 100
+
+    # Handle potential division by zero (if total_jobs_per_group is 0)
+    jobs_by_callsign_long["percentage_of_group"] = jobs_by_callsign_long["percentage_of_group"].fillna(0)
+
+
+    ###############
+    # Prep sim data
+    ###############
+
+    call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
+    call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
+
+    jobs_counts_by_callsign_monthly_sim = (
+        call_df
+        .groupby(['run_number', 'month_start', 'callsign', 'callsign_group', 'vehicle_type'])['P_ID']
+        .count().reset_index().rename(columns={'P_ID': 'jobs'})
+        )
+
+    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim[~jobs_counts_by_callsign_monthly_sim['callsign'].isna()]
+
+    all_combinations = pd.MultiIndex.from_product([
+        jobs_counts_by_callsign_monthly_sim["month_start"].unique(),
+        jobs_counts_by_callsign_monthly_sim["run_number"].unique(),
+        jobs_counts_by_callsign_monthly_sim["callsign"].unique()
+    ], names=["month_start", "run_number", "callsign"])
+
+    # Reindex the dataframe to include missing callsigns
+    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim.set_index(
+        ["month_start", "run_number", "callsign"]
+    ).reindex(all_combinations, fill_value=0).reset_index()
+
+    jobs_counts_by_callsign_monthly_sim['callsign_group'] = jobs_counts_by_callsign_monthly_sim['callsign'].str.extract(r'(\d+)')
+    jobs_counts_by_callsign_monthly_sim['vehicle_type'] = jobs_counts_by_callsign_monthly_sim['callsign'].apply(lambda x: 'car' if "C" in x else 'helicopter')
+
+    # Compute total jobs per callsign_group per month
+    jobs_counts_by_callsign_monthly_sim["total_jobs_per_group"] = jobs_counts_by_callsign_monthly_sim.groupby(["month_start", "callsign_group", "run_number"])["jobs"].transform("sum")
+
+    # Compute percentage of calls per row
+    jobs_counts_by_callsign_monthly_sim["percentage_of_group"] = (jobs_counts_by_callsign_monthly_sim["jobs"] / jobs_counts_by_callsign_monthly_sim["total_jobs_per_group"]) * 100
+
+    # Handle potential division by zero (if total_jobs_per_group is 0)
+    jobs_counts_by_callsign_monthly_sim["percentage_of_group"] = jobs_counts_by_callsign_monthly_sim["percentage_of_group"].fillna(0)
+
+    sim_averages = jobs_counts_by_callsign_monthly_sim.groupby(["callsign_group", "callsign", "vehicle_type"])[["percentage_of_group"]].mean().reset_index()
+
+    fig = go.Figure()
+
+    # Bar chart (Simulation Averages)
+    for idx, vehicle in enumerate(sim_averages["vehicle_type"].unique()):
+        filtered_data = sim_averages[sim_averages["vehicle_type"] == vehicle]
+
+        fig.add_trace(go.Bar(
+            y=filtered_data["percentage_of_group"],
+            x=filtered_data["callsign_group"],
+            name=f"Simulated - {vehicle}",
+            # orientation='h',
+            marker=dict(
+            color=list(DAA_COLORSCHEME.values())[idx]),
+            width=0.3,
+            opacity=0.6  # Same opacity for consistency
+        ))
+
+        fig.update_layout(
+            title="<b>Comparison of Allocated Resources by Callsign Group</b><br>Simulation vs Historical Data",
+            yaxis_title="Percentage of Group",
+            xaxis_title="Callsign Group",
+            barmode='group',
+            legend_title="Vehicle Type",
+            height=600
+        )
+
+    for callsign in jobs_by_callsign_long["callsign"].unique():
+
+        filtered_data = jobs_by_callsign_long[
+            jobs_by_callsign_long["callsign"] == callsign
+        ].groupby(["callsign_group", "vehicle_type", "callsign"])[["percentage_of_group"]].mean().reset_index()
+
+        if filtered_data["callsign_group"].values[0] in ["70", "71"]:
+
+            if filtered_data["vehicle_type"].values[0] == "car":
+                fig.add_trace(
+                    go.Scatter(
+                        x = [float(filtered_data["callsign_group"].values[0])-0.4, float(filtered_data["callsign_group"].values[0])],
+                        y = [filtered_data['percentage_of_group'].values[0] - 1, filtered_data['percentage_of_group'].values[0] - 1],  # Width of the "line"
+                        # base = [filtered_data['percentage_of_group'].values[0] - 1] ,
+                        mode="lines",
+                        name=f"Expected Level - {callsign}",
+                        show_legend=False,
+                        hoverinfo="all",
+                        line=dict(dash='dash', color=DAA_COLORSCHEME['charcoal'])
+                    )
+                )
+
+            else:
+                fig.add_trace(
+                    go.Scatter(
+                        x = [float(filtered_data["callsign_group"].values[0]), float(filtered_data["callsign_group"].values[0])+0.4],
+                        y = [filtered_data['percentage_of_group'].values[0] - 1, filtered_data['percentage_of_group'].values[0] - 1],  # Width of the "line"
+                        # base = [filtered_data['percentage_of_group'].values[0] - 1] ,
+                        mode="lines",
+                        name=f"Expected Level - {callsign}",
+                        hoverinfo="all",
+                        line=dict(dash='dash', color=DAA_COLORSCHEME['charcoal'])
+                    )
+                )
+
+    min_x = min(sim_averages["callsign_group"].astype('int').values)
+    max_x = max(sim_averages["callsign_group"].astype('int').values)
+
+    tick_vals = list(range(min_x, max_x + 1))  # Tick positions at integer values
+
+    fig.update_layout(
+        xaxis=dict(
+            tickmode='array',
+            tickvals=tick_vals,  # Ensure ticks are at integer positions
+            range=[min_x - 0.5, max_x + 0.5]  # Extend range to start 0.5 units earlier
+        )
+    )
+
+    return fig
