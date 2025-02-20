@@ -164,6 +164,7 @@ cython_debug/
 .DS_Store
 
 external_data
+data
 app/assets/~$text.xlsx
 app/func_development_jobs.ipynb
 app/func_development_util.ipynb

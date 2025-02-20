@@ -61,8 +61,11 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 
 def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
-           sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True):
+           sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True, demand_increase_percent: float):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
+
+    print(f'{Utils.current_time()}: Demand increase set to {demand_increase_percent*100}%')
+    logging.debug(f'{Utils.current_time()}: Demand increase set to {demand_increase_percent*100}%')
 
     start = time.process_time()
 
@@ -70,7 +73,7 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
     logging.debug(f"{Utils.current_time()}: Run {run+1} of {total_runs}")
 
     #print(f"Sim start date is {sim_start_date}")
-    daa_model = DES_HEMS(run, sim_duration, warm_up_time, sim_start_date, amb_data)
+    daa_model = DES_HEMS(run, sim_duration, warm_up_time, sim_start_date, amb_data, demand_increase_percent)
     daa_model.run()
 
     print(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
@@ -108,14 +111,14 @@ def removeExistingResults() -> None:
         if os.path.isfile(all_results_file_path):
             os.unlink(all_results_file_path)
 
-def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool):
+def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int, sim_start_date: datetime, amb_data: bool, demand_increase_percent: float):
 
-    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data) for run in range(total_runs))
+    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data, demand_increase_percent) for run in range(total_runs))
 
 if __name__ == "__main__":
     removeExistingResults()
-    parallelProcessJoblib(1, (2*365*24*60), (0*60), datetime.strptime("2022-07-24 09:19:00", "%Y-%m-%d %H:%M:%S"), False)
-    #parallelProcessJoblib(5, (1*365*24*60), (0*60), datetime.strptime("2023-01-01 00:00:00", "%Y-%m-%d %H:%M:%S"), False)
+    #parallelProcessJoblib(1, (2*365*24*60), (0*60), datetime.strptime("2022-07-24 05:47:00", "%Y-%m-%d %H:%M:%S"), False, 1)
+    parallelProcessJoblib(5, (2*365*24*60), (0*60), datetime.strptime("2022-07-24 05:47:00", "%Y-%m-%d %H:%M:%S"), False, 1.2)
 
 # Testing ----------
 # python des_parallel_process.py
