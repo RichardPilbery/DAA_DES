@@ -35,25 +35,24 @@ with col2:
 
 st.caption(get_text("page_description", text_df))
 
-with st.expander(get_text("expander_title_template", text_df)):
-    st.caption(get_text("expander_description_template", text_df))
-    col_template_1, col_template_2 = st.columns(2)
+# with st.expander(get_text("expander_title_template", text_df)):
+#     st.caption(get_text("expander_description_template", text_df))
+#     col_template_1, col_template_2 = st.columns(2)
 
-    with col_template_1:
-        st.file_uploader(get_text("file_uploader_button", text_df), type="xlsx",
-                         disabled=True)
+#     with col_template_1:
+#         st.file_uploader(get_text("file_uploader_button", text_df), type="xlsx",
+#                          disabled=True)
 
 
-    with col_template_2:
-        st.write(get_text("file_template_download_hint", text_df))
-        st.download_button(data="parameter_template.xlsx",
-                           label=get_text("file_template_download_button", text_df),
-                           file_name="daa_simulation_model_parameters_TEMPLATE.xlsx",
-                           disabled=True)
+#     with col_template_2:
+#         st.write(get_text("file_template_download_hint", text_df))
+#         st.download_button(data="parameter_template.xlsx",
+#                            label=get_text("file_template_download_button", text_df),
+#                            file_name="daa_simulation_model_parameters_TEMPLATE.xlsx",
+#                            disabled=True)
 
-st.divider()
+# st.divider()
 
-# TODO - make this operational
 st.button(get_text("reset_parameters_button", text_df),
           type="primary",
           on_click=reset_to_defaults,
@@ -206,19 +205,19 @@ updated_helo_df = st.data_editor(
         ),
         "summer_start": st.column_config.TimeColumn(
             "Summer Start", format="HH:mm",
-            disabled=True
+            disabled=False
         ),
         "summer_end": st.column_config.TimeColumn(
             "Summer End", format="HH:mm",
-            disabled=True
+            disabled=False
         ),
         "winter_start": st.column_config.TimeColumn(
             "Winter Start", format="HH:mm",
-            disabled=True
+            disabled=False
         ),
         "winter_end": st.column_config.TimeColumn(
             "Winter End", format="HH:mm",
-            disabled=True
+            disabled=False
         )
         }
     )
@@ -244,19 +243,19 @@ updated_car_df = st.data_editor(final_car_df.reset_index(),
         ),
         "summer_start": st.column_config.TimeColumn(
             "Summer Start", format="HH:mm",
-            disabled=True
+            disabled=False
         ),
         "summer_end": st.column_config.TimeColumn(
             "Summer End", format="HH:mm",
-            disabled=True
+            disabled=False
         ),
         "winter_start": st.column_config.TimeColumn(
             "Winter Start", format="HH:mm",
-            disabled=True
+            disabled=False
         ),
         "winter_end": st.column_config.TimeColumn(
             "Winter End", format="HH:mm",
-            disabled=True
+            disabled=False
         )
 
         }
@@ -337,46 +336,46 @@ else:
 
 st.divider()
 
-st.subheader(get_text("header_scenario", text_df))
+# st.subheader(get_text("header_scenario", text_df))
 
-# TODO: Make these do something more than just display a notification!
-st.caption(get_text("scenario_comparison_help", text_df))
-scenario_1_button_col, scenario_2_button_col = st.columns(2)
+# # TODO: Make these do something more than just display a notification!
+# st.caption(get_text("scenario_comparison_help", text_df))
+# scenario_1_button_col, scenario_2_button_col = st.columns(2)
 
-with scenario_1_button_col:
-    with stylable_container(
-        css_styles="""
-                button {
-                        background-color: #00205b;
-                        color: white;
-                    }
-                    """,
-        key="blue_buttons"
-        ):
-        st.button(
-            "Set Scenario 1 to Current Parameters",
-            on_click=set_scenario_1_params,
-            disabled=True
-            )
+# with scenario_1_button_col:
+#     with stylable_container(
+#         css_styles="""
+#                 button {
+#                         background-color: #00205b;
+#                         color: white;
+#                     }
+#                     """,
+#         key="blue_buttons"
+#         ):
+#         st.button(
+#             "Set Scenario 1 to Current Parameters",
+#             on_click=set_scenario_1_params,
+#             disabled=True
+#             )
 
-with scenario_2_button_col:
-    with stylable_container(
-        css_styles="""
-                button {
-                        background-color: #00205b;
-                        color: white;
-                    }
-                    """,
-        key="blue_buttons"
-        ):
-        st.button(
-        "Set Scenario 2 to Current Parameters",
-        type="primary",
-        disabled=True,
-        on_click=set_scenario_2_params
-        )
+# with scenario_2_button_col:
+#     with stylable_container(
+#         css_styles="""
+#                 button {
+#                         background-color: #00205b;
+#                         color: white;
+#                     }
+#                     """,
+#         key="blue_buttons"
+#         ):
+#         st.button(
+#         "Set Scenario 2 to Current Parameters",
+#         type="primary",
+#         disabled=True,
+#         on_click=set_scenario_2_params
+#         )
 
-st.divider()
+# st.divider()
 
 st.header(get_text("additional_params_header", text_df))
 
@@ -444,20 +443,20 @@ with st.expander(get_text("additional_params_expander_title", text_df)):
 
 st.divider()
 
-st.subheader(get_text("header_params_reuse", text_df))
+# st.subheader(get_text("header_params_reuse", text_df))
 
-st.caption(get_text("params_reuse_description", text_df))
+# st.caption(get_text("params_reuse_description", text_df))
 
-# TODO - This just currently redownloads the blank template
-# Will need to populate this
-st.download_button(data="parameter_template.xlsx",
-                    label="Click to Download the Parameter File",
-                    type="primary",
-                    disabled=True,
-                    file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
-)
+# # TODO - This just currently redownloads the blank template
+# # Will need to populate this
+# st.download_button(data="parameter_template.xlsx",
+#                     label="Click to Download the Parameter File",
+#                     type="primary",
+#                     disabled=True,
+#                     file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
+# )
 
-st.divider()
+# st.divider()
 
 with st.sidebar:
     with stylable_container(
