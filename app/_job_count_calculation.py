@@ -94,7 +94,8 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_mont
         jobs_per_hour_historic['year_numeric'] = jobs_per_hour_historic['month'].apply(lambda x: x.year)
         jobs_per_hour_historic['month_numeric'] = jobs_per_hour_historic['month'].apply(lambda x: x.month)
         jobs_per_hour_historic_long = jobs_per_hour_historic.melt(id_vars=['month','month_numeric', 'year_numeric'])
-        jobs_per_hour_historic_long["hour"] = jobs_per_hour_historic_long['variable'].str.extract(r"(\d+)\s")
+        # jobs_per_hour_historic_long["hour"] = jobs_per_hour_historic_long['variable'].str.extract(r"(\d+)\s")
+        jobs_per_hour_historic_long.rename(columns={'variable': 'hour'}, inplace=True)
         jobs_per_hour_historic_long["hour"] = jobs_per_hour_historic_long["hour"].astype('int')
         jobs_per_hour_historic_long = jobs_per_hour_historic_long[~jobs_per_hour_historic_long['value'].isna()]
 

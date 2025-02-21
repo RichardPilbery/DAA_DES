@@ -496,7 +496,7 @@ Partial months are excluded for ease of interpretation.
                         show_error_bars_bar=display_error_bars_bar,
                         use_poppins=True,
                         show_historical=display_historic_jph,
-                        historical_data_path="actual_data/jobs_by_hour.csv"
+                        historical_data_path="historical_data/historical_monthly_totals_by_hour_of_day.csv"
                         ))
 
                 plot_jobs_per_hour()
@@ -509,7 +509,7 @@ Partial months are excluded for ease of interpretation.
                     st.plotly_chart(
                         _utilisation_result_calculation.create_UTIL_rwc_plot(
                         call_df,
-                        real_data_path="historical_data/historical_jobs_per_month_by_callsign.csv"
+                        real_data_path="historical_data/historical_monthly_totals_by_callsign.csv"
                         )
                     )
 
