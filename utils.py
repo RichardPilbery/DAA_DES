@@ -30,6 +30,8 @@ class Utils:
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         self.pt_outcome_by_hems_result_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_probs.csv')
+        # Import maximum call duration times
+        self.max_values_df = pd.read_csv('distribution_data/upper_allowable_time_bounds.csv')
 
         # Read in age distribution data into a dictionary
         age_data = []
@@ -245,13 +247,19 @@ class Utils:
 
         distribution = {}
 
+        # Calculate the maximum time allowed for given type of job cycle time
+        max_time = self.max_values_df[self.max_values_df['time'] == time_type].max_value_mins.iloc[0]
+
         for i in self.activity_time_distr:
             #print(i)
             if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
                 #print('Match')
                 distribution = i['best_fit']
 
-        sampled_time = self.sample_from_distribution(distribution)
+        sampled_time = -1000
+
+        while (0 > sampled_time) or (sampled_time > max_time):
+            sampled_time = self.sample_from_distribution(distribution)
 
         return sampled_time
 

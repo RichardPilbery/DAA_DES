@@ -104,6 +104,8 @@ class DistributionFitUtils():
         self.df['quarter'] = self.df['inc_date'].dt.quarter   
         self.df['first_day_of_month'] = self.df['inc_date'].to_numpy().astype('datetime64[M]')
 
+        self.max_values_df = self.upper_allowable_time_bounds()
+
         # This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
 
@@ -149,6 +151,8 @@ class DistributionFitUtils():
         self.historical_monthly_totals_by_callsign()
         self.historical_monthly_totals_by_day_of_week()
         self.historical_median_time_of_activities_by_month_and_resource_type()
+        self.historical_monthly_totals_by_hour_of_day()
+        self.historical_monthly_resource_utilisation()
             
 
     def hour_by_ampds_card_probs(self):
@@ -211,7 +215,8 @@ class DistributionFitUtils():
                     #print(f"HEMS result is {row['hems_result']} cs is {cs} and times_to_fit is {ttf} and patient outcome {pto}")
 
                     # This line might not be required if data quality is determined when importing the data
-                    max_time = 20 if ttf == "time_mobile" else 120
+                    max_time = self.max_values_df[self.max_values_df['time'] == ttf].max_value_mins.iloc[0]
+
                     fit_times = self.df[
                         (self.df.vehicle_type == vt) & 
                         (self.df[ttf] > 0) & 
@@ -438,7 +443,6 @@ class DistributionFitUtils():
 
         monthly_totals_df.rename(columns={'first_day_of_month': 'month', 'inc_date':'jobs'}).to_csv('historical_data/historical_jobs_per_month.csv', mode="w+", index=False)
 
-
     def historical_monthly_totals_by_callsign(self):
         """
             Calculates monthly incident totals from provided dataset of historical data stratified by callsign
@@ -457,6 +461,24 @@ class DistributionFitUtils():
 
         monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_by_callsign.csv', mode="w+", index=False)
 
+    def historical_monthly_totals_by_hour_of_day(self):
+        """
+            Calculates monthly incident totals from provided dataset of historical data stratified by hour of the day
+        """
+
+        # Multiple resources can be sent to the same job.
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'hour']].dropna()\
+            .drop_duplicates(subset="inc_date", keep="first")
+        
+        monthly_totals_df = monthly_df.groupby(['first_day_of_month', 'hour']).count().reset_index()
+
+        #print(monthly_totals_df.head())
+
+        monthly_totals_pivot_df = monthly_totals_df.pivot(index='first_day_of_month', columns='hour', values='inc_date').fillna(0).reset_index().rename_axis(None, axis=1)
+
+        #print(monthly_totals_pivot_df.head())
+
+        monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_by_hour_of_day.csv', mode="w+", index=False)
 
     def historical_monthly_totals_by_day_of_week(self):
         """
@@ -503,6 +525,61 @@ class DistributionFitUtils():
         pivot_data = pivot_data.reset_index()
 
         pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
+    
+    def historical_monthly_resource_utilisation(self):
+        """
+            Calculates number of, and time spent on, incidents per month stratified by callsign
+        """
+
+        # Multiple resources can be sent to the same job.
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
+
+        monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
+        
+        monthly_totals_df = monthly_df.groupby(['callsign', 'first_day_of_month'], as_index=False)\
+            .agg(n = ('callsign', 'size'), total_time = ('total_time', 'sum'))
+
+        monthly_totals_pivot_df = monthly_totals_df.pivot(index='first_day_of_month', columns='callsign', values=['n', 'total_time'])
+
+        monthly_totals_pivot_df.columns = [f"{col[0]}_{col[1]}" for col in  monthly_totals_pivot_df.columns]
+        monthly_totals_pivot_df = monthly_totals_pivot_df.reset_index()
+
+        monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_resource_utilisation.csv', mode="w+", index=False)
+
+    def upper_allowable_time_bounds(self):
+        """
+            Calculates the maximum permissable time for each phase on an incident based on supplied historical data.
+            This is currently set to 1.5x the upper quartile of the data distribution
+        """
+
+        median_df = self.df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+
+        # Replacing zeros with NaN to exclude from median calculation
+        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
+        median_df.replace(0, np.nan, inplace=True)
+
+        print(median_df.quantile(.75))
+        # pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
+
+    def upper_allowable_time_bounds(self):
+        """
+            Calculates the maximum permissable time for each phase on an incident based on supplied historical data.
+            This is currently set to 1.5x the upper quartile of the data distribution
+        """
+
+        median_df = self.df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
+
+        # Replacing zeros with NaN to exclude from median calculation
+        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
+        median_df.replace(0, np.nan, inplace=True)
+
+        upper_quartile_and_50_percent = median_df.quantile(.75)*1.5
+
+        df = upper_quartile_and_50_percent.reset_index().rename(columns={'index':'time', 0.75:'max_value_mins'})
+
+        df.to_csv('distribution_data/upper_allowable_time_bounds.csv', mode="w+", index=False)
+
+        return df
     
 
 if __name__ == "__main__":
