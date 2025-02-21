@@ -1,5 +1,6 @@
 import streamlit as st
-from _app_utils import get_text, get_text_sheet
+from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
+from streamlit_extras.stylable_container import stylable_container
 
 st.set_page_config(layout="wide")
 
@@ -17,3 +18,34 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=300)
 
 st.write(get_text("page_description", text_df))
+
+col_nav_1, col_nav_2 = st.columns(2)
+
+with col_nav_1:
+    with stylable_container(
+        css_styles=f"""
+                button {{
+                        background-color: {DAA_COLORSCHEME["teal"]};
+                        color: white;
+                    }}
+                    """,
+        key="green_buttons"
+        ):
+        if st.button("Want to run a simulation of the current service?\n\nHead straight to the simulation page.",
+                     icon=":material/play_circle:"):
+            st.switch_page("model.py")
+
+
+with col_nav_2:
+    with stylable_container(
+        css_styles=f"""
+                button {{
+                        background-color: {DAA_COLORSCHEME["teal"]};
+                        color: white;
+                    }}
+                    """,
+        key="green_buttons"
+        ):
+        if st.button("Want to change some parameters first?\n\nHead to the setup page.",
+                     icon=":material/display_settings:"):
+            st.switch_page("setup.py")
