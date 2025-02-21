@@ -249,14 +249,14 @@ class DES_HEMS:
 
                 self.add_patient_result_row(pt, msg, "resource_preferred_outcome")
 
-                if hems_res_list[0] != None:
+                if hems_allocation != None:
                     if hems_res_list[2]:
                         self.add_patient_result_row(pt, f"{"H" if pt.hems_pref_vehicle_type == "helicopter" else "CC"}{pt.hems_pref_callsign_group}", "resource_preferred_service")
 
             # if hems_res_list[2]:
             #     print(f"Back from allocate resource with {hems_res_list[1]} and {hems_res_list[2]}")
 
-            if hems_allocation is not None:
+            if hems_allocation != None:
                 #print(f"allocated {hems_allocation.callsign}")
                 self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
@@ -306,7 +306,7 @@ class DES_HEMS:
         else:
             #print("No HEMS available")
             self.add_patient_result_row(patient, "No HEMS available", "queue")
-            self.add_patient_result_row(patient, "depart", "arrival_departure")
+            #self.add_patient_result_row(patient, "depart", "arrival_departure")
 
         #print('Inside hems_avail')
         if self.amb_data:
