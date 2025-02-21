@@ -453,7 +453,7 @@ def create_UTIL_rwc_plot(call_df,
             color=list(DAA_COLORSCHEME.values())[idx]),
             width=0.3,
             opacity=0.6,  # Same opacity for consistency
-            text=["Simulated: {:.1f}%".format(val) for val in filtered_data["percentage_of_group"]],  # Correct way            textposition="inside",  # Places text just above the x-axis
+            text=["Simulated:<br>{:.1f}%".format(val) for val in filtered_data["percentage_of_group"]],  # Correct way            textposition="inside",  # Places text just above the x-axis
             insidetextanchor="start",  # Anchors text inside the bottom of the bar
             textfont=dict(
                         color='white'
@@ -505,8 +505,8 @@ def create_UTIL_rwc_plot(call_df,
             fig.add_trace(
                 go.Scatter(
                     x=[(x_start + x_end) / 2],  # Center the text horizontally
-                    y=[expected_y *1.05],  # Slightly above the line
-                    text=[f"Historical: {y_value:.1f}%"],
+                    y=[expected_y + 5],  # Slightly above the line
+                    text=[f"Historical:<br>{y_value:.1f}%"],
                     mode="text",
                     textfont=dict(
                         color='black'
@@ -528,7 +528,8 @@ def create_UTIL_rwc_plot(call_df,
             tickvals=tick_vals,  # Ensure ticks are at integer positions
             range=[min_x - 0.5, max_x + 0.5]  # Extend range to start 0.5 units earlier
         ),
-        yaxis=dict(ticksuffix="%", titlefont = dict(size = 15), tickfont = dict(size=20)),
+        yaxis=dict(ticksuffix="%", titlefont = dict(size = 15), tickfont = dict(size=20),
+                     range=[0, 100]),
 
         legend = dict(font = dict(size = 15)),
         legend_title = dict(font = dict(size = 20))

@@ -523,12 +523,25 @@ Partial months are excluded for ease of interpretation.
                     )
 
                 create_utilisation_rwc_plot()
-                st.caption("""
+
+                historical_monthly_totals_df = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
+                historical_monthly_totals_df["month"] = pd.to_datetime(historical_monthly_totals_df["month"], format="%Y-%m-%d")
+
+                st.caption(f"""
 This plot shows the split within a callsign group of resources that are sent on jobs.
 Bars within a callsign group will sum to 100%.
 
 Dotted lines indicate the average historical allocation seen of resources within a callsign group,
-averaged over 24 months.
+averaged over {len(historical_monthly_totals_df)} months, drawing on data
+from {historical_monthly_totals_df.month.min().strftime("%B %Y")}
+to {historical_monthly_totals_df.month.max().strftime("%B %Y")}.
+
+If the simulation is using the default parameters, we would expect the dotted lines to be roughly level with the top of the
+relevant bars - though being out by a few % is not too unusual due to the natural variation that occurs across
+simulation runs.
+
+If the simulation is not using the default parameters, we would not expect the output to match the historical data, but you may
+wish to consider the historical split as part of your decision making.
                 """)
 
         with tab4:
