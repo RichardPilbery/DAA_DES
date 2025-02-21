@@ -166,12 +166,3 @@ cython_debug/
 external_data
 data
 app/assets/~$text.xlsx
-app/func_development_jobs.ipynb
-app/func_development_util.ipynb
-actual_data/historical_jobs_per_month.csv
-actual_data/job_actual_breakdown.csv
-actual_data/jobs_by_callsign.csv
-actual_data/jobs_by_hour.csv
-actual_data/median_activity_times_historical.csv
-actual_data/patient_seen_by_day_of_week.csv
-app/*.ipynb
