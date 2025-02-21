@@ -42,6 +42,7 @@ with col_nav_2:
                 button {{
                         background-color: {DAA_COLORSCHEME["teal"]};
                         color: white;
+                        border-color: {DAA_COLORSCHEME["navy"]};
                     }}
                     """,
         key="green_buttons"

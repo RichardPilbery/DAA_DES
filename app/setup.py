@@ -12,7 +12,7 @@ from streamlit_extras.stylable_container import stylable_container
 
 from utils import Utils
 
-from _app_utils import get_text, get_text_sheet
+from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
 
 st.set_page_config(layout="wide")
 
@@ -460,17 +460,17 @@ st.divider()
 
 with st.sidebar:
     with stylable_container(
-        css_styles="""
-                button {
-                        background-color: green;
-                        color: white;
-                    }
-                    """,
-        key="green_buttons"
-        ):
-        if st.button("Finished Setting Up Parameters? Click here to go to the model page",
+        css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['teal']};
+                            color: white;
+                            border-color: white;
+                        }}
+                        """, key="teal_buttons"
+            ):
+        if st.button("Finished setting up parameters?\n\nClick here to go to the model page",
                      icon=":material/play_circle:"):
             st.switch_page("model.py")
-        if st.button("Set up two scenarios you want to compare? Click here to go to the scenario comparison page",
-                     icon=":material/compare:"):
-            st.switch_page("compare_scenarios.py")
+        # if st.button("Set up two scenarios you want to compare? Click here to go to the scenario comparison page",
+        #              icon=":material/compare:"):
+        #     st.switch_page("compare_scenarios.py")

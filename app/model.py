@@ -15,6 +15,8 @@ import _job_count_calculation
 import _vehicle_calculation
 import _utilisation_result_calculation
 
+from _app_utils import DAA_COLORSCHEME
+
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
@@ -62,14 +64,15 @@ hr {
         st.subheader("Model Input Summary")
 
         with stylable_container(key="green_buttons",
-            css_styles="""
-                    button {
-                            background-color: green;
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['teal']};
                             color: white;
-                        }
+                            border-color: white;
+                        }}
                         """
             ):
-            if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
+            if st.button("Want to change some parameters?\n\nClick here to go to the setup page", type="primary", icon=":material/display_settings:"):
                 st.switch_page("setup.py")
 
         st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
