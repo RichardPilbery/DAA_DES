@@ -102,6 +102,7 @@ class DistributionFitUtils():
         self.df['day_of_week'] = self.df['inc_date'].dt.day_name()         # Day of the week (e.g., Monday)
         self.df['month'] = self.df['inc_date'].dt.month
         self.df['quarter'] = self.df['inc_date'].dt.quarter   
+        self.df['first_day_of_month'] = self.df['inc_date'].to_numpy().astype('datetime64[M]')
 
         # This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
@@ -142,6 +143,12 @@ class DistributionFitUtils():
         # Calculate school holidays since servicing schedules typically avoid these dates
         if self.calculate_school_holidays:
             self.school_holidays()
+
+        # Calculate historical data
+        self.historical_monthly_totals()
+        self.historical_monthly_totals_by_callsign()
+        self.historical_monthly_totals_by_day_of_week()
+        self.historical_median_time_of_activities_by_month_and_resource_type()
             
 
     def hour_by_ampds_card_probs(self):
@@ -413,6 +420,90 @@ class DistributionFitUtils():
 
         sh.to_csv('actual_data/school_holidays.csv', index = False)
 
+
+# These functions are to wrangle historical data to provide comparison against the simulation outputs
+
+    def historical_monthly_totals(self):
+        """
+            Calculates monthly incident totals from provided dataset of historical data
+        """
+
+        # Multiple resources can be sent to the same job.
+        monthly_df = self.df[['inc_date', 'first_day_of_month']].dropna()\
+            .drop_duplicates(subset="inc_date", keep="first")
+        
+        monthly_totals_df = monthly_df.groupby(['first_day_of_month']).count().reset_index()
+
+        #print(monthly_totals_df.head())
+
+        monthly_totals_df.rename(columns={'first_day_of_month': 'month', 'inc_date':'jobs'}).to_csv('historical_data/historical_jobs_per_month.csv', mode="w+", index=False)
+
+
+    def historical_monthly_totals_by_callsign(self):
+        """
+            Calculates monthly incident totals from provided dataset of historical data stratified by callsign
+        """
+
+        # Multiple resources can be sent to the same job.
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign']].dropna()
+        
+        monthly_totals_df = monthly_df.groupby(['first_day_of_month', 'callsign']).count().reset_index()
+
+        #print(monthly_totals_df.head())
+
+        monthly_totals_pivot_df = monthly_totals_df.pivot(index='first_day_of_month', columns='callsign', values='inc_date').fillna(0).reset_index().rename_axis(None, axis=1)
+
+        #print(monthly_totals_pivot_df.head())
+
+        monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_by_callsign.csv', mode="w+", index=False)
+
+
+    def historical_monthly_totals_by_day_of_week(self):
+        """
+            Calculates number of incidents per month stratified by day of the week
+        """
+
+        # Multiple resources can be sent to the same job.
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'day_of_week']].dropna()\
+            .drop_duplicates(subset="inc_date", keep="first")
+        
+        monthly_totals_df = monthly_df.groupby(['first_day_of_month', 'day_of_week']).count().reset_index()
+
+        #print(monthly_totals_df.head())
+
+        monthly_totals_pivot_df = monthly_totals_df.pivot(index='first_day_of_month', columns='day_of_week', values='inc_date').fillna(0).reset_index().rename_axis(None, axis=1)
+
+        #print(monthly_totals_pivot_df.head())
+
+        monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_by_day_of_week.csv', mode="w+", index=False)
+    
+    def historical_median_time_of_activities_by_month_and_resource_type(self):
+        """
+            Calculate the median time for each of the job cycle phases stratified by month and vehicle type
+        """
+
+        median_df = self.df[['first_day_of_month', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+        
+        median_df['total_job_time'] = median_df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].sum(axis=1)
+
+        # Replacing zeros with NaN to exclude from median calculation
+        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
+        median_df.replace(0, np.nan, inplace=True)
+
+        # Grouping by month and resource_type, calculating medians
+        median_times = median_df.groupby(['first_day_of_month', 'vehicle_type']).median(numeric_only=True).reset_index()
+
+        pivot_data = median_times.pivot_table(
+            index='first_day_of_month',
+            columns='vehicle_type',
+            values=['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'total_job_time']
+        )
+
+        pivot_data.columns = [f"median_{col[1]}_{col[0]}" for col in pivot_data.columns]
+        pivot_data = pivot_data.reset_index()
+
+        pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
+    
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
