@@ -264,7 +264,7 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_mont
 
 def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                        show_historical=False,
-                       historical_monthly_job_data_path="../actual_data/historical_jobs_per_month.csv",
+                       historical_monthly_job_data_path="../historical_data/historical_jobs_per_month.csv",
                        show_historical_individual_years=False):
     call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
@@ -354,20 +354,20 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         historical_jobs_per_month = pd.read_csv(historical_monthly_job_data_path, parse_dates=False)
         # Convert to datetime
         # (using 'parse_dates=True' in read_csv isn't reliably doing that, so make it explicit here)
-        historical_jobs_per_month["Month"] = pd.to_datetime(historical_jobs_per_month['Month'])
+        historical_jobs_per_month["month"] = pd.to_datetime(historical_jobs_per_month['month'])
 
         historical_jobs_per_month["Month_Numeric"] = (
-            historical_jobs_per_month["Month"].apply(lambda x: x.month)
+            historical_jobs_per_month["month"].apply(lambda x: x.month)
             )
 
         historical_jobs_per_month["Year_Numeric"] = (
-            historical_jobs_per_month["Month"]
+            historical_jobs_per_month["month"]
             .apply(lambda x: x.year)
             )
 
         historical_summary = (
             historical_jobs_per_month
-            .groupby('Month_Numeric')['Jobs']
+            .groupby('Month_Numeric')['jobs']
             .agg(["max","min"])
             .reset_index()
             .rename(columns={"max": "historic_max", "min": "historic_min"})
@@ -382,8 +382,8 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         #     .apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
         #     )
 
-        if (historical_jobs_per_month["Jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
-            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["Jobs"].max() * 1.1)})
+        if (historical_jobs_per_month["jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
+            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["jobs"].max() * 1.1)})
 
         if show_historical_individual_years:
             for idx, year  in enumerate(historical_jobs_per_month["Year_Numeric"].unique()):
@@ -398,7 +398,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                 # Add the trace for the current year
                 fig.add_trace(go.Scatter(
                     x=new_df["month_start"],
-                    y=new_df["Jobs"],
+                    y=new_df["jobs"],
                     mode='lines+markers',
                     opacity=0.7,
                     name=str(year),  # Using the year as the trace name
