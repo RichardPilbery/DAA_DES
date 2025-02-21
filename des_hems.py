@@ -65,6 +65,7 @@ class DES_HEMS:
 
         self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
 
+
     def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
         """
             Convenience function to return the time between incidents
