@@ -17,7 +17,7 @@ DEFAULT_INPUTS = {
     "amb_data": False,
     "sim_duration_input": 365,
     "warm_up_duration": 0,
-    "number_of_runs_input": 20,
+    "number_of_runs_input": 10,
     "create_animation_input": False,
     "sim_start_date_input": datetime.today().strftime('%Y-%m-%d'),
     "sim_start_time_input": "08:00",
