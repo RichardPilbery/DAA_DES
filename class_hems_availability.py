@@ -112,6 +112,11 @@ class HEMSAvailability():
 
             self.HEMS_resources_list.append(hems)
 
+        # Write servicing schedules to a file for use in calculations and resource visualisations
+        (pd.DataFrame(schedule, columns=["resource", "service_start_date"])
+        .merge(pd.DataFrame(service_dates))
+        .to_csv("data/service_dates.csv"))
+
 
     def populate_store(self):
         """
