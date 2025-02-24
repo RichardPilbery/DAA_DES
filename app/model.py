@@ -11,6 +11,11 @@ import re
 import plotly.express as px
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
+import _job_count_calculation
+import _vehicle_calculation
+import _utilisation_result_calculation
+
+from _app_utils import DAA_COLORSCHEME
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -23,7 +28,7 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
-from _app_utils import iconMetricContainer, file_download_confirm
+from _app_utils import iconMetricContainer, file_download_confirm, get_text, get_text_sheet
 
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
@@ -35,13 +40,15 @@ with open("app/style.css") as css:
 
 setup_state()
 
+text_df=get_text_sheet("model")
+
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
     st.title("Run a Simulation")
 
 with col2:
-    st.image("app/assets/daa-logo.svg", width=300)
+    st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
     with stylable_container(css_styles="""
@@ -54,19 +61,18 @@ hr {
 """, key="hr"):
         st.divider()
     if 'number_of_runs_input' in st.session_state:
-        st.subheader("Model Input Summary")
-
-        with stylable_container(
-            css_styles="""
-                    button {
-                            background-color: green;
+        with stylable_container(key="green_buttons",
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['teal']};
                             color: white;
-                        }
-                        """,
-            key="green_buttons"
+                            border-color: white;
+                        }}
+                        """
             ):
-            if st.button("Want to change the parameters? Click here to go to the parameter page", type="primary"):
+            if st.button("Want to change some parameters? Click here.", type="primary", icon=":material/display_settings:"):
                 st.switch_page("setup.py")
+        st.subheader("Model Input Summary")
 
         st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
         st.write(f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}")
@@ -100,7 +106,7 @@ hr {
 """, key="hr"):
             st.divider()
 
-        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {st.session_state.sim_start_date_input}")
+        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}")
 
         if st.session_state.create_animation_input:
             st.write("An animated output will be created.")
@@ -113,14 +119,16 @@ hr {
         else:
             st.write("SWAST Ambulance Activity will not be modelled")
 
-if not st.session_state["visited_setup_page"]:
-    st.warning("You haven't set up any parameters - default parameters will be used!")
-
-    if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
-                 type="primary"):
-            st.switch_page("setup.py")
 
 button_run_pressed = st.button("Run simulation")
+
+if not st.session_state["visited_setup_page"]:
+    if not button_run_pressed:
+        st.warning("You haven't set up any parameters - default parameters will be used!")
+    if not button_run_pressed:
+        if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
+                    type="primary"):
+                st.switch_page("setup.py")
 
 if button_run_pressed:
     progress_text = "Simulation in progress. Please wait."
@@ -144,7 +152,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
-                        amb_data=st.session_state.amb_data
+                        amb_data=st.session_state.amb_data,
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
                     )
 
                 results.append(
@@ -159,6 +168,8 @@ if button_run_pressed:
         # If running locally, use parallel processing function to speed up execution significantly
         else:
             print("Running in parallel")
+            print(f"st.session_state.overall_demand_mult: {st.session_state.overall_demand_mult}")
+            print(f"st.session_state.sim_duration_input: {st.session_state.sim_duration_input}")
             parallelProcessJoblib(
                         total_runs = st.session_state.number_of_runs_input,
                         sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
@@ -167,7 +178,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
-                        amb_data = st.session_state.amb_data
+                        amb_data = st.session_state.amb_data,
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -175,28 +187,41 @@ if button_run_pressed:
 
         tab_names = [
             "Simulation Results Summary",
-            "Visualisations",
-            "Debugging Visualisations",
+            "Key Visualisations",
+            "Comparing Model with Historic Data",
+            "Additional Outputs",
             ]
+
+        my_bar.empty()
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
             )
         else:
-            tab1, tab2, tab3 = st.tabs(
+            tab1, tab2, tab3, tab4 = st.tabs(
                 tab_names
             )
+
+        # @st.cache_data
+        def get_job_count_df():
+            return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
+                                                            path="data/run_results.csv")
+
+        # @st.cache_data
+        def get_params_df():
+            return pd.read_csv("data/run_params_used.csv")
 
         with tab1:
             @st.fragment
             def download_button_quarto():
                 # st.download_button(
                 st.button(
-                    "Click here to download these results as a file",
+                    "(COMING SOON!) Click here to download these results as a file",
                     on_click=file_download_confirm,
-                    icon=":material/download:"
+                    icon=":material/download:",
+                    disabled=True
                     )
 
             download_button_quarto()
@@ -207,53 +232,60 @@ if button_run_pressed:
 
             with t1_col1:
                 with iconMetricContainer(key="nonattend_metric", icon_unicode="e61f", family="outline"):
-                    st.metric("Number of Calls DAAT Resource Couldn't Attend",
-                            "47 of 1203 (3.9%)",
+                    st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
+                            _vehicle_calculation.get_perc_unattended_string(results_all_runs),
                             border=True)
-                    st.caption("""
-These are the 'missed' calls where no DAAT resource was available.
-This could be due to
-- no resource being on shift
-- all resources being tasked to other jobs at the time of the call
-""")
+                    st.caption(get_text("missed_calls_description", text_df))
 
             with t1_col2:
-                with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                    st.metric("Overall Helicopter Utilisation",
-                            "78%",
-                            border=True)
+                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
+                    path="data/run_results.csv", params_path="data/run_params_used.csv",
+                    rota_path="data/hems_rota_used.csv"
+                )
+                t1_col_2_a, t1_col_2_b = st.columns(2)
+                with t1_col_2_a:
+                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
+                        st.metric("Average H70 Utilisation",
+                                utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0],
+                                border=True)
 
-                    st.caption("""
-This is how much of the available time (where a helicopter is on shift and able to fly) the helicopter
-was in use for.
+                with t1_col_2_b:
+                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
+                        st.metric("Average H71 Utilisation",
+                                utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0],
+                                border=True)
 
-Time where the helicopter was unable to fly due to weather conditions is not counted as available time here.
-For reference, the helicopter was unable to fly for 5.3% of on-shift hours on average (range 3.4% to 7.6%)
-                """)
+                st.caption(get_text("helicopter_utilisation_description", text_df))
 
 
             t1_col3, t1_col4 = st.columns(2)
 
-            with t1_col3:
-                with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
-                    st.metric("Preferred Resource Allocated",
-                            "907 of 1203 (75.4%)",
-                            border=True)
-                    st.caption("""
-This is the percentage of time where the 'preferred' resource was available at the time of the call
-for response.
-""")
+#             with t1_col3:
+#                 with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
+#                     st.metric("Preferred Resource Allocated",
+#                             "907 of 1203 (75.4%)",
+#                             border=True)
+#                     st.caption("""
+# This is the percentage of time where the 'preferred' resource was available at the time of the call
+# for response.
+# """)
 
 
         with tab2:
-            tab_2_1, tab_2_2 = st.tabs(["Simulation Summary Graphs", "Per-Run Simulation Breakdowns"])
+            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "Coming Soon"])
             with tab_2_1:
                 st.header("Summary Graphs")
+
+                st.caption("""
+Plots on this page reflect the values generated by the simulation.
+                """)
 
                 tab_2_1_col_1, tab_2_1_col_2 = st.columns(2)
 
                 with tab_2_1_col_1:
                     st.subheader("Utilisation by Callsign")
+
+                    st.warning("This is a placeholder graph - real simulation outputs not shown")
 
                     heli_util_df_dummy = pd.DataFrame([
                         {"Vehicle": "H70/CC70",
@@ -292,166 +324,284 @@ for response.
                 with tab_2_1_col_2:
                     st.subheader("Helicopter and Backup Utilisation Split")
 
-                    heli_util_df_dummy_split = pd.DataFrame([
-                        {"Callsign Group": "70 (Exeter)",
-                         "Callsign": "H70",
-                        "Utilisation": 89},
-                        {"Callsign Group": "70 (Exeter)",
-                         "Callsign": "CC70",
-                        "Utilisation": 11},
-                        {"Callsign Group": "71 (Eaglescott - North Devon)",
-                         "Callsign": "H71",
-                        "Utilisation": 76},
-                        {"Callsign Group": "71 (Eaglescott - North Devon)",
-                         "Callsign": "CC71",
-                        "Utilisation": 24},
-                        ]
-                    )
+                    @st.fragment
+                    def make_util_within_callsign_group_plot():
+                        call_df = get_job_count_df()
+                        return st.plotly_chart(
+                            _utilisation_result_calculation.make_SIMULATION_stacked_callsign_util_plot(call_df)
+                        )
 
-                    util_split_fig_simple = px.bar(heli_util_df_dummy_split,
-                            x="Utilisation",
-                            y="Callsign Group",
-                            color="Callsign",
-                            orientation="h",
-                            height=300
-                            ).update_xaxes(ticksuffix = "%", range=[0, 105])
+                    st.success("This is a graph using real simulation outputs")
 
-                    st.plotly_chart(util_split_fig_simple)
+                    make_util_within_callsign_group_plot()
 
+                st.header("Per-run Breakdowns")
+
+                st.warning("This is a placeholder graph - real simulation outputs not shown")
+
+                st.subheader("Variation in Vehicle Utilisation per Run")
+                heli_util_df_dummy = pd.DataFrame([
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 89,
+                    "Run": 1},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 85,
+                    "Run": 2},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 83,
+                    "Run": 3},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 91,
+                    "Run": 4},
+                    {"Vehicle": "H70/CC70",
+                    "Utilisation": 82,
+                    "Run": 5},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 61,
+                    "Run": 1},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 64,
+                    "Run": 2},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 63,
+                    "Run": 3},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 59,
+                    "Run": 4},
+                    {"Vehicle": "H71/CC71",
+                    "Utilisation": 68,
+                    "Run": 5},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 71,
+                        "Run": 1},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 72,
+                        "Run": 2},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 73,
+                        "Run": 3},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 68,
+                        "Run": 4},
+                    {"Vehicle": "CC72",
+                        "Utilisation": 74,
+                        "Run": 5}
+                    ]
+                )
+
+                util_fig_advanced = px.box(heli_util_df_dummy,
+                        x="Utilisation",
+                        y="Vehicle",
+                        orientation="h",
+                        height=300,
+                        points="all"
+                        ).update_xaxes(ticksuffix = "%", range=[0, 105])
+
+                # Add optimum range
+                util_fig_advanced.add_vrect(x0=65, x1=85,
+                                        fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
+                # Add extreme range (above)
+                util_fig_advanced.add_vrect(x0=85, x1=100,
+                                        fillcolor="#D45E5E", opacity=0.25, line_width=0)
+                # Add suboptimum range (below)
+                util_fig_advanced.add_vrect(x0=40, x1=65,
+                                        fillcolor="#FDD049", opacity=0.25, line_width=0)
+                # Add extreme range (below)
+                util_fig_advanced.add_vrect(x0=0, x1=40,
+                                        fillcolor="#D45E5E", opacity=0.25, line_width=0)
+
+                st.plotly_chart(
+                    util_fig_advanced
+                )
 
                 with tab_2_2:
 
-                    st.header("Per-run Breakdowns")
-
-                    st.subheader("Variation in Vehicle Utilisation per Run")
-                    heli_util_df_dummy = pd.DataFrame([
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 89,
-                        "Run": 1},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 85,
-                        "Run": 2},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 83,
-                        "Run": 3},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 91,
-                        "Run": 4},
-                        {"Vehicle": "H70/CC70",
-                        "Utilisation": 82,
-                        "Run": 5},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 61,
-                        "Run": 1},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 64,
-                        "Run": 2},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 63,
-                        "Run": 3},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 59,
-                        "Run": 4},
-                        {"Vehicle": "H71/CC71",
-                        "Utilisation": 68,
-                        "Run": 5},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 71,
-                         "Run": 1},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 72,
-                         "Run": 2},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 73,
-                         "Run": 3},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 68,
-                         "Run": 4},
-                        {"Vehicle": "CC72",
-                         "Utilisation": 74,
-                         "Run": 5}
-                        ]
-                    )
-
-                    util_fig_advanced = px.box(heli_util_df_dummy,
-                            x="Utilisation",
-                            y="Vehicle",
-                            orientation="h",
-                            height=300,
-                            points="all"
-                            ).update_xaxes(ticksuffix = "%", range=[0, 105])
-
-                    # Add optimum range
-                    util_fig_advanced.add_vrect(x0=65, x1=85,
-                                            fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
-                    # Add extreme range (above)
-                    util_fig_advanced.add_vrect(x0=85, x1=100,
-                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
-                    # Add suboptimum range (below)
-                    util_fig_advanced.add_vrect(x0=40, x1=65,
-                                            fillcolor="#FDD049", opacity=0.25, line_width=0)
-                    # Add extreme range (below)
-                    util_fig_advanced.add_vrect(x0=0, x1=40,
-                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
-
-                    st.plotly_chart(
-                        util_fig_advanced
-                    )
+                    st.subheader("Placeholder")
 
 
         with tab3:
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
-                "Comparisons with Real-World Data", "Counts", "Logs", "Debug Events", "Debug Resources", "Test Results"
+
+            tab_3_1, tab_3_2, tab_3_3 = st.tabs([
+                "Jobs per Month",
+                "Jobs per Hour",
+                "Utilisation Comparison"
                 ])
+
             with tab_3_1:
-                st.write("Placeholder")
+                @st.fragment
+                def plot_monthly_jobs():
+                    call_df = get_job_count_df()
+
+                    mj_1, mj_2 = st.columns(2)
+
+                    show_real_data = mj_1.toggle(
+                        "Compare with Real Data",
+                        value=True,
+                        disabled=False)
+
+                    show_individual_runs = mj_2.toggle("Show Individual Simulation Runs", value=False)
+
+                    if show_real_data:
+                        historical_view_method = st.radio(
+                            "Choose Historical Data Display Method",
+                            ["Range", "Individual Lines"],
+                            horizontal=True
+                            )
+                        if historical_view_method == "Range":
+                            show_historical_individual_years = False
+                        else:
+                            show_historical_individual_years = True
+                    else:
+                        show_historical_individual_years = False
+
+                    return st.plotly_chart(
+                        _job_count_calculation.plot_monthly_calls(
+                            call_df,
+                            show_individual_runs=show_individual_runs,
+                            use_poppins=False,
+                            show_historical=show_real_data,
+                            show_historical_individual_years=show_historical_individual_years,
+                            historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
+                            )
+                    )
+
+                plot_monthly_jobs()
+                st.caption("""
+Note that only full months in the simulation are included in this plot.
+Partial months are excluded for ease of interpretation.
+                           """)
 
             with tab_3_2:
-                st.subheader("Observed Event Types")
 
-                event_counts_df =  (pd.DataFrame(
-                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
-                        .pivot(index="run_number", columns="time_type", values="count")
-                )
-                st.write(
-                event_counts_df
+                @st.fragment
+                def plot_jobs_per_hour():
+                    call_df = get_job_count_df()
+                    params_df = get_params_df()
+                    help_jph = get_text("help_jobs_per_hour", text_df)
+                    jph_1, jph_2, jph_3, jph_4 = st.columns(4)
+
+                    display_historic_jph = jph_1.toggle(
+                        "Display Historic Data",
+                        value=True
+                        )
+                    average_per_month = jph_2.toggle(
+                        "Display Average Calls Per Month",
+                        value=True,
+                        help= help_jph
                         )
 
-                st.subheader("Observed Callsigns")
+                    display_advanced = jph_3.toggle("Display Advanced Plot", value=False)
 
-                st.write(
-                    pd.DataFrame(
-                        results_all_runs[["run_number", "callsign_group"]].value_counts()).reset_index()
-                        .pivot(index="run_number", columns="callsign_group", values="count")
-                        )
+                    if not display_advanced:
+                        display_error_bars_bar = jph_4.toggle("Display Variation")
+                    else:
+                        display_error_bars_bar = False
+
+                    st.plotly_chart(_job_count_calculation.plot_hourly_call_counts(
+                        call_df, params_df,
+                        average_per_month=average_per_month,
+                        box_plot=display_advanced,
+                        show_error_bars_bar=display_error_bars_bar,
+                        use_poppins=True,
+                        show_historical=display_historic_jph,
+                        historical_data_path="historical_data/historical_monthly_totals_by_hour_of_day.csv"
+                        ))
+
+                plot_jobs_per_hour()
 
             with tab_3_3:
-                st.subheader("Full Event Log")
+                @st.fragment
+                def create_utilisation_rwc_plot():
+                    call_df = get_job_count_df()
 
-                st.write(results_all_runs)
+                    st.plotly_chart(
+                        _utilisation_result_calculation.create_UTIL_rwc_plot(
+                        call_df,
+                        real_data_path="historical_data/historical_monthly_totals_by_callsign.csv"
+                        )
+                    )
 
-            with tab_3_4:
+                create_utilisation_rwc_plot()
+
+                historical_monthly_totals_df = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
+                historical_monthly_totals_df["month"] = pd.to_datetime(historical_monthly_totals_df["month"], format="%Y-%m-%d")
+
+                st.caption(f"""
+This plot shows the split within a callsign group of resources that are sent on jobs.
+Bars within a callsign group will sum to 100%.
+
+Dotted lines indicate the average historical allocation seen of resources within a callsign group,
+averaged over {len(historical_monthly_totals_df)} months, drawing on data
+from {historical_monthly_totals_df.month.min().strftime("%B %Y")}
+to {historical_monthly_totals_df.month.max().strftime("%B %Y")}.
+
+If the simulation is using the default parameters, we would expect the dotted lines to be roughly level with the top of the
+relevant bars - though being out by a few % is not too unusual due to the natural variation that occurs across
+simulation runs.
+
+If the simulation is not using the default parameters, we would not expect the output to match the historical data, but you may
+wish to consider the historical split as part of your decision making.
+                """)
+
+        with tab4:
+
+            st.caption("""
+This tab contains visualisations to help model authors do additional checks into the underlying functioning of the model.
+
+Most users will not need to look at the visualisations in this tab.
+            """)
+
+            tab_4_1, tab_4_2 = st.tabs(["Debug Events", "Debug Resources"])
+
+            with tab_4_1:
                 st.subheader("Event Overview")
 
-                tab3a, tab3b = st.tabs(["By Event", "By Run"])
+                @st.fragment
+                def event_overview_plot():
+                    runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
 
-                with tab3a:
+                    events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
+
+                    events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
+
                     fig = px.scatter(
-                            results_all_runs,
+                            events_over_time_df,
                             x="timestamp_dt",
-                            y="run_number",
-                            facet_row="time_type",
+                            y="time_type",
+                            # facet_row="run_number",
+                            # showlegend=False,
                             color="time_type",
                             height=800,
-                            title="Events Over Time - By Run")
+                            title="Events Over Time - By Run"
+                            )
+
                     fig.update_traces(marker=dict(size=3, opacity=0.5))
+
+                    fig.update_layout(yaxis_title="", # Remove y-axis label
+                                      yaxis_type='category',
+                                      showlegend=False)
+                    # Remove facet labels
+                    fig.for_each_annotation(lambda x: x.update(text=""))
+
+                    # fig.update_xaxes(rangeslider_visible=True,
+                    # rangeselector=dict(
+                    #     buttons=list([
+                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
+                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
+                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
+                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
+                    #         dict(step="all")
+                    #     ]))
+                    # )
+
                     st.plotly_chart(
                         fig,
                             use_container_width=True
                         )
 
-                with tab3b:
-                    st.plotly_chart(
+                event_overview_plot()
+
+                st.plotly_chart(
                         px.line(
                             results_all_runs[results_all_runs["time_type"]=="arrival"],
                             x="timestamp_dt",
@@ -465,45 +615,67 @@ for response.
                 st.subheader("Event Counts")
                 st.write(f"Period: {st.session_state.sim_duration_input} days")
 
-                # st.write(event_counts_df.reset_index(drop=False).melt(id_vars="run_number"))
-
+                event_counts_df =  (pd.DataFrame(
+                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
+                        .pivot(index="run_number", columns="time_type", values="count")
+                )
                 event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
 
-                st.plotly_chart(
-                        px.bar(
-                            event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
-                            x="run_number",
-                            y="value",
-                            facet_col="time_type",
-                            height=600
+                # st.plotly_chart(
+                #         px.bar(
+                #             event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
+                #             x="run_number",
+                #             y="value",
+                #             facet_col="time_type",
+                #             height=600
+                #     )
+                # )
+
+                @st.fragment
+                def event_funnel_plot():
+
+                    hems_events_initial = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile",
+                                    # "HEMS stood down en route",
+                                    "HEMS on scene",
+                                    # "HEMS patient treated (not conveyed)",
+                                    "HEMS leaving scene",
+                                    "HEMS arrived destination",
+                                    "HEMS clear"]
+
+                    hems_events = st.multiselect("Choose the events to show",
+                                                 event_counts_long["time_type"].unique(),
+                                                 hems_events_initial)
+
+                    run_select = st.multiselect("Choose the runs to show",
+                                                 event_counts_long["run_number"].unique(),
+                                                 1)
+
+                    return st.plotly_chart(
+                            px.funnel(
+                                event_counts_long[(event_counts_long["time_type"].isin(hems_events)) &
+                                                  (event_counts_long["run_number"].isin(run_select))  ],
+                                facet_col="run_number",
+                                x="value",
+                                y="time_type",
+                                category_orders={"time_type": hems_events[::-1]}
+
+                        )
                     )
-                )
 
-                hems_events = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile", "HEMS stood down en route", "HEMS on scene", "HEMS patient treated (not conveyed)", "HEMS leaving scene", "HEMS arrived destination", "HEMS clear"]
+                event_funnel_plot()
 
-                st.plotly_chart(
-                        px.funnel(
-                            event_counts_long[event_counts_long["time_type"].isin(hems_events)],
-                            facet_col="run_number",
-                            x="value",
-                            y="time_type",
-                            category_orders={"time_type": hems_events[::-1]}
+                # amb_events = ["arrival", "AMB call start", "AMB clear"]
 
-                    )
-                )
+                # st.plotly_chart(
+                #         px.funnel(
+                #             event_counts_long[event_counts_long["time_type"].isin(amb_events)],
+                #             facet_col="run_number",
+                #             x="value",
+                #             y="time_type",
+                #             category_orders={"time_type": amb_events[::-1]},
 
-                amb_events = ["arrival", "AMB call start", "AMB clear"]
-
-                st.plotly_chart(
-                        px.funnel(
-                            event_counts_long[event_counts_long["time_type"].isin(amb_events)],
-                            facet_col="run_number",
-                            x="value",
-                            y="time_type",
-                            category_orders={"time_type": amb_events[::-1]},
-
-                    )
-                )
+                #     )
+                # )
 
                 @st.fragment
                 def patient_viz():
@@ -514,186 +686,69 @@ for response.
                     tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
 
                     for idx, tab in enumerate(tab_list):
-                        tab.plotly_chart(
-                            px.scatter(
-                                results_all_runs[
+                        p_df = results_all_runs[
                                     (results_all_runs.P_ID==patient_filter) &
-                                    (results_all_runs.run_number==idx+1)],
+                                    (results_all_runs.run_number==idx+1)]
+
+                        p_df['time_type'] = p_df['time_type'].astype('str')
+
+                        fig = px.scatter(
+                                p_df,
                                 x="timestamp_dt",
                                 y="time_type",
-                                color="time_type"),
-                                use_container_width=True
+                                color="time_type")
+
+                        fig.update_layout(yaxis_type='category')
+
+                        tab.plotly_chart(
+                            fig,
+                            use_container_width=True
                         )
 
                 patient_viz()
 
-            with tab_3_5:
+            with tab_4_2:
                 st.subheader("Resource Use")
 
                 resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
-                with st.expander("Click here to see the timings of resource use"):
-                    st.dataframe(resource_use_events_only)
-                    st.dataframe(resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"))
 
-                st.plotly_chart(
-                    px.scatter(
-                    resource_use_events_only[["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
-                    x="value",
-                    y="time_type",
-                    color="event_type"
+                @st.fragment
+                def resource_use_exploration_plots():
+
+                    run_select_ruep = st.multiselect("Choose the runs to show",
+                                resource_use_events_only["run_number"].unique(),
+                                1)
+
+
+                    with st.expander("Click here to see the timings of resource use"):
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)])
+
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)]
+                                        [["P_ID", "time_type", "timestamp_dt", "event_type"]]
+                                        .melt(id_vars=["P_ID", "time_type", "event_type"],
+                                        value_vars="timestamp_dt"))
+
+                    resource_use_fig = px.scatter(
+                        resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)][["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
+                        x="value",
+                        y="time_type",
+                        color="event_type"
+                        )
+
+                    resource_use_fig.update_xaxes(rangeslider_visible=True,
+                    # rangeselector=dict(
+                    #     buttons=list([
+                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
+                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
+                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
+                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
+                    #         dict(step="all")
+                    #     ]))
                     )
-                )
 
-            with tab_3_6:
-                st.write("Placeholder")
-
-
-        if st.session_state.create_animation_input:
-            with tab4:
-
-                st.error("Warning - this is not yet working as intended")
-                event_position_df = pd.DataFrame([
-
-                    {'event': 'HEMS call start',
-                    'x':  10, 'y': 600, 'label': "HEMS Call Start"},
-
-                    {'event': 'HEMS allocated to call',
-                    'x':  180, 'y': 550, 'label': "HEMS Allocated"},
-
-                    {'event': 'HEMS mobile',
-                    'x':  300, 'y': 500, 'label': "HEMS Mobile"},
-
-                    {'event': 'HEMS on scene',
-                    'x':  400, 'y': 450, 'label': "HEMS On Scene"},
-
-                    {'event': "HEMS stood down en route",
-                    'x':  400, 'y': 425, 'label': "HEMS Stood Down"},
-
-                    {'event': 'HEMS leaving scene',
-                    'x':  530, 'y': 400, 'label': "HEMS Leaving Scene"},
-
-                    {'event': 'HEMS arrived destination',
-                    'x':  700, 'y': 350, 'label': "HEMS Arrived Destination"},
-
-                    {'event': 'HEMS clear',
-                    'x':  900, 'y': 300, 'label': "HEMS Clear"},
-
-                    # {'event': 'AMB call start',
-                    # 'x':  160, 'y': 100, 'label': "Ambulance Call Start"},
-
-                    # {'event': 'AMB arrival at hospital',
-                    # 'x':  360, 'y': 100, 'label': "Ambulance Arrive at Hospital"},
-
-                    # {'event': 'AMB clear',
-                    # 'x':  660, 'y': 100, 'label': "Ambulance Clear"},
-
-                    # {'event': 'HEMS to AMB handover',
-                    # 'x':  360, 'y': 300, 'label': "HEMS to AMB handover"},
-
-                    ]
-                )
-
-                event_log = results_all_runs.reset_index().rename(
-                                columns = {"timestamp":"time",
-                                "P_ID": "patient",
-                                # "time_type": "event",
-                                "callsign_group": "pathway"}
-                                )
-
-                event_log['pathway'] = event_log['pathway'].fillna('Shared')
-                event_log['resource_id'] = 1
-
-                #print(event_log.head(50))
-                event_log['callsign'] = event_log['vehicle_type'].str[0].str.upper() + event_log['pathway'].astype(str)
-
-                event_log['event'] = event_log.apply(lambda row:
-                    row['time_type'] if row['time_type'] in ['arrival', 'depart'] else row['callsign'],
-                    axis=1)
+                    st.plotly_chart(
+                        resource_use_fig
+                    )
 
 
-                with st.expander("See final event log"):
-                    st.dataframe(event_log[event_log["run_number"]==1])
-
-                event_position_df = pd.DataFrame([
-                    {'event': 'arrival',
-                    'x':  50, 'y': 400,
-                    'label': "Arrival" },
-
-                    {'event': 'H70',
-                    'x':  150, 'y': 275,
-                    'resource':'n_H70',
-                    'label': "H70 Attending"},
-
-                    {'event': 'CC70',
-                    'x':  150, 'y': 175,
-                    'resource':'n_CC70',
-                    'label': "CC70 Attending"},
-
-                {'event': 'H71',
-                    'x':  325, 'y': 275,
-                    'resource':'n_H71',
-                    'label': "H71 Attending"},
-
-                    {'event': 'CC71',
-                    'x':  325, 'y': 175,
-                    'resource':'n_CC71',
-                    'label': "CC71 Attending"},
-
-                    {'event': 'CC72',
-                    'x':  475, 'y': 175,
-                    'resource':'n_CC72',
-                    'label': "CC72 Attending"},
-
-                    {'event': 'exit',
-                    'x':  270, 'y': 70,
-                    'label': "Exit"}
-
-                ])
-
-                class g():
-                    n_H70 = 1
-                    n_CC70 = 1
-                    n_H71 = 1
-                    n_CC71 = 1
-                    n_CC72 = 1
-
-                full_patient_df = reshape_for_animations(
-                    event_log[event_log["run_number"]==1],
-                    every_x_time_units=5,
-                    limit_duration=60*24*sim_duration_input,
-                    debug_mode=True
-                )
-
-                with st.expander("See step 1 animation dataframe"):
-                    st.dataframe(full_patient_df)
-
-                full_patient_df_with_position = generate_animation_df(full_patient_df=full_patient_df, event_position_df=event_position_df)
-
-                with st.expander("See step 2 animation dataframe"):
-                    st.dataframe(full_patient_df_with_position)
-
-                st.plotly_chart(
-                    generate_animation(
-                        full_patient_df_plus_pos=full_patient_df_with_position,
-                        event_position_df=event_position_df,
-                        scenario=g(),
-                        plotly_height=750,
-                        # start_date=datetime.combine(sim_start_date_input, sim_start_time_input),
-                        # time_display_units="dhm"
-
-                                    )
-                )
-
-                # st.plotly_chart(
-                #     animate_activity_log(
-                #             event_log = event_log[event_log["run_number"]==1],
-                #             event_position_df=event_position_df,
-                #             scenario=g(),
-                #             setup_mode=True,
-                #             debug_mode=True,
-                #             every_x_time_units=10,
-                #             display_stage_labels=True,
-                #             limit_duration=60*24*sim_duration_input,
-                #             time_display_units="dhm"
-                #     )
-                # )
+                resource_use_exploration_plots()

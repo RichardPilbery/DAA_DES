@@ -26,7 +26,9 @@ class DES_HEMS:
 
     """
 
-    def __init__(self, run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str, amb_data: bool, demand_increase_percent: float = 1.0):
+    def __init__(self,
+                run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str,
+                amb_data: bool, demand_increase_percent: float):
 
         self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
         self.sim_duration = sim_duration
@@ -69,12 +71,12 @@ class DES_HEMS:
     def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
         """
             Convenience function to return the time between incidents
-            using either NSPPThinning or sampling the exponential 
+            using either NSPPThinning or sampling the exponential
             distribution
 
             Arrivals distribution using NSPPThinning
             HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
-        
+
         """
 
         if NSPPThin:
@@ -93,7 +95,7 @@ class DES_HEMS:
             # Or just regular exponential distrib.
             inter_time = self.utils.inter_arrival_rate(hour, qtr)
             return expovariate(1.0 / inter_time)
-        
+
 
     def calls_per_hour(self, quarter: int) -> dict:
         """
@@ -120,12 +122,12 @@ class DES_HEMS:
         d = {}
 
         hours, counts = np.unique(calls_in_hours, return_counts=True)
-        
+
         for i in range(len(hours)):
             d[hours[i]] = counts[i]
 
         return d
-    
+
     def predetermine_call_arrival(self, current_hour: int, quarter: int) -> list:
         """
             Function to determine the number of calls in
@@ -134,7 +136,7 @@ class DES_HEMS:
             in a patient generator
 
         """
-        
+
         hourly_activity = self.utils.hourly_arrival_by_qtr_probs_df
         hourly_activity_for_qtr = hourly_activity[hourly_activity['quarter'] == quarter][['hour','proportion']]
 
@@ -192,10 +194,10 @@ class DES_HEMS:
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
 
                 # [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
-                
+
 
     def generate_patient(self, dow, hod, weekday, month, qtr, current_dt):
-        
+
         self.patient_counter += 1
 
         # Create a new caller/patient
@@ -251,7 +253,7 @@ class DES_HEMS:
 
                 if hems_allocation != None:
                     if hems_res_list[2]:
-                        self.add_patient_result_row(pt, f"{"H" if pt.hems_pref_vehicle_type == "helicopter" else "CC"}{pt.hems_pref_callsign_group}", "resource_preferred_service")
+                        self.add_patient_result_row(pt, f"{'H' if pt.hems_pref_vehicle_type == 'helicopter' else 'CC'}{pt.hems_pref_callsign_group}", "resource_preferred_service")
 
             # if hems_res_list[2]:
             #     print(f"Back from allocate resource with {hems_res_list[1]} and {hems_res_list[2]}")
@@ -278,11 +280,11 @@ class DES_HEMS:
         patient_enters_sim = self.env.now
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
-                    
+
         if not_in_warm_up_period:
             #print(f"Arrival for patient {patient.id} on run {self.run_number}")
             self.add_patient_result_row(patient, "arrival", "arrival_departure")
-  
+
         hems_avail = True if hems_res != None else False
 
         if hems_res != None:
@@ -314,7 +316,13 @@ class DES_HEMS:
 
         # Add boolean to determine whether the patient is still within the simulation warm-up
         # period. If so, then we will not record the patient progress
-        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
+        # SR NOTE: I changed this from strictly less than to <= as it was causing odd behaviour
+        # if the first call came in at the start of the simulation in a scenario with 0 warm up
+        # time. Alternative could be reverting it to stricly less check but then adding an or check
+        # leading to not_in_warm_up_period being True if the warm-up duration is exactly 0.
+        # SR NOTE 2 - there is also a check implemented directly in the method add_patient_result_row
+        # so I'm not sure the additional check in this instance is actually necessary
+        not_in_warm_up_period = False if self.env.now <= self.warm_up_duration else True
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
@@ -513,7 +521,11 @@ class DES_HEMS:
         for key, value in kwargs.items():
              results[key] = value
 
-        if self.env.now > self.warm_up_duration:
+        # SR NOTE: I changed this from strictly less than to <= as it was causing odd behaviour
+        # if the first call came in at the start of the simulation in a scenario with 0 warm up
+        # time. Alternative could be reverting it to stricly less check but then adding an or check
+        # leading to not_in_warm_up_period being True if the warm-up duration is exactly 0.
+        if self.env.now >= self.warm_up_duration:
             self.store_patient_results(results)
 
 
@@ -563,7 +575,7 @@ class DES_HEMS:
             Function to start the simulation.
 
         """
-        print(f"HEMS class initialised with the following: {self.run_number} {self.sim_duration} {self.warm_up_duration} {self.sim_start_date}")
+        print(f"HEMS class initialised with the following: run {self.run_number}, duration {self.sim_duration}, warm-up {self.warm_up_duration}, start date {self.sim_start_date}, demand increase multiplier {self.demand_increase_percent}")
 
         # Start entity generators
         self.env.process(self.generate_calls())
