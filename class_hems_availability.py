@@ -135,7 +135,7 @@ class HEMSAvailability():
         pass
 
 
-    def preferred_group_available(self, preferred_group: int, preferred_vehicle_type: str) -> list[HEMS | None, int, bool]:
+    def preferred_group_available(self, pt: Patient, preferred_group: int, preferred_vehicle_type: str) -> list[HEMS | None, int, bool]:
         """
             Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None, 
             an indication as to whether the resource was available, or another resource in the same callsign_group, and
@@ -158,30 +158,32 @@ class HEMSAvailability():
             # this condition is met
             # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
             # so return)
+            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr) and not h.unavailable_due_to_service(pt.current_dt):
 
-            if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
-                # if h.being_serviced:
-                #     print(f"Preferred resource service status {h.being_serviced}")
-                service_status = h.being_serviced
+                if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+                    # if h.being_serviced:
+                    #     print(f"Preferred resource service status {h.being_serviced}")
+                    service_status = h.being_serviced
 
-            if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
-                hems = h
-                preferred = 1
+                if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+                    hems = h
+                    preferred = 1
+                    break
 
-            # If it's the preferred group but not the preferred vehicle type, the variable
-            # hems becomes the HEMS resource object that we are currently looking at in the store
-            # so we will basically - in the event of not finding the exact resource we want - find
-            # the next best thing from the callsign group
-            # SR note 13/1/25 - double check this logic - as we would send a critical care car over
-            # a different available helicopter if I'm interpreting this correctly. Just need to confirm
-            # this was the order of priority agreed on.
-            # RP note 13/02/2025 - Based on discussions with despatcher, sounds like closest free resource
-            # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
-            # Perhaps a TODO?
+                # If it's the preferred group but not the preferred vehicle type, the variable
+                # hems becomes the HEMS resource object that we are currently looking at in the store
+                # so we will basically - in the event of not finding the exact resource we want - find
+                # the next best thing from the callsign group
+                # SR note 13/1/25 - double check this logic - as we would send a critical care car over
+                # a different available helicopter if I'm interpreting this correctly. Just need to confirm
+                # this was the order of priority agreed on.
+                # RP note 13/02/2025 - Based on discussions with despatcher, sounds like closest free resource
+                # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
+                # Perhaps a TODO?
 
-            elif h.callsign_group == preferred_group:
-                hems = h
-                preferred = 2
+                elif h.callsign_group == preferred_group:
+                    hems = h
+                    preferred = 2
 
         # If we have not found an exact match for preferred callsign and vehicle type out of the
         # resources currently available in our store, we will then reach this code
@@ -209,14 +211,16 @@ class HEMSAvailability():
         # - OR None if neither of those conditions are met
 
         pref_res = self.preferred_group_available(
+            pt=pt,
             preferred_group=pt.hems_pref_callsign_group,
             preferred_vehicle_type=pt.hems_pref_vehicle_type
         )
 
         resource_event: Event = self.env.event()
 
-        def process(pres_res: list[HEMS, int, bool]) -> Generator[Any, Any, None]:
-            def resource_filter(resource: HEMS, pref_res: HEMS) -> bool:
+        def process(pres_res: list[HEMS | None, int, bool]) -> Generator[Any, Any, None]:
+
+            def resource_filter(resource: HEMS, pref_res: list[HEMS | None, int, bool]) -> bool:
                 """
                 Checks whether the resource the incident wants is available in the
                 simpy FilterStore
@@ -228,27 +232,31 @@ class HEMSAvailability():
                 """
                 #print(f"Resource filter with hour {hour} and qtr {qtr}")
 
-                # If the resource **is not currently in use** AND **is currently on shift** AND not being serviced
-                if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr) and not resource.unavailable_due_to_service(pt.current_dt):
-                    # Check whether the resource is the preferred resource
-                    if pref_res != None:
-                        if resource.callsign == pref_res.callsign:
-                            #print(f"Preferred resource {pref_res.callsign} available")
-                            return True
+                if pref_res[0] != None:
+                   # print('Preferred resource is available')
+                    if pref_res[1] == 1:
+                        # Need to find preferred resource
+                        return True if resource.callsign_group == pref_res[0].callsign_group else False
                     else:
-                        #print("Other (non-preferred) resource available")
-                        return True
+                        # Need to find resource in preferred group
+                        return True if resource.callsign_group == pref_res[0].callsign_group else False
+
                 else:
-                    # If neither of these are available, return 'False'
-                    # print("Neither preferred or non-preferred resource available")
-                    return False
+                    #print('Preferred resource is NOT available')
+                    # If the resource **is not currently in use** AND **is currently on shift** AND not being serviced
+                    if not resource.in_use and resource.hems_resource_on_shift(pt.hour, pt.qtr) and not resource.unavailable_due_to_service(pt.current_dt):
+                        return True
+                    else:
+                        return False
 
+            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as request:
 
-            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res[0])) as request:
+                #print(request)
+                
                 resource = yield request | self.env.timeout(0.1)
 
                 if request in resource:
-                    #print(f"Allocating HEMS resource at time {self.env.now:.3f}")
+                    #print(f"Allocating HEMS resource {resource[request].callsign} at time {self.env.now:.3f}")
                     resource.in_use = True
                     pt.hems_callsign_group = resource[request].callsign_group
                     pt.hems_vehicle_type = resource[request].vehicle_type
