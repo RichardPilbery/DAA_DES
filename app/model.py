@@ -28,7 +28,8 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
-from _app_utils import iconMetricContainer, file_download_confirm, get_text, get_text_sheet
+from _app_utils import iconMetricContainer, file_download_confirm, \
+                        get_text, get_text_sheet, to_military_time
 
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
@@ -79,8 +80,11 @@ hr {
         for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
             per_callsign_rota = rota[rota["callsign"]==helicopter]
             st.caption(f"""
-{helicopter} is an {per_callsign_rota["model"].values[0]} and runs from {per_callsign_rota["summer_start"].values[0]} to {per_callsign_rota["summer_end"].values[0]}
-in summer and {per_callsign_rota["winter_start"].values[0]} to {per_callsign_rota["winter_end"].values[0]} in winter.
+{helicopter} is an {per_callsign_rota["model"].values[0]} and runs
+from {to_military_time(per_callsign_rota["summer_start"].values[0])}
+to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
+and {to_military_time(per_callsign_rota["winter_start"].values[0])}
+to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
 """)
         st.write(f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}")
         callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
@@ -90,18 +94,21 @@ in summer and {per_callsign_rota["winter_start"].values[0]} to {per_callsign_rot
         for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
             per_callsign_rota = rota[rota["callsign"]==car]
             st.caption(f"""
-{car} is a {per_callsign_rota["model"].values[0]} and runs from {per_callsign_rota["summer_start"].values[0]} to {per_callsign_rota["summer_end"].values[0]}
-in summer and {per_callsign_rota["winter_start"].values[0]} to {per_callsign_rota["winter_end"].values[0]} in winter.
+{car} is a {per_callsign_rota["model"].values[0]} and runs
+from {to_military_time(per_callsign_rota["summer_start"].values[0])}
+to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
+and {to_military_time(per_callsign_rota["winter_start"].values[0])}
+to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
 """)
 
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
             if st.session_state.overall_demand_mult == 100:
-                st.write(f"Demand is based on historically observed demand with no adjustments")
+                st.write(f"Demand is based on historically observed demand with no adjustments.")
             elif st.session_state.overall_demand_mult < 100:
-                st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand")
+                st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand.")
             elif st.session_state.overall_demand_mult > 100:
-                st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand")
+                st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand.")
 
         # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
         elif st.session_state.demand_adjust_type == "Per Season Demand Adjustment":
@@ -124,7 +131,7 @@ hr {
 """, key="hr"):
             st.divider()
 
-        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}")
+        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}.")
 
         if st.session_state.create_animation_input:
             st.write("An animated output will be created.")
@@ -133,9 +140,9 @@ hr {
             st.write("No animated output will be created.")
 
         if st.session_state.amb_data:
-            st.write("SWAST Ambulance Activity will be modelled")
+            st.write("SWAST Ambulance Activity will be modelled.")
         else:
-            st.write("SWAST Ambulance Activity will not be modelled")
+            st.write("SWAST Ambulance Activity will not be modelled.")
 
 
 button_run_pressed = st.button("Run simulation")

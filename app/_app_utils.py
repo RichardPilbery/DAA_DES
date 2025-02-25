@@ -135,3 +135,6 @@ def q75(x):
 # 25th Percentile
 def q25(x):
     return x.quantile(0.25)
+
+def to_military_time(hour: int) -> str:
+    return f"{hour:02d}00"
