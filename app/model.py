@@ -9,6 +9,7 @@ import re
 
 # Plotting
 import plotly.express as px
+import plotly.graph_objects as go
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
 import _job_count_calculation
@@ -745,7 +746,8 @@ Most users will not need to look at the visualisations in this tab.
 
                         tab.plotly_chart(
                             fig,
-                            use_container_width=True
+                            use_container_width=True,
+                            key=f"p_viz_{patient_filter}_{idx}"
                         )
 
                 patient_viz()
@@ -758,25 +760,136 @@ Most users will not need to look at the visualisations in this tab.
                 @st.fragment
                 def resource_use_exploration_plots():
 
-                    run_select_ruep = st.multiselect("Choose the runs to show",
-                                resource_use_events_only["run_number"].unique(),
-                                1)
+                    run_select_ruep = st.selectbox("Choose the run to show",
+                                resource_use_events_only["run_number"].unique())
 
 
                     with st.expander("Click here to see the timings of resource use"):
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)])
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
 
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)]
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
                                         .melt(id_vars=["P_ID", "time_type", "event_type"],
                                         value_vars="timestamp_dt"))
 
-                    resource_use_fig = px.scatter(
-                        resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)][["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
-                        x="value",
-                        y="time_type",
-                        color="event_type"
-                        )
+                        resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
+                            [["P_ID", "time_type", "timestamp_dt", "event_type"]]
+                            .pivot(columns="event_type", index=["P_ID","time_type"], values="timestamp_dt").reset_index())
+
+                        # get the number of referrals and assign them a value
+                        resources = resource_use_wide.time_type.unique()
+                        resource_dict = {resource: index for index, resource in enumerate(resources)}
+                        resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
+
+                        # Convert time types to numerical values
+                        # resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
+
+                        # Compute duration for each resource use
+                        resource_use_wide["resource_use_end"] = pd.to_datetime(resource_use_wide["resource_use_end"])
+                        resource_use_wide["resource_use"] = pd.to_datetime(resource_use_wide["resource_use"])
+                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
+
+                        # Convert time to numeric (e.g., seconds since the first event)
+                        time_origin = resource_use_wide["resource_use"].min()  # Set the reference time
+                        resource_use_wide["resource_use_numeric"] = (resource_use_wide["resource_use"] - time_origin).dt.total_seconds()
+                        resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
+
+                        # Compute duration
+                        resource_use_wide["duration"] = resource_use_wide["resource_use_end_numeric"] - resource_use_wide["resource_use_numeric"]
+                        # Compute duration as seconds
+                        resource_use_wide["duration_seconds"] = (resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]).dt.total_seconds()*1000
+
+                        st.dataframe(resource_use_wide)
+
+
+                    # Create figure
+                    resource_use_fig = go.Figure()
+
+
+
+
+
+                    # # Use a single Bar trace with correct base values
+                    # resource_use_fig.add_trace(go.Bar(
+                    #     x=resource_use_wide["duration"],
+                    #     y=resource_use_wide["y_pos"],
+                    #     base=resource_use_wide["resource_use_numeric"],  # Start of each bar (now numerical)
+                    #     orientation="h",  # Horizontal bars
+                    #     marker=dict(color="rgba(0,100,250,0.3)", line=dict(color="rgba(0,100,250,0.5)", width=0.6)),
+                    #     name="Resource Use"
+                    # ))
+
+                    # # Generate tick labels for x-axis
+                    # num_ticks = 10  # Adjust for more or fewer ticks
+                    # tick_vals = list(range(0, int(resource_use_wide["resource_use_end_numeric"].max()),
+                    #                         max(1, int(resource_use_wide["resource_use_end_numeric"].max() / num_ticks))))
+                    # tick_labels = [(time_origin + pd.to_timedelta(t, unit="s")).strftime("%H:%M:%S") for t in tick_vals]
+
+                    # # Layout tweaks
+                    # resource_use_fig.update_layout(
+                    #     title="Resource Use Over Time",
+                    #     xaxis=dict(
+                    #         title="Time",
+                    #         tickmode="array",
+                    #         tickvals=tick_vals,
+                    #         ticktext=tick_labels,  # Show formatted datetime labels
+                    #     ),
+                    #     yaxis=dict(
+                    #         title="Time Type",
+                    #         tickmode="array",
+                    #         tickvals=list(resource_dict.values()),
+                    #         ticktext=list(resource_dict.keys())
+                    #     ),
+                    #     showlegend=True
+                    # )
+
+                    # Add horizontal bars using actual datetime values
+                    resource_use_fig.add_trace(go.Bar(
+                        x=resource_use_wide["duration_seconds"],  # Duration (Timedelta)
+                        y=resource_use_wide["y_pos"],
+                        base=resource_use_wide["resource_use"],  # Start time as actual datetime
+                        orientation="h",
+                        marker=dict(color="rgba(0,100,250,0.3)", line=dict(color="rgba(0,100,250,0.5)", width=1)),
+                        name="Resource Use"
+                    ))
+
+                    # Layout tweaks
+                    resource_use_fig.update_layout(
+                        title="Resource Use Over Time",
+                        xaxis=dict(
+                            title="Time",
+                            type="date",  # Ensures proper datetime scaling with zoom
+                            # tickformat="%b %d, %Y",  # Default formatting (months & days)
+                        ),
+                        yaxis=dict(
+                            title="Time Type",
+                            tickmode="array",
+                            tickvals=list(resource_dict.values()),
+                            ticktext=list(resource_dict.keys())
+                        ),
+                        showlegend=True
+                    )
+
+
+
+                    # # Add line segments connecting start and end times
+                    # for _, row in resource_use_wide.iterrows():
+                    #     resource_use_fig.add_shape(
+                    #         type="rect",
+                    #         x0=row["resource_use"], x1=row["resource_use_end"],
+                    #         y0=resource_dict[row["time_type"]]+0.2, y1=resource_dict[row["time_type"]]-0.2,  # Adjust height for visibility
+                    #         line=dict(color="rgba(0,100,250,0.5)"),
+                    #         fillcolor="rgba(0,100,250,0.3)"
+                    #     )
+
+                    # # Layout tweaks
+                    # resource_use_fig.update_layout(
+                    #     title="Resource Use Over Time",
+                    #     xaxis_title="Time",
+                    #     yaxis_title="Time Type",
+                    #     showlegend=True
+                    # )
+
 
                     resource_use_fig.update_xaxes(rangeslider_visible=True,
                     # rangeselector=dict(
@@ -792,6 +905,5 @@ Most users will not need to look at the visualisations in this tab.
                     st.plotly_chart(
                         resource_use_fig
                     )
-
 
                 resource_use_exploration_plots()
