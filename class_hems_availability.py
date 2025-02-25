@@ -48,6 +48,10 @@ class HEMSAvailability():
         # Populate the store with HEMS resources
         self.populate_store()
 
+        # Daily servicing check (in case sim starts during a service)
+        [dow, hod, weekday, month, qtr, current_dt] = self.utilityClass.date_time_of_call(self.sim_start_date, self.env.now)
+        self.daily_servicing_check(current_dt)
+
     def daily_servicing_check(self, current_dt: datetime) -> None:
         """
             Function to iterate through the store and trigger the service check
@@ -56,6 +60,8 @@ class HEMSAvailability():
         h: HEMS
         for h in self.store.items:
             h.unavailable_due_to_service(current_dt)
+            # if h.unavailable_due_to_service(current_dt):
+            #     print(f"{current_dt.date()} {h.callsign} is being serviced")
 
 
     def prep_HEMS_resources(self) -> None:
@@ -142,6 +148,9 @@ class HEMSAvailability():
             the service status of the preferred resource.
         """
 
+        # if preferred_group == 70:
+        #     print(f"Preferred group is {preferred_group} and vehicle_type {preferred_vehicle_type}")
+            
         # Initialise object HEMS as a placeholder object
         hems = HEMS
         # Initialise variable 'preferred' to False
@@ -158,17 +167,21 @@ class HEMSAvailability():
             # this condition is met
             # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
             # so return)
-            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr) and not h.unavailable_due_to_service(pt.current_dt):
+
+            # if preferred_group == 70:
+            #     print(f"{pt.current_dt} Preferred Resource status check: {h.callsign} in_use: {h.in_use} on_shift: {h.hems_resource_on_shift(pt.hour, pt.qtr)} and service {h.unavailable_due_to_service(pt.current_dt)}")
+
+            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
 
                 if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
                     # if h.being_serviced:
-                    #     print(f"Preferred resource service status {h.being_serviced}")
+                    #     print(f"{h.callsign} Preferred resource service status {h.being_serviced}")
                     service_status = h.being_serviced
 
-                if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
+                if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
                     hems = h
                     preferred = 1
-                    break
+                    return [hems, preferred, service_status]
 
                 # If it's the preferred group but not the preferred vehicle type, the variable
                 # hems becomes the HEMS resource object that we are currently looking at in the store
@@ -181,7 +194,7 @@ class HEMSAvailability():
                 # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
                 # Perhaps a TODO?
 
-                elif h.callsign_group == preferred_group:
+                elif h.callsign_group == preferred_group and not h.being_serviced:
                     hems = h
                     preferred = 2
 
@@ -192,7 +205,7 @@ class HEMSAvailability():
         # which may be relevant if there is more than one other resource within that callsign group
         # (though this is not currently a situation that occurs within the naming conventions at DAAT)
 
-        if preferred in [1, 2]:
+        if preferred == 2:
             return [hems, preferred, service_status]
         else:
             return [None, preferred, service_status]
@@ -233,10 +246,10 @@ class HEMSAvailability():
                 #print(f"Resource filter with hour {hour} and qtr {qtr}")
 
                 if pref_res[0] != None:
-                   # print('Preferred resource is available')
+                   # print('A resource is available')
                     if pref_res[1] == 1:
                         # Need to find preferred resource
-                        return True if resource.callsign_group == pref_res[0].callsign_group else False
+                        return True if (resource.callsign_group == pref_res[0].callsign_group) and (resource.vehicle_type == pref_res[0].vehicle_type) else False
                     else:
                         # Need to find resource in preferred group
                         return True if resource.callsign_group == pref_res[0].callsign_group else False
@@ -249,34 +262,59 @@ class HEMSAvailability():
                     else:
                         return False
 
-            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as request:
+            with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as primary_callsign_group_member:
 
-                #print(request)
-                
-                resource = yield request | self.env.timeout(0.1)
+                # Retrieve other group resource is there is one and make it unavailable.
+                            
+                resource = yield primary_callsign_group_member | self.env.timeout(0.1)
 
-                if request in resource:
+                if primary_callsign_group_member in resource:
                     #print(f"Allocating HEMS resource {resource[request].callsign} at time {self.env.now:.3f}")
                     resource.in_use = True
-                    pt.hems_callsign_group = resource[request].callsign_group
-                    pt.hems_vehicle_type = resource[request].vehicle_type
+                    pt.hems_callsign_group = resource[primary_callsign_group_member].callsign_group
+                    pt.hems_vehicle_type = resource[primary_callsign_group_member].vehicle_type
 
-                    resource_event.succeed([resource[request], pref_res[1], pref_res[2]])
+                    # Also need to check if there is another vehicle in the group and make that unavailable
+                    with self.store.get(lambda hems_resource2: hems_resource2.callsign_group == pt.hems_callsign_group) as secondary_callsign_group_member:      
+
+                        resource2 = yield secondary_callsign_group_member | self.env.timeout(0.1)   
+
+                        # We need to either return the second resource in the callsign_group or None
+                        # back to the main model so that we can return it with the primary allocated 
+                        # resource at the end of the patient episode.
+
+                        return_resource2_value = None;    
+
+                        if secondary_callsign_group_member in resource2:
+                            # print('Secondary callsign group resource being allocated')
+                            # print(resource2[secondary_callsign_group_member].callsign)
+                            resource2.in_use = True
+                            return_resource2_value = resource2[secondary_callsign_group_member]
+
+
+                    resource_event.succeed([resource[primary_callsign_group_member], pref_res[1], pref_res[2], return_resource2_value])
                 else:
                     #print(f"No HEMS (helimed or ccc) resource available; using Non-DAAT land ambulance")
-                    resource_event.succeed([None, pref_res[1], pref_res[2]])
+                    resource_event.succeed([None, pref_res[1], pref_res[2], None])
 
         self.env.process(process(pref_res))
     
         return resource_event
 
 
-    def return_resource(self, resource: HEMS) -> None:
+    def return_resource(self, resource: HEMS, secondary_resource: HEMS|None) -> None:
         """
             Class to return HEMS class object back to the filestore
         """
+
         resource.in_use = False
         self.store.put(resource)
+
+        if secondary_resource != None:
+            # print('Returning resource')
+            # print(secondary_resource.callsign)
+            secondary_resource.in_use = False
+            self.store.put(secondary_resource)
 
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:

@@ -166,34 +166,55 @@ class DES_HEMS:
 
         """
 
-
         while self.env.now < (self.sim_duration + self.warm_up_duration):
             # Get current day of week and hour of day
             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
-            self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
-
-            ia_dict = {}
-
             # If it is a new day, need to calculate how many calls
             # in the next 24 hours
-            if(self.new_day != current_dt.date):
-                self.new_day = current_dt.date
+            if(self.new_day != current_dt.date()):
+                # print("It's a new day")
+                # print(dow)
+                # print(f"{self.new_day} and {current_dt.date}")
+                self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
+
+                #print(f"{current_dt.date()} There will be {self.calls_today} calls today")
+                
+                self.new_day = current_dt.date()
+                
+                ia_dict = {}
                 ia_dict = self.calls_per_hour(qtr)
+
+                #print(ia_dict)
+
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 self.hems_resources.daily_servicing_check(current_dt)
 
             if self.calls_today > 0:
                 # Work out how long until next incident
-                if hod in ia_dict.keys() and ia_dict[hod] > 0:
+                #print(ia_dict.keys())
+                if hod in ia_dict.keys():
+                    #print(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
                     for i in range(0, ia_dict[hod]):
                         #print(f"Creating new patient at {current_dt}")
                         self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+                        # Might need to determine spread of jobs during any given hour.
+                        yield self.env.timeout(5) # Wait 5 minutes until the next allocation
+                        [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
+                        
+                    #print('Out of loop')
+            else:
+                # Skip to tomorrow
 
-                # [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                print('Skip to tomorrow')
+
+                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                next_day = current_dt.floor('d') + pd.Timedelta(days=1)
+                print("next day is {next_day}")
+                yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
 
 
     def generate_patient(self, dow, hod, weekday, month, qtr, current_dt):
@@ -239,8 +260,11 @@ class DES_HEMS:
             self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
             self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
 
-            hems_res_list: list[HEMS|None, int, bool] = yield self.hems_resources.allocate_resource(pt)
+            hems_res_list: list[HEMS|None, int, bool, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
             hems_allocation = hems_res_list[0]
+
+            # This will either contain the other resource in a callsign_group or None
+            hems_group_resource_allocation = hems_res_list[3] 
 
             if not_in_warm_up_period:
                 msg = "No resource in group available"
@@ -262,13 +286,16 @@ class DES_HEMS:
                 #print(f"allocated {hems_allocation.callsign}")
                 self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
-                self.env.process(self.patient_journey(hems_allocation, pt))
+                if hems_group_resource_allocation != None:
+                    self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
+
+                self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
                 #print("No HEMS resource available - non-DAAT land crew sent")
-                self.env.process(self.patient_journey(None, pt))
+                self.env.process(self.patient_journey(None, pt, None))
 
 
-    def patient_journey(self, hems_res: HEMS, patient: Patient):
+    def patient_journey(self, hems_res: HEMS|None, patient: Patient, secondary_hems_res: HEMS|None):
         """
             Send patient on their journey!
         """
@@ -461,8 +488,7 @@ class DES_HEMS:
             yield self.env.timeout(clear_time)
 
             if hems_res != None:
-               # print(f"Returning resource {hems_res.callsign}")
-                self.hems_resources.return_resource(hems_res)
+                self.hems_resources.return_resource(hems_res, secondary_hems_res)
                 self.add_patient_result_row(patient, hems_res.callsign, "resource_use_end")
 
         if self.amb_data:
