@@ -145,15 +145,33 @@ hr {
             st.write("SWAST Ambulance Activity will not be modelled.")
 
 
-button_run_pressed = st.button("Run simulation")
+with stylable_container(key="run_buttons",
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['blue']};
+                            color: white;
+                            border-color: white;
+                        }}
+                        """
+            ):
+    button_run_pressed = st.button(
+        "Click this button to run the simulation with the selected parameters",
+        icon=":material/play_circle:")
 
 if not st.session_state["visited_setup_page"]:
     if not button_run_pressed:
-        st.warning("You haven't set up any parameters - default parameters will be used!")
-    if not button_run_pressed:
-        if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
-                    type="primary"):
-                st.switch_page("setup.py")
+        with stylable_container(key="warning_buttons",
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['orange']};
+                            color: {DAA_COLORSCHEME['charcoal']};
+                            border-color: white;
+                        }}
+                        """
+            ):
+            if st.button("**Warning**\n\nYou haven't set up any parameters - default parameters will be used!\n\nClick this button to go to the parameter page, or click the blue button above\n\nif you are happy to use the default model parameters",
+                        icon=":material/warning:"):
+                    st.switch_page("setup.py")
 
 if button_run_pressed:
     progress_text = "Simulation in progress. Please wait."
