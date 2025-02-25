@@ -198,12 +198,13 @@ with col_summer:
 with col_winter:
     st.caption(get_text("winter_rota_help", text_df))
 
-st.caption("Columns with the :material/edit_note: symbol can be edited.")
+
 
 @st.fragment
 def fleet_editors(final_helo_df, final_car_df):
     # Create an editable dataframe for people to modify the parameters in
     st.markdown("##### Helicopters")
+    st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
 
     updated_helo_df = st.data_editor(
         final_helo_df.reset_index(),
@@ -245,15 +246,16 @@ def fleet_editors(final_helo_df, final_car_df):
         )
 
     st.caption("""
-All helicopters in the model are automatically assumed to have a backup car assigned to them for use
-when the helicopter is unavailable for any reason.
-
-However, in the table below you can also alter the parameters of the additional cars that have their own separate callsign
-group and operate as a totally separate resource to the helicopters.
+:red_car: **All helicopters in the model are automatically assumed to have a backup car assigned to them for use
+when the helicopter is unavailable for any reason.**
 """)
 
 
     st.markdown("##### Additional Cars")
+    st.caption("""
+In the table below you can also alter the parameters of the *additional* cars that have their own separate callsign
+group and operate as a totally separate resource to the helicopters.""")
+    st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
 
     final_car_df["vehicle_type"] = final_car_df["vehicle_type"].apply(lambda x: x.title())
 

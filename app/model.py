@@ -75,7 +75,25 @@ hr {
         st.subheader("Model Input Summary")
 
         st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
+        rota = Utils.HEMS_ROTA
+        for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
+            per_callsign_rota = rota[rota["callsign"]==helicopter]
+            st.caption(f"""
+{helicopter} is an {per_callsign_rota["model"].values[0]} and runs from {per_callsign_rota["summer_start"].values[0]} to {per_callsign_rota["summer_end"].values[0]}
+in summer and {per_callsign_rota["winter_start"].values[0]} to {per_callsign_rota["winter_end"].values[0]} in winter.
+""")
         st.write(f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}")
+        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
+        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
+
+
+        for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
+            per_callsign_rota = rota[rota["callsign"]==car]
+            st.caption(f"""
+{car} is a {per_callsign_rota["model"].values[0]} and runs from {per_callsign_rota["summer_start"].values[0]} to {per_callsign_rota["summer_end"].values[0]}
+in summer and {per_callsign_rota["winter_start"].values[0]} to {per_callsign_rota["winter_end"].values[0]} in winter.
+""")
+
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
             if st.session_state.overall_demand_mult == 100:
