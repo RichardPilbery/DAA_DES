@@ -187,6 +187,12 @@ def fleet_setup():
 
     final_helo_df["vehicle_type"] = final_helo_df["vehicle_type"].apply(lambda x: x.title())
 
+    return final_helo_df, final_car_df
+
+final_helo_df, final_car_df = fleet_setup()
+
+@st.fragment
+def fleet_editors(final_helo_df, final_car_df):
     # Create an editable dataframe for people to modify the parameters in
     updated_helo_df = st.data_editor(
         final_helo_df.reset_index(),
@@ -326,7 +332,7 @@ group and operate as a totally separate resource to the helicopters.
     # Write the rota back to a csv
     final_rota.to_csv('actual_data/HEMS_ROTA.csv', index=False)
 
-fleet_setup()
+fleet_editors(final_helo_df, final_car_df)
 
 st.divider()
 
