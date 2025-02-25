@@ -23,7 +23,8 @@ DEFAULT_INPUTS = {
     "sim_start_date_input": datetime.today().strftime('%Y-%m-%d'),
     "sim_start_time_input": "08:00",
     "scenario_1_set": False,
-    "scenario_2_set": False
+    "scenario_2_set": False,
+    "rota_initialised": False
 }
 
 # def setup_state():
@@ -34,6 +35,13 @@ DEFAULT_INPUTS = {
 #         #     st.session_state[session_state_key] = session_state_default_value
 
 def setup_state():
+    if "rota_initialised" not in st.session_state:
+        # Set the rota back to defaults, overwriting any changes made
+        # the last time the app was run
+        base_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+        base_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+        st.session_state.rota_initialised = True
+
     for session_state_key, session_state_default_value in DEFAULT_INPUTS.items():
         if session_state_key not in st.session_state:
             st.session_state[session_state_key] = session_state_default_value
