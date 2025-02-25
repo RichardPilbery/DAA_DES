@@ -125,8 +125,8 @@ def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
 
 if __name__ == "__main__":
     removeExistingResults()
-    parallelProcessJoblib(1, (1*365*24*60), (0*60), datetime.strptime("2022-07-24 05:47:00", "%Y-%m-%d %H:%M:%S"), False, 1)
-    #parallelProcessJoblib(5, (2*365*24*60), (0*60), datetime.strptime("2022-07-24 05:47:00", "%Y-%m-%d %H:%M:%S"), False, 1.2)
+    #parallelProcessJoblib(1, (1*365*24*60), (0*60), datetime.strptime("2022-07-24 05:47:00", "%Y-%m-%d %H:%M:%S"), False, 1)
+    parallelProcessJoblib(5, (2*365*24*60), (0*60), datetime.strptime("2022-07-24 05:47:00", "%Y-%m-%d %H:%M:%S"), False, 1.2)
 
 # Testing ----------
 # python des_parallel_process.py
