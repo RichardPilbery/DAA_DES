@@ -66,6 +66,11 @@ def fleet_setup():
 
     st.header(get_text("header_fleet_setup", text_df))
 
+    st.caption("""
+*Note that while it is not currently possible to change the number of vehicles in
+the fleet, this is planned for a future version of the model.*
+    """)
+
     col_1_fleet_setup, col_2_fleet_setup, blank_col_fleet_setup = st.columns(3)
 
     with col_1_fleet_setup:
@@ -93,12 +98,6 @@ def fleet_setup():
             )
 
     # st.subheader(get_text("header_fleet_makeup", text_df))
-
-    col_summer, col_winter, col_summer_winter_spacing = st.columns(3)
-    with col_summer:
-        st.caption(get_text("summer_rota_help", text_df))
-    with col_winter:
-        st.caption(get_text("winter_rota_help", text_df))
 
     original_rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
     original_rota["callsign_count"] = original_rota.groupby('callsign_group')['callsign_group'].transform('count')
@@ -191,9 +190,21 @@ def fleet_setup():
 
 final_helo_df, final_car_df = fleet_setup()
 
+st.markdown("#### Set the Fleet Details")
+
+col_summer, col_winter, col_summer_winter_spacing = st.columns(3)
+with col_summer:
+    st.caption(get_text("summer_rota_help", text_df))
+with col_winter:
+    st.caption(get_text("winter_rota_help", text_df))
+
+st.caption("Columns with the :material/edit_note: symbol can be edited.")
+
 @st.fragment
 def fleet_editors(final_helo_df, final_car_df):
     # Create an editable dataframe for people to modify the parameters in
+    st.markdown("##### Helicopters")
+
     updated_helo_df = st.data_editor(
         final_helo_df.reset_index(),
         disabled=["vehicle_type"],
@@ -241,6 +252,8 @@ However, in the table below you can also alter the parameters of the additional 
 group and operate as a totally separate resource to the helicopters.
 """)
 
+
+    st.markdown("##### Additional Cars")
 
     final_car_df["vehicle_type"] = final_car_df["vehicle_type"].apply(lambda x: x.title())
 
