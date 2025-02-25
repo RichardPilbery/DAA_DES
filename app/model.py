@@ -791,67 +791,46 @@ Most users will not need to look at the visualisations in this tab.
 
                         # Convert time to numeric (e.g., seconds since the first event)
                         time_origin = resource_use_wide["resource_use"].min()  # Set the reference time
-                        resource_use_wide["resource_use_numeric"] = (resource_use_wide["resource_use"] - time_origin).dt.total_seconds()
-                        resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
+                        # resource_use_wide["resource_use_numeric"] = (resource_use_wide["resource_use"] - time_origin).dt.total_seconds()
+                        # resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
 
                         # Compute duration
-                        resource_use_wide["duration"] = resource_use_wide["resource_use_end_numeric"] - resource_use_wide["resource_use_numeric"]
-                        # Compute duration as seconds
+                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end_numeric"] - resource_use_wide["resource_use_numeric"]
+                        resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
+
+                        # Compute duration as seconds and multiply by 1000 (to account for how datetime axis
+                        # is handled in plotly
                         resource_use_wide["duration_seconds"] = (resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]).dt.total_seconds()*1000
+                        resource_use_wide["duration_minutes"] = resource_use_wide["duration_seconds"] / 1000 / 60
 
                         st.dataframe(resource_use_wide)
+
+                        service_schedule = pd.read_csv("data/service_dates.csv")
+
+                        st.dataframe(service_schedule)
 
 
                     # Create figure
                     resource_use_fig = go.Figure()
 
-
-
-
-
-                    # # Use a single Bar trace with correct base values
-                    # resource_use_fig.add_trace(go.Bar(
-                    #     x=resource_use_wide["duration"],
-                    #     y=resource_use_wide["y_pos"],
-                    #     base=resource_use_wide["resource_use_numeric"],  # Start of each bar (now numerical)
-                    #     orientation="h",  # Horizontal bars
-                    #     marker=dict(color="rgba(0,100,250,0.3)", line=dict(color="rgba(0,100,250,0.5)", width=0.6)),
-                    #     name="Resource Use"
-                    # ))
-
-                    # # Generate tick labels for x-axis
-                    # num_ticks = 10  # Adjust for more or fewer ticks
-                    # tick_vals = list(range(0, int(resource_use_wide["resource_use_end_numeric"].max()),
-                    #                         max(1, int(resource_use_wide["resource_use_end_numeric"].max() / num_ticks))))
-                    # tick_labels = [(time_origin + pd.to_timedelta(t, unit="s")).strftime("%H:%M:%S") for t in tick_vals]
-
-                    # # Layout tweaks
-                    # resource_use_fig.update_layout(
-                    #     title="Resource Use Over Time",
-                    #     xaxis=dict(
-                    #         title="Time",
-                    #         tickmode="array",
-                    #         tickvals=tick_vals,
-                    #         ticktext=tick_labels,  # Show formatted datetime labels
-                    #     ),
-                    #     yaxis=dict(
-                    #         title="Time Type",
-                    #         tickmode="array",
-                    #         tickvals=list(resource_dict.values()),
-                    #         ticktext=list(resource_dict.keys())
-                    #     ),
-                    #     showlegend=True
-                    # )
-
                     # Add horizontal bars using actual datetime values
-                    resource_use_fig.add_trace(go.Bar(
-                        x=resource_use_wide["duration_seconds"],  # Duration (Timedelta)
-                        y=resource_use_wide["y_pos"],
-                        base=resource_use_wide["resource_use"],  # Start time as actual datetime
-                        orientation="h",
-                        marker=dict(color="rgba(0,100,250,0.3)", line=dict(color="rgba(0,100,250,0.5)", width=1)),
-                        name="Resource Use"
-                    ))
+                    for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
+                        callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
+                        resource_use_fig.add_trace(go.Bar(
+                            x=callsign_df["duration_seconds"],  # Duration (Timedelta)
+                            y=callsign_df["y_pos"],
+                            base=callsign_df["resource_use"],  # Start time as actual datetime
+                            orientation="h",
+                            marker=dict(color=list(DAA_COLORSCHEME.values())[idx],
+                                        line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
+                                        ),
+                            name=callsign,
+                            # customdata=np.stack((callsign_df['resource_use'], callsign_df['resource_use_end']), axis=-1),
+                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
+                            hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %b %Y %H:%M} to %{customdata[1]|%a %b %Y %H:%M})<extra></extra>"
+                        ))
+
+
 
                     # Layout tweaks
                     resource_use_fig.update_layout(
@@ -867,7 +846,8 @@ Most users will not need to look at the visualisations in this tab.
                             tickvals=list(resource_dict.values()),
                             ticktext=list(resource_dict.keys())
                         ),
-                        showlegend=True
+                        showlegend=True,
+                        height=600
                     )
 
 
