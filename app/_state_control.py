@@ -1,5 +1,6 @@
 import streamlit as st
 from datetime import datetime
+import pandas as pd
 
 # Note: following
 # Dmitri's approach here to avoid issues with session state setting
@@ -21,7 +22,6 @@ DEFAULT_INPUTS = {
     "create_animation_input": False,
     "sim_start_date_input": datetime.today().strftime('%Y-%m-%d'),
     "sim_start_time_input": "08:00",
-
     "scenario_1_set": False,
     "scenario_2_set": False
 }
@@ -42,6 +42,8 @@ def setup_state():
 def reset_to_defaults():
     for session_state_key, session_state_default_value in DEFAULT_INPUTS.items():
             st.session_state[session_state_key] = session_state_default_value
+    base_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+    base_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
     st.toast("All parameters have been reset to the default values",
              icon=":material/history:")
 

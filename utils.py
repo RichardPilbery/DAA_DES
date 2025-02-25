@@ -14,7 +14,10 @@ class Utils:
 
     # External file containing details of resources
     # hours of operation and servicing schedules
+    HEMS_ROTA_DEFAULT = pd.read_csv('actual_data/HEMS_ROTA_DEFAULT.csv')
     HEMS_ROTA = pd.read_csv('actual_data/HEMS_ROTA.csv')
+
+    SERVICING_SCHEDULES_BY_MODEL = pd.read_csv('actual_data/service_schedules_by_model.csv')
 
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
@@ -377,9 +380,9 @@ class Utils:
                 end_date = start_date + timedelta(days = 14)
             else:
                 end_date = start_date + timedelta(days = 13)
-            
+
         holidays.append({
-            'year': int(year), 
+            'year': int(year),
             'start_date': start_date,
             'end_date' : end_date
         })
@@ -390,7 +393,7 @@ class Utils:
         summer_half_term_end = summer_half_term_start + timedelta(days = 6)
 
         holidays.append({
-            'year': int(year), 
+            'year': int(year),
             'start_date': summer_half_term_start,
             'end_date' : summer_half_term_end
         })
@@ -401,7 +404,7 @@ class Utils:
         summer_end = self.get_nth_weekday(year, 9, calendar.MONDAY, 1)
 
         holidays.append({
-            'year': int(year), 
+            'year': int(year),
             'start_date': summer_start,
             'end_date' : summer_end
         })
@@ -416,20 +419,20 @@ class Utils:
         autumn_half_term_end = autumn_half_term_start + timedelta(days = 6)
 
         holidays.append({
-            'year': int(year), 
+            'year': int(year),
             'start_date': autumn_half_term_start,
-            'end_date' : autumn_half_term_end 
-        })   
+            'end_date' : autumn_half_term_end
+        })
 
         # Christmas Hols
 
         start_date = self.get_last_weekday(year, 12, calendar.MONDAY) - timedelta(days = 7)
 
         holidays.append({
-            'year': int(year), 
+            'year': int(year),
             'start_date': start_date,
             'end_date' : datetime(year, 12, 31)
-        })   
+        })
 
         return pd.DataFrame(holidays)
 
@@ -457,6 +460,6 @@ class Utils:
         day = ((h + l - 7 * m + 114) % 31) + 1
 
         return datetime(year, month, day)
-    
+
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
