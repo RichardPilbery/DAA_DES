@@ -18,6 +18,8 @@ st.set_page_config(layout="wide")
 
 setup_state()
 
+u = Utils()
+
 text_df=get_text_sheet("setup")
 
 with open("app/style.css") as css:
@@ -330,16 +332,22 @@ group and operate as a totally separate resource to the helicopters.""")
     # default rota
     final_rota = final_rota.drop(columns=["service_schedule_months","service_duration_weeks"])
 
+    print(final_rota)
+
     # Merge with service schedule df to get actual servicing intervals for chosen model
     # of helicopter
-    final_rota = final_rota.merge(Utils.SERVICING_SCHEDULES_BY_MODEL, on="model", how="left")
+    final_rota = final_rota.merge(u.SERVICING_SCHEDULES_BY_MODEL, on="model", how="left")
+
+    print(u.SERVICING_SCHEDULES_BY_MODEL)
+
+    print(final_rota)
 
     # Convert the time columns back to something the model can understand
     for col in ["summer_start", "winter_start", "summer_end", "winter_end"]:
         final_rota[col] = final_rota[col].apply(lambda x: x.hour)
 
     # Sort the columns into the order of the original rota
-    column_order = Utils.HEMS_ROTA_DEFAULT.columns
+    column_order = u.HEMS_ROTA_DEFAULT.columns
     final_rota = final_rota[column_order]
 
     # print(final_rota)
@@ -492,7 +500,7 @@ with st.expander(get_text("additional_params_expander_title", text_df)):
     sim_duration_input =  st.slider(
         "Simulation Duration (days)",
         min_value=1,
-        max_value=365,
+        max_value=365*3,
         value=st.session_state.sim_duration_input,
         on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
         key="key_sim_duration_input"

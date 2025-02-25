@@ -77,7 +77,13 @@ hr {
         st.subheader("Model Input Summary")
 
         st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
-        rota = Utils.HEMS_ROTA
+
+        # Avoid reading from utils due to odd issues it seems to be introducing
+        # TODO: Explore why this is happening in more detail
+        # u = Utils()
+        # rota = u.HEMS_ROTA
+        rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+
         for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
             per_callsign_rota = rota[rota["callsign"]==helicopter]
             st.caption(f"""
@@ -803,12 +809,29 @@ Most users will not need to look at the visualisations in this tab.
                         resource_use_wide["duration_seconds"] = (resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]).dt.total_seconds()*1000
                         resource_use_wide["duration_minutes"] = resource_use_wide["duration_seconds"] / 1000 / 60
 
+                        resource_use_wide["callsign_group"] = resource_use_wide["time_type"].str.extract("(\d+)")
+
+                        resource_use_wide = resource_use_wide.sort_values(["callsign_group", "time_type"])
+
                         st.dataframe(resource_use_wide)
 
+                        ######################################
+                        # Load in the servicing schedule df
+                        ######################################
                         service_schedule = pd.read_csv("data/service_dates.csv")
+                        # Convert to appropriate datatypes
+                        service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
+                        service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
+                        # Calculate duration for plotting and for hover text
+                        service_schedule["duration_seconds"] = (service_schedule["service_end_date"] - service_schedule["service_start_date"]).dt.total_seconds()*1000
+                        service_schedule["duration_days"] = (service_schedule["duration_seconds"] / 1000) / 60 / 60 / 24
+                        # Match y position of the resource in the rest of the plot
+                        service_schedule["y_pos"] = service_schedule["resource"].map(resource_dict)
+                        # Limit the dataframe to only contain servicing
+                        service_schedule = service_schedule[(service_schedule["service_start_date"] <= resource_use_wide.resource_use.max()) &
+                                        (service_schedule["service_end_date"] >= resource_use_wide.resource_use.min())]
 
                         st.dataframe(service_schedule)
-
 
                     # Create figure
                     resource_use_fig = go.Figure()
@@ -816,60 +839,61 @@ Most users will not need to look at the visualisations in this tab.
                     # Add horizontal bars using actual datetime values
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
+
+                        service_schedule_df = service_schedule[service_schedule["resource"]==callsign]
+
+                        # Add in hatched boxes showing the servicing periods
+                        if len(service_schedule_df) > 0:
+                            resource_use_fig.add_trace(go.Bar(
+                                x=service_schedule_df["duration_seconds"],  # Duration (Timedelta)
+                                y=service_schedule_df["y_pos"],
+                                base=service_schedule_df["service_start_date"],  # Start time as actual datetime
+                                orientation="h",
+                                width=0.6,
+                                marker_pattern_shape="x",
+                                marker=dict(color="rgba(63, 63, 63, 0.30)",
+                                            line=dict(color="black", width=1)
+                                            ),
+                                name=f"Servicing = {callsign}",
+                                customdata=service_schedule_df[['resource','duration_days','service_start_date', 'service_end_date']],
+                                hovertemplate="Servicing %{customdata[0]} lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
+                            ))
+
+                        # Add in boxes showing the duration of individual calls
                         resource_use_fig.add_trace(go.Bar(
                             x=callsign_df["duration_seconds"],  # Duration (Timedelta)
                             y=callsign_df["y_pos"],
                             base=callsign_df["resource_use"],  # Start time as actual datetime
                             orientation="h",
+                            width=0.4,
                             marker=dict(color=list(DAA_COLORSCHEME.values())[idx],
                                         line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
                                         ),
                             name=callsign,
                             # customdata=np.stack((callsign_df['resource_use'], callsign_df['resource_use_end']), axis=-1),
                             customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
-                            hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %b %Y %H:%M} to %{customdata[1]|%a %b %Y %H:%M})<extra></extra>"
+                            hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
                         ))
-
-
 
                     # Layout tweaks
                     resource_use_fig.update_layout(
                         title="Resource Use Over Time",
+                        barmode='overlay',
                         xaxis=dict(
                             title="Time",
                             type="date",  # Ensures proper datetime scaling with zoom
                             # tickformat="%b %d, %Y",  # Default formatting (months & days)
                         ),
                         yaxis=dict(
-                            title="Time Type",
+                            title="Callsign",
                             tickmode="array",
                             tickvals=list(resource_dict.values()),
-                            ticktext=list(resource_dict.keys())
+                            ticktext=list(resource_dict.keys()),
+                            autorange = "reversed"
                         ),
                         showlegend=True,
-                        height=600
+                        height=700
                     )
-
-
-
-                    # # Add line segments connecting start and end times
-                    # for _, row in resource_use_wide.iterrows():
-                    #     resource_use_fig.add_shape(
-                    #         type="rect",
-                    #         x0=row["resource_use"], x1=row["resource_use_end"],
-                    #         y0=resource_dict[row["time_type"]]+0.2, y1=resource_dict[row["time_type"]]-0.2,  # Adjust height for visibility
-                    #         line=dict(color="rgba(0,100,250,0.5)"),
-                    #         fillcolor="rgba(0,100,250,0.3)"
-                    #     )
-
-                    # # Layout tweaks
-                    # resource_use_fig.update_layout(
-                    #     title="Resource Use Over Time",
-                    #     xaxis_title="Time",
-                    #     yaxis_title="Time Type",
-                    #     showlegend=True
-                    # )
-
 
                     resource_use_fig.update_xaxes(rangeslider_visible=True,
                     # rangeselector=dict(
