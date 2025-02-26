@@ -467,7 +467,7 @@ class DistributionFitUtils():
         monthly_totals_df = monthly_df.groupby('first_day_of_month').agg(
                                 stand_down_car=('stand_down_car', 'sum'),
                                 stand_down_helicopter=('stand_down_helicopter', 'sum'),
-                                total=('vehicle_type', 'size')
+                                total_jobs=('vehicle_type', 'size')
                             ).reset_index()
 
         monthly_totals_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_jobs_per_month.csv', mode="w+", index=False)
