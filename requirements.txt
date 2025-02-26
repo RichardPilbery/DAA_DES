@@ -10,7 +10,7 @@ simpy==4.1.1
 six==1.16.0
 tzdata==2024.1
 plotly==5.23.0
-streamlit==1.41.1
+streamlit==1.42.0
 sim-tools==0.6.1
 vidigi==0.0.3
 joblib==1.4.2

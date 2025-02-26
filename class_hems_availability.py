@@ -14,11 +14,11 @@ class HEMSAvailability():
         This class is a filter store which can provide HEMS resources
         based on the time of day and servicing schedule
 
-    
+
     """
 
     def __init__(self, env, sim_start_date, sim_duration, servicing_overlap_allowed = False, servicing_buffer_weeks = 4, servicing_preferred_month = 1):
-       
+
         self.env = env
         self.utilityClass = Utils()
 
@@ -30,9 +30,9 @@ class HEMSAvailability():
 
         print(f"Sim start date {self.sim_start_date}")
         # For belts and braces, add an additional year to
-        # calculate the service schedules since service dates can be walked back to the 
+        # calculate the service schedules since service dates can be walked back to the
         # previous year
-        self.sim_end_date = sim_start_date + timedelta(minutes=sim_duration + (1*365*24*60)) 
+        self.sim_end_date = sim_start_date + timedelta(minutes=sim_duration + (1*365*24*60))
 
         # School holidays
         self.school_holidays = pd.read_csv('actual_data/school_holidays.csv')
@@ -69,7 +69,7 @@ class HEMSAvailability():
             This function ingests HEMS resource data from a user-supplied CSV file
             and populates a list of HEMS class objects. The key activity here is
             the calculation of service schedules for each HEMS object, taking into account a
-            user-specified preferred month of servicing, service duration, and a buffer period 
+            user-specified preferred month of servicing, service duration, and a buffer period
             following a service to allow for over-runs and school holidays
 
         """
@@ -86,13 +86,13 @@ class HEMSAvailability():
                 #print(f"Checking {row['callsign']} with previous service date of {row['last_service']}")
                 last_service = datetime.strptime(row['last_service'], "%Y-%m-%d")
                 service_date = last_service
-                
+
                 while last_service < self.sim_end_date:
 
                     end_date = last_service + timedelta(weeks = int(row['service_duration_weeks'])) + timedelta(weeks=self.serviing_buffer_weeks)
 
                     service_date, end_date = self.find_next_service_date(last_service, row["service_schedule_months"], service_dates, row['service_duration_weeks'])
-                    
+
                     schedule.append((row['callsign'], service_date))
                     #print(service_date)
                     service_dates.append({'service_start_date': service_date, 'service_end_date': end_date})
@@ -117,6 +117,11 @@ class HEMSAvailability():
             )
 
             self.HEMS_resources_list.append(hems)
+
+        # Write servicing schedules to a file for use in calculations and resource visualisations
+        (pd.DataFrame(schedule, columns=["resource", "service_start_date"])
+        .merge(pd.DataFrame(service_dates))
+        .to_csv("data/service_dates.csv", index=False))
 
 
     def populate_store(self):
@@ -143,14 +148,14 @@ class HEMSAvailability():
 
     def preferred_group_available(self, pt: Patient, preferred_group: int, preferred_vehicle_type: str) -> list[HEMS | None, int, bool]:
         """
-            Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None, 
+            Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None,
             an indication as to whether the resource was available, or another resource in the same callsign_group, and
             the service status of the preferred resource.
         """
 
         # if preferred_group == 70:
         #     print(f"Preferred group is {preferred_group} and vehicle_type {preferred_vehicle_type}")
-            
+
         # Initialise object HEMS as a placeholder object
         hems = HEMS
         # Initialise variable 'preferred' to False
@@ -265,7 +270,7 @@ class HEMSAvailability():
             with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as primary_callsign_group_member:
 
                 # Retrieve other group resource is there is one and make it unavailable.
-                            
+
                 resource = yield primary_callsign_group_member | self.env.timeout(0.1)
 
                 if primary_callsign_group_member in resource:
@@ -275,15 +280,15 @@ class HEMSAvailability():
                     pt.hems_vehicle_type = resource[primary_callsign_group_member].vehicle_type
 
                     # Also need to check if there is another vehicle in the group and make that unavailable
-                    with self.store.get(lambda hems_resource2: hems_resource2.callsign_group == pt.hems_callsign_group) as secondary_callsign_group_member:      
+                    with self.store.get(lambda hems_resource2: hems_resource2.callsign_group == pt.hems_callsign_group) as secondary_callsign_group_member:
 
-                        resource2 = yield secondary_callsign_group_member | self.env.timeout(0.1)   
+                        resource2 = yield secondary_callsign_group_member | self.env.timeout(0.1)
 
                         # We need to either return the second resource in the callsign_group or None
-                        # back to the main model so that we can return it with the primary allocated 
+                        # back to the main model so that we can return it with the primary allocated
                         # resource at the end of the patient episode.
 
-                        return_resource2_value = None;    
+                        return_resource2_value = None;
 
                         if secondary_callsign_group_member in resource2:
                             # print('Secondary callsign group resource being allocated')
@@ -298,7 +303,7 @@ class HEMSAvailability():
                     resource_event.succeed([None, pref_res[1], pref_res[2], None])
 
         self.env.process(process(pref_res))
-    
+
         return resource_event
 
 
@@ -338,7 +343,7 @@ class HEMSAvailability():
         """
 
         for index, row in self.school_holidays.iterrows():
-            
+
             if self.do_ranges_overlap(pd.to_datetime(row['start_date']), pd.to_datetime(row['end_date']), start_date, end_date):
                 return True
 
@@ -361,31 +366,31 @@ class HEMSAvailability():
     def find_next_service_date(self, last_service_date: datetime, interval_months: int, service_dates: list, service_duration: int) -> list[datetime]:
         """
             Function to determine the next service date for a resource. The date is determine by
-            the servicing schedule for the resource, the preferred month of servicing, and to 
+            the servicing schedule for the resource, the preferred month of servicing, and to
             avoid dates that fall in either school holidays or when other resources are being serviced.
         """
 
         next_due_date = last_service_date + relativedelta(months = interval_months) # Approximate month length
-        end_date = next_due_date + timedelta(weeks = service_duration) 
+        end_date = next_due_date + timedelta(weeks = service_duration)
 
         preferred_date = datetime(next_due_date.year, self.servicing_preferred_month , 2)
-        preferred_end_date = preferred_date + timedelta(weeks = service_duration) 
+        preferred_end_date = preferred_date + timedelta(weeks = service_duration)
 
         if next_due_date.month > preferred_date.month:
             preferred_date += relativedelta(years = 1)
 
         # print(f"Next due: {next_due_date} with end date {end_date} and preferred_date is {preferred_date} with pref end {preferred_end_date}")
-        
+
         # If preferred date is valid, use it
         if preferred_date <= next_due_date and not self.is_during_school_holidays(preferred_date, preferred_end_date):
             next_due_date = preferred_date
-        
+
         while True:
-            if self.is_during_school_holidays(next_due_date, end_date) or self.is_other_resource_being_serviced(next_due_date, end_date, service_dates):    
+            if self.is_during_school_holidays(next_due_date, end_date) or self.is_other_resource_being_serviced(next_due_date, end_date, service_dates):
                 next_due_date -= timedelta(days = 1)
                 end_date = next_due_date + timedelta(weeks = service_duration)
                 continue
             else:
                 break
-            
+
         return [next_due_date, end_date]

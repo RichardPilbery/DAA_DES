@@ -49,7 +49,8 @@ def write_run_params(model) -> None:
         params_df.to_csv(f"{Utils.RESULTS_FOLDER}/run_params_used.csv", header="column_names")
 
         # TODO: This will need adjusting for this being changeable in the frontend
-        model.utils.HEMS_ROTA.to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
+        # model.utils.HEMS_ROTA.to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
+        pd.read_csv("actual_data/HEMS_ROTA.csv").to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
 
 try:
      __file__
@@ -58,7 +59,6 @@ except NameError:
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-
 
 def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
            sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True,

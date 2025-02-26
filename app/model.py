@@ -9,6 +9,7 @@ import re
 
 # Plotting
 import plotly.express as px
+import plotly.graph_objects as go
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
 import _job_count_calculation
@@ -28,7 +29,8 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
-from _app_utils import iconMetricContainer, file_download_confirm, get_text, get_text_sheet
+from _app_utils import iconMetricContainer, file_download_confirm, \
+                        get_text, get_text_sheet, to_military_time
 
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
@@ -75,15 +77,45 @@ hr {
         st.subheader("Model Input Summary")
 
         st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
+
+        # Avoid reading from utils due to odd issues it seems to be introducing
+        # TODO: Explore why this is happening in more detail
+        # u = Utils()
+        # rota = u.HEMS_ROTA
+        rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+
+        for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
+            per_callsign_rota = rota[rota["callsign"]==helicopter]
+            st.caption(f"""
+{helicopter} is an {per_callsign_rota["model"].values[0]} and runs
+from {to_military_time(per_callsign_rota["summer_start"].values[0])}
+to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
+and {to_military_time(per_callsign_rota["winter_start"].values[0])}
+to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
+""")
         st.write(f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}")
+        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
+        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
+
+
+        for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
+            per_callsign_rota = rota[rota["callsign"]==car]
+            st.caption(f"""
+{car} is a {per_callsign_rota["model"].values[0]} and runs
+from {to_military_time(per_callsign_rota["summer_start"].values[0])}
+to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
+and {to_military_time(per_callsign_rota["winter_start"].values[0])}
+to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
+""")
+
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
             if st.session_state.overall_demand_mult == 100:
-                st.write(f"Demand is based on historically observed demand with no adjustments")
+                st.write(f"Demand is based on historically observed demand with no adjustments.")
             elif st.session_state.overall_demand_mult < 100:
-                st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand")
+                st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand.")
             elif st.session_state.overall_demand_mult > 100:
-                st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand")
+                st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand.")
 
         # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
         elif st.session_state.demand_adjust_type == "Per Season Demand Adjustment":
@@ -106,7 +138,7 @@ hr {
 """, key="hr"):
             st.divider()
 
-        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}")
+        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}.")
 
         if st.session_state.create_animation_input:
             st.write("An animated output will be created.")
@@ -115,20 +147,38 @@ hr {
             st.write("No animated output will be created.")
 
         if st.session_state.amb_data:
-            st.write("SWAST Ambulance Activity will be modelled")
+            st.write("SWAST Ambulance Activity will be modelled.")
         else:
-            st.write("SWAST Ambulance Activity will not be modelled")
+            st.write("SWAST Ambulance Activity will not be modelled.")
 
 
-button_run_pressed = st.button("Run simulation")
+with stylable_container(key="run_buttons",
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['blue']};
+                            color: white;
+                            border-color: white;
+                        }}
+                        """
+            ):
+    button_run_pressed = st.button(
+        "Click this button to run the simulation with the selected parameters",
+        icon=":material/play_circle:")
 
 if not st.session_state["visited_setup_page"]:
     if not button_run_pressed:
-        st.warning("You haven't set up any parameters - default parameters will be used!")
-    if not button_run_pressed:
-        if st.button("Click here to go to the parameter page, or continue to use the default model parameters",
-                    type="primary"):
-                st.switch_page("setup.py")
+        with stylable_container(key="warning_buttons",
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['orange']};
+                            color: {DAA_COLORSCHEME['charcoal']};
+                            border-color: white;
+                        }}
+                        """
+            ):
+            if st.button("**Warning**\n\nYou haven't set up any parameters - default parameters will be used!\n\nClick this button to go to the parameter page, or click the blue button above\n\nif you are happy to use the default model parameters",
+                        icon=":material/warning:"):
+                    st.switch_page("setup.py")
 
 if button_run_pressed:
     progress_text = "Simulation in progress. Please wait."
@@ -702,7 +752,8 @@ Most users will not need to look at the visualisations in this tab.
 
                         tab.plotly_chart(
                             fig,
-                            use_container_width=True
+                            use_container_width=True,
+                            key=f"p_viz_{patient_filter}_{idx}"
                         )
 
                 patient_viz()
@@ -715,25 +766,134 @@ Most users will not need to look at the visualisations in this tab.
                 @st.fragment
                 def resource_use_exploration_plots():
 
-                    run_select_ruep = st.multiselect("Choose the runs to show",
-                                resource_use_events_only["run_number"].unique(),
-                                1)
+                    run_select_ruep = st.selectbox("Choose the run to show",
+                                resource_use_events_only["run_number"].unique())
 
 
                     with st.expander("Click here to see the timings of resource use"):
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)])
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
 
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)]
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
                                         .melt(id_vars=["P_ID", "time_type", "event_type"],
                                         value_vars="timestamp_dt"))
 
-                    resource_use_fig = px.scatter(
-                        resource_use_events_only[resource_use_events_only["run_number"].isin(run_select_ruep)][["P_ID", "time_type", "timestamp_dt", "event_type"]].melt(id_vars=["P_ID", "time_type", "event_type"], value_vars="timestamp_dt"),
-                        x="value",
-                        y="time_type",
-                        color="event_type"
-                        )
+                        resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
+                            [["P_ID", "time_type", "timestamp_dt", "event_type"]]
+                            .pivot(columns="event_type", index=["P_ID","time_type"], values="timestamp_dt").reset_index())
+
+                        # get the number of referrals and assign them a value
+                        resources = resource_use_wide.time_type.unique()
+                        resource_dict = {resource: index for index, resource in enumerate(resources)}
+                        resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
+
+                        # Convert time types to numerical values
+                        # resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
+
+                        # Compute duration for each resource use
+                        resource_use_wide["resource_use_end"] = pd.to_datetime(resource_use_wide["resource_use_end"])
+                        resource_use_wide["resource_use"] = pd.to_datetime(resource_use_wide["resource_use"])
+                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
+
+                        # Convert time to numeric (e.g., seconds since the first event)
+                        time_origin = resource_use_wide["resource_use"].min()  # Set the reference time
+                        # resource_use_wide["resource_use_numeric"] = (resource_use_wide["resource_use"] - time_origin).dt.total_seconds()
+                        # resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
+
+                        # Compute duration
+                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end_numeric"] - resource_use_wide["resource_use_numeric"]
+                        resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
+
+                        # Compute duration as seconds and multiply by 1000 (to account for how datetime axis
+                        # is handled in plotly
+                        resource_use_wide["duration_seconds"] = (resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]).dt.total_seconds()*1000
+                        resource_use_wide["duration_minutes"] = resource_use_wide["duration_seconds"] / 1000 / 60
+
+                        resource_use_wide["callsign_group"] = resource_use_wide["time_type"].str.extract("(\d+)")
+
+                        resource_use_wide = resource_use_wide.sort_values(["callsign_group", "time_type"])
+
+                        st.dataframe(resource_use_wide)
+
+                        ######################################
+                        # Load in the servicing schedule df
+                        ######################################
+                        service_schedule = pd.read_csv("data/service_dates.csv")
+                        # Convert to appropriate datatypes
+                        service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
+                        service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
+                        # Calculate duration for plotting and for hover text
+                        service_schedule["duration_seconds"] = (service_schedule["service_end_date"] - service_schedule["service_start_date"]).dt.total_seconds()*1000
+                        service_schedule["duration_days"] = (service_schedule["duration_seconds"] / 1000) / 60 / 60 / 24
+                        # Match y position of the resource in the rest of the plot
+                        service_schedule["y_pos"] = service_schedule["resource"].map(resource_dict)
+                        # Limit the dataframe to only contain servicing
+                        service_schedule = service_schedule[(service_schedule["service_start_date"] <= resource_use_wide.resource_use.max()) &
+                                        (service_schedule["service_end_date"] >= resource_use_wide.resource_use.min())]
+
+                        st.dataframe(service_schedule)
+
+                    # Create figure
+                    resource_use_fig = go.Figure()
+
+                    # Add horizontal bars using actual datetime values
+                    for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
+                        callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
+
+                        service_schedule_df = service_schedule[service_schedule["resource"]==callsign]
+
+                        # Add in hatched boxes showing the servicing periods
+                        if len(service_schedule_df) > 0:
+                            resource_use_fig.add_trace(go.Bar(
+                                x=service_schedule_df["duration_seconds"],  # Duration (Timedelta)
+                                y=service_schedule_df["y_pos"],
+                                base=service_schedule_df["service_start_date"],  # Start time as actual datetime
+                                orientation="h",
+                                width=0.6,
+                                marker_pattern_shape="x",
+                                marker=dict(color="rgba(63, 63, 63, 0.30)",
+                                            line=dict(color="black", width=1)
+                                            ),
+                                name=f"Servicing = {callsign}",
+                                customdata=service_schedule_df[['resource','duration_days','service_start_date', 'service_end_date']],
+                                hovertemplate="Servicing %{customdata[0]} lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
+                            ))
+
+                        # Add in boxes showing the duration of individual calls
+                        resource_use_fig.add_trace(go.Bar(
+                            x=callsign_df["duration_seconds"],  # Duration (Timedelta)
+                            y=callsign_df["y_pos"],
+                            base=callsign_df["resource_use"],  # Start time as actual datetime
+                            orientation="h",
+                            width=0.4,
+                            marker=dict(color=list(DAA_COLORSCHEME.values())[idx],
+                                        line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
+                                        ),
+                            name=callsign,
+                            # customdata=np.stack((callsign_df['resource_use'], callsign_df['resource_use_end']), axis=-1),
+                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
+                            hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                        ))
+
+                    # Layout tweaks
+                    resource_use_fig.update_layout(
+                        title="Resource Use Over Time",
+                        barmode='overlay',
+                        xaxis=dict(
+                            title="Time",
+                            type="date",  # Ensures proper datetime scaling with zoom
+                            # tickformat="%b %d, %Y",  # Default formatting (months & days)
+                        ),
+                        yaxis=dict(
+                            title="Callsign",
+                            tickmode="array",
+                            tickvals=list(resource_dict.values()),
+                            ticktext=list(resource_dict.keys()),
+                            autorange = "reversed"
+                        ),
+                        showlegend=True,
+                        height=700
+                    )
 
                     resource_use_fig.update_xaxes(rangeslider_visible=True,
                     # rangeselector=dict(
@@ -749,6 +909,5 @@ Most users will not need to look at the visualisations in this tab.
                     st.plotly_chart(
                         resource_use_fig
                     )
-
 
                 resource_use_exploration_plots()
