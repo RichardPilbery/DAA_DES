@@ -57,13 +57,11 @@ class HEMS(Ambulance):
         """
 
         for index, row in self.servicing_schedule.iterrows():
-            
             if row['service_start_date'] <= current_dt <= row['service_end_date']:
                 self.being_serviced = True
                 return True
-            
+
         self.being_serviced = False
-        
         return False
 
     def hems_resource_on_shift(self, hour: int, season: int) -> bool:
