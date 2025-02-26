@@ -2,5 +2,5 @@ callsign,category,vehicle_type,callsign_group,summer_start,winter_start,summer_e
 H70,CC,helicopter,70,7,7,2,2,Airbus H145,12,3,2020-01-10
 CC70,CC,car,70,7,7,2,2,Volvo XC90,0,0,
 H71,EC,helicopter,71,7,7,19,17,Airbus EC135,8,3,2020-03-20
-CC71,EC,car,71,9,7,19,17,Volvo XC90,0,0,
+CC71,EC,car,71,7,7,19,17,Volvo XC90,0,0,
 CC72,CC,car,72,8,8,18,18,Volvo XC90,0,0,

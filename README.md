@@ -47,4 +47,4 @@ The model generates a CSV file containing raw data, which can then be wrangled a
 
 The web app can be run using the command
 
-`streamlit run app/app_main.py`
+`streamlit run app/app.py`

@@ -457,14 +457,20 @@ class DistributionFitUtils():
         """
 
         # Multiple resources can be sent to the same job.
-        monthly_df = self.df[['inc_date', 'first_day_of_month']].dropna()\
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'hems_result', 'vehicle_type']].dropna()\
             .drop_duplicates(subset="inc_date", keep="first")
-        
-        monthly_totals_df = monthly_df.groupby(['first_day_of_month']).count().reset_index()
 
-        #print(monthly_totals_df.head())
+        is_stand_down = monthly_df['hems_result'].str.contains("Stand Down")
+        monthly_df['stand_down_car'] = ((monthly_df['vehicle_type'] == "car") & is_stand_down).astype(int)
+        monthly_df['stand_down_helicopter'] = ((monthly_df['vehicle_type'] == "helicopter") & is_stand_down).astype(int)
 
-        monthly_totals_df.rename(columns={'first_day_of_month': 'month', 'inc_date':'jobs'}).to_csv('historical_data/historical_jobs_per_month.csv', mode="w+", index=False)
+        monthly_totals_df = monthly_df.groupby('first_day_of_month').agg(
+                                stand_down_car=('stand_down_car', 'sum'),
+                                stand_down_helicopter=('stand_down_helicopter', 'sum'),
+                                total=('vehicle_type', 'size')
+                            ).reset_index()
+
+        monthly_totals_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_jobs_per_month.csv', mode="w+", index=False)
 
     def historical_monthly_totals_by_callsign(self):
         """
