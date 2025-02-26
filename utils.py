@@ -11,6 +11,8 @@ class Utils:
     RESULTS_FOLDER = 'data'
     ALL_RESULTS_CSV = f'{RESULTS_FOLDER}/all_results.csv'
     RUN_RESULTS_CSV = f'{RESULTS_FOLDER}/run_results.csv'
+    HISTORICAL_FOLDER = 'historical_data'
+    DISTRIBUTION_FOLDER = 'distribution_data'
 
     # External file containing details of resources
     # hours of operation and servicing schedules
@@ -31,7 +33,7 @@ class Utils:
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         self.pt_outcome_by_hems_result_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_probs.csv')
         # Import maximum call duration times
-        self.max_values_df = pd.read_csv('distribution_data/upper_allowable_time_bounds.csv')
+        self.max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
 
         # Read in age distribution data into a dictionary
         age_data = []

@@ -1,10 +1,16 @@
 from csv import QUOTE_ALL
+import glob
+import os
+import sys
 import numpy as np
 import pandas as pd
 import json
 from fitter import Fitter, get_common_distributions
 from datetime import timedelta
 from utils import Utils
+
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
 class DistributionFitUtils():
     """
@@ -49,6 +55,19 @@ class DistributionFitUtils():
             "betabinom",
             "pearson3",
         ] + get_common_distributions()
+
+    def removeExistingResults(self, folder: str) -> None:
+            """
+                Removes results from previous fitting
+            """
+
+            matching_files = glob.glob(os.path.join(folder, "*.*"))
+
+            print(matching_files)
+
+            for file in matching_files:
+                os.remove(file)
+
 
     def getBestFit(self, q_times, distr=get_common_distributions(), show_summary=False):
         """
@@ -108,6 +127,10 @@ class DistributionFitUtils():
 
         # This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
+
+        self.removeExistingResults(Utils.HISTORICAL_FOLDER)
+        self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
+        
 
         #get proportions of AMPDS card by hour of day
         self.hour_by_ampds_card_probs()
@@ -584,8 +607,8 @@ class DistributionFitUtils():
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
-    test = DistributionFitUtils('external_data/clean_daa_import.csv', True)
-    #test = DistributionFitUtils('external_data/clean_daa_import-2023.csv')
+    test = DistributionFitUtils('external_data/clean_daa_import_2024.csv', True)
+    #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
 
 # Testing ----------

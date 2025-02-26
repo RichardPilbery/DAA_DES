@@ -1,25 +1,25 @@
 ,hems_result,callsign_group,vehicle_type,count,proportion
-0,Landed but no patient contact,70,car,98,0.1194
-1,Landed but no patient contact,70,helicopter,147,0.076
-2,Landed but no patient contact,71,car,14,0.0714
-3,Landed but no patient contact,71,helicopter,50,0.0776
-4,Landed but no patient contact,72,car,99,0.153
-5,Patient Conveyed,70,car,221,0.2692
-6,Patient Conveyed,70,helicopter,649,0.3356
-7,Patient Conveyed,71,car,46,0.2347
-8,Patient Conveyed,71,helicopter,241,0.3742
-9,Patient Conveyed,72,car,133,0.2056
-10,Patient Treated (not conveyed),70,car,219,0.2667
-11,Patient Treated (not conveyed),70,helicopter,522,0.2699
-12,Patient Treated (not conveyed),71,car,75,0.3827
-13,Patient Treated (not conveyed),71,helicopter,202,0.3137
-14,Patient Treated (not conveyed),72,car,269,0.4158
-15,Stand Down Before Mobile,70,car,14,0.0171
-16,Stand Down Before Mobile,70,helicopter,59,0.0305
-17,Stand Down Before Mobile,71,helicopter,13,0.0202
-18,Stand Down Before Mobile,72,car,1,0.0015
-19,Stand Down En Route,70,car,269,0.3276
-20,Stand Down En Route,70,helicopter,557,0.288
-21,Stand Down En Route,71,car,61,0.3112
-22,Stand Down En Route,71,helicopter,138,0.2143
-23,Stand Down En Route,72,car,145,0.2241
+0,Landed but no patient contact,70,car,125,0.1168
+1,Landed but no patient contact,70,helicopter,182,0.0771
+2,Landed but no patient contact,71,car,20,0.0719
+3,Landed but no patient contact,71,helicopter,52,0.0705
+4,Landed but no patient contact,72,car,126,0.1511
+5,Patient Conveyed,70,car,295,0.2757
+6,Patient Conveyed,70,helicopter,803,0.3401
+7,Patient Conveyed,71,car,58,0.2086
+8,Patient Conveyed,71,helicopter,283,0.3835
+9,Patient Conveyed,72,car,173,0.2074
+10,Patient Treated (not conveyed),70,car,287,0.2682
+11,Patient Treated (not conveyed),70,helicopter,638,0.2702
+12,Patient Treated (not conveyed),71,car,119,0.4281
+13,Patient Treated (not conveyed),71,helicopter,238,0.3225
+14,Patient Treated (not conveyed),72,car,348,0.4173
+15,Stand Down Before Mobile,70,car,16,0.015
+16,Stand Down Before Mobile,70,helicopter,71,0.0301
+17,Stand Down Before Mobile,71,helicopter,14,0.019
+18,Stand Down Before Mobile,72,car,2,0.0024
+19,Stand Down En Route,70,car,347,0.3243
+20,Stand Down En Route,70,helicopter,667,0.2825
+21,Stand Down En Route,71,car,81,0.2914
+22,Stand Down En Route,71,helicopter,151,0.2046
+23,Stand Down En Route,72,car,185,0.2218
