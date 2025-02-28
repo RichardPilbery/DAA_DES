@@ -1,5 +1,4 @@
 month,median_car_time_allocation,median_helicopter_time_allocation,median_car_time_mobile,median_helicopter_time_mobile,median_car_time_on_scene,median_helicopter_time_on_scene,median_car_time_to_clear,median_helicopter_time_to_clear,median_car_time_to_hospital,median_helicopter_time_to_hospital,median_car_time_to_scene,median_helicopter_time_to_scene,median_car_total_job_time,median_helicopter_total_job_time
-2022-07-01,11.0,7.5,2.0,6.0,15.0,33.5,30.0,23.0,25.0,28.5,14.5,21.5,59.0,101.0
 2022-08-01,10.0,9.0,3.0,5.0,26.0,25.5,27.0,23.0,32.0,30.0,22.0,20.0,70.0,86.0
 2022-09-01,7.0,9.0,2.0,5.0,30.5,30.0,35.0,26.0,12.5,32.0,15.0,22.0,65.0,97.0
 2022-10-01,10.0,10.0,2.0,5.0,21.0,28.5,24.0,26.5,20.0,27.0,15.0,20.5,64.5,81.0
