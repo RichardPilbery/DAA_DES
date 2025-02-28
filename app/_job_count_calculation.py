@@ -367,7 +367,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
 
         historical_summary = (
             historical_jobs_per_month
-            .groupby('Month_Numeric')['jobs']
+            .groupby('Month_Numeric')['total_jobs']
             .agg(["max","min"])
             .reset_index()
             .rename(columns={"max": "historic_max", "min": "historic_min"})
@@ -382,8 +382,8 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         #     .apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
         #     )
 
-        if (historical_jobs_per_month["jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
-            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["jobs"].max() * 1.1)})
+        if (historical_jobs_per_month["total_jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
+            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["total_jobs"].max() * 1.1)})
 
         if show_historical_individual_years:
             for idx, year  in enumerate(historical_jobs_per_month["Year_Numeric"].unique()):
@@ -398,7 +398,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                 # Add the trace for the current year
                 fig.add_trace(go.Scatter(
                     x=new_df["month_start"],
-                    y=new_df["jobs"],
+                    y=new_df["total_jobs"],
                     mode='lines+markers',
                     opacity=0.7,
                     name=str(year),  # Using the year as the trace name
