@@ -487,65 +487,69 @@ st.header(get_text("additional_params_header", text_df))
 
 st.caption(get_text("additional_params_help", text_df))
 
-with st.expander(get_text("additional_params_expander_title", text_df)):
-    number_of_runs_input = st.slider(
-        "Number of Runs",
-        min_value=1,
-        max_value=30,
-        value=st.session_state.number_of_runs_input,
-        on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
-        key="key_number_of_runs_input"
-        )
+@st.fragment
+def additional_params_expander():
+    with st.expander(get_text("additional_params_expander_title", text_df)):
+        number_of_runs_input = st.slider(
+            "Number of Runs",
+            min_value=1,
+            max_value=30,
+            value=st.session_state.number_of_runs_input,
+            on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
+            key="key_number_of_runs_input"
+            )
 
-    sim_duration_input =  st.slider(
-        "Simulation Duration (days)",
-        min_value=1,
-        max_value=365*3,
-        value=st.session_state.sim_duration_input,
-        on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
-        key="key_sim_duration_input"
-        )
+        sim_duration_input =  st.slider(
+            "Simulation Duration (days)",
+            min_value=1,
+            max_value=365*3,
+            value=st.session_state.sim_duration_input,
+            on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
+            key="key_sim_duration_input"
+            )
 
-    warm_up_duration =  st.slider(
-        "Warm-up Duration (hours)",
-        min_value=0,
-        max_value=24*10,
-        value=st.session_state.warm_up_duration,
-        on_change= lambda: setattr(st.session_state, 'warm_up_duration', st.session_state.key_warm_up_duration),
-        key="key_warm_up_duration"
-        )
+        warm_up_duration =  st.slider(
+            "Warm-up Duration (hours)",
+            min_value=0,
+            max_value=24*10,
+            value=st.session_state.warm_up_duration,
+            on_change= lambda: setattr(st.session_state, 'warm_up_duration', st.session_state.key_warm_up_duration),
+            key="key_warm_up_duration"
+            )
 
-    st.caption(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
+        st.caption(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
 
-    sim_start_date_input = st.date_input(
-        "Select the starting day for the simulation",
-        value=st.session_state.sim_start_date_input,
-        on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
-        key="key_sim_start_date_input"
-        )
+        sim_start_date_input = st.date_input(
+            "Select the starting day for the simulation",
+            value=st.session_state.sim_start_date_input,
+            on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
+            key="key_sim_start_date_input"
+            )
 
-    sim_start_time_input = st.time_input(
-        "Select the starting time for the simulation",
-        value=st.session_state.sim_start_time_input,
-        on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
-        key="key_sim_start_time_input"
-        )
+        sim_start_time_input = st.time_input(
+            "Select the starting time for the simulation",
+            value=st.session_state.sim_start_time_input,
+            on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
+            key="key_sim_start_time_input"
+            )
 
-    create_animation_input = st.toggle(
-        "Create Animation",
-        value=st.session_state.create_animation_input,
-        on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
-        key="key_create_animation_input",
-        disabled=True
-        )
+        create_animation_input = st.toggle(
+            "Create Animation",
+            value=st.session_state.create_animation_input,
+            on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
+            key="key_create_animation_input",
+            disabled=True
+            )
 
-    amb_data = st.toggle(
-        "Model ambulance service data",
-        value=st.session_state.amb_data,
-        on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
-        key="key_amb_data",
-        disabled=True
-        )
+        amb_data = st.toggle(
+            "Model ambulance service data",
+            value=st.session_state.amb_data,
+            on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
+            key="key_amb_data",
+            disabled=True
+            )
+
+additional_params_expander()
 
 st.divider()
 
