@@ -522,16 +522,16 @@ def additional_params_expander():
         sim_start_date_input = st.date_input(
             "Select the starting day for the simulation",
             value=st.session_state.sim_start_date_input,
-            on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
+            on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input.strftime("%Y-%m-%d")),
             key="key_sim_start_date_input"
-            )
+        ).strftime("%Y-%m-%d")
 
         sim_start_time_input = st.time_input(
             "Select the starting time for the simulation",
             value=st.session_state.sim_start_time_input,
-            on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
+            on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input.strftime("%H:%M")),
             key="key_sim_start_time_input"
-            )
+            ).strftime("%H:%M")
 
         create_animation_input = st.toggle(
             "Create Animation",
