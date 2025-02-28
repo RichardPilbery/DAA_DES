@@ -141,13 +141,6 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_mont
 
         if average_per_month:
             hourly_calls_per_run['average_per_day'] = hourly_calls_per_run['count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24 / 30)
-            # hourly_calls_per_run['average_per_day'] = hourly_calls_per_run['count'] / 30
-            # fig = px.box(hourly_calls_per_run,
-            #               x="hour", y="average_per_day",
-            #               color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-            #               labels={"average_per_day": "Average Monthly Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
-            #                       "hour": "Hour"},
-            #               title=title).update_xaxes(dtick=1)
             y_column = "average_per_day"
             y_label = "Average Monthly Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs"
         else:
@@ -164,8 +157,6 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_mont
             marker=dict(color=DAA_COLORSCHEME[bar_colour]),
             showlegend=True,
             boxpoints="outliers",  # Show all data points
-            # jitter=0.3,  # Spread out points slightly for visibility
-            # pointpos=-1.8  # Offset points to avoid overlap with the box
         ))
 
         # Update layout
@@ -174,32 +165,26 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_mont
             xaxis=dict(title="Hour", dtick=1),
             yaxis=dict(title=y_label)
         )
-            # fig = px.box(hourly_calls_per_run,
-            #               x="hour", y="count",
-            #               color_discrete_sequence=[DAA_COLORSCHEME[bar_colour]],
-            #               labels={"count": "Total Calls Per Hour Across Simulation<br>Averaged Across Simulation Runs",
-            #             "hour": "Hour"},
-            #               title=title).update_xaxes(dtick=1)
 
     else:
 
         # Create required dataframe for simulation output display
         aggregated_data = hourly_calls_per_run.groupby("hour").agg(
             mean_count=("count", "mean"),
-            std_count=("count", "std")
+            # std_count=("count", "std")
+            se_count=("count", lambda x: x.std() / np.sqrt(len(x)))  # Standard Error
         ).reset_index()
 
         if show_error_bars_bar:
-                error_y = "std_count"
+                # error_y = aggregated_data["std_count"]
+                error_y = aggregated_data["se_count"]
         else:
             error_y=None
 
         if average_per_month:
-            # aggregated_data['mean_count'] = aggregated_data['mean_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
-            # aggregated_data['std_count'] = aggregated_data['std_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24)
-
             aggregated_data['mean_count'] = aggregated_data['mean_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
-            aggregated_data['std_count'] = aggregated_data['std_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
+            # aggregated_data['std_count'] = aggregated_data['std_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
+            aggregated_data['se_count'] = aggregated_data['se_count'] / (float(_processing_functions.get_param("sim_duration", params_df))/60/24/ 30)
 
 
             fig.add_trace(go.Bar(
