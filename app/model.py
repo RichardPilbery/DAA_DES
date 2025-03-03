@@ -16,6 +16,7 @@ import _job_count_calculation
 import _vehicle_calculation
 import _utilisation_result_calculation
 import _job_time_calcs
+import _app_utils
 
 from _app_utils import DAA_COLORSCHEME
 
@@ -243,17 +244,18 @@ if button_run_pressed:
             "Key Visualisations",
             "Comparing Model with Historic Data",
             "Additional Outputs",
+            "Download Output"
             ]
 
         my_bar.empty()
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
                 tab_names
             )
         else:
-            tab1, tab2, tab3, tab4 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
             )
 
@@ -265,19 +267,21 @@ if button_run_pressed:
             return pd.read_csv("data/run_params_used.csv")
 
         with tab1:
-            @st.fragment
-            def download_button_quarto():
-                # st.download_button(
-                st.button(
-                    "(COMING SOON!) Click here to download these results as a file",
-                    on_click=file_download_confirm,
-                    icon=":material/download:",
-                    disabled=True
-                    )
+            # @st.fragment
+            # def download_button_quarto():
+            #     # st.download_button(
+            #     st.button(
+            #         "(COMING SOON!) Click here to download these results as a file",
+            #         on_click=file_download_confirm,
+            #         icon=":material/download:",
+            #         disabled=True
+            #         )
 
-            download_button_quarto()
+            # download_button_quarto()
 
             st.info(f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs")
+
+            report_message = st.empty()
 
             historical_utilisation_df_complete, historical_utilisation_df_summary = (
                 _utilisation_result_calculation.make_RWC_utilisation_dataframe(
@@ -905,3 +909,6 @@ Most users will not need to look at the visualisations in this tab.
                     )
 
                 resource_use_exploration_plots()
+
+        with tab5:
+            _app_utils.generate_quarto_report(report_message, run_quarto_check=False)

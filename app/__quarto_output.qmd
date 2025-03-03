@@ -1,0 +1,37 @@
+---
+title: "Air Ambulance Simulation - Report"
+execute:
+  echo: false
+format:
+    html:
+        # toc: true
+        embed-resources: true
+        # URL options
+        link-external-icon: true
+        link-external-newwindow: true
+        # Reference options
+        citations-hover: true
+        footnotes-hover: true
+        #####################
+        # Theme options #
+        #####################
+        css: "report_theme.css"
+        callout-appearance: simple
+        callout-collapse: true
+        # Caption options
+        cap-location: bottom
+        # Title options
+        title-block-banner: '#00B0B9'
+        backgroundcolor: '#f0f4f5'
+        # Set font
+        mainfont: 'Poppins'
+---
+
+
+This is a test output.
+
+```{python}
+import pandas as pd
+
+pd.read_csv("../data/run_params_used.csv")
+```

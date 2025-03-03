@@ -1,10 +1,15 @@
 import streamlit as st
 from _state_control import setup_state
+from _app_utils import get_quarto
+import platform
 
 setup_state()
 
 if "visited_setup_page" not in st.session_state:
     st.session_state["visited_setup_page"] = False
+
+if platform.processor() == '':
+    get_quarto("quarto_streamlit_community_cloud") # This name must match the repository name on GitHub
 
 pg = st.navigation(
 
