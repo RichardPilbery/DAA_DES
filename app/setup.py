@@ -487,15 +487,16 @@ st.header(get_text("additional_params_header", text_df))
 
 st.caption(get_text("additional_params_help", text_df))
 
-with st.expander(get_text("additional_params_expander_title", text_df)):
+@st.fragment
+def additional_params_expander():
     number_of_runs_input = st.slider(
-        "Number of Runs",
-        min_value=1,
-        max_value=30,
-        value=st.session_state.number_of_runs_input,
-        on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
-        key="key_number_of_runs_input"
-        )
+            "Number of Runs",
+            min_value=1,
+            max_value=30,
+            value=st.session_state.number_of_runs_input,
+            on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
+            key="key_number_of_runs_input"
+            )
 
     sim_duration_input =  st.slider(
         "Simulation Duration (days)",
@@ -520,16 +521,25 @@ with st.expander(get_text("additional_params_expander_title", text_df)):
     sim_start_date_input = st.date_input(
         "Select the starting day for the simulation",
         value=st.session_state.sim_start_date_input,
-        on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input),
+        on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input.strftime("%Y-%m-%d")),
         key="key_sim_start_date_input"
-        )
+    ).strftime("%Y-%m-%d")
 
     sim_start_time_input = st.time_input(
         "Select the starting time for the simulation",
         value=st.session_state.sim_start_time_input,
-        on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input),
+        on_change=lambda: setattr(st.session_state, 'sim_start_time_input', st.session_state.key_sim_start_time_input.strftime("%H:%M")),
         key="key_sim_start_time_input"
-        )
+        ).strftime("%H:%M")
+
+    activity_duration_multiplier = st.slider(
+        "Apply a multiplier to activity times",
+        value=st.session_state.activity_duration_multiplier,
+        max_value=2.0,
+        min_value=0.7,
+        on_change=lambda: setattr(st.session_state, 'activity_duration_multiplier', st.session_state.key_activity_duration_multiplier),
+        key="key_activity_duration_multiplier"
+    )
 
     create_animation_input = st.toggle(
         "Create Animation",
@@ -546,6 +556,9 @@ with st.expander(get_text("additional_params_expander_title", text_df)):
         key="key_amb_data",
         disabled=True
         )
+
+with st.expander(get_text("additional_params_expander_title", text_df)):
+    additional_params_expander()
 
 st.divider()
 

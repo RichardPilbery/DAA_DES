@@ -15,6 +15,7 @@ from vidigi.prep import reshape_for_animations, generate_animation_df
 import _job_count_calculation
 import _vehicle_calculation
 import _utilisation_result_calculation
+import _job_time_calcs
 
 from _app_utils import DAA_COLORSCHEME
 
@@ -203,7 +204,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
                         amb_data=st.session_state.amb_data,
-                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
+                        activity_duration_multiplier=float(st.session_state.activity_duration_modifier)
                     )
 
                 results.append(
@@ -229,7 +231,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
                         amb_data = st.session_state.amb_data,
-                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -254,12 +257,10 @@ if button_run_pressed:
                 tab_names
             )
 
-        # @st.cache_data
         def get_job_count_df():
             return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
                                                             path="data/run_results.csv")
 
-        # @st.cache_data
         def get_params_df():
             return pd.read_csv("data/run_params_used.csv")
 
@@ -278,6 +279,14 @@ if button_run_pressed:
 
             st.info(f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs")
 
+            historical_utilisation_df_complete, historical_utilisation_df_summary = (
+                _utilisation_result_calculation.make_RWC_utilisation_dataframe(
+                    historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
+                    rota_path="actual_data/HEMS_ROTA.csv",
+                    service_path="data/service_dates.csv"
+                    )
+                )
+
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
@@ -285,13 +294,22 @@ if button_run_pressed:
                     st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
                             _vehicle_calculation.get_perc_unattended_string(results_all_runs),
                             border=True)
+
+                    st.warning("""
+Data on the number of calls that were historically not attended due to resource unavailability is being added soon - a comparison with the model's figures
+will be available at this point
+                            """)
+
                     st.caption(get_text("missed_calls_description", text_df))
 
             with t1_col2:
                 resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
-                    path="data/run_results.csv", params_path="data/run_params_used.csv",
+                    path="data/run_results.csv",
+                    params_path="data/run_params_used.csv",
+                    service_path="data/service_dates.csv",
                     rota_path="data/hems_rota_used.csv"
                 )
+
                 t1_col_2_a, t1_col_2_b = st.columns(2)
                 with t1_col_2_a:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
@@ -299,11 +317,23 @@ if button_run_pressed:
                                 utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0],
                                 border=True)
 
+                    h70_hist = _utilisation_result_calculation.get_hist_util_fig(
+                        historical_utilisation_df_summary, "H70", "mean"
+                    )
+
+                    st.caption(f"*The historical average utilisation of H70 was {h70_hist}%*")
+
                 with t1_col_2_b:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
                         st.metric("Average H71 Utilisation",
                                 utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0],
                                 border=True)
+
+                    h71_hist = _utilisation_result_calculation.get_hist_util_fig(
+                        historical_utilisation_df_summary, "H71", "mean"
+                    )
+
+                    st.caption(f"*The historical average utilisation of H71 was {h71_hist}%*")
 
                 st.caption(get_text("helicopter_utilisation_description", text_df))
 
@@ -322,159 +352,58 @@ if button_run_pressed:
 
 
         with tab2:
-            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "Coming Soon"])
+            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "'Missed' Calls"])
             with tab_2_1:
-                st.header("Summary Graphs")
-
-                st.caption("""
-Plots on this page reflect the values generated by the simulation.
-                """)
-
-                tab_2_1_col_1, tab_2_1_col_2 = st.columns(2)
-
-                with tab_2_1_col_1:
-                    st.subheader("Utilisation by Callsign")
-
-                    st.warning("This is a placeholder graph - real simulation outputs not shown")
-
-                    heli_util_df_dummy = pd.DataFrame([
-                        {"Vehicle": "H70/CC70",
-                        "Average Utilisation": 89},
-                        {"Vehicle": "H71/CC71",
-                        "Average Utilisation": 61},
-                        {"Vehicle": "CC72",
-                         "Average Utilisation": 71}
-                        ]
-                    )
-
-                    util_fig_simple = px.bar(heli_util_df_dummy,
-                            x="Average Utilisation",
-                            y="Vehicle",
-                            orientation="h",
-                            height=300
-                            ).update_xaxes(ticksuffix = "%", range=[0, 105])
-
-                    # Add optimum range
-                    util_fig_simple.add_vrect(x0=65, x1=85,
-                                            fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
-                    # Add extreme range (above)
-                    util_fig_simple.add_vrect(x0=85, x1=100,
-                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
-                    # Add suboptimum range (below)
-                    util_fig_simple.add_vrect(x0=40, x1=65,
-                                            fillcolor="#FDD049", opacity=0.25, line_width=0)
-                    # Add extreme range (below)
-                    util_fig_simple.add_vrect(x0=0, x1=40,
-                                            fillcolor="#D45E5E", opacity=0.25, line_width=0)
+                @st.fragment
+                def create_utilisation_rwc_plot():
+                    call_df = get_job_count_df()
 
                     st.plotly_chart(
-                        util_fig_simple
+                        _utilisation_result_calculation.create_UTIL_rwc_plot(
+                        call_df,
+                        real_data_path="historical_data/historical_monthly_totals_by_callsign.csv"
+                        )
                     )
 
-                with tab_2_1_col_2:
-                    st.subheader("Helicopter and Backup Utilisation Split")
+                create_utilisation_rwc_plot()
 
-                    @st.fragment
-                    def make_util_within_callsign_group_plot():
-                        call_df = get_job_count_df()
-                        return st.plotly_chart(
-                            _utilisation_result_calculation.make_SIMULATION_stacked_callsign_util_plot(call_df)
-                        )
+                historical_monthly_totals_df = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
+                historical_monthly_totals_df["month"] = pd.to_datetime(historical_monthly_totals_df["month"], format="%Y-%m-%d")
 
-                    st.success("This is a graph using real simulation outputs")
+                st.caption(f"""
+This plot shows the split within a callsign group of resources that are sent on jobs.
+Bars within a callsign group will sum to 100%.
 
-                    make_util_within_callsign_group_plot()
+Dotted lines indicate the average historical allocation seen of resources within a callsign group,
+averaged over {len(historical_monthly_totals_df)} months, drawing on data
+from {historical_monthly_totals_df.month.min().strftime("%B %Y")}
+to {historical_monthly_totals_df.month.max().strftime("%B %Y")}.
 
-                st.header("Per-run Breakdowns")
+If the simulation is using the default parameters, we would expect the dotted lines to be roughly level with the top of the
+relevant bars - though being out by a few % is not too unusual due to the natural variation that occurs across
+simulation runs.
 
-                st.warning("This is a placeholder graph - real simulation outputs not shown")
-
-                st.subheader("Variation in Vehicle Utilisation per Run")
-                heli_util_df_dummy = pd.DataFrame([
-                    {"Vehicle": "H70/CC70",
-                    "Utilisation": 89,
-                    "Run": 1},
-                    {"Vehicle": "H70/CC70",
-                    "Utilisation": 85,
-                    "Run": 2},
-                    {"Vehicle": "H70/CC70",
-                    "Utilisation": 83,
-                    "Run": 3},
-                    {"Vehicle": "H70/CC70",
-                    "Utilisation": 91,
-                    "Run": 4},
-                    {"Vehicle": "H70/CC70",
-                    "Utilisation": 82,
-                    "Run": 5},
-                    {"Vehicle": "H71/CC71",
-                    "Utilisation": 61,
-                    "Run": 1},
-                    {"Vehicle": "H71/CC71",
-                    "Utilisation": 64,
-                    "Run": 2},
-                    {"Vehicle": "H71/CC71",
-                    "Utilisation": 63,
-                    "Run": 3},
-                    {"Vehicle": "H71/CC71",
-                    "Utilisation": 59,
-                    "Run": 4},
-                    {"Vehicle": "H71/CC71",
-                    "Utilisation": 68,
-                    "Run": 5},
-                    {"Vehicle": "CC72",
-                        "Utilisation": 71,
-                        "Run": 1},
-                    {"Vehicle": "CC72",
-                        "Utilisation": 72,
-                        "Run": 2},
-                    {"Vehicle": "CC72",
-                        "Utilisation": 73,
-                        "Run": 3},
-                    {"Vehicle": "CC72",
-                        "Utilisation": 68,
-                        "Run": 4},
-                    {"Vehicle": "CC72",
-                        "Utilisation": 74,
-                        "Run": 5}
-                    ]
-                )
-
-                util_fig_advanced = px.box(heli_util_df_dummy,
-                        x="Utilisation",
-                        y="Vehicle",
-                        orientation="h",
-                        height=300,
-                        points="all"
-                        ).update_xaxes(ticksuffix = "%", range=[0, 105])
-
-                # Add optimum range
-                util_fig_advanced.add_vrect(x0=65, x1=85,
-                                        fillcolor="#5DFDA0", opacity=0.25,  line_width=0)
-                # Add extreme range (above)
-                util_fig_advanced.add_vrect(x0=85, x1=100,
-                                        fillcolor="#D45E5E", opacity=0.25, line_width=0)
-                # Add suboptimum range (below)
-                util_fig_advanced.add_vrect(x0=40, x1=65,
-                                        fillcolor="#FDD049", opacity=0.25, line_width=0)
-                # Add extreme range (below)
-                util_fig_advanced.add_vrect(x0=0, x1=40,
-                                        fillcolor="#D45E5E", opacity=0.25, line_width=0)
-
-                st.plotly_chart(
-                    util_fig_advanced
-                )
+If the simulation is not using the default parameters, we would not expect the output to match the historical data, but you may
+    wish to consider the historical split as part of your decision making.
+                """)
 
                 with tab_2_2:
 
-                    st.subheader("Placeholder")
+                    st.warning("""
+Data on the number of calls that were historically not attended due to resource unavailability is being added soon - a comparison with the model's figures
+will be available at this point
+                            """)
 
 
         with tab3:
 
-            tab_3_1, tab_3_2, tab_3_3 = st.tabs([
+            # tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
+            tab_3_1, tab_3_2, tab_3_3, tab_3_4 = st.tabs([
                 "Jobs per Month",
                 "Jobs per Hour",
-                "Utilisation Comparison"
+                "Jobs per Day",
+                "Job Durations - Overall",
+                # "Job Durations - Split"
                 ])
 
             with tab_3_1:
@@ -560,38 +489,103 @@ Partial months are excluded for ease of interpretation.
                 plot_jobs_per_hour()
 
             with tab_3_3:
-                @st.fragment
-                def create_utilisation_rwc_plot():
-                    call_df = get_job_count_df()
 
-                    st.plotly_chart(
-                        _utilisation_result_calculation.create_UTIL_rwc_plot(
-                        call_df,
-                        real_data_path="historical_data/historical_monthly_totals_by_callsign.csv"
+                @st.fragment
+                def plot_jobs_per_day():
+                    call_df = get_job_count_df()
+                    params_df = get_params_df()
+                    # help_jph = get_text("help_jobs_per_hour", text_df)
+                    jpd_1, jpd_2, jpd_3, jpd_4 = st.columns(4)
+
+                    display_historic_jph_pd = jpd_1.toggle(
+                        "Display Historic Data",
+                        value=True,
+                         key="historic_pd"
+                        )
+
+                    average_per_month_pd = jpd_2.toggle(
+                        "Display Average Calls Per Day",
+                        value=True,
+                        # help= help_jph,
+                        key="average_pd"
+
+                        )
+
+                    display_advanced_pd = jpd_3.toggle("Display Advanced Plot", value=False,
+                                                        key="advanced_pd")
+
+                    if not display_advanced_pd:
+                        display_error_bars_bar_pd = jpd_4.toggle("Display Variation",
+                                                        key="variation_pd")
+                    else:
+                        display_error_bars_bar_pd = False
+
+                    st.plotly_chart(_job_count_calculation.plot_daily_call_counts(
+                        call_df, params_df,
+                        average_per_month=average_per_month_pd,
+                        box_plot=display_advanced_pd,
+                        show_error_bars_bar=display_error_bars_bar_pd,
+                        use_poppins=True,
+                        show_historical=display_historic_jph_pd,
+                        historical_data_path="historical_data/historical_monthly_totals_by_day_of_week.csv"
+                        ))
+
+                plot_jobs_per_day()
+
+            with tab_3_4:
+                historical_time_df = _job_time_calcs.get_historical_times(
+                            'historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
+                            )
+
+                st.plotly_chart(
+                    _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
+                        historical_time_df,
+                        utilisation_model_df=_job_time_calcs.get_total_times_model(
+                            get_summary=False,
+                            path="data/run_results.csv",
+                            params_path="data/run_params_used.csv",
+                            rota_path="data/hems_rota_used.csv",
+                            service_path="data/service_dates.csv"),
+                        use_poppins=True
                         )
                     )
 
-                create_utilisation_rwc_plot()
+                st.caption("""
+This plot looks at the total amount of time each resource was in use during the simulation.
 
-                historical_monthly_totals_df = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
-                historical_monthly_totals_df["month"] = pd.to_datetime(historical_monthly_totals_df["month"], format="%Y-%m-%d")
+All simulated points are represented in the box plots.
 
-                st.caption(f"""
-This plot shows the split within a callsign group of resources that are sent on jobs.
-Bars within a callsign group will sum to 100%.
+The blue bars give an indication of the historical averages
 
-Dotted lines indicate the average historical allocation seen of resources within a callsign group,
-averaged over {len(historical_monthly_totals_df)} months, drawing on data
-from {historical_monthly_totals_df.month.min().strftime("%B %Y")}
-to {historical_monthly_totals_df.month.max().strftime("%B %Y")}.
+We would expect the median - the central horizontal line within the box portion of the box plots -
+to fall within the blue box for each resource type, and likely to be fairly central within that
+region.
+""")
 
-If the simulation is using the default parameters, we would expect the dotted lines to be roughly level with the top of the
-relevant bars - though being out by a few % is not too unusual due to the natural variation that occurs across
-simulation runs.
+            # with tab_3_5:
+            #     event_log_df = _job_time_calcs.create_simulation_event_duration_df(
+            #                 event_log_path="data/run_results.csv"
+            #                 )
 
-If the simulation is not using the default parameters, we would not expect the output to match the historical data, but you may
-wish to consider the historical split as part of your decision making.
-                """)
+
+
+            #     st.plotly_chart(
+            #         _job_time_calcs.plot_activity_time_breakdowns(
+            #             historical_activity_times=historical_time_df,
+            #             event_log_df=event_log_df,
+            #             title="Simulation Event Times Breakdown - Helicopter",
+            #             vehicle_type="helicopter"
+            #         )
+            #     )
+
+            #     st.plotly_chart(
+            #         _job_time_calcs.plot_activity_time_breakdowns(
+            #             historical_activity_times=historical_time_df,
+            #             event_log_df=event_log_df,
+            #             title="Simulation Event Times Breakdown - Car",
+            #             vehicle_type="car"
+            #         )
+            #     )
 
         with tab4:
 
@@ -601,9 +595,9 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2 = st.tabs(["Debug Events", "Debug Resources"])
+            tab_4_1, tab_4_2 = st.tabs(["Debug Resources", "Debug Events"])
 
-            with tab_4_1:
+            with tab_4_2:
                 st.subheader("Event Overview")
 
                 @st.fragment
@@ -758,7 +752,7 @@ Most users will not need to look at the visualisations in this tab.
 
                 patient_viz()
 
-            with tab_4_2:
+            with tab_4_1:
                 st.subheader("Resource Use")
 
                 resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]

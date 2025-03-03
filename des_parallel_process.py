@@ -42,6 +42,7 @@ def write_run_params(model) -> None:
              # This is defined in class_hems and will need updating here too
             'summer_start_date': [f'{sim_start_date.year}-04-01'],
             'winter_start_date':  [f'{sim_start_date.year}-10-01'],
+            'activity_duration_multiplier': [model.activity_duration_multiplier]
         }, orient='index', columns=['value'])
 
         params_df.index.name = "parameter"
@@ -60,9 +61,15 @@ except NameError:
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 
-def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
-           sim_start_date: datetime, amb_data: bool, save_params_csv: bool = True,
-           demand_increase_percent: float = 1.0):
+def runSim(run: int,
+           total_runs: int,
+           sim_duration: int,
+           warm_up_time: int,
+           sim_start_date: datetime,
+           amb_data: bool,
+           save_params_csv: bool = True,
+           demand_increase_percent: float = 1.0,
+           activity_duration_multiplier: float = 1.0):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
 
     print(f'{Utils.current_time()}: Demand increase set to {demand_increase_percent*100}%')
@@ -79,7 +86,9 @@ def runSim(run: int, total_runs: int, sim_duration: int, warm_up_time: int,
                         warm_up_duration=warm_up_time,
                         sim_start_date=sim_start_date,
                         amb_data=amb_data,
-                        demand_increase_percent=demand_increase_percent)
+                        demand_increase_percent=demand_increase_percent,
+                        activity_duration_multiplier=activity_duration_multiplier
+                        )
     daa_model.run()
 
     print(f'{Utils.current_time()}: Run {run+1} took {round((time.process_time() - start)/60, 1)} minutes to run')
@@ -117,16 +126,21 @@ def removeExistingResults() -> None:
         if os.path.isfile(all_results_file_path):
             os.unlink(all_results_file_path)
 
-def parallelProcessJoblib(total_runs: int, sim_duration: int, warm_up_time: int,
-                        sim_start_date: datetime, amb_data: bool,
-                        save_params_csv: bool = True, demand_increase_percent: float = 1.0):
+def parallelProcessJoblib(total_runs: int,
+                          sim_duration: int,
+                          warm_up_time: int,
+                          sim_start_date: datetime,
+                          amb_data: bool,
+                          save_params_csv: bool = True,
+                          demand_increase_percent: float = 1.0,
+                          activity_duration_multiplier: float = 1.0):
 
-    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data, save_params_csv, demand_increase_percent) for run in range(total_runs))
+    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data, save_params_csv, demand_increase_percent, activity_duration_multiplier) for run in range(total_runs))
 
 if __name__ == "__main__":
     removeExistingResults()
     #parallelProcessJoblib(1, (2*365*24*60), (0*60), datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"), False, 1.0)
-    parallelProcessJoblib(5, (2*365*24*60), (0*60), datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"), False, 1.0)
+    parallelProcessJoblib(5, (2*365*24*60), (0*60), datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"), False, False, 1.0, 1.0)
 
 # Testing ----------
 # python des_parallel_process.py
