@@ -172,6 +172,86 @@ def plot_historical_utilisation_vs_simulation_overall(
     return fig
 
 
+def plot_activity_time_breakdowns(historical_activity_times,
+                                  event_log_df,
+                                  title,
+                                  vehicle_type="helicopter",
+                                  use_poppins=True):
+
+    single_vehicle_type_df = event_log_df[event_log_df["vehicle_type"]==vehicle_type]
+
+    historical_single_vehicle_type = historical_activity_times.set_index("month").filter(like=vehicle_type).reset_index()
+
+    str_map = {
+        f"median_{vehicle_type}_time_allocation": "HEMS allocated to call",
+        f"median_{vehicle_type}_time_mobile": "HEMS mobile",
+        f'median_{vehicle_type}_time_on_scene': "HEMS on scene",
+        f'median_{vehicle_type}_time_to_clear': "HEMS clear",
+        f'median_{vehicle_type}_time_to_hospital': "HEMS leaving scene",
+        f'median_{vehicle_type}_time_to_scene': "HEMS arrived destination",
+        f'median_{vehicle_type}_total_job_time': "HEMS total job time",
+    }
+
+    historical_single_vehicle_type_long = historical_single_vehicle_type.melt(id_vars="month")
+
+    historical_single_vehicle_type_long['Event'] = historical_single_vehicle_type_long['variable'].apply(
+        lambda x: str_map[x]
+        )
+
+    fig = go.Figure()
+
+    fig.add_trace(
+        go.Box(
+            x=single_vehicle_type_df['time_type'],
+            y=single_vehicle_type_df['time_elapsed_minutes'],
+            name="Simulated Range"
+        )
+    )
+
+    for idx, event_type in enumerate(single_vehicle_type_df['time_type'].unique()):
+
+        historical_df = historical_single_vehicle_type_long[historical_single_vehicle_type_long["Event"]==event_type]
+
+        fig.add_trace(
+            go.Bar(
+                x=[event_type],
+                y=[q90(historical_df['value']) - q10(historical_df['value'])],  # Height of the box
+                base=[q10(historical_df['value'])],  # Start from q10
+                marker=dict(color="rgba(0, 176, 185, 0.3)"),
+                showlegend=True if idx==0 else False,
+                name="Usual Historical Range"
+            )
+        )
+
+
+    fig.update_layout(title=title)
+
+    order_of_events = [
+        'HEMS call start',
+        # 'No HEMS available',
+        'HEMS allocated to call',
+        # 'HEMS stand down before mobile',
+        'HEMS mobile',
+        # 'HEMS stand down en route',
+        'HEMS on scene',
+        # 'HEMS landed but no patient contact',
+        'HEMS leaving scene',
+        # 'HEMS patient treated (not conveyed)',
+        'HEMS arrived destination',
+        'HEMS clear'
+        ]
+
+    fig.update_xaxes(
+        categoryorder='array',
+        categoryarray=order_of_events
+        )
+
+    # Adjust font to match DAA style
+    if use_poppins:
+        fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
+
+    return fig
+
 def plot_total_times(utilisation_model_df, by_run=False):
 
     if not by_run:
