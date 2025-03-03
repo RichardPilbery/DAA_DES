@@ -5,23 +5,35 @@ from _app_utils import DAA_COLORSCHEME
 import _vehicle_calculation
 import _job_count_calculation
 import plotly.graph_objects as go
+from datetime import datetime, timedelta
+import re
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",
-                                     rota_path="../data/hems_rota_used.csv"):
+                                     rota_path="../data/hems_rota_used.csv",
+                                     service_path="../data/service_dates.csv"):
     df = pd.read_csv(path)
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
 
     # First get the dataframe of true availability hours
     # TODO: Incorporate servicing unavailability into this
-    daily_availability, total_avail_hours, total_avail_minutes = (
-        _vehicle_calculation.calculate_available_hours(
-            params_df, rota_path=rota_path
-        )
-    )
+    # daily_availability, total_avail_hours, total_avail_minutes = (
+    #     _vehicle_calculation.calculate_available_hours(
+    #         params_df, rota_path=rota_path
+    #     )
+    # )
+    daily_availability, total_avail_minutes = (
+        _vehicle_calculation.calculate_available_hours_v2(
+            params_df,
+            rota_data=pd.read_csv(rota_path),
+            service_data=pd.read_csv(service_path),
+            output_by_month=False,
+            long_format_df=False
+                    )
+                )
 
-    del daily_availability, total_avail_hours
+    # del daily_availability, total_avail_minutes
 
     # Add callsign column if not already present in the dataframe passed to the function
     if 'callsign' not in df.columns:
@@ -292,12 +304,154 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall,
     else:
         return fig
 
-def make_RWC_utilisation_dataframe(utilisation_df):
-    pass
+def make_RWC_utilisation_dataframe(
+        historical_df_path="../historical_data/historical_monthly_resource_utilisation.csv",
+        rota_path="../actual_data/HEMS_ROTA.csv",
+        service_path="../data/service_dates.csv"):
+    historical_utilisation_df = pd.read_csv(historical_df_path)
 
+    def calculate_theoretical_time(
+        historical_data,
+        rota_data,
+        service_data,
+        long_format_df=True):
+        """
+        Note that this function has been partially provided by ChatGPT.
+        """
 
-def make_RWC_utilisation_plot():
-    pass
+        # Convert data into DataFrames
+        historical_df = pd.DataFrame(historical_data)
+        rota_df = pd.DataFrame(rota_data)
+        service_df = pd.DataFrame(service_data)
+
+        # Convert date columns to datetime format
+        historical_df['month'] = pd.to_datetime(historical_df['month'])
+        service_df['service_start_date'] = pd.to_datetime(service_df['service_start_date'])
+        service_df['service_end_date'] = pd.to_datetime(service_df['service_end_date'])
+
+        # Initialize dictionary to store results
+        theoretical_availability = {}
+
+        # Iterate over each row in the historical dataset
+        for index, row in historical_df.iterrows():
+            month_start = row['month']
+            month_end = month_start + pd.offsets.MonthEnd(0)
+            days_in_month = (month_end - month_start).days + 1
+
+            # Store theoretical available time for each resource
+            month_data = {}
+
+            for _, rota in rota_df.iterrows():
+                callsign = rota['callsign']
+
+                # Determine summer or winter schedule
+                is_summer = month_start.month in range(3, 11)
+                start_hour = rota['summer_start'] if is_summer else rota['winter_start']
+                end_hour = rota['summer_end'] if is_summer else rota['winter_end']
+
+                # Handle cases where the shift ends after midnight
+                if end_hour < start_hour:
+                    daily_available_time = (24 - start_hour) + end_hour
+                else:
+                    daily_available_time = end_hour - start_hour
+
+                total_available_time = daily_available_time * days_in_month * 60  # Convert to minutes
+
+                # Adjust for servicing periods
+                service_downtime = 0
+                for _, service in service_df[service_df['resource'] == callsign].iterrows():
+                    service_start = max(service['service_start_date'], month_start)
+                    service_end = min(service['service_end_date'], month_end)
+
+                    if service_start <= service_end:  # Overlapping service period
+                        service_days = (service_end - service_start).days + 1
+                        service_downtime += service_days * daily_available_time * 60
+
+                # Final available time after accounting for servicing
+                month_data[callsign] = total_available_time - service_downtime
+
+            theoretical_availability[month_start.strftime('%Y-%m-01')] = month_data
+
+        theoretical_availability_df = pd.DataFrame(theoretical_availability).T
+        theoretical_availability_df.index.name = "month"
+        theoretical_availability_df = theoretical_availability_df.reset_index()
+        # theoretical_availability_df = theoretical_availability_df.add_prefix("theoretical_availability_")
+
+        theoretical_availability_df.fillna(0.0)
+
+        if long_format_df:
+            theoretical_availability_df = (
+                theoretical_availability_df
+                .melt(id_vars="month")
+                .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
+                )
+
+            theoretical_availability_df['theoretical_availability'] = (
+                theoretical_availability_df['theoretical_availability'].astype('float')
+                )
+
+        return theoretical_availability_df
+
+    theoretical_availability_df = calculate_theoretical_time(
+        historical_data=historical_utilisation_df,
+        rota_data=pd.read_csv(rota_path),
+        service_data=pd.read_csv(service_path),
+        long_format_df= True
+    )
+
+    historical_utilisation_df_times = (
+        historical_utilisation_df.set_index('month')
+        .filter(like='total_time').reset_index()
+        )
+
+    historical_utilisation_df_times.columns = [
+        x.replace("total_time_","")
+        for x in historical_utilisation_df_times.columns
+        ]
+
+    historical_utilisation_df_times = (
+        historical_utilisation_df_times.melt(id_vars="month")
+        .rename(columns={"value":"usage", "variable": "callsign"})
+        )
+
+    historical_utilisation_df_times = historical_utilisation_df_times.fillna(0)
+
+    historical_utilisation_df_complete = pd.merge(
+        left=historical_utilisation_df_times,
+        right=theoretical_availability_df,
+        on=["callsign", "month"],
+        how="left"
+    )
+
+    historical_utilisation_df_complete["percentage_utilisation"] = (
+        historical_utilisation_df_complete["usage"] /
+        historical_utilisation_df_complete["theoretical_availability"]
+        )
+
+    historical_utilisation_df_complete["percentage_utilisation_display"] = (
+        historical_utilisation_df_complete["percentage_utilisation"].apply(lambda x: f"{x:.1%}")
+        )
+
+    historical_utilisation_df_summary = (
+        historical_utilisation_df_complete
+        .groupby('callsign')['percentage_utilisation']
+        .agg(['min', 'max', 'mean', 'median'])*100
+        ).round(1)
+
+    return historical_utilisation_df_complete, historical_utilisation_df_summary
+
+def get_hist_util_fig(historical_utilisation_df_summary, callsign="H70", average="mean"):
+    return historical_utilisation_df_summary[historical_utilisation_df_summary.index==callsign][average].values[0]
+
+def make_RWC_utilisation_plot(historical_df_path="../historical_data/historical_monthly_resource_utilisation.csv"):
+    historical_utilisation_df_complete, historical_utilisation_df_summary = (
+                make_RWC_utilisation_dataframe(
+                    historical_df_path=historical_df_path
+                    )
+                )
+    fig = px.box(historical_utilisation_df_complete, x="percentage_utilisation", y="callsign")
+
+    return fig
 
 def make_SIMULATION_utilisation_headline_figure(vehicle_type, utilisation_df_overall):
     """

@@ -16,14 +16,19 @@ import pandas as pd
 import re
 
 
-def calculate_available_hours(params_df, rota_path="../data/hems_rota_used.csv"):
+def calculate_available_hours(params_df,
+        rota_path="../data/hems_rota_used.csv",
+        # service_data_path="../data/service_dates.csv"
+        ):
+
     warm_up_end = _processing_functions.get_param("warm_up_end_date", params_df)
     warm_up_end = datetime.strptime(warm_up_end, "%Y-%m-%d %H:%M:%S")
+
     sim_end = _processing_functions.get_param("sim_end_date", params_df)
     sim_end = datetime.strptime(sim_end, "%Y-%m-%d %H:%M:%S")
 
     hems_rota = pd.read_csv(rota_path)
-
+    # service_dates = pd.read_csv(service_data_path)
 
     date_range = pd.date_range(start=warm_up_end.date(),
                             end=sim_end.date(),
@@ -109,6 +114,104 @@ def calculate_available_hours(params_df, rota_path="../data/hems_rota_used.csv")
     total_avail_minutes = total_avail_minutes.rename(columns={'total_available_hours_in_sim': 'total_available_minutes_in_sim'})
 
     return (daily_available_hours, total_avail_hours, total_avail_minutes)
+
+
+def calculate_available_hours_v2(params_df,
+    rota_data,#=pd.read_csv("../data/hems_rota_used.csv"),
+    service_data,#=pd.read_csv("../data/service_dates.csv"),
+    output_by_month=False,
+    long_format_df=False
+):
+    # Convert data into DataFrames
+    warm_up_end = _processing_functions.get_param("warm_up_end_date", params_df)
+    warm_up_end = datetime.strptime(warm_up_end, "%Y-%m-%d %H:%M:%S")
+
+    sim_end = _processing_functions.get_param("sim_end_date", params_df)
+    sim_end = datetime.strptime(sim_end, "%Y-%m-%d %H:%M:%S")
+
+#     hems_rota = pd.read_csv(rota_path)
+    # service_dates = pd.read_csv(service_data_path)
+
+    date_range = pd.date_range(start=warm_up_end.date(),
+                            end=sim_end.date(),
+                            freq='D')
+    daily_df = pd.DataFrame({'date': date_range})
+
+#     daily_df = pd.DataFrame(daily_data)
+    rota_df = pd.DataFrame(rota_data)
+    service_df = pd.DataFrame(service_data)
+
+    # Convert date columns to datetime format
+    daily_df['date'] = pd.to_datetime(daily_df['date'])
+    service_df['service_start_date'] = pd.to_datetime(service_df['service_start_date'])
+    service_df['service_end_date'] = pd.to_datetime(service_df['service_end_date'])
+
+    # Initialize dictionary to store results
+    theoretical_availability = {}
+
+    # Iterate over each row in the daily dataset
+    for index, row in daily_df.iterrows():
+        current_date = row['date']
+
+        # Store theoretical available time for each resource
+        day_data = {}
+
+        for _, rota in rota_df.iterrows():
+            callsign = rota['callsign']
+
+            # Determine summer or winter schedule
+            is_summer = current_date.month in range(3, 11)
+            start_hour = rota['summer_start'] if is_summer else rota['winter_start']
+            end_hour = rota['summer_end'] if is_summer else rota['winter_end']
+
+            # Handle cases where the shift ends after midnight
+            if end_hour < start_hour:
+                daily_available_time = (24 - start_hour) + end_hour
+            else:
+                daily_available_time = end_hour - start_hour
+
+            total_available_time = daily_available_time * 60  # Convert to minutes
+
+            # Adjust for servicing periods
+            service_downtime = 0
+            for _, service in service_df[service_df['resource'] == callsign].iterrows():
+                if service['service_start_date'] <= current_date <= service['service_end_date']:
+                    service_downtime = daily_available_time * 60
+                    break
+
+            # Final available time after accounting for servicing
+            day_data[callsign] = total_available_time - service_downtime
+
+        theoretical_availability[current_date.strftime('%Y-%m-%d')] = day_data
+
+    theoretical_availability_df = pd.DataFrame(theoretical_availability).T
+    theoretical_availability_df.index.name = "month"
+    theoretical_availability_df = theoretical_availability_df.reset_index()
+    # theoretical_availability_df = theoretical_availability_df.add_prefix("theoretical_availability_")
+
+    theoretical_availability_df.fillna(0.0)
+
+
+    theoretical_availability_df_long = (
+        theoretical_availability_df
+        .melt(id_vars="month")
+        .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
+        )
+
+    theoretical_availability_df_long['theoretical_availability'] = theoretical_availability_df_long['theoretical_availability'].astype('float')
+
+    daily_available_minutes = theoretical_availability_df_long.copy()
+
+    print(daily_available_minutes)
+
+    total_avail_minutes = daily_available_minutes.groupby('callsign')[['theoretical_availability']].sum(numeric_only=True).reset_index().rename(columns={'theoretical_availability':'total_available_minutes_in_sim'})
+
+    total_avail_minutes["callsign_group"] = total_avail_minutes["callsign"].apply(lambda x: re.sub('\D', '', x))
+
+    if long_format_df:
+        theoretical_availability_df_long
+    else:
+        return theoretical_availability_df, total_avail_minutes
 
 def resource_allocation_outcomes(event_log_df):
     n_runs = len(event_log_df["run_number"].unique())

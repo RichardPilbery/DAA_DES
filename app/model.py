@@ -254,12 +254,10 @@ if button_run_pressed:
                 tab_names
             )
 
-        # @st.cache_data
         def get_job_count_df():
             return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
                                                             path="data/run_results.csv")
 
-        # @st.cache_data
         def get_params_df():
             return pd.read_csv("data/run_params_used.csv")
 
@@ -278,6 +276,14 @@ if button_run_pressed:
 
             st.info(f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs")
 
+            historical_utilisation_df_complete, historical_utilisation_df_summary = (
+                _utilisation_result_calculation.make_RWC_utilisation_dataframe(
+                    historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
+                    rota_path="actual_data/HEMS_ROTA.csv",
+                    service_path="data/service_dates.csv"
+                    )
+                )
+
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
@@ -289,9 +295,12 @@ if button_run_pressed:
 
             with t1_col2:
                 resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
-                    path="data/run_results.csv", params_path="data/run_params_used.csv",
+                    path="data/run_results.csv",
+                    params_path="data/run_params_used.csv",
+                    service_path="data/service_dates.csv",
                     rota_path="data/hems_rota_used.csv"
                 )
+
                 t1_col_2_a, t1_col_2_b = st.columns(2)
                 with t1_col_2_a:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
@@ -299,11 +308,23 @@ if button_run_pressed:
                                 utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0],
                                 border=True)
 
+                    h70_hist = _utilisation_result_calculation.get_hist_util_fig(
+                        historical_utilisation_df_summary, "H70", "mean"
+                    )
+
+                    st.caption(f"This compares to a historical average of {h70_hist}%")
+
                 with t1_col_2_b:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
                         st.metric("Average H71 Utilisation",
                                 utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0],
                                 border=True)
+
+                    h71_hist = _utilisation_result_calculation.get_hist_util_fig(
+                        historical_utilisation_df_summary, "H71", "mean"
+                    )
+
+                    st.caption(f"This compares to a historical average of {h71_hist}%")
 
                 st.caption(get_text("helicopter_utilisation_description", text_df))
 
@@ -322,7 +343,7 @@ if button_run_pressed:
 
 
         with tab2:
-            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "Coming Soon"])
+            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "'Missed' Calls"])
             with tab_2_1:
                 st.header("Summary Graphs")
 
