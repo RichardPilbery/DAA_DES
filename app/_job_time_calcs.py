@@ -15,7 +15,7 @@ Covers variation within the simulation, and comparison with real world data.
 
 import pandas as pd
 from datetime import datetime, timedelta
-from _app_utils import DAA_COLORSCHEME, q10, q90
+from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75
 import plotly.express as px
 from _utilisation_result_calculation import make_utilisation_model_dataframe
 import plotly.graph_objects as go
@@ -135,8 +135,8 @@ def plot_historical_utilisation_vs_simulation_overall(
     fig.add_trace(
         go.Bar(
             x=["Car"],
-            y=[q90(historical_activity_times['median_car_total_job_time']) - q10(historical_activity_times['median_car_total_job_time'])],  # Height of the box
-            base=[q10(historical_activity_times['median_car_total_job_time'])],  # Start from q10
+            y=[q75(historical_activity_times['median_car_total_job_time']) - q25(historical_activity_times['median_car_total_job_time'])],  # Height of the box
+            base=[q25(historical_activity_times['median_car_total_job_time'])],  # Start from q10
             marker=dict(color="rgba(0, 176, 185, 0.3)"),
             showlegend=True,
             name="Usual Historical Range - Car"
@@ -146,8 +146,8 @@ def plot_historical_utilisation_vs_simulation_overall(
     fig.add_trace(
         go.Bar(
             x=["Helicopter"],
-            y=[q90(historical_activity_times['median_helicopter_total_job_time']) - q10(historical_activity_times['median_helicopter_total_job_time'])],  # Height of the box
-            base=[q10(historical_activity_times['median_helicopter_total_job_time'])],  # Start from q10
+            y=[q75(historical_activity_times['median_helicopter_total_job_time']) - q25(historical_activity_times['median_helicopter_total_job_time'])],  # Height of the box
+            base=[q25(historical_activity_times['median_helicopter_total_job_time'])],  # Start from q10
             marker=dict(color="rgba(0, 176, 185, 0.3)"),
             showlegend=True,
             name="Usual Historical Range - Helicoper"

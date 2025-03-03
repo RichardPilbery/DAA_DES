@@ -1,11 +1,11 @@
 """
 File containing all calculations and visualisations relating to the vehicles.
 
-- Simultaneous usage of different callsign groups
-- Total available hours
-- Servicing overrun
-- Instances of being unable to lift
-- Resource allocation hierarchies
+[] Simultaneous usage of different callsign groups
+[] Total available hours
+[] Servicing overrun
+[] Instances of being unable to lift
+[] Resource allocation hierarchies
 
 Covers variation within the simulation, and comparison with real world data.
 """
@@ -15,11 +15,19 @@ from datetime import datetime
 import pandas as pd
 import re
 
-
 def calculate_available_hours(params_df,
         rota_path="../data/hems_rota_used.csv",
         # service_data_path="../data/service_dates.csv"
         ):
+    """
+    Version of a function to calculate the number of hours a resource is available for use
+    across the duration of the simulation, based on the rota used during the period, accounting
+    for time during the simulation that uses the summer rota and time that uses the winter rota.
+
+    NOTE: Servicing is not taken into account.
+
+    Warm up duration is taken into account.
+    """
 
     warm_up_end = _processing_functions.get_param("warm_up_end_date", params_df)
     warm_up_end = datetime.strptime(warm_up_end, "%Y-%m-%d %H:%M:%S")
@@ -122,6 +130,15 @@ def calculate_available_hours_v2(params_df,
     output_by_month=False,
     long_format_df=False
 ):
+    """
+    Version of a function to calculate the number of hours a resource is available for use
+    across the duration of the simulation, based on the rota used during the period, accounting
+    for time during the simulation that uses the summer rota and time that uses the winter rota.
+
+    Servicing is also taken into account.
+
+    Warm up duration is taken into account.
+    """
     # Convert data into DataFrames
     warm_up_end = _processing_functions.get_param("warm_up_end_date", params_df)
     warm_up_end = datetime.strptime(warm_up_end, "%Y-%m-%d %H:%M:%S")

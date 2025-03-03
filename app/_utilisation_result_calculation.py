@@ -16,13 +16,6 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
 
-    # First get the dataframe of true availability hours
-    # TODO: Incorporate servicing unavailability into this
-    # daily_availability, total_avail_hours, total_avail_minutes = (
-    #     _vehicle_calculation.calculate_available_hours(
-    #         params_df, rota_path=rota_path
-    #     )
-    # )
     daily_availability, total_avail_minutes = (
         _vehicle_calculation.calculate_available_hours_v2(
             params_df,
@@ -32,8 +25,6 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
             long_format_df=False
                     )
                 )
-
-    # del daily_availability, total_avail_minutes
 
     # Add callsign column if not already present in the dataframe passed to the function
     if 'callsign' not in df.columns:
