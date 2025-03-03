@@ -10,7 +10,8 @@ DEFAULT_INPUTS = {
     'num_helicopters': 2,
     "num_cars": 1,
     "demand_adjust_type": "Overall Demand Adjustment",
-    "overall_demand_mult": 100,
+    # "overall_demand_mult": 100,
+    "overall_demand_mult": 120,
     "spring_demand_mult": 100,
     "summer_demand_mult": 100,
     "autumn_demand_mult": 100,
@@ -24,7 +25,9 @@ DEFAULT_INPUTS = {
     "sim_start_time_input": "08:00",
     "scenario_1_set": False,
     "scenario_2_set": False,
-    "rota_initialised": False
+    "rota_initialised": False,
+    # "activity_duration_multiplier": 1.0
+    "activity_duration_multiplier": 1.55
 }
 
 # def setup_state():

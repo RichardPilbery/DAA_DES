@@ -28,7 +28,7 @@ class DES_HEMS:
 
     def __init__(self,
                 run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str,
-                amb_data: bool, demand_increase_percent: float):
+                amb_data: bool, demand_increase_percent: float, activity_duration_multiplier: float):
 
         self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
         self.sim_duration = sim_duration
@@ -66,6 +66,8 @@ class DES_HEMS:
         self.results_df = None
 
         self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
+
+        self.activity_duration_multiplier = activity_duration_multiplier
 
 
     def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
@@ -179,9 +181,9 @@ class DES_HEMS:
                 self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
 
                 #print(f"{current_dt.date()} There will be {self.calls_today} calls today")
-                
+
                 self.new_day = current_dt.date()
-                
+
                 ia_dict = {}
                 ia_dict = self.calls_per_hour(qtr)
 
@@ -204,7 +206,7 @@ class DES_HEMS:
 
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
-                        
+
                     #print('Out of loop')
             else:
                 # Skip to tomorrow
@@ -264,7 +266,7 @@ class DES_HEMS:
             hems_allocation = hems_res_list[0]
 
             # This will either contain the other resource in a callsign_group or None
-            hems_group_resource_allocation = hems_res_list[3] 
+            hems_group_resource_allocation = hems_res_list[3]
 
             if not_in_warm_up_period:
                 msg = "No resource in group available"
@@ -364,7 +366,7 @@ class DES_HEMS:
         # Allocation time --------------
 
         if patient.hems_case == 1 and hems_avail:
-            allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation')
+            allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation') * self.activity_duration_multiplier
             #print(f"Vehicle type {patient.hems_vehicle_type} and allocation time is {allocation_time}")
             yield self.env.timeout(allocation_time)
 
@@ -390,7 +392,7 @@ class DES_HEMS:
 
         # Calculate mobile to time at scene (or stood down before)
         if patient.hems_case == 1 and hems_avail:
-            mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile')
+            mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile') * self.activity_duration_multiplier
             yield self.env.timeout(mobile_time)
 
         if self.amb_data:
@@ -411,7 +413,7 @@ class DES_HEMS:
         # On scene ---------------
 
         if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
-            tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene')
+            tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene') * self.activity_duration_multiplier
             yield self.env.timeout(tts_time)
 
         if self.amb_data:
@@ -436,7 +438,7 @@ class DES_HEMS:
         # Leaving scene ------------
 
         if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
-            tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene')
+            tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene') * self.activity_duration_multiplier
             yield self.env.timeout(tos_time)
 
         if self.amb_data:
@@ -459,7 +461,7 @@ class DES_HEMS:
         # Arrived destination time ------------
 
         if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
-            travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital')
+            travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital') * self.activity_duration_multiplier
             yield self.env.timeout(travel_time)
 
         if self.amb_data:
@@ -484,7 +486,7 @@ class DES_HEMS:
         # Clear time ------------
 
         if (patient.hems_case == 1 and hems_avail):
-            clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear')
+            clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear') * self.activity_duration_multiplier
             yield self.env.timeout(clear_time)
 
             if hems_res != None:
@@ -601,7 +603,7 @@ class DES_HEMS:
             Function to start the simulation.
 
         """
-        print(f"HEMS class initialised with the following: run {self.run_number}, duration {self.sim_duration}, warm-up {self.warm_up_duration}, start date {self.sim_start_date}, demand increase multiplier {self.demand_increase_percent}")
+        print(f"HEMS class initialised with the following: run {self.run_number}, duration {self.sim_duration}, warm-up {self.warm_up_duration}, start date {self.sim_start_date}, demand increase multiplier {self.demand_increase_percent}, activity duration multiplier {self.activity_duration_multiplier}")
 
         # Start entity generators
         self.env.process(self.generate_calls())

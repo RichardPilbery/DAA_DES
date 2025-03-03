@@ -204,7 +204,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
                         amb_data=st.session_state.amb_data,
-                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
+                        activity_duration_multiplier=float(st.session_state.activity_duration_modifier)
                     )
 
                 results.append(
@@ -230,7 +231,8 @@ if button_run_pressed:
                             datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
                             ),
                         amb_data = st.session_state.amb_data,
-                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0
+                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -313,7 +315,7 @@ if button_run_pressed:
                         historical_utilisation_df_summary, "H70", "mean"
                     )
 
-                    st.caption(f"This compares to a historical average of {h70_hist}%")
+                    st.caption(f"*This compares to a historical average of {h70_hist}%*")
 
                 with t1_col_2_b:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
@@ -325,7 +327,7 @@ if button_run_pressed:
                         historical_utilisation_df_summary, "H71", "mean"
                     )
 
-                    st.caption(f"This compares to a historical average of {h71_hist}%")
+                    st.caption(f"*This compares to a historical average of {h71_hist}%*")
 
                 st.caption(get_text("helicopter_utilisation_description", text_df))
 
