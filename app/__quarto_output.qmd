@@ -27,10 +27,8 @@ format:
         mainfont: 'Poppins'
         include-before-body:
           text: |
-            <script>
-              @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
-              @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
-            </script>
+              <link href='https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap' rel="stylesheet">
+              <link href='https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap' rel="stylesheet">
 ---
 
 # Parameters
@@ -50,7 +48,7 @@ file.close()
 
 ## Comparisons with Historical Data
 
-### Utilsation Split
+### Utilisation Split
 
 ```{=html}
 <iframe width="100%" height="600"
@@ -70,7 +68,7 @@ file.close()
 
 ```{=html}
 <iframe width="100%" height="600"
-  src="fig_outputs/fig_day_of_week.html"
+  src="fig_outputs/fig_hour_of_day.html"
 ></iframe>
 ```
 
