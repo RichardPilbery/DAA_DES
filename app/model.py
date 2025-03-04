@@ -416,8 +416,6 @@ will be available at this point
 
                         quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
 
-                        quarto_string += f"\n\n---\n\n"
-
                         st.metric(f"Average Simulated {car_callsign} Utilisation",
                                 car_util_fig,
                                 border=True)
@@ -428,6 +426,8 @@ will be available at this point
                     car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
 
                     quarto_string += car_util_fig_hist
+
+                    quarto_string += f"\n\n---\n\n"
 
                     st.caption(car_util_fig_hist)
 
