@@ -41,7 +41,13 @@ with col_h:
 #### Project Areas
 
 - Project management
-- Input data analysis and wrangling
+- Stakeholder and subject matter expert liaison
+- Input data coordination, analysis and wrangling
+- Domain expertise
+""")
+
+    st.markdown("""
+Hannah is a process improvement manager, first working with Devon Air Ambulance in 2015. Hannah has extensive expertise with both ambulance and air ambulance service data.
 """)
 
 with col_r:
@@ -54,7 +60,10 @@ with col_r:
     st.markdown("""
 #### Project Areas
 
+- Simulation model architecture design
 - Simulation model coding
+- Historical data transformations
+- Domain expertise
 """)
 
     # st.image("assets/rp.png")
@@ -81,7 +90,7 @@ Richard is a paramedic research fellow with over 20 years experience in the ambu
             }
             """,
     ):
-            st.link_button("ORCID", url="https://orcid.org/0000-0002-5797-9788")
+            st.link_button("ORCiD", url="https://orcid.org/0000-0002-5797-9788")
 
     with rp_col_2:
         with stylable_container(
@@ -97,13 +106,13 @@ Richard is a paramedic research fellow with over 20 years experience in the ambu
         }
         """,
 ):
-            st.link_button("Github", url="https://github.com/RichardPilbery")
+            st.link_button("GitHub", url="https://github.com/RichardPilbery")
 
 
 
 with col_s:
     st.subheader("Sammi Rosser")
-    st.markdown("*University of Exeter - PenCHORD Team*")
+    st.markdown("*University of Exeter Medical School*")
 
     st.image("app/assets/sr.jpg", width=200)
 
@@ -113,7 +122,8 @@ with col_s:
 - Web application development
 - Data visualisation
 - Additional model coding
-
+- Testing and validation
+- Documentation
 """)
 
     st.markdown(
@@ -141,7 +151,7 @@ on the [Health Service Modelling Associates Programme](https://www.hsma.co.uk).
             }
             """,
     ):
-            st.link_button("ORCID", url="https://orcid.org/0000-0002-9552-8988")
+            st.link_button("ORCiD", url="https://orcid.org/0000-0002-9552-8988")
 
     with sr_col_2:
         with stylable_container(
@@ -157,9 +167,12 @@ on the [Health Service Modelling Associates Programme](https://www.hsma.co.uk).
             }
             """,
     ):
-            st.link_button("Github", url="https://github.com/Bergam0t")
+            st.link_button("GitHub", url="https://github.com/Bergam0t")
 
 
+st.markdown("""
+**This Health Service Modelling Associates (HSMA) alumni project has been supported by the [HSMA programme](https://www.hsma.co.uk).**
 
-
+Alumni of the HSMA programme are able to register a simulation or machine learning project and receive mentoring and support from the HSMA community of over 500 modelling associates.
+""")
 # st.write(get_text("page_description", text_df))
