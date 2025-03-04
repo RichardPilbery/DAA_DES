@@ -19,11 +19,12 @@ with col2:
 
 st.caption(get_text("page_description", text_df))
 
-tab_model_logic, tab_demand_data,tab_activity_durations, tab_stand_downs = st.tabs(
+tab_model_logic, tab_demand_data,tab_activity_durations, tab_stand_downs, tab_resource_allocation = st.tabs(
     [get_text("tab_1_name", text_df),
      get_text("tab_2_name", text_df),
      get_text("tab_3_name", text_df),
-     get_text("tab_4_name", text_df)
+     get_text("tab_4_name", text_df),
+     get_text("tab_5_name", text_df)
      ])
 
 with tab_model_logic:
@@ -41,3 +42,6 @@ with tab_activity_durations:
 
 with tab_stand_downs:
     st.markdown(get_text("tab_4_content", text_df))
+
+with tab_resource_allocation:
+    st.markdown(get_text("tab_5_content", text_df))
