@@ -1,10 +1,11 @@
 import streamlit as st
-from _app_utils import get_text, get_text_sheet
 
 st.set_page_config(layout="wide")
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
+from _app_utils import get_text, get_text_sheet
 
 text_df=get_text_sheet("what_is")
 

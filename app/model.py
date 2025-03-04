@@ -1,12 +1,15 @@
 import streamlit as st
-import platform
+st.set_page_config(layout="wide")
 
+with open("app/style.css") as css:
+    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
+import platform
 # Data processing imports
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import re
-
 # Plotting
 import plotly.express as px
 import plotly.graph_objects as go
@@ -17,8 +20,8 @@ import _vehicle_calculation
 import _utilisation_result_calculation
 import _job_time_calcs
 import _app_utils
-
-from _app_utils import DAA_COLORSCHEME
+from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
+                        get_text, get_text_sheet, to_military_time
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -31,16 +34,9 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
-from _app_utils import iconMetricContainer, file_download_confirm, \
-                        get_text, get_text_sheet, to_military_time
 
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
-
-st.set_page_config(layout="wide")
-
-with open("app/style.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 setup_state()
 

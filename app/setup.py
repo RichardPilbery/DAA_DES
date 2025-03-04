@@ -8,22 +8,21 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from _state_control import setup_state, reset_to_defaults, \
                             set_scenario_1_params, set_scenario_2_params
-from streamlit_extras.stylable_container import stylable_container
-
-from utils import Utils
-
-from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
 
 st.set_page_config(layout="wide")
 
+with open("app/style.css") as css:
+    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
 setup_state()
+
+from streamlit_extras.stylable_container import stylable_container
+from utils import Utils
+from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
 
 u = Utils()
 
 text_df=get_text_sheet("setup")
-
-with open("app/style.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 st.session_state["visited_setup_page"] = True
 
