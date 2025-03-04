@@ -185,7 +185,7 @@ def generate_quarto_report(run_quarto_check=False):
     button in the event of failure
     """
     output_dir = os.path.join(os.getcwd(),'app/outputs')
-    qmd_filename = 'app/__quarto_output.qmd'
+    qmd_filename = 'app/air_ambulance_simulation_output.qmd'
     qmd_path = os.path.join(os.getcwd(),qmd_filename)
     html_filename = os.path.basename(qmd_filename).replace('.qmd', '.html')
     # html_filename = f"simulation_output_{datetime.now().strftime('%Y%m%d_%H%M')}.html"
