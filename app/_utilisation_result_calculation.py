@@ -26,6 +26,8 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
                     )
                 )
 
+    total_avail_minutes["callsign"] = total_avail_minutes["callsign"].str.replace("CC", "C")
+
     # Add callsign column if not already present in the dataframe passed to the function
     if 'callsign' not in df.columns:
         df = _processing_functions.make_callsign_column(df)
@@ -81,7 +83,7 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
     # Join with df of how long each resource was available for in the sim
     # We will for now assume this is the same across each run
     utilisation_df_per_run = utilisation_df_per_run.reset_index(drop=False).merge(
-        total_avail_minutes, on="callsign"
+        total_avail_minutes, on="callsign", how="left"
         )
 
     utilisation_df_per_run["perc_time_in_use"] = (
@@ -115,7 +117,7 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
     total_avail_minutes_per_csg['callsign_group'] =  total_avail_minutes_per_csg['callsign_group'].astype('float')
 
     utilisation_df_per_run_by_csg = utilisation_df_per_run_by_csg.merge(
-        total_avail_minutes_per_csg, on="callsign_group"
+        total_avail_minutes_per_csg, on="callsign_group", how="left"
         )
 
     utilisation_df_per_run_by_csg["perc_time_in_use"] = (
@@ -145,7 +147,7 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
         )
 
     utilisation_df_overall = utilisation_df_overall.reset_index(drop=False).merge(
-        total_avail_minutes, on="callsign"
+        total_avail_minutes, on="callsign", how="left"
         )
 
     utilisation_df_overall["perc_time_in_use"] = (

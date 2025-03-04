@@ -4,7 +4,7 @@ execute:
   echo: false
 format:
     html:
-        # toc: true
+        toc: true
         embed-resources: true
         # URL options
         link-external-icon: true
@@ -46,11 +46,7 @@ print(content)
 file.close()
 ```
 
-# Key Model Metrics
-
-Coming Soon!
-
-# Model Outputs
+# Model Graphs
 
 ## Comparisons with Historical Data
 

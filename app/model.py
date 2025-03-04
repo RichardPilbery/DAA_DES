@@ -293,17 +293,6 @@ if button_run_pressed:
             return pd.read_csv("data/run_params_used.csv")
 
         with tab1:
-            # @st.fragment
-            # def download_button_quarto():
-            #     # st.download_button(
-            #     st.button(
-            #         "(COMING SOON!) Click here to download these results as a file",
-            #         on_click=file_download_confirm,
-            #         icon=":material/download:",
-            #         disabled=True
-            #         )
-
-            # download_button_quarto()
             quarto_string += "# Key Metrics\n\n"
 
             averaged_string = f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs"
@@ -322,6 +311,8 @@ if button_run_pressed:
                     service_path="data/service_dates.csv"
                     )
                 )
+
+            print(historical_utilisation_df_summary)
 
             t1_col1, t1_col2 = st.columns(2)
 
@@ -349,7 +340,7 @@ will be available at this point
                     quarto_string += missed_calls_description
 
             with t1_col2:
-                quarto_string += "\n\n##Resource Utilisation"
+                quarto_string += "\n\n## Resource Utilisation"
                 resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
                     path="data/run_results.csv",
                     params_path="data/run_params_used.csv",
@@ -357,14 +348,16 @@ will be available at this point
                     rota_path="data/hems_rota_used.csv"
                 )
 
+                print(utilisation_df_overall)
+
                 t1_col_2_a, t1_col_2_b = st.columns(2)
                 with t1_col_2_a:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
                         h70_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0]
 
-                        quarto_string += f"\n\nAverage H70 Utilisation was {h70_util_fig}\n\n"
+                        quarto_string += f"\n\nAverage Simulated H70 Utilisation was {h70_util_fig}\n\n"
 
-                        st.metric("Average H70 Utilisation",
+                        st.metric("Average Simulated H70 Utilisation",
                                 h70_util_fig,
                                 border=True)
 
@@ -381,9 +374,9 @@ will be available at this point
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
                         h71_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0]
 
-                        quarto_string += f"\n\nAverage H71 Utilisation was {h71_util_fig}\n\n"
+                        quarto_string += f"\n\nAverage Simulated H71 Utilisation was {h71_util_fig}\n\n"
 
-                        st.metric("Average H71 Utilisation",
+                        st.metric("Average Simulated H71 Utilisation",
                                 h71_util_fig,
                                 border=True)
 
@@ -395,6 +388,37 @@ will be available at this point
                     st.caption(h71_hist_util_fig)
 
                 st.caption(get_text("helicopter_utilisation_description", text_df))
+
+            st.divider()
+
+            cars = ["C70", "C71", "C72"]
+
+            car_metric_cols = st.columns(len(cars))
+
+            historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
+
+            for idx, col in enumerate(car_metric_cols):
+                with col:
+                    car_callsign = cars[idx]
+
+                    with iconMetricContainer(key="car_util", icon_unicode="eb3c", type="symbols"):
+                        print(utilisation_df_overall)
+                        car_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']==car_callsign]['PRINT_perc'].values[0]
+
+                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
+
+                        st.metric(f"Average Simulated {car_callsign} Utilisation",
+                                car_util_fig,
+                                border=True)
+
+                    car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
+                        historical_utilisation_df_summary, car_callsign, "mean"
+                    )
+                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
+
+                    quarto_string += car_util_fig_hist
+
+                    st.caption(car_util_fig_hist)
 
 
             t1_col3, t1_col4 = st.columns(2)
