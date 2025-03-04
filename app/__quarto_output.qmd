@@ -1,0 +1,99 @@
+---
+title: "Air Ambulance Simulation - Report"
+execute:
+  echo: false
+format:
+    html:
+        toc: true
+        embed-resources: true
+        # URL options
+        link-external-icon: true
+        link-external-newwindow: true
+        # Reference options
+        citations-hover: true
+        footnotes-hover: true
+        #####################
+        # Theme options #
+        #####################
+        css: "report_theme.css"
+        callout-appearance: simple
+        callout-collapse: true
+        # Caption options
+        cap-location: bottom
+        # Title options
+        title-block-banner: '#00B0B9'
+        backgroundcolor: '#f0f4f5'
+        # Set font
+        mainfont: 'Poppins'
+        include-before-body:
+          text: |
+              <link href='https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap' rel="stylesheet">
+              <link href='https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap' rel="stylesheet">
+---
+
+# Parameters
+
+```{python}
+#| output: asis
+file = open("fig_outputs/quarto_text.txt", "r")
+content = file.read()
+print(content)
+```
+
+```{python}
+file.close()
+```
+
+# Model Graphs
+
+## Comparisons with Historical Data
+
+### Utilisation Split
+
+```{=html}
+<iframe width="100%" height="600"
+  src="fig_outputs/fig_utilisation.html"
+></iframe>
+```
+
+### Monthly Job Numbers
+
+```{=html}
+<iframe width="100%" height="600"
+  src="fig_outputs/fig_monthly_calls.html"
+></iframe>
+```
+
+### Hour of Day
+
+```{=html}
+<iframe width="100%" height="600"
+  src="fig_outputs/fig_hour_of_day.html"
+></iframe>
+```
+
+### Day of Week
+
+```{=html}
+<iframe width="100%" height="600"
+  src="fig_outputs/fig_day_of_week.html"
+></iframe>
+```
+
+### Job Durations
+
+```{=html}
+<iframe width="100%" height="600"
+  src="fig_outputs/fig_job_durations_historical.html"
+></iframe>
+```
+
+## Other Plots
+
+### Resource Usage Over Time
+
+```{=html}
+<iframe width="100%" height="600"
+  src="fig_outputs/resource_use_fig.html"
+></iframe>
+```

@@ -1,16 +1,10 @@
 from streamlit_extras.stylable_container import stylable_container
 import streamlit as st
-## logic_diagram.py
-import schemdraw
-from schemdraw import flow
-import streamlit as st
 import pandas as pd
-
-# Set default flowchart box fill colors
-flow.Box.defaults['fill'] = '#eeffff'
-flow.Start.defaults['fill'] = '#ffeeee'
-flow.Decision.defaults['fill'] = '#ffffee'
-flow.Circle.defaults['fill'] = '#eeeeee'
+import os
+import subprocess
+import platform
+from datetime import datetime
 
 
 def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', family="filled", type="icons"):
@@ -138,3 +132,109 @@ def q25(x):
 
 def to_military_time(hour: int) -> str:
     return f"{hour:02d}00"
+
+@st.cache_data
+def get_quarto(repo_name, quarto_version="1.5.57"):
+    print(f"Output of platform.processor(): {platform.processor()}")
+    print(f"type:  {type(platform.processor())}")
+    print("Attempting to download Quarto")
+    # Download Quarto
+    os.system(f"wget https://github.com/quarto-dev/quarto-cli/releases/download/v{quarto_version}/quarto-{quarto_version}-linux-amd64.tar.gz")
+
+    # Create directory and extract Quarto
+    os.system(f"tar -xvzf quarto-{quarto_version}-linux-amd64.tar.gz")
+    # Check the contents of the folder we are in
+    os.system("pwd")
+
+    # # Ensure PATH is updated in the current Python process
+    # Check current path
+    os.system("echo $PATH")
+    # Create a folder and symlink quarto to that location
+    os.system(f"mkdir -p /mount/src/{repo_name}/local/bin")
+    os.system(f"ln -s /mount/src/{repo_name}/quarto-{quarto_version}/bin/quarto /mount/src/{repo_name}/local/bin")
+    # Update path
+    os.system(f"echo 'export PATH=$PATH:/mount/src/{repo_name}/local/bin' >> ~/.bashrc")
+    os.system('source /etc/bash.bashrc')
+    # alternative method for good measure
+    os.environ['PATH'] = f"/mount/src/{repo_name}/local/bin:{os.environ['PATH']}"
+
+    # ensure path updates have propagated through
+    print(os.environ['PATH'])
+    # Install jupyter even if not in requirements
+    os.system("python3 -m pip install jupyter")
+    # Install second copy of requirements (so accessible by Quarto - can't access packages
+    # that are installed as part of community cloud instance setup process)
+    os.system(f"python3 -m pip install -r /mount/src/{repo_name}/requirements.txt")
+
+    print("Trying to run 'quarto check' command")
+    try:
+        os.system("quarto check")
+        result = subprocess.run(['quarto', 'check'], capture_output=True, text=True, shell=True)
+        print(result.stdout)
+        print(result.stderr)
+        print("Quarto check run")
+    except PermissionError:
+        print("Permission error encountered when running 'quarto check'")
+    except:
+        print("Other unspecified error when running quarto check")
+
+@st.fragment
+def generate_quarto_report(run_quarto_check=False):
+    """
+    Passed an empty placeholder, put in a download button or a disabled download
+    button in the event of failure
+    """
+    output_dir = os.path.join(os.getcwd(),'app/outputs')
+    qmd_filename = 'app/__quarto_output.qmd'
+    qmd_path = os.path.join(os.getcwd(),qmd_filename)
+    html_filename = os.path.basename(qmd_filename).replace('.qmd', '.html')
+    # html_filename = f"simulation_output_{datetime.now().strftime('%Y%m%d_%H%M')}.html"
+    # print(html_filename)
+    # dest_html_path = os.path.join(output_dir,f"simulation_output_{datetime.now().strftime('%H-%m-%d_%H%M')}.html")
+    dest_html_path = os.path.join(output_dir,html_filename)
+    # print(dest_html_path)
+
+    try:
+        if run_quarto_check:
+            print("Trying to run 'quarto check' command")
+            subprocess.run(["quarto"
+                        , "check"])
+
+        ## forces result to be html
+        result = subprocess.run(["quarto"
+                                , "render"
+                                , qmd_path
+                                , "--to"
+                                , "html"
+                                , "--output-dir"
+                                , output_dir
+                                # , "--output-file"
+                                # , html_filename
+                                ]
+                                , capture_output=True
+                                , text=True)
+    except:
+        ## error message
+        print(f"Report cannot be generated")
+
+    if os.path.exists(dest_html_path):
+        with open(dest_html_path, "r") as f:
+            html_data = f.read()
+
+        st.download_button(
+                label="Download Report",
+                data=html_data,
+                file_name=html_filename,
+                mime="text/html"
+            )
+    else:
+        ## error message
+        print(f"Report failed to generate\n\n_{result}_")
+
+        st.button(
+                label="Error Generating Downloadable Report",
+                disabled=True
+            )
+
+        st.warning("""It has not been possible to generate a downloadable copy of the simulation outputs.
+                Please speak to a developer""")

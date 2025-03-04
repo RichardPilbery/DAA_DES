@@ -166,3 +166,12 @@ cython_debug/
 external_data
 data
 app/assets/~$text.xlsx
+
+session_data.json
+
+/.quarto/
+/outputs/*.html
+
+/app/fig_outputs/*.txt
+/app/fig_outputs/*.html
+/app/outputs/*.html

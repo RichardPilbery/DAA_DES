@@ -16,6 +16,7 @@ import _job_count_calculation
 import _vehicle_calculation
 import _utilisation_result_calculation
 import _job_time_calcs
+import _app_utils
 
 from _app_utils import DAA_COLORSCHEME
 
@@ -43,7 +44,14 @@ with open("app/style.css") as css:
 
 setup_state()
 
-text_df=get_text_sheet("model")
+poppins_script = """
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+"""
+
+quarto_string = ""
+
+text_df = get_text_sheet("model")
 
 col1, col2 = st.columns([0.7, 0.3])
 
@@ -76,8 +84,12 @@ hr {
             if st.button("Want to change some parameters? Click here.", type="primary", icon=":material/display_settings:"):
                 st.switch_page("setup.py")
         st.subheader("Model Input Summary")
+        quarto_string += "## Model Input Summary\n\n"
 
-        st.write(f"Number of Helicopters: {st.session_state.num_helicopters}")
+        num_helos_string = f"Number of Helicopters: {st.session_state.num_helicopters}"
+        quarto_string += num_helos_string
+        quarto_string += "\n\n"
+        st.write(num_helos_string)
 
         # Avoid reading from utils due to odd issues it seems to be introducing
         # TODO: Explore why this is happening in more detail
@@ -87,36 +99,50 @@ hr {
 
         for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
             per_callsign_rota = rota[rota["callsign"]==helicopter]
-            st.caption(f"""
+            helicopter_rota_string = f"""
 {helicopter} is an {per_callsign_rota["model"].values[0]} and runs
 from {to_military_time(per_callsign_rota["summer_start"].values[0])}
 to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
 and {to_military_time(per_callsign_rota["winter_start"].values[0])}
 to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
-""")
-        st.write(f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}")
+"""
+            # quarto_string += "🚁 "
+            quarto_string += helicopter_rota_string
+            st.caption(helicopter_rota_string)
+
+        num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
+        quarto_string += num_cars_string
+        quarto_string += "\n\n"
+        st.write(num_cars_string)
         callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
         backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
 
 
         for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
             per_callsign_rota = rota[rota["callsign"]==car]
-            st.caption(f"""
+            car_rota_string = f"""
 {car} is a {per_callsign_rota["model"].values[0]} and runs
 from {to_military_time(per_callsign_rota["summer_start"].values[0])}
 to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
 and {to_military_time(per_callsign_rota["winter_start"].values[0])}
 to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
-""")
+"""
+            # quarto_string += "🚗 "
+            quarto_string += car_rota_string
+            st.caption(car_rota_string)
 
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
             if st.session_state.overall_demand_mult == 100:
-                st.write(f"Demand is based on historically observed demand with no adjustments.")
+                demand_adjustment_string = f"Demand is based on historically observed demand with no adjustments."
             elif st.session_state.overall_demand_mult < 100:
-                st.write(f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand.")
+                demand_adjustment_string = f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand."
             elif st.session_state.overall_demand_mult > 100:
-                st.write(f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand.")
+                demand_adjustment_string = f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand."
+
+            st.write(demand_adjustment_string)
+            quarto_string += demand_adjustment_string
+            quarto_string += "\n\n"
 
         # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
         elif st.session_state.demand_adjust_type == "Per Season Demand Adjustment":
@@ -139,7 +165,13 @@ hr {
 """, key="hr"):
             st.divider()
 
-        st.write(f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}.")
+        replication_string = f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}."
+
+        st.write(replication_string)
+        quarto_string += replication_string.replace("will run", "ran")
+        quarto_string += "\n\n"
+
+        quarto_string += f"Activity durations are modified by a factor of {st.session_state.activity_duration_multiplier}\n\n"
 
         if st.session_state.create_animation_input:
             st.write("An animated output will be created.")
@@ -243,17 +275,18 @@ if button_run_pressed:
             "Key Visualisations",
             "Comparing Model with Historic Data",
             "Additional Outputs",
+            "Download Output"
             ]
 
         my_bar.empty()
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
                 tab_names
             )
         else:
-            tab1, tab2, tab3, tab4 = st.tabs(
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(
                 tab_names
             )
 
@@ -265,19 +298,16 @@ if button_run_pressed:
             return pd.read_csv("data/run_params_used.csv")
 
         with tab1:
-            @st.fragment
-            def download_button_quarto():
-                # st.download_button(
-                st.button(
-                    "(COMING SOON!) Click here to download these results as a file",
-                    on_click=file_download_confirm,
-                    icon=":material/download:",
-                    disabled=True
-                    )
+            quarto_string += "# Key Metrics\n\n"
 
-            download_button_quarto()
+            averaged_string = f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs"
 
-            st.info(f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs")
+            quarto_string += averaged_string
+            quarto_string += "\n\n"
+
+            st.info(averaged_string)
+
+            report_message = st.empty()
 
             historical_utilisation_df_complete, historical_utilisation_df_summary = (
                 _utilisation_result_calculation.make_RWC_utilisation_dataframe(
@@ -287,12 +317,20 @@ if button_run_pressed:
                     )
                 )
 
+            print(historical_utilisation_df_summary)
+
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
+                perc_unattended = _vehicle_calculation.get_perc_unattended_string(results_all_runs)
+
+                quarto_string += "## Calls Not Attended\n\n"
+
+                quarto_string += f"Across these runs of the simulation, on average a DAAT Resource was unable to attend {perc_unattended} calls\n\n"
+
                 with iconMetricContainer(key="nonattend_metric", icon_unicode="e61f", family="outline"):
                     st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
-                            _vehicle_calculation.get_perc_unattended_string(results_all_runs),
+                            perc_unattended,
                             border=True)
 
                     st.warning("""
@@ -300,9 +338,14 @@ Data on the number of calls that were historically not attended due to resource 
 will be available at this point
                             """)
 
-                    st.caption(get_text("missed_calls_description", text_df))
+                    missed_calls_description = get_text("missed_calls_description", text_df)
+
+                    st.caption(missed_calls_description)
+
+                    quarto_string += missed_calls_description
 
             with t1_col2:
+                quarto_string += "\n\n## Resource Utilisation"
                 resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
                     path="data/run_results.csv",
                     params_path="data/run_params_used.csv",
@@ -310,32 +353,83 @@ will be available at this point
                     rota_path="data/hems_rota_used.csv"
                 )
 
+                print(utilisation_df_overall)
+
                 t1_col_2_a, t1_col_2_b = st.columns(2)
                 with t1_col_2_a:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                        st.metric("Average H70 Utilisation",
-                                utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0],
+                        h70_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0]
+
+                        quarto_string += f"\n\nAverage simulated H70 Utilisation was {h70_util_fig}\n\n"
+
+                        st.metric("Average Simulated H70 Utilisation",
+                                h70_util_fig,
                                 border=True)
 
                     h70_hist = _utilisation_result_calculation.get_hist_util_fig(
                         historical_utilisation_df_summary, "H70", "mean"
                     )
 
-                    st.caption(f"*The historical average utilisation of H70 was {h70_hist}%*")
+                    h70_hist_util_fig = f"*The historical average utilisation of H70 was {h70_hist}%*\n\n"
+                    quarto_string += h70_hist_util_fig
+
+                    quarto_string += f"\n\n---\n\n"
+
+                    st.caption(h70_hist_util_fig)
 
                 with t1_col_2_b:
                     with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                        st.metric("Average H71 Utilisation",
-                                utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0],
+                        h71_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0]
+
+                        quarto_string += f"\n\nAverage simulated H71 Utilisation was {h71_util_fig}\n\n"
+
+                        st.metric("Average Simulated H71 Utilisation",
+                                h71_util_fig,
                                 border=True)
 
                     h71_hist = _utilisation_result_calculation.get_hist_util_fig(
                         historical_utilisation_df_summary, "H71", "mean"
                     )
+                    h71_hist_util_fig = f"*The historical average utilisation of H71 was {h71_hist}%*\n\n"
+                    quarto_string += h71_hist_util_fig
+                    st.caption(h71_hist_util_fig)
 
-                    st.caption(f"*The historical average utilisation of H71 was {h71_hist}%*")
+                    quarto_string += f"\n\n---\n\n"
 
                 st.caption(get_text("helicopter_utilisation_description", text_df))
+
+            st.divider()
+
+            cars = ["C70", "C71", "C72"]
+
+            car_metric_cols = st.columns(len(cars))
+
+            historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
+
+            for idx, col in enumerate(car_metric_cols):
+                with col:
+                    car_callsign = cars[idx]
+
+                    with iconMetricContainer(key="car_util", icon_unicode="eb3c", type="symbols"):
+                        print(utilisation_df_overall)
+                        car_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']==car_callsign]['PRINT_perc'].values[0]
+
+                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
+
+                        st.metric(f"Average Simulated {car_callsign} Utilisation",
+                                car_util_fig,
+                                border=True)
+
+                    car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
+                        historical_utilisation_df_summary, car_callsign, "mean"
+                    )
+                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
+
+                    quarto_string += car_util_fig_hist
+
+                    quarto_string += f"\n\n---\n\n"
+
+                    st.caption(car_util_fig_hist)
 
 
             t1_col3, t1_col4 = st.columns(2)
@@ -358,11 +452,15 @@ will be available at this point
                 def create_utilisation_rwc_plot():
                     call_df = get_job_count_df()
 
-                    st.plotly_chart(
-                        _utilisation_result_calculation.create_UTIL_rwc_plot(
+                    fig_utilisation = _utilisation_result_calculation.create_UTIL_rwc_plot(
                         call_df,
                         real_data_path="historical_data/historical_monthly_totals_by_callsign.csv"
                         )
+
+                    fig_utilisation.write_html("app/fig_outputs/fig_utilisation.html")#, post_script = poppins_script)#,full_html=False, include_plotlyjs='cdn')
+
+                    st.plotly_chart(
+                        fig_utilisation
                     )
 
                 create_utilisation_rwc_plot()
@@ -433,15 +531,27 @@ will be available at this point
                     else:
                         show_historical_individual_years = False
 
-                    return st.plotly_chart(
-                        _job_count_calculation.plot_monthly_calls(
+                    fig_monthly_calls = _job_count_calculation.plot_monthly_calls(
+                            call_df,
+                            show_individual_runs=show_individual_runs,
+                            use_poppins=True,
+                            show_historical=show_real_data,
+                            show_historical_individual_years=show_historical_individual_years,
+                            historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
+                            )
+
+                    _job_count_calculation.plot_monthly_calls(
                             call_df,
                             show_individual_runs=show_individual_runs,
                             use_poppins=False,
                             show_historical=show_real_data,
                             show_historical_individual_years=show_historical_individual_years,
                             historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
-                            )
+                            ).write_html("app/fig_outputs/fig_monthly_calls.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+
+
+                    return st.plotly_chart(
+                        fig_monthly_calls
                     )
 
                 plot_monthly_jobs()
@@ -476,7 +586,7 @@ Partial months are excluded for ease of interpretation.
                     else:
                         display_error_bars_bar = False
 
-                    st.plotly_chart(_job_count_calculation.plot_hourly_call_counts(
+                    fig_hour_of_day = _job_count_calculation.plot_hourly_call_counts(
                         call_df, params_df,
                         average_per_month=average_per_month,
                         box_plot=display_advanced,
@@ -484,7 +594,22 @@ Partial months are excluded for ease of interpretation.
                         use_poppins=True,
                         show_historical=display_historic_jph,
                         historical_data_path="historical_data/historical_monthly_totals_by_hour_of_day.csv"
-                        ))
+                        )
+
+                    _job_count_calculation.plot_hourly_call_counts(
+                        call_df, params_df,
+                        average_per_month=average_per_month,
+                        box_plot=display_advanced,
+                        show_error_bars_bar=display_error_bars_bar,
+                        use_poppins=False,
+                        show_historical=display_historic_jph,
+                        historical_data_path="historical_data/historical_monthly_totals_by_hour_of_day.csv"
+                        ).write_html("app/fig_outputs/fig_hour_of_day.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+
+
+                    st.plotly_chart(
+                        fig_hour_of_day
+                    )
 
                 plot_jobs_per_hour()
 
@@ -520,7 +645,7 @@ Partial months are excluded for ease of interpretation.
                     else:
                         display_error_bars_bar_pd = False
 
-                    st.plotly_chart(_job_count_calculation.plot_daily_call_counts(
+                    fig_day_of_week = _job_count_calculation.plot_daily_call_counts(
                         call_df, params_df,
                         average_per_month=average_per_month_pd,
                         box_plot=display_advanced_pd,
@@ -528,7 +653,22 @@ Partial months are excluded for ease of interpretation.
                         use_poppins=True,
                         show_historical=display_historic_jph_pd,
                         historical_data_path="historical_data/historical_monthly_totals_by_day_of_week.csv"
-                        ))
+                        )
+
+                    _job_count_calculation.plot_daily_call_counts(
+                        call_df, params_df,
+                        average_per_month=average_per_month_pd,
+                        box_plot=display_advanced_pd,
+                        show_error_bars_bar=display_error_bars_bar_pd,
+                        use_poppins=False,
+                        show_historical=display_historic_jph_pd,
+                        historical_data_path="historical_data/historical_monthly_totals_by_day_of_week.csv"
+                        ).write_html("app/fig_outputs/fig_day_of_week.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+
+
+                    st.plotly_chart(
+                        fig_day_of_week
+                    )
 
                 plot_jobs_per_day()
 
@@ -537,8 +677,7 @@ Partial months are excluded for ease of interpretation.
                             'historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
                             )
 
-                st.plotly_chart(
-                    _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
+                fig_job_durations_historical =  _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
                         historical_time_df,
                         utilisation_model_df=_job_time_calcs.get_total_times_model(
                             get_summary=False,
@@ -548,6 +687,20 @@ Partial months are excluded for ease of interpretation.
                             service_path="data/service_dates.csv"),
                         use_poppins=True
                         )
+
+                _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
+                        historical_time_df,
+                        utilisation_model_df=_job_time_calcs.get_total_times_model(
+                            get_summary=False,
+                            path="data/run_results.csv",
+                            params_path="data/run_params_used.csv",
+                            rota_path="data/hems_rota_used.csv",
+                            service_path="data/service_dates.csv"),
+                        use_poppins=False
+                        ).write_html("app/fig_outputs/fig_job_durations_historical.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+
+                st.plotly_chart(
+                   fig_job_durations_historical
                     )
 
                 st.caption("""
@@ -900,8 +1053,27 @@ Most users will not need to look at the visualisations in this tab.
                     #     ]))
                     )
 
+                    resource_use_fig.write_html("app/fig_outputs/resource_use_fig.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+
                     st.plotly_chart(
                         resource_use_fig
                     )
 
                 resource_use_exploration_plots()
+
+        with tab5:
+            report_message = st.empty()
+
+            report_message.info("Generating Report...")
+
+            try:
+                with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
+                    text_file.write(quarto_string)
+
+                _app_utils.generate_quarto_report(run_quarto_check=False)
+
+                report_message.success("Report Available for Download")
+
+            except:
+                ## error message
+                report_message.error(f"Report cannot be generated - please speak to a devleoper")
