@@ -63,25 +63,6 @@ def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', famil
 def file_download_confirm():
     st.toast("File Downloaded", icon=":material/download:")
 
-def create_logic_diagram(number_labels = False, session_data = None):
-    """
-    Credit to Dom Rowney
-
-    https://github.com/DomRowney/Project_Toy_MECC/blob/main/streamlit_app/logic_diagram.py
-    """
-    ## create a drawing class
-    with schemdraw.Drawing() as d:
-
-        label_call = "Call Arrives \n at SWAST"
-
-        call = flow.Circle(r=d.unit/2).label(label_call).drop("S")
-        flow.Arrow().at(call.S).down(d.unit/2)
-
-        ## Save the drawing to a temporary file
-        img_path = "logic_diagram.png"
-        d.save(img_path)
-        return img_path
-
 @st.cache_data
 def get_text_sheet(sheet):
     return pd.read_excel("app/assets/text.xlsx", sheet_name=sheet, engine="calamine")
