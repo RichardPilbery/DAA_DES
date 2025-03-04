@@ -188,8 +188,11 @@ def generate_quarto_report(run_quarto_check=False):
     qmd_filename = 'app/__quarto_output.qmd'
     qmd_path = os.path.join(os.getcwd(),qmd_filename)
     html_filename = os.path.basename(qmd_filename).replace('.qmd', '.html')
-    # dest_html_path = os.path.join(output_dir,f"simulation_output_{datetime.now().strftime('%H-%m-%d %H %M')}.html")
+    # html_filename = f"simulation_output_{datetime.now().strftime('%Y%m%d_%H%M')}.html"
+    # print(html_filename)
+    # dest_html_path = os.path.join(output_dir,f"simulation_output_{datetime.now().strftime('%H-%m-%d_%H%M')}.html")
     dest_html_path = os.path.join(output_dir,html_filename)
+    # print(dest_html_path)
 
     try:
         if run_quarto_check:
@@ -204,7 +207,10 @@ def generate_quarto_report(run_quarto_check=False):
                                 , "--to"
                                 , "html"
                                 , "--output-dir"
-                                , output_dir]
+                                , output_dir
+                                # , "--output-file"
+                                # , html_filename
+                                ]
                                 , capture_output=True
                                 , text=True)
     except:
