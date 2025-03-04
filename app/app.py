@@ -25,10 +25,10 @@ pg = st.navigation(
             st.Page("model.py", title="Run Simulation"),
             # st.Page("compare_scenarios.py", title="Scenario Comparison")
             ],
-        "Model Information": [
-            st.Page("what_is.py", title="Introduction to Simulation"),
-            st.Page("info.py", title="Model Information"),
+        "Additional Information": [
+            # st.Page("what_is.py", title="Introduction to Simulation"),
             st.Page("glossary.py", title="Glossary of Terms"),
+            st.Page("info.py", title="Model Details"),
             st.Page("acknowledgements.py", title="Acknowledgements"),
             ]
 
