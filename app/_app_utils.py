@@ -202,12 +202,23 @@ def generate_quarto_report(run_quarto_check=False):
         with open(dest_html_path, "r") as f:
             html_data = f.read()
 
-        st.download_button(
-                label="Download Report",
-                data=html_data,
-                file_name=html_filename,
-                mime="text/html"
-            )
+        with stylable_container(key="report_dl_buttons",
+            css_styles=f"""
+                    button {{
+                            background-color: {DAA_COLORSCHEME['green']};
+                            color: white;
+                            border-color: white;
+                        }}
+                        """
+            ):
+            st.download_button(
+                    label="Download Report",
+                    data=html_data,
+                    file_name=html_filename,
+                    mime="text/html"
+                )
+
+            return "success"
     else:
         ## error message
         print(f"Report failed to generate\n\n_{result}_")
@@ -219,3 +230,5 @@ def generate_quarto_report(run_quarto_check=False):
 
         st.warning("""It has not been possible to generate a downloadable copy of the simulation outputs.
                 Please speak to a developer""")
+
+        return "failure"
