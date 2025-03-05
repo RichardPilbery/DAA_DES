@@ -1,12 +1,15 @@
 import streamlit as st
-import platform
+st.set_page_config(layout="wide")
 
+with open("app/style.css") as css:
+    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
+import platform
 # Data processing imports
 import pandas as pd
 import numpy as np
 from datetime import datetime
 import re
-
 # Plotting
 import plotly.express as px
 import plotly.graph_objects as go
@@ -17,8 +20,8 @@ import _vehicle_calculation
 import _utilisation_result_calculation
 import _job_time_calcs
 import _app_utils
-
-from _app_utils import DAA_COLORSCHEME
+from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
+                        get_text, get_text_sheet, to_military_time
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -31,16 +34,9 @@ from des_parallel_process import runSim, parallelProcessJoblib, collateRunResult
 from utils import Utils
 
 from _state_control import setup_state
-from _app_utils import iconMetricContainer, file_download_confirm, \
-                        get_text, get_text_sheet, to_military_time
 
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
-
-st.set_page_config(layout="wide")
-
-with open("app/style.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 setup_state()
 
@@ -87,6 +83,7 @@ hr {
         quarto_string += "## Model Input Summary\n\n"
 
         num_helos_string = f"Number of Helicopters: {st.session_state.num_helicopters}"
+        quarto_string += "### "
         quarto_string += num_helos_string
         quarto_string += "\n\n"
         st.write(num_helos_string)
@@ -111,6 +108,7 @@ to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
             st.caption(helicopter_rota_string)
 
         num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
+        quarto_string += "\n\n### "
         quarto_string += num_cars_string
         quarto_string += "\n\n"
         st.write(num_cars_string)
@@ -141,6 +139,8 @@ to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
                 demand_adjustment_string = f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand."
 
             st.write(demand_adjustment_string)
+
+            quarto_string += "\n\n### Simulation Parameters\n\n"
             quarto_string += demand_adjustment_string
             quarto_string += "\n\n"
 
@@ -237,7 +237,7 @@ if button_run_pressed:
                             ),
                         amb_data=st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_modifier)
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
                     )
 
                 results.append(
@@ -290,6 +290,12 @@ if button_run_pressed:
                 tab_names
             )
 
+        with tab5:
+            report_message = st.empty()
+
+            report_message.info("Generating Report...")
+
+
         def get_job_count_df():
             return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
                                                             path="data/run_results.csv")
@@ -302,8 +308,9 @@ if button_run_pressed:
 
             averaged_string = f"All Metrics are averaged across {st.session_state.number_of_runs_input} simulation runs"
 
+            quarto_string += "*"
             quarto_string += averaged_string
-            quarto_string += "\n\n"
+            quarto_string += "*\n\n"
 
             st.info(averaged_string)
 
@@ -414,16 +421,16 @@ will be available at this point
                         print(utilisation_df_overall)
                         car_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']==car_callsign]['PRINT_perc'].values[0]
 
-                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
+                        quarto_string += f"\n\nAverage simulated C{car_callsign} utilisation was {car_util_fig}\n\n"
 
-                        st.metric(f"Average Simulated {car_callsign} Utilisation",
+                        st.metric(f"Average Simulated C{car_callsign} Utilisation",
                                 car_util_fig,
                                 border=True)
 
                     car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
                         historical_utilisation_df_summary, car_callsign, "mean"
                     )
-                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
+                    car_util_fig_hist = f"*The historical average utilisation of C{car_callsign} was {car_util_hist}%*\n\n"
 
                     quarto_string += car_util_fig_hist
 
@@ -1062,18 +1069,17 @@ Most users will not need to look at the visualisations in this tab.
                 resource_use_exploration_plots()
 
         with tab5:
-            report_message = st.empty()
-
-            report_message.info("Generating Report...")
-
             try:
                 with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
                     text_file.write(quarto_string)
 
-                _app_utils.generate_quarto_report(run_quarto_check=False)
+                msg = _app_utils.generate_quarto_report(run_quarto_check=False)
 
-                report_message.success("Report Available for Download")
+                # print(msg)
+
+                if msg == "success":
+                    report_message.success("Report Available for Download")
 
             except:
                 ## error message
-                report_message.error(f"Report cannot be generated - please speak to a devleoper")
+                report_message.error(f"Report cannot be generated - please speak to a developer")

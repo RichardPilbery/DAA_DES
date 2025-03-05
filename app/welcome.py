@@ -1,11 +1,12 @@
 import streamlit as st
-from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
-from streamlit_extras.stylable_container import stylable_container
 
 st.set_page_config(layout="wide")
 
 with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
+from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
+from streamlit_extras.stylable_container import stylable_container
 
 text_df=get_text_sheet("welcome")
 
