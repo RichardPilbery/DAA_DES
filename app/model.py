@@ -940,6 +940,9 @@ Most users will not need to look at the visualisations in this tab.
 
                     events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
 
+                    if 'P_ID' not in events_over_time_df.columns:
+                        events_over_time_df = events_over_time_df.reset_index()
+
                     events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
 
                     fig = px.scatter(
