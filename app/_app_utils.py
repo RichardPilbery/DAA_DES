@@ -165,9 +165,11 @@ def generate_quarto_report(run_quarto_check=False):
     Passed an empty placeholder, put in a download button or a disabled download
     button in the event of failure
     """
+    print("Trying to generate a downloadable quarto report")
     output_dir = os.path.join(os.getcwd(),'app/outputs')
     qmd_filename = 'app/air_ambulance_simulation_output.qmd'
     qmd_path = os.path.join(os.getcwd(),qmd_filename)
+    print(f"Trying to find quarto template in {qmd_path}")
     html_filename = os.path.basename(qmd_filename).replace('.qmd', '.html')
     # html_filename = f"simulation_output_{datetime.now().strftime('%Y%m%d_%H%M')}.html"
     # print(html_filename)
@@ -228,7 +230,7 @@ def generate_quarto_report(run_quarto_check=False):
             return "success"
     else:
         ## error message
-        print(f"Destination file found not in filesystem")
+        print(f"Generated file found not in filesystem")
         try:
             print(f"Report failed to generate\n\n_{result}_")
         except UnboundLocalError:
