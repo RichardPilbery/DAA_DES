@@ -221,7 +221,10 @@ def generate_quarto_report(run_quarto_check=False):
             return "success"
     else:
         ## error message
-        print(f"Report failed to generate\n\n_{result}_")
+        try:
+            print(f"Report failed to generate\n\n_{result}_")
+        except UnboundLocalError:
+            print("Report failed to generate")
 
         st.button(
                 label="Error Generating Downloadable Report",
