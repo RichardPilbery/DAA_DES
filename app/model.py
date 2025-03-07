@@ -12,6 +12,7 @@ from datetime import datetime
 import re
 # Plotting
 import plotly.express as px
+import platform
 import plotly.graph_objects as go
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
@@ -39,6 +40,13 @@ from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
 
 setup_state()
+
+
+# Set up filepaths for historical data
+
+
+
+
 
 poppins_script = """
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
@@ -215,7 +223,10 @@ if not st.session_state["visited_setup_page"]:
 
 if button_run_pressed:
     progress_text = "Simulation in progress. Please wait."
-    my_bar = st.progress(0, text=progress_text)
+    # This check is a way to guess whether it's running on
+    # Streamlit community cloud
+    if platform.processor() == '':
+        my_bar = st.progress(0, text=progress_text)
 
     with st.spinner('Simulating the system...'):
 
@@ -249,6 +260,8 @@ if button_run_pressed:
             # Turn into a single dataframe when all runs complete
             results_all_runs = pd.concat(results)
 
+            my_bar.empty()
+
         # If running locally, use parallel processing function to speed up execution significantly
         else:
             print("Running in parallel")
@@ -278,7 +291,7 @@ if button_run_pressed:
             "Download Output"
             ]
 
-        my_bar.empty()
+
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
