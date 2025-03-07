@@ -1,10 +1,12 @@
 import streamlit as st
 from datetime import datetime
 import pandas as pd
-
+import platform
 # Note: following
 # Dmitri's approach here to avoid issues with session state setting
 # https://discuss.streamlit.io/t/mini-tutorial-initializing-widget-values-and-getting-them-to-stick-without-double-presses/31391/6
+
+
 
 DEFAULT_INPUTS = {
     'num_helicopters': 2,
@@ -29,6 +31,27 @@ DEFAULT_INPUTS = {
     # "activity_duration_multiplier": 1.0
     "activity_duration_multiplier": 1.55
 }
+
+# Adjust some parameters depending on whether it is running
+# locally on a users computer (in which case parallel processing
+# can be invoked) or on the Streamlit community cloud platform
+
+# This check is a way to guess whether it's running on
+# Streamlit community cloud
+if platform.processor() == '':
+    ADDITIONAL_INPUTS =   {
+        "sim_duration_input": 365,
+        "number_of_runs_input": 3
+    }
+
+else:
+    ADDITIONAL_INPUTS =   {
+        "sim_duration_input": 365,
+        "number_of_runs_input": 10
+    }
+
+DEFAULT_INPUTS.update(ADDITIONAL_INPUTS)
+
 
 # def setup_state():
 #     for session_state_key, session_state_default_value in DEFAULT_INPUTS.items():
