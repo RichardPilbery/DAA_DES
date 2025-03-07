@@ -173,6 +173,7 @@ def generate_quarto_report(run_quarto_check=False):
     # print(html_filename)
     # dest_html_path = os.path.join(output_dir,f"simulation_output_{datetime.now().strftime('%H-%m-%d_%H%M')}.html")
     dest_html_path = os.path.join(output_dir,html_filename)
+
     # print(dest_html_path)
 
     try:
@@ -180,6 +181,8 @@ def generate_quarto_report(run_quarto_check=False):
             print("Trying to run 'quarto check' command")
             subprocess.run(["quarto"
                         , "check"])
+
+        print("Running Quarto Render Command")
 
         ## forces result to be html
         result = subprocess.run(["quarto"
@@ -194,11 +197,15 @@ def generate_quarto_report(run_quarto_check=False):
                                 ]
                                 , capture_output=True
                                 , text=True)
+
+        print("Quarto Render Command run succesfully")
+        print(f"Destination Path: {dest_html_path}")
     except:
         ## error message
         print(f"Report cannot be generated")
 
     if os.path.exists(dest_html_path):
+        print(f"Destination file found in filesystem - obtaining for download")
         with open(dest_html_path, "r") as f:
             html_data = f.read()
 
@@ -221,6 +228,7 @@ def generate_quarto_report(run_quarto_check=False):
             return "success"
     else:
         ## error message
+        print(f"Destination file found not in filesystem")
         try:
             print(f"Report failed to generate\n\n_{result}_")
         except UnboundLocalError:
