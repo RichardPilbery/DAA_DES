@@ -775,6 +775,11 @@ Most users will not need to look at the visualisations in this tab.
 
                 resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
 
+                # Accounting for odd bug being seen in streamlit community cloud
+                if 'P_ID' not in resource_use_events_only.columns:
+                    resource_use_events_only = resource_use_events_only.reset_index()
+
+
                 @st.fragment
                 def resource_use_exploration_plots():
 
