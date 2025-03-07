@@ -985,7 +985,7 @@ Most users will not need to look at the visualisations in this tab.
 
                 # Fix to deal with odd community cloud indexing bug
                 if 'P_ID' not in results_all_runs.columns:
-                    events_over_time_df = results_all_runs.reset_index()
+                    results_all_runs = results_all_runs.reset_index()
 
 
                 st.plotly_chart(
