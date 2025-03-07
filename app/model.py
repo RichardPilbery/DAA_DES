@@ -940,6 +940,7 @@ Most users will not need to look at the visualisations in this tab.
 
                     events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
 
+                    # Fix to deal with odd community cloud indexing bug
                     if 'P_ID' not in events_over_time_df.columns:
                         events_over_time_df = events_over_time_df.reset_index()
 
@@ -981,6 +982,11 @@ Most users will not need to look at the visualisations in this tab.
                         )
 
                 event_overview_plot()
+
+                # Fix to deal with odd community cloud indexing bug
+                if 'P_ID' not in results_all_runs.columns:
+                    events_over_time_df = results_all_runs.reset_index()
+
 
                 st.plotly_chart(
                         px.line(
