@@ -12,6 +12,7 @@ from datetime import datetime
 import re
 # Plotting
 import plotly.express as px
+import platform
 import plotly.graph_objects as go
 from vidigi.animation import animate_activity_log, generate_animation
 from vidigi.prep import reshape_for_animations, generate_animation_df
@@ -39,6 +40,13 @@ from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
 
 setup_state()
+
+
+# Set up filepaths for historical data
+
+
+
+
 
 poppins_script = """
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
@@ -215,7 +223,10 @@ if not st.session_state["visited_setup_page"]:
 
 if button_run_pressed:
     progress_text = "Simulation in progress. Please wait."
-    my_bar = st.progress(0, text=progress_text)
+    # This check is a way to guess whether it's running on
+    # Streamlit community cloud
+    if platform.processor() == '':
+        my_bar = st.progress(0, text=progress_text)
 
     with st.spinner('Simulating the system...'):
 
@@ -249,6 +260,8 @@ if button_run_pressed:
             # Turn into a single dataframe when all runs complete
             results_all_runs = pd.concat(results)
 
+            my_bar.empty()
+
         # If running locally, use parallel processing function to speed up execution significantly
         else:
             print("Running in parallel")
@@ -278,7 +291,7 @@ if button_run_pressed:
             "Download Output"
             ]
 
-        my_bar.empty()
+
 
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
@@ -757,165 +770,15 @@ Most users will not need to look at the visualisations in this tab.
 
             tab_4_1, tab_4_2 = st.tabs(["Debug Resources", "Debug Events"])
 
-            with tab_4_2:
-                st.subheader("Event Overview")
-
-                @st.fragment
-                def event_overview_plot():
-                    runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
-
-                    events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
-
-                    events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
-
-                    fig = px.scatter(
-                            events_over_time_df,
-                            x="timestamp_dt",
-                            y="time_type",
-                            # facet_row="run_number",
-                            # showlegend=False,
-                            color="time_type",
-                            height=800,
-                            title="Events Over Time - By Run"
-                            )
-
-                    fig.update_traces(marker=dict(size=3, opacity=0.5))
-
-                    fig.update_layout(yaxis_title="", # Remove y-axis label
-                                      yaxis_type='category',
-                                      showlegend=False)
-                    # Remove facet labels
-                    fig.for_each_annotation(lambda x: x.update(text=""))
-
-                    # fig.update_xaxes(rangeslider_visible=True,
-                    # rangeselector=dict(
-                    #     buttons=list([
-                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
-                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
-                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
-                    #         dict(step="all")
-                    #     ]))
-                    # )
-
-                    st.plotly_chart(
-                        fig,
-                            use_container_width=True
-                        )
-
-                event_overview_plot()
-
-                st.plotly_chart(
-                        px.line(
-                            results_all_runs[results_all_runs["time_type"]=="arrival"],
-                            x="timestamp_dt",
-                            y="P_ID",
-                            color="run_number",
-                            height=800,
-                            title="Cumulative Arrivals Per Run"),
-                            use_container_width=True
-                        )
-
-                st.subheader("Event Counts")
-                st.write(f"Period: {st.session_state.sim_duration_input} days")
-
-                event_counts_df =  (pd.DataFrame(
-                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
-                        .pivot(index="run_number", columns="time_type", values="count")
-                )
-                event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
-
-                # st.plotly_chart(
-                #         px.bar(
-                #             event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
-                #             x="run_number",
-                #             y="value",
-                #             facet_col="time_type",
-                #             height=600
-                #     )
-                # )
-
-                @st.fragment
-                def event_funnel_plot():
-
-                    hems_events_initial = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile",
-                                    # "HEMS stood down en route",
-                                    "HEMS on scene",
-                                    # "HEMS patient treated (not conveyed)",
-                                    "HEMS leaving scene",
-                                    "HEMS arrived destination",
-                                    "HEMS clear"]
-
-                    hems_events = st.multiselect("Choose the events to show",
-                                                 event_counts_long["time_type"].unique(),
-                                                 hems_events_initial)
-
-                    run_select = st.multiselect("Choose the runs to show",
-                                                 event_counts_long["run_number"].unique(),
-                                                 1)
-
-                    return st.plotly_chart(
-                            px.funnel(
-                                event_counts_long[(event_counts_long["time_type"].isin(hems_events)) &
-                                                  (event_counts_long["run_number"].isin(run_select))  ],
-                                facet_col="run_number",
-                                x="value",
-                                y="time_type",
-                                category_orders={"time_type": hems_events[::-1]}
-
-                        )
-                    )
-
-                event_funnel_plot()
-
-                # amb_events = ["arrival", "AMB call start", "AMB clear"]
-
-                # st.plotly_chart(
-                #         px.funnel(
-                #             event_counts_long[event_counts_long["time_type"].isin(amb_events)],
-                #             facet_col="run_number",
-                #             x="value",
-                #             y="time_type",
-                #             category_orders={"time_type": amb_events[::-1]},
-
-                #     )
-                # )
-
-                @st.fragment
-                def patient_viz():
-                    st.subheader("Per-patient journey exploration")
-
-                    patient_filter = st.selectbox("Select a patient", results_all_runs.P_ID.unique())
-
-                    tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
-
-                    for idx, tab in enumerate(tab_list):
-                        p_df = results_all_runs[
-                                    (results_all_runs.P_ID==patient_filter) &
-                                    (results_all_runs.run_number==idx+1)]
-
-                        p_df['time_type'] = p_df['time_type'].astype('str')
-
-                        fig = px.scatter(
-                                p_df,
-                                x="timestamp_dt",
-                                y="time_type",
-                                color="time_type")
-
-                        fig.update_layout(yaxis_type='category')
-
-                        tab.plotly_chart(
-                            fig,
-                            use_container_width=True,
-                            key=f"p_viz_{patient_filter}_{idx}"
-                        )
-
-                patient_viz()
-
             with tab_4_1:
                 st.subheader("Resource Use")
 
                 resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
+
+                # Accounting for odd bug being seen in streamlit community cloud
+                if 'P_ID' not in resource_use_events_only.columns:
+                    resource_use_events_only = resource_use_events_only.reset_index()
+
 
                 @st.fragment
                 def resource_use_exploration_plots():
@@ -1067,6 +930,172 @@ Most users will not need to look at the visualisations in this tab.
                     )
 
                 resource_use_exploration_plots()
+
+            with tab_4_2:
+                st.subheader("Event Overview")
+
+                @st.fragment
+                def event_overview_plot():
+                    runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
+
+                    events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
+
+                    # Fix to deal with odd community cloud indexing bug
+                    if 'P_ID' not in events_over_time_df.columns:
+                        events_over_time_df = events_over_time_df.reset_index()
+
+                    events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
+
+                    fig = px.scatter(
+                            events_over_time_df,
+                            x="timestamp_dt",
+                            y="time_type",
+                            # facet_row="run_number",
+                            # showlegend=False,
+                            color="time_type",
+                            height=800,
+                            title="Events Over Time - By Run"
+                            )
+
+                    fig.update_traces(marker=dict(size=3, opacity=0.5))
+
+                    fig.update_layout(yaxis_title="", # Remove y-axis label
+                                      yaxis_type='category',
+                                      showlegend=False)
+                    # Remove facet labels
+                    fig.for_each_annotation(lambda x: x.update(text=""))
+
+                    # fig.update_xaxes(rangeslider_visible=True,
+                    # rangeselector=dict(
+                    #     buttons=list([
+                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
+                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
+                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
+                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
+                    #         dict(step="all")
+                    #     ]))
+                    # )
+
+                    st.plotly_chart(
+                        fig,
+                            use_container_width=True
+                        )
+
+                event_overview_plot()
+
+                # Fix to deal with odd community cloud indexing bug
+                if 'P_ID' not in results_all_runs.columns:
+                    results_all_runs = results_all_runs.reset_index()
+
+
+                st.plotly_chart(
+                        px.line(
+                            results_all_runs[results_all_runs["time_type"]=="arrival"],
+                            x="timestamp_dt",
+                            y="P_ID",
+                            color="run_number",
+                            height=800,
+                            title="Cumulative Arrivals Per Run"),
+                            use_container_width=True
+                        )
+
+                st.subheader("Event Counts")
+                st.write(f"Period: {st.session_state.sim_duration_input} days")
+
+                event_counts_df =  (pd.DataFrame(
+                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
+                        .pivot(index="run_number", columns="time_type", values="count")
+                )
+                event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
+
+                # st.plotly_chart(
+                #         px.bar(
+                #             event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
+                #             x="run_number",
+                #             y="value",
+                #             facet_col="time_type",
+                #             height=600
+                #     )
+                # )
+
+                @st.fragment
+                def event_funnel_plot():
+
+                    hems_events_initial = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile",
+                                    # "HEMS stood down en route",
+                                    "HEMS on scene",
+                                    # "HEMS patient treated (not conveyed)",
+                                    "HEMS leaving scene",
+                                    "HEMS arrived destination",
+                                    "HEMS clear"]
+
+                    hems_events = st.multiselect("Choose the events to show",
+                                                 event_counts_long["time_type"].unique(),
+                                                 hems_events_initial)
+
+                    run_select = st.multiselect("Choose the runs to show",
+                                                 event_counts_long["run_number"].unique(),
+                                                 1)
+
+                    return st.plotly_chart(
+                            px.funnel(
+                                event_counts_long[(event_counts_long["time_type"].isin(hems_events)) &
+                                                  (event_counts_long["run_number"].isin(run_select))  ],
+                                facet_col="run_number",
+                                x="value",
+                                y="time_type",
+                                category_orders={"time_type": hems_events[::-1]}
+
+                        )
+                    )
+
+                event_funnel_plot()
+
+                # amb_events = ["arrival", "AMB call start", "AMB clear"]
+
+                # st.plotly_chart(
+                #         px.funnel(
+                #             event_counts_long[event_counts_long["time_type"].isin(amb_events)],
+                #             facet_col="run_number",
+                #             x="value",
+                #             y="time_type",
+                #             category_orders={"time_type": amb_events[::-1]},
+
+                #     )
+                # )
+
+                @st.fragment
+                def patient_viz():
+                    st.subheader("Per-patient journey exploration")
+
+                    patient_filter = st.selectbox("Select a patient", results_all_runs.P_ID.unique())
+
+                    tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
+
+                    for idx, tab in enumerate(tab_list):
+                        p_df = results_all_runs[
+                                    (results_all_runs.P_ID==patient_filter) &
+                                    (results_all_runs.run_number==idx+1)]
+
+                        p_df['time_type'] = p_df['time_type'].astype('str')
+
+                        fig = px.scatter(
+                                p_df,
+                                x="timestamp_dt",
+                                y="time_type",
+                                color="time_type")
+
+                        fig.update_layout(yaxis_type='category')
+
+                        tab.plotly_chart(
+                            fig,
+                            use_container_width=True,
+                            key=f"p_viz_{patient_filter}_{idx}"
+                        )
+
+                patient_viz()
+
+
 
         with tab5:
             try:

@@ -165,14 +165,17 @@ def generate_quarto_report(run_quarto_check=False):
     Passed an empty placeholder, put in a download button or a disabled download
     button in the event of failure
     """
+    print("Trying to generate a downloadable quarto report")
     output_dir = os.path.join(os.getcwd(),'app/outputs')
     qmd_filename = 'app/air_ambulance_simulation_output.qmd'
     qmd_path = os.path.join(os.getcwd(),qmd_filename)
+    print(f"Trying to find quarto template in {qmd_path}")
     html_filename = os.path.basename(qmd_filename).replace('.qmd', '.html')
     # html_filename = f"simulation_output_{datetime.now().strftime('%Y%m%d_%H%M')}.html"
     # print(html_filename)
     # dest_html_path = os.path.join(output_dir,f"simulation_output_{datetime.now().strftime('%H-%m-%d_%H%M')}.html")
     dest_html_path = os.path.join(output_dir,html_filename)
+
     # print(dest_html_path)
 
     try:
@@ -180,6 +183,8 @@ def generate_quarto_report(run_quarto_check=False):
             print("Trying to run 'quarto check' command")
             subprocess.run(["quarto"
                         , "check"])
+
+        print("Running Quarto Render Command")
 
         ## forces result to be html
         result = subprocess.run(["quarto"
@@ -194,11 +199,15 @@ def generate_quarto_report(run_quarto_check=False):
                                 ]
                                 , capture_output=True
                                 , text=True)
+
+        print("Quarto Render Command run succesfully")
+        print(f"Destination Path: {dest_html_path}")
     except:
         ## error message
         print(f"Report cannot be generated")
 
     if os.path.exists(dest_html_path):
+        print(f"Destination file found in filesystem - obtaining for download")
         with open(dest_html_path, "r") as f:
             html_data = f.read()
 
@@ -221,7 +230,11 @@ def generate_quarto_report(run_quarto_check=False):
             return "success"
     else:
         ## error message
-        print(f"Report failed to generate\n\n_{result}_")
+        print(f"Generated file found not in filesystem")
+        try:
+            print(f"Report failed to generate\n\n_{result}_")
+        except UnboundLocalError:
+            print("Report failed to generate")
 
         st.button(
                 label="Error Generating Downloadable Report",

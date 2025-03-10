@@ -77,7 +77,7 @@ class HEMSAvailability():
         schedule = []
         service_dates = []
 
-        HEMS_ROTA = pd.read_csv('actual_data/HEMS_rota.csv')
+        HEMS_ROTA = pd.read_csv('actual_data/HEMS_ROTA.csv')
 
         for index, row in HEMS_ROTA.iterrows():
             current_resource_service_dates = []
