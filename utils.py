@@ -277,15 +277,24 @@ class Utils:
 
         """
 
+        season = 'summer' if quarter in [2, 3] else 'winter'
+
         distribution = {}
+        max_n = 0
+        min_n = 0
 
         for i in self.inc_per_day_distr:
             #print(i)
-            if (i['quarter'] == quarter):
+            if (i['season'] == season):
                 #print('Match')
                 distribution = i['best_fit']
+                max_n = i['max_n_per_day']
+                min_n = i['min_n_per_day']
 
-        sampled_inc_per_day = self.sample_from_distribution(distribution)
+        sampled_inc_per_day = -1
+        
+        while not (sampled_inc_per_day >= min_n and sampled_inc_per_day <= max_n):
+            sampled_inc_per_day = self.sample_from_distribution(distribution)
 
         return sampled_inc_per_day
 
@@ -466,3 +475,18 @@ class Utils:
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
+    
+    
+    def biased_mean(series: pd.Series, bias: float = .6) -> float:
+        """
+
+        Compute a weighted mean, favoring the larger value.
+
+        """
+
+        if len(series) == 1:
+            return series.iloc[0]  # Return the only value if there's just one
+        
+        sorted_vals = np.sort(series)  # Ensure values are sorted
+        weights = np.linspace(1, bias * 2, len(series))  # Increasing weights
+        return np.average(sorted_vals, weights=weights)

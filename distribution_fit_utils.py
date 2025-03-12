@@ -1,5 +1,6 @@
 from csv import QUOTE_ALL
 import glob
+import math
 import os
 import sys
 import numpy as np
@@ -328,26 +329,52 @@ class DistributionFitUtils():
         
         """
 
-        inc_df = self.df[['inc_date', 'date_only', 'quarter']].dropna()\
-            .drop_duplicates(subset="inc_date", keep="first")
-        
-        #print(inc_df.shape)
-        
-        jpd_df = inc_df.groupby(['date_only', 'quarter']).size().reset_index(name = 'jobs_per_day')
+        inc_df = self.df[['inc_date', 'date_only', 'quarter']]
 
-        quarters = jpd_df['quarter'].unique()
+        inc_df['year'] = inc_df['date_only'].dt.year
+        inc_df['season'] = inc_df['quarter'].map(lambda q: "winter" if q in [1, 4] else "summer")
+        inc_df['month_day'] = inc_df['date_only'].dt.strftime('%m-%d')  # Ignore year for seasonality
 
+        inc_per_day = inc_df.groupby(['date_only']).size().reset_index(name='jobs_per_day')
+        max_n_per_day = int(inc_per_day['jobs_per_day'].max())
+        min_n_per_day = int(inc_per_day['jobs_per_day'].min())
+
+        mean_jobs_df = inc_df.groupby(['year', 'month_day', 'season'])['date_only'].size().reset_index(name='jobs_per_day')
+
+        mean_jobs_df = (
+            inc_df.groupby(['year', 'month_day', 'season'])['date_only'].size().reset_index(name='jobs_per_day')
+            .groupby(['month_day', 'season'])
+            .agg(
+                mean_jobs_per_day=('jobs_per_day', lambda x: math.ceil(Utils.biased_mean(x))),
+            )
+            .reset_index()
+        )
+
+        seasons = mean_jobs_df['season'].dropna().unique()  # Avoid NaN seasons if they exist
         jpd_distr = []
 
-        for q in quarters:
-            fit_quarter = jpd_df[jpd_df['quarter'] == q]['jobs_per_day']
-            best_fit = self.getBestFit(fit_quarter, distr=self.sim_tools_distr_plus )
-            return_dict = { "quarter": int(q), "best_fit": best_fit, "n": len(fit_quarter)}
-            jpd_distr.append(return_dict)
+        for season in seasons:
+
+            # Added ceiling to convert mean to integer values
+            fit_season = mean_jobs_df[mean_jobs_df['season'] == season]['mean_jobs_per_day'].apply(math.ceil) 
             
+            # Compute best fit distribution
+            best_fit = self.getBestFit(fit_season, distr=self.sim_tools_distr_plus)
+
+            return_dict = {
+                "season": season,
+                "best_fit": best_fit,
+                "min_n_per_day": min_n_per_day,  
+                "max_n_per_day": max_n_per_day,
+                "mean_n_per_day": fit_season.mean()
+            }
+            
+            jpd_distr.append(return_dict)
+
+        # Step 7: Save results to file
         with open('distribution_data/inc_per_day_distributions.txt', 'w+') as convert_file:
-            convert_file.write(json.dumps(jpd_distr))
-        convert_file.close()
+            json.dump(jpd_distr, convert_file)
+
 
 
     def hourly_arrival_by_qtr_probs(self):
