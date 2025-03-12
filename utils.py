@@ -480,7 +480,8 @@ class Utils:
     def biased_mean(series: pd.Series, bias: float = .6) -> float:
         """
 
-        Compute a weighted mean, favoring the larger value.
+        Compute a weighted mean, favoring the larger value since demand
+        likely to only increase with time
 
         """
 
