@@ -366,6 +366,7 @@ class DES_HEMS:
         # Allocation time --------------
 
         if patient.hems_case == 1 and hems_avail:
+            # Calculate min and max permitted times.
             allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation') * self.activity_duration_multiplier
             #print(f"Vehicle type {patient.hems_vehicle_type} and allocation time is {allocation_time}")
             yield self.env.timeout(allocation_time)

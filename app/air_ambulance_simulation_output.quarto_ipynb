@@ -40,7 +40,7 @@
         "\n",
         "# Parameters\n"
       ],
-      "id": "512fadb8"
+      "id": "2ddb674d"
     },
     {
       "cell_type": "code",
@@ -51,7 +51,7 @@
         "content = file.read()\n",
         "print(content)"
       ],
-      "id": "1b394c90",
+      "id": "f4dad2f9",
       "execution_count": null,
       "outputs": []
     },
@@ -61,7 +61,7 @@
       "source": [
         "file.close()"
       ],
-      "id": "8402cb3e",
+      "id": "e5514cd6",
       "execution_count": null,
       "outputs": []
     },
@@ -134,7 +134,7 @@
         "></iframe>\n",
         "```"
       ],
-      "id": "3f099cf8"
+      "id": "a423ba72"
     }
   ],
   "metadata": {

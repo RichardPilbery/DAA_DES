@@ -175,3 +175,4 @@ session_data.json
 /app/fig_outputs/*.txt
 /app/fig_outputs/*.html
 /app/outputs/*.html
+app/outputs/.gitkeep

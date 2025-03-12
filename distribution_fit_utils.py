@@ -123,7 +123,13 @@ class DistributionFitUtils():
         self.df['quarter'] = self.df['inc_date'].dt.quarter   
         self.df['first_day_of_month'] = self.df['inc_date'].to_numpy().astype('datetime64[M]')
 
-        self.max_values_df = self.upper_allowable_time_bounds()
+        # Replacing a upper quartile limit on job cycle times and
+        # instead using a manually specified time frame.
+        # This has the advantage of allowing manual amendment of the falues
+        # on the front-end
+        # self.max_values_df = self.upper_allowable_time_bounds()
+        self.min_max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
+        #print(self.min_max_values_df)
 
         # This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
@@ -238,12 +244,13 @@ class DistributionFitUtils():
                     #print(f"HEMS result is {row['hems_result']} cs is {cs} and times_to_fit is {ttf} and patient outcome {pto}")
 
                     # This line might not be required if data quality is determined when importing the data
-                    max_time = self.max_values_df[self.max_values_df['time'] == ttf].max_value_mins.iloc[0]
+                    max_time = self.min_max_values_df[self.min_max_values_df['time'] == ttf].max_value_mins.iloc[0]
+                    min_time = self.min_max_values_df[self.min_max_values_df['time'] == ttf].min_value_mins.iloc[0]
 
                     fit_times = self.df[
                         (self.df.vehicle_type == vt) & 
-                        (self.df[ttf] > 0) & 
-                        (self.df[ttf] < max_time) & 
+                        (self.df[ttf] >= min_time) & 
+                        (self.df[ttf] <= max_time) & 
                         (self.df.hems_result == row['hems_result'])
                     ][ttf]
                     #print(fit_times[:10])
@@ -589,26 +596,6 @@ class DistributionFitUtils():
 
         print(median_df.quantile(.75))
         # pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
-
-    def upper_allowable_time_bounds(self):
-        """
-            Calculates the maximum permissable time for each phase on an incident based on supplied historical data.
-            This is currently set to 1.5x the upper quartile of the data distribution
-        """
-
-        median_df = self.df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
-
-        # Replacing zeros with NaN to exclude from median calculation
-        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
-        median_df.replace(0, np.nan, inplace=True)
-
-        upper_quartile_and_50_percent = median_df.quantile(.75)*1.5
-
-        df = upper_quartile_and_50_percent.reset_index().rename(columns={'index':'time', 0.75:'max_value_mins'})
-
-        df.to_csv('distribution_data/upper_allowable_time_bounds.csv', mode="w+", index=False)
-
-        return df
     
 
 if __name__ == "__main__":
