@@ -164,7 +164,7 @@ cython_debug/
 .DS_Store
 
 external_data
-data
+data/*
 app/assets/~$text.xlsx
 
 session_data.json
