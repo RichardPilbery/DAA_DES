@@ -355,6 +355,8 @@ class DistributionFitUtils():
             inc_df.groupby(['year', 'month_day', 'season'])['date_only'].size().reset_index(name='jobs_per_day')
             .groupby(['month_day', 'season'])
             .agg(
+                # Biased_mean as the name implies, puts a slight increase weighting on
+                # years with higher levels of activity (default = .6)
                 mean_jobs_per_day=('jobs_per_day', lambda x: math.ceil(Utils.biased_mean(x))),
             )
             .reset_index()

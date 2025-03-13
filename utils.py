@@ -489,5 +489,5 @@ class Utils:
             return series.iloc[0]  # Return the only value if there's just one
         
         sorted_vals = np.sort(series)  # Ensure values are sorted
-        weights = np.linspace(1, bias * 2, len(series))  # Increasing weights
+        weights = np.linspace(1, bias * 2, len(series))  # Increasing weights with larger values
         return np.average(sorted_vals, weights=weights)
