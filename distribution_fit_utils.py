@@ -248,12 +248,22 @@ class DistributionFitUtils():
                     max_time = self.min_max_values_df[self.min_max_values_df['time'] == ttf].max_value_mins.iloc[0]
                     min_time = self.min_max_values_df[self.min_max_values_df['time'] == ttf].min_value_mins.iloc[0]
 
-                    fit_times = self.df[
-                        (self.df.vehicle_type == vt) & 
-                        (self.df[ttf] >= min_time) & 
-                        (self.df[ttf] <= max_time) & 
-                        (self.df.hems_result == row['hems_result'])
-                    ][ttf]
+                    if ttf == 'time_on_scene':
+                        # There is virtually no data for HEMS_result other than patient conveyed
+                        # which is causing issues with fitting. For time on scene, will
+                        # use a simplified fitting ignoring hems_result as a category
+                        fit_times = self.df[
+                            (self.df.vehicle_type == vt) & 
+                            (self.df[ttf] >= min_time) & 
+                            (self.df[ttf] <= max_time) 
+                        ][ttf]
+                    else:
+                        fit_times = self.df[
+                            (self.df.vehicle_type == vt) & 
+                            (self.df[ttf] >= min_time) & 
+                            (self.df[ttf] <= max_time) & 
+                            (self.df.hems_result == row['hems_result'])
+                        ][ttf]
                     #print(fit_times[:10])
                     best_fit = self.getBestFit(fit_times, distr=self.sim_tools_distr_plus)
                     return_dict = { "vehicle_type": vt, "time_type" : ttf, "best_fit": best_fit, "hems_result": row['hems_result'], "n": len(fit_times)}
