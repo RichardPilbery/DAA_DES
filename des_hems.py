@@ -242,7 +242,7 @@ class DES_HEMS:
         pt.age = self.utils.age_sampling(pt.ampds_card, 115)
         pt.sex = self.utils.sex_selection(pt.ampds_card)
         pt.hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
-        #print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
+        print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
