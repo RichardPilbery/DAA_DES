@@ -77,13 +77,17 @@ class HEMSAvailability():
         schedule = []
         service_dates = []
 
-        HEMS_ROTA = pd.read_csv('actual_data/HEMS_ROTA.csv')
 
-        for index, row in HEMS_ROTA.iterrows():
+        # Calculate service schedules for each resource
+
+        SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
+
+        for index, row in SERVICING_SCHEDULE.iterrows():
+            #print(row)
             current_resource_service_dates = []
             # Check if service date provided
             if not pd.isna(row['last_service']):
-                #print(f"Checking {row['callsign']} with previous service date of {row['last_service']}")
+                #print(f"Checking {row['registration']} with previous service date of {row['last_service']}")
                 last_service = datetime.strptime(row['last_service'], "%Y-%m-%d")
                 service_date = last_service
 
@@ -93,13 +97,42 @@ class HEMSAvailability():
 
                     service_date, end_date = self.find_next_service_date(last_service, row["service_schedule_months"], service_dates, row['service_duration_weeks'])
 
-                    schedule.append((row['callsign'], service_date))
+                    schedule.append((row['registration'], service_date, end_date))
                     #print(service_date)
                     service_dates.append({'service_start_date': service_date, 'service_end_date': end_date})
 
                     current_resource_service_dates.append({'service_start_date': service_date, 'service_end_date': end_date})
                     #print(service_dates)
+                    #print(current_resource_service_dates)
                     last_service = service_date
+            else:
+                schedule.append((row['registration'], None, None))
+                #print(schedule)
+
+            service_df = pd.DataFrame(schedule, columns=["registration", "service_start_date", "service_end_date"])
+
+            service_df.to_csv("data/service_dates.csv", index=False)
+               
+        # Append those to the HEMS resource.
+
+        HEMS_RESOURCES = (
+            pd.read_csv("actual_data/HEMS_ROTA.csv")
+                .merge(
+                    SERVICING_SCHEDULE
+                        .merge(
+                            pd.read_csv("actual_data/callsign_registration_lookup.csv"),
+                            on="registration",
+                            how="left"
+                        ),
+                    on="callsign",
+                    how="left"
+                )
+        )
+
+        for index, row in HEMS_RESOURCES.iterrows():
+
+            s = service_df[service_df['registration'] == row['registration']]
+            #print(s)
 
             # Create new HEMS resource and add to HEMS_resource_list
             #pd.DataFrame(columns=['year', 'service_start_date', 'service_end_date'])
@@ -108,20 +141,18 @@ class HEMSAvailability():
                 callsign_group      = row['callsign_group'],
                 vehicle_type        = row['vehicle_type'],
                 category            = row['category'],
+                registration        = row['registration'],
                 summer_start        = row['summer_start'],
                 winter_start        = row['winter_start'],
                 summer_end          = row['summer_end'],
                 winter_end          = row['winter_end'],
-                servicing_schedule  = pd.DataFrame(current_resource_service_dates),
-                resource_id         = row['callsign']
+                servicing_schedule  = s,
+                resource_id         = row['registration']
             )
 
             self.HEMS_resources_list.append(hems)
 
-        # Write servicing schedules to a file for use in calculations and resource visualisations
-        (pd.DataFrame(schedule, columns=["resource", "service_start_date"])
-        .merge(pd.DataFrame(service_dates))
-        .to_csv("data/service_dates.csv", index=False))
+        #print(self.HEMS_resources_list)
 
 
     def populate_store(self):
@@ -132,8 +163,8 @@ class HEMSAvailability():
 
         h: HEMS
         for h in self.HEMS_resources_list:
-            print(f"Populating resource store: HEMS({h.callsign})")
-            print(h.servicing_schedule)
+            #print(f"Populating resource store: HEMS({h.callsign})")
+            #print(h.servicing_schedule)
             self.store.put(h)
 
 

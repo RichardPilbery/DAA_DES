@@ -1,11 +1,11 @@
 parameter,value
-sim_duration,525600.0
-warm_up_duration,0.0
-sim_start_date,2023-01-01 08:00:00
-sim_end_date,2024-01-01 08:00:00
-warm_up_end_date,2023-01-01 08:00:00
+sim_duration,525600
+warm_up_duration,0
+sim_start_date,2023-01-01 05:00:00
+sim_end_date,2024-01-01 05:00:00
+warm_up_end_date,2023-01-01 05:00:00
 amb_data,False
-model_exec_time,2025-03-13 11:53:16.442178
+model_exec_time,2025-03-13 13:45:54.145398
 summer_start_date,2023-04-01
 winter_start_date,2023-10-01
 activity_duration_multiplier,1.0

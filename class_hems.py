@@ -18,6 +18,7 @@ class HEMS(Ambulance):
             callsign_group: str, 
             vehicle_type: str, 
             category: str, 
+            registration: str,
             summer_start: str,
             winter_start: str,
             summer_end: str,
@@ -37,6 +38,7 @@ class HEMS(Ambulance):
         self.flying_time = 0
         self.vehicle_type = vehicle_type
         self.category = category
+        self.registration = registration
         self.summer_start = summer_start
         self.winter_start = winter_start
         self.summer_end = summer_end
@@ -57,6 +59,7 @@ class HEMS(Ambulance):
         """
 
         for index, row in self.servicing_schedule.iterrows():
+            #print(row)
             if row['service_start_date'] <= current_dt <= row['service_end_date']:
                 self.being_serviced = True
                 return True

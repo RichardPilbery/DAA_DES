@@ -61,6 +61,9 @@ class Patient:
 
         self.pt_outcome = ""
 
+        # Category to denote need for EC/CC or REG (regular) care
+        self.hems_cc_or_ec = "REG"
+
         # Critical care desk staffed
         self.cc_desk = 0
 

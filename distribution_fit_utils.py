@@ -160,6 +160,9 @@ class DistributionFitUtils():
         # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
         self.incidents_per_day()
 
+        # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
+        self.enhanced_or_critical_care_by_ampds_card_probs()
+
         # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
         self.callsign_group_by_ampds_card_and_hour_probs()
 
@@ -386,6 +389,36 @@ class DistributionFitUtils():
         # Step 7: Save results to file
         with open('distribution_data/inc_per_day_distributions.txt', 'w+') as convert_file:
             json.dump(jpd_distr, convert_file)
+
+
+    def enhanced_or_critical_care_by_ampds_card_probs(self):
+        """
+        
+            Calculates the probabilty of enhanced or critica care resource beign required
+            based on the AMPDS card 
+        
+        """
+
+        ec_df = self.df[['ampds_card', 'ec_benefit', 'cc_benefit']].copy()
+
+        def assign_care_category(row):
+            # There are some columns with both EC and CC benefit selected
+            # this function will allocate to only 1
+            if row['cc_benefit'] == 'y':
+                return 'CC'
+            elif row['ec_benefit'] == 'y':
+                return 'EC'
+            else:
+                return 'REG'
+            
+        ec_df['care_category'] = ec_df.apply(assign_care_category, axis = 1)
+
+        care_cat_counts = ec_df.groupby(['ampds_card', 'care_category']).size().reset_index(name='count')
+        total_counts = care_cat_counts.groupby('ampds_card')['count'].transform('sum')
+
+        care_cat_counts['proportion'] = round(care_cat_counts['count'] / total_counts, 3)
+
+        care_cat_counts.to_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv', mode = "w+", index = False)
 
 
 

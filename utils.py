@@ -31,6 +31,7 @@ class Utils:
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
         self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_ampds_card_probs.csv')
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
+        self.care_cat_by_ampds_df = pd.read_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv')
         self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
@@ -153,6 +154,19 @@ class Utils:
             # Range crosses midnight
             return current >= start or current < end
 
+    def care_category_selection(self, ampds_card: str) -> str:
+        """
+            This function will allocate and return an care category
+            based on AMPDS card
+        """
+
+        #print(f"Callsign group selection with {hour} and {ampds_card}")
+
+        df = self.care_cat_by_ampds_df[
+            (self.care_cat_by_ampds_df['ampds_card'] == ampds_card)
+        ]
+
+        return  pd.Series.sample(df['care_category'], weights = df['proportion']).iloc[0]
 
     def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
         """
@@ -475,7 +489,6 @@ class Utils:
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
-    
     
     def biased_mean(series: pd.Series, bias: float = .6) -> float:
         """

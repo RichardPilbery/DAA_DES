@@ -1,4 +1,6 @@
-model,service_schedule_months,service_duration_weeks
-Airbus H145,12,3
-Airbus EC135,8,3
-Volvo XC90,0,0
+model,registration,service_schedule_months,service_duration_weeks,last_service
+Airbus H145,g-daas,12,3,2022-01-04
+Airbus EC135,g-daan,8,3,2022-03-20
+Volvo XC90,cc70,0,0
+Volvo XC90,cc71,0,0
+Volvo XC90,cc72,0,0

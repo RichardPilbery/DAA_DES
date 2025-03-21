@@ -1,6 +1,6 @@
 import math
 import os, simpy
-from random import expovariate, uniform, random
+from random import expovariate, uniform
 from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 # from random import expovariate
@@ -9,7 +9,7 @@ from class_patient import Patient
 from class_hems_availability import HEMSAvailability
 from class_hems import HEMS
 from class_ambulance import Ambulance
-from datetime import datetime, timedelta, time
+from datetime import timedelta
 import warnings
 import numpy as np
 from math import floor
@@ -241,6 +241,8 @@ class DES_HEMS:
         #print(f"AMPDS card is {pt.ampds_card}")
         pt.age = self.utils.age_sampling(pt.ampds_card, 115)
         pt.sex = self.utils.sex_selection(pt.ampds_card)
+        pt.hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
+        #print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
@@ -256,6 +258,7 @@ class DES_HEMS:
             #print(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
             pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
             #print(f"Callsign is {pt.hems_pref_callsign_group}")
+
             pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
             #print(f"Vehicle type is {pt.hems_pref_vehicle_type}")
 
@@ -540,6 +543,7 @@ class DES_HEMS:
             "ampds_card"        : patient.ampds_card,
             "age"               : patient.age,
             "sex"               : patient.sex,
+            "care_cat"          : patient.hems_cc_or_ec,
             "hems_result"       : patient.hems_result,
             "outcome"           : patient.pt_outcome
         }
