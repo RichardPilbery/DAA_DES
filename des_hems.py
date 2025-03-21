@@ -6,7 +6,8 @@ import pandas as pd
 # from random import expovariate
 from utils import Utils
 from class_patient import Patient
-from class_hems_availability import HEMSAvailability
+# Revised class for HEMS availability
+from class_hems_availability_v2 import HEMSAvailability
 from class_hems import HEMS
 from class_ambulance import Ambulance
 from datetime import timedelta
@@ -242,7 +243,7 @@ class DES_HEMS:
         pt.age = self.utils.age_sampling(pt.ampds_card, 115)
         pt.sex = self.utils.sex_selection(pt.ampds_card)
         pt.hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
-        print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
+        #print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
@@ -259,9 +260,18 @@ class DES_HEMS:
             pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
             #print(f"Callsign is {pt.hems_pref_callsign_group}")
 
-            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
-            #print(f"Vehicle type is {pt.hems_pref_vehicle_type}")
+            # About 5% of 'REG' calls might have a helicopter benefit
+            helicopter_benefit = 'y'
+            if pt.hems_cc_or_ec == 'REG':
+                helicopter_benefit = 'y' if uniform(0, 1) <= 0.05 else 'n'
+                # if(helicopter_benefit == 1):
+                #     print('REG call with helicopter')
 
+            pt.hems_helicopter_benefit = helicopter_benefit
+            self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
+            self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
+
+            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
             self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
             self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
 
@@ -544,6 +554,7 @@ class DES_HEMS:
             "age"               : patient.age,
             "sex"               : patient.sex,
             "care_cat"          : patient.hems_cc_or_ec,
+            "heli_benefit"      : patient.hems_helicopter_benefit,
             "hems_result"       : patient.hems_result,
             "outcome"           : patient.pt_outcome
         }

@@ -35,6 +35,7 @@ class Utils:
         self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
+        self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
         self.pt_outcome_by_hems_result_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_probs.csv')
         # Import maximum call duration times
         self.min_max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
@@ -204,6 +205,18 @@ class Utils:
         df = self.hems_result_by_callsign_group_and_vehicle_type_df[
             (self.hems_result_by_callsign_group_and_vehicle_type_df['callsign_group'] == int(callsign_group)) &
             (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
+        ]
+
+        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
+    
+    def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
+        """
+            This function will allocate a HEMS result based on care category and helicopter benefit
+        """
+
+        df = self.hems_result_by_care_category_and_helicopter_benefit_df[
+            (self.hems_result_by_care_category_and_helicopter_benefit_df ['care_category'] == care_category) &
+            (self.hems_result_by_care_category_and_helicopter_benefit_df ['helicopter_benefit'] == helicopter_benefit)
         ]
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]

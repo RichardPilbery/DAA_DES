@@ -64,6 +64,9 @@ class Patient:
         # Category to denote need for EC/CC or REG (regular) care
         self.hems_cc_or_ec = "REG"
 
+        # Is the helicopter beneficial for this job?
+        self.hems_helicopter_benefit = ""
+
         # Critical care desk staffed
         self.cc_desk = 0
 

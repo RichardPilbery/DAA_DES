@@ -169,6 +169,9 @@ class DistributionFitUtils():
         # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
         self.hems_result_by_callsign_group_and_vehicle_type_probs()
 
+        # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
+        self.hems_result_by_care_cat_and_helicopter_benefit_probs()
+
         # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
         self.pt_outcome_by_hems_result_probs()
 
@@ -451,7 +454,7 @@ class DistributionFitUtils():
         total_counts = callsign_counts.groupby(['ampds_card', 'hour'])['count'].transform('sum')
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
-        callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv', mode = "w+")
+        callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv', mode = "w+", index=False)
 
 
     def vehicle_type_by_month_probs(self):
@@ -484,7 +487,52 @@ class DistributionFitUtils():
         total_counts = hems_counts.groupby(['callsign_group', 'vehicle_type'])['count'].transform('sum')
         hems_counts['proportion'] = round(hems_counts['count'] / total_counts, 4)
 
-        hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+")
+        hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+", index=False)
+
+        
+    def hems_result_by_care_cat_and_helicopter_benefit_probs(self):
+        """
+        
+            Calculates the probabilty of a specific HEMS result being allocated to
+            a call based on the care category amd whether a helicopter is beneficial
+        
+        """
+
+        # Wrangle the data...trying numpy for a change
+
+        hems_df = (
+            self.df
+            .assign(
+                helicopter_benefit=np.select(
+                    [
+                        self.df["cc_benefit"] == "y",
+                        self.df["ec_benefit"] == "y",
+                        self.df["hems_result"].isin([
+                            "Stand Down En Route", 
+                            "Landed but no patient contact", 
+                            "Stand Down Before Mobile"
+                        ])
+                    ],
+                    ["y", "y", "n"],
+                    default=self.df["helicopter_benefit"]
+                ),
+                care_cat=np.select(
+                    [
+                        self.df["cc_benefit"] == "y",
+                        self.df["ec_benefit"] == "y"
+                    ],
+                    ["CC", "EC"],
+                    default="REG"
+                )
+            )
+        )
+
+        hems_counts = hems_df.groupby(['hems_result', 'care_cat', 'helicopter_benefit']).size().reset_index(name='count')
+
+        hems_counts['total'] = hems_counts.groupby(['care_cat', 'helicopter_benefit'])['count'].transform('sum')
+        hems_counts['proportion'] = round(hems_counts['count'] / hems_counts['total'], 4)
+
+        hems_counts.to_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv', mode = "w+", index=False)
 
 
     def pt_outcome_by_hems_result_probs(self):
