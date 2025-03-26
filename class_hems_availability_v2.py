@@ -263,6 +263,20 @@ class HEMSAvailability():
 
         print(pref_res)
 
+        # YOU ARE HERE #
+                # YOU ARE HERE #
+                        # YOU ARE HERE #
+                                # YOU ARE HERE #
+                                        # YOU ARE HERE #
+                                                # YOU ARE HERE #
+                                                        # YOU ARE HERE #
+                                                                # YOU ARE HERE #
+
+                                                                        # YOU ARE HERE #        # YOU ARE HERE #
+                                                                                # YOU ARE HERE #
+                                                                                        # YOU ARE HERE #
+                                                                                        
+
         resource_event: Event = self.env.event()
 
         def process(pres_res: list[HEMS | None, int, bool]) -> Generator[Any, Any, None]:
@@ -317,7 +331,7 @@ class HEMSAvailability():
                         # back to the main model so that we can return it with the primary allocated
                         # resource at the end of the patient episode.
 
-                        return_resource2_value = None;
+                        return_resource2_value = None
 
                         if secondary_callsign_group_member in resource2:
                             # print('Secondary callsign group resource being allocated')
