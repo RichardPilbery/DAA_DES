@@ -7,7 +7,7 @@ import pandas as pd
 from utils import Utils
 from class_patient import Patient
 # Revised class for HEMS availability
-from class_hems_availability_v2 import HEMSAvailability
+from class_hems_availability import HEMSAvailability
 from class_hems import HEMS
 from class_ambulance import Ambulance
 from datetime import timedelta
