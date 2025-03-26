@@ -3,17 +3,17 @@ Landed but no patient contact,70,car,107,0.119
 Landed but no patient contact,70,helicopter,154,0.0775
 Landed but no patient contact,71,car,18,0.0714
 Landed but no patient contact,71,helicopter,39,0.0694
-Landed but no patient contact,72,car,113,0.1565
+Landed but no patient contact,72,car,113,0.1563
 Patient Conveyed,70,car,251,0.2792
 Patient Conveyed,70,helicopter,674,0.339
 Patient Conveyed,71,car,49,0.1944
 Patient Conveyed,71,helicopter,211,0.3754
-Patient Conveyed,72,car,153,0.2119
+Patient Conveyed,72,car,154,0.213
 Patient Treated (not conveyed),70,car,224,0.2492
 Patient Treated (not conveyed),70,helicopter,520,0.2616
 Patient Treated (not conveyed),71,car,110,0.4365
 Patient Treated (not conveyed),71,helicopter,190,0.3381
-Patient Treated (not conveyed),72,car,299,0.4141
+Patient Treated (not conveyed),72,car,299,0.4136
 Stand Down Before Mobile,70,car,16,0.0178
 Stand Down Before Mobile,70,helicopter,66,0.0332
 Stand Down Before Mobile,71,helicopter,13,0.0231
@@ -22,4 +22,4 @@ Stand Down En Route,70,car,301,0.3348
 Stand Down En Route,70,helicopter,574,0.2887
 Stand Down En Route,71,car,75,0.2976
 Stand Down En Route,71,helicopter,109,0.194
-Stand Down En Route,72,car,155,0.2147
+Stand Down En Route,72,car,155,0.2144

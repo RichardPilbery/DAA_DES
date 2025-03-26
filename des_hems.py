@@ -181,14 +181,14 @@ class DES_HEMS:
                 # print(f"{self.new_day} and {current_dt.date}")
                 self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
 
-                #print(f"{current_dt.date()} There will be {self.calls_today} calls today")
+                print(f"{current_dt.date()} There will be {self.calls_today} calls today")
 
                 self.new_day = current_dt.date()
 
                 ia_dict = {}
                 ia_dict = self.calls_per_hour(qtr)
 
-                #print(ia_dict)
+                print(ia_dict)
 
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 self.hems_resources.daily_servicing_check(current_dt)
@@ -247,6 +247,10 @@ class DES_HEMS:
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
+        if not_in_warm_up_period:
+            #print(f"Arrival for patient {pt.id} on run {self.run_number}")
+            self.add_patient_result_row(pt, "arrival", "arrival_departure")
+
         if self.amb_data:
             # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
             # if ambulance data is being collected too.
@@ -268,41 +272,45 @@ class DES_HEMS:
                 #     print('REG call with helicopter')
 
             pt.hems_helicopter_benefit = helicopter_benefit
-            self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
-            self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
+            if not_in_warm_up_period:
+                self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
+                self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
 
-            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
-            self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
-            self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
+            #print(f"Callsign group {pt.hems_pref_callsign_group}")
+            if pt.hems_pref_callsign_group == "Other":
+                pt.hems_pref_vehicle_type = "Other"
+            else:
+                pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
 
-            hems_res_list: list[HEMS|None, int, bool, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
+            if not_in_warm_up_period:
+                self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
+                self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
+
+            hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
             hems_allocation = hems_res_list[0]
 
             # This will either contain the other resource in a callsign_group or None
-            hems_group_resource_allocation = hems_res_list[3]
+            hems_group_resource_allocation = hems_res_list[2]
 
             if not_in_warm_up_period:
-                msg = "No resource in group available"
-                if hems_res_list[1] == 1:
-                    msg = "Preferred resource available and allocated"
-                elif hems_res_list[1] == 2:
-                    msg = "Preferred resource not available but other resource in same group allocated"
+                #print(hems_res_list[1])
+                self.add_patient_result_row(pt, hems_res_list[1], "resource_preferred_outcome")
 
-                self.add_patient_result_row(pt, msg, "resource_preferred_outcome")
-
-                if hems_allocation != None:
-                    if hems_res_list[2]:
-                        self.add_patient_result_row(pt, f"{'H' if pt.hems_pref_vehicle_type == 'helicopter' else 'CC'}{pt.hems_pref_callsign_group}", "resource_preferred_service")
+                # if hems_allocation != None:
+                #     if hems_res_list[2]:
+                #         self.add_patient_result_row(pt, f"{'H' if pt.hems_pref_vehicle_type == 'helicopter' else 'CC'}{pt.hems_pref_callsign_group}", "resource_preferred_service")
 
             # if hems_res_list[2]:
             #     print(f"Back from allocate resource with {hems_res_list[1]} and {hems_res_list[2]}")
 
             if hems_allocation != None:
                 #print(f"allocated {hems_allocation.callsign}")
-                self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
-                if hems_group_resource_allocation != None:
-                    self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
+                if not_in_warm_up_period:
+                    self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
+
+                    if hems_group_resource_allocation != None:
+                        self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
 
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
@@ -323,19 +331,17 @@ class DES_HEMS:
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
-        if not_in_warm_up_period:
-            #print(f"Arrival for patient {patient.id} on run {self.run_number}")
-            self.add_patient_result_row(patient, "arrival", "arrival_departure")
-
         hems_avail = True if hems_res != None else False
 
-        if hems_res != None:
+        if hems_avail:
 
             patient.hems_callsign_group = hems_res.callsign_group
             #print(f"Patient csg is {patient.hems_callsign_group}")
             patient.hems_vehicle_type = hems_res.vehicle_type
 
-            patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
+            #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
+            #print(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
+            patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
 
             # Check if HEMS result indicates that resource stodd down before going mobile or en route
             no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False

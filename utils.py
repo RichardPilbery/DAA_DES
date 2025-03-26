@@ -215,8 +215,8 @@ class Utils:
         """
 
         df = self.hems_result_by_care_category_and_helicopter_benefit_df[
-            (self.hems_result_by_care_category_and_helicopter_benefit_df ['care_category'] == care_category) &
-            (self.hems_result_by_care_category_and_helicopter_benefit_df ['helicopter_benefit'] == helicopter_benefit)
+            (self.hems_result_by_care_category_and_helicopter_benefit_df['care_cat'] == care_category) &
+            (self.hems_result_by_care_category_and_helicopter_benefit_df['helicopter_benefit'] == helicopter_benefit)
         ]
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]

@@ -237,7 +237,7 @@ class DistributionFitUtils():
         
         """
        
-        vehicle_type = self.df['vehicle_type'].unique()
+        vehicle_type = self.df['vehicle_type'].dropna().unique()
 
         # We'll need to make sure that where a distribution is missing that the time is set to 0 in the model.
         # Probably easier than complicated logic to determine what times should be available based on hems_result
@@ -720,7 +720,7 @@ class DistributionFitUtils():
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
-    test = DistributionFitUtils('external_data/clean_daa_import_2024.csv', True)
+    test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
 

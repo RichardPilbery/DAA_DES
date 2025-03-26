@@ -100,7 +100,22 @@ hr {
         # TODO: Explore why this is happening in more detail
         # u = Utils()
         # rota = u.HEMS_ROTA
-        rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+        #rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+        SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
+
+        rota = (
+            pd.read_csv("actual_data/HEMS_ROTA.csv")
+                .merge(
+                    SERVICING_SCHEDULE
+                        .merge(
+                            pd.read_csv("actual_data/callsign_registration_lookup.csv"),
+                            on="registration",
+                            how="left"
+                        ),
+                    on="callsign",
+                    how="left"
+                )
+        )
 
         for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
             per_callsign_rota = rota[rota["callsign"]==helicopter]
