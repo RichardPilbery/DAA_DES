@@ -521,7 +521,9 @@ def additional_params_expander():
         "Select the starting day for the simulation",
         value=st.session_state.sim_start_date_input,
         on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input.strftime("%Y-%m-%d")),
-        key="key_sim_start_date_input"
+        key="key_sim_start_date_input",
+        min_value="today",
+        max_value="2027-01-01"
     ).strftime("%Y-%m-%d")
 
     sim_start_time_input = st.time_input(
