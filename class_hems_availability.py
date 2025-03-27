@@ -96,7 +96,7 @@ class HEMSAvailability():
             on="registration"
             )
 
-        print("prep_hems_resources: schedule {SERVICING_SCHEDULE}")
+        print(f"prep_hems_resources: schedule {SERVICING_SCHEDULE}")
 
         for index, row in SERVICING_SCHEDULE.iterrows():
             #print(row)
