@@ -308,13 +308,16 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall,
 def make_RWC_utilisation_dataframe(
         historical_df_path="../historical_data/historical_monthly_resource_utilisation.csv",
         rota_path="../actual_data/HEMS_ROTA.csv",
+        callsign_path="../actual_data/callsign_registration_lookup.csv",
         service_path="../data/service_dates.csv"):
+
     historical_utilisation_df = pd.read_csv(historical_df_path)
 
     def calculate_theoretical_time(
         historical_data,
         rota_data,
         service_data,
+        callsign_data,
         long_format_df=True):
         """
         Note that this function has been partially provided by ChatGPT.
@@ -323,7 +326,10 @@ def make_RWC_utilisation_dataframe(
         # Convert data into DataFrames
         historical_df = pd.DataFrame(historical_data)
         rota_df = pd.DataFrame(rota_data)
+        callsign_df = pd.DataFrame(callsign_data)
         service_df = pd.DataFrame(service_data)
+
+        rota_df = rota_df.merge(callsign_df, on="callsign")
 
         # Convert date columns to datetime format
         historical_df['month'] = pd.to_datetime(historical_df['month'])
@@ -343,7 +349,7 @@ def make_RWC_utilisation_dataframe(
             month_data = {}
 
             for _, rota in rota_df.iterrows():
-                callsign = rota['callsign']
+                registration = rota['registration']
 
                 # Determine summer or winter schedule
                 is_summer = month_start.month in range(3, 11)
@@ -360,7 +366,7 @@ def make_RWC_utilisation_dataframe(
 
                 # Adjust for servicing periods
                 service_downtime = 0
-                for _, service in service_df[service_df['resource'] == callsign].iterrows():
+                for _, service in service_df[service_df['registration'] == registration].iterrows():
                     service_start = max(service['service_start_date'], month_start)
                     service_end = min(service['service_end_date'], month_end)
 
@@ -369,7 +375,8 @@ def make_RWC_utilisation_dataframe(
                         service_downtime += service_days * daily_available_time * 60
 
                 # Final available time after accounting for servicing
-                month_data[callsign] = total_available_time - service_downtime
+                print(month_data)
+                month_data[registration] = total_available_time - service_downtime
 
             theoretical_availability[month_start.strftime('%Y-%m-01')] = month_data
 
@@ -396,6 +403,7 @@ def make_RWC_utilisation_dataframe(
     theoretical_availability_df = calculate_theoretical_time(
         historical_data=historical_utilisation_df,
         rota_data=pd.read_csv(rota_path),
+        callsign_data=pd.read_csv(callsign_path),
         service_data=pd.read_csv(service_path),
         long_format_df= True
     )

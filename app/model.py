@@ -209,6 +209,7 @@ if button_run_pressed:
                 _utilisation_result_calculation.make_RWC_utilisation_dataframe(
                     historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
                     rota_path="actual_data/HEMS_ROTA.csv",
+                    callsign_path="actual_data/callsign_registration_lookup.csv",
                     service_path="data/service_dates.csv"
                     )
                 )

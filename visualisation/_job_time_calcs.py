@@ -102,7 +102,7 @@ def get_historical_times(
 def get_total_times_model(get_summary=False,
                           path="../data/run_results.csv",
                           params_path="../data/run_params_used.csv",
-                          rota_path="../data/hems_rota_used.csv",
+                          rota_path="../actual_data/HEMS_ROTA.csv",
                           service_path="../data/service_dates.csv"
                           ):
 
