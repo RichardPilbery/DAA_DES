@@ -181,14 +181,14 @@ class DES_HEMS:
                 # print(f"{self.new_day} and {current_dt.date}")
                 self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
 
-                print(f"{current_dt.date()} There will be {self.calls_today} calls today")
+                #print(f"{current_dt.date()} There will be {self.calls_today} calls today")
 
                 self.new_day = current_dt.date()
 
                 ia_dict = {}
                 ia_dict = self.calls_per_hour(qtr)
 
-                print(ia_dict)
+                #print(ia_dict)
 
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 self.hems_resources.daily_servicing_check(current_dt)
