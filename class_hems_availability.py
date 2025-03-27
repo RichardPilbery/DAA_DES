@@ -317,6 +317,9 @@ class HEMSAvailability():
             #print(f"Resource filter with hour {hour} and qtr {qtr}")
 
             if pres_res[0] == None:
+                # Check if hems_attend_reg_calls is True and if so allocate a resource
+                # based on historic activity.
+
                 return resource_event.succeed([None, pref_res[1], None])
 
             else:
