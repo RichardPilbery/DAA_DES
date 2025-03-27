@@ -16,7 +16,7 @@ import pandas as pd
 import re
 
 def calculate_available_hours(params_df,
-        rota_path="../data/hems_rota_used.csv",
+        rota_path="../actual_data/HEMS_ROTA.csv",
         # service_data_path="../data/service_dates.csv"
         ):
     """
@@ -125,7 +125,7 @@ def calculate_available_hours(params_df,
 
 
 def calculate_available_hours_v2(params_df,
-    rota_data,#=pd.read_csv("../data/hems_rota_used.csv"),
+    rota_data,#=pd.read_csv("../actual_data/HEMS_ROTA.csv"),
     service_data,#=pd.read_csv("../data/service_dates.csv"),
     output_by_month=False,
     long_format_df=False
