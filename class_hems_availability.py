@@ -81,6 +81,22 @@ class HEMSAvailability():
         # Calculate service schedules for each resource
 
         SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
+        SERVICE_HISTORY = pd.read_csv('actual_data/service_history.csv', na_values=0)
+        CALLSIGN_REGISTRATION = pd.read_csv('actual_data/callsign_registration_lookup.csv')
+
+        SERVICING_SCHEDULE = SERVICING_SCHEDULE.merge(
+            CALLSIGN_REGISTRATION,
+            how="right",
+            on="model"
+            )
+
+        SERVICING_SCHEDULE = SERVICING_SCHEDULE.merge(
+            SERVICE_HISTORY,
+            how="left",
+            on="registration"
+            )
+
+        print("prep_hems_resources: schedule {SERVICING_SCHEDULE}")
 
         for index, row in SERVICING_SCHEDULE.iterrows():
             #print(row)
@@ -93,9 +109,16 @@ class HEMSAvailability():
 
                 while last_service < self.sim_end_date:
 
-                    end_date = last_service + timedelta(weeks = int(row['service_duration_weeks'])) + timedelta(weeks=self.serviing_buffer_weeks)
+                    end_date = last_service + \
+                        timedelta(weeks = int(row['service_duration_weeks'])) + \
+                        timedelta(weeks=self.serviing_buffer_weeks)
 
-                    service_date, end_date = self.find_next_service_date(last_service, row["service_schedule_months"], service_dates, row['service_duration_weeks'])
+                    service_date, end_date = self.find_next_service_date(
+                        last_service,
+                        row["service_schedule_months"],
+                        service_dates,
+                        row['service_duration_weeks']
+                    )
 
                     schedule.append((row['registration'], service_date, end_date))
                     #print(service_date)
@@ -112,19 +135,15 @@ class HEMSAvailability():
             service_df = pd.DataFrame(schedule, columns=["registration", "service_start_date", "service_end_date"])
 
             service_df.to_csv("data/service_dates.csv", index=False)
-               
+
         # Append those to the HEMS resource.
 
         HEMS_RESOURCES = (
             pd.read_csv("actual_data/HEMS_ROTA.csv")
+                # Add model and servicing rules
                 .merge(
-                    SERVICING_SCHEDULE
-                        .merge(
-                            pd.read_csv("actual_data/callsign_registration_lookup.csv"),
-                            on="registration",
-                            how="left"
-                        ),
-                    on="callsign",
+                    SERVICING_SCHEDULE,
+                    on=["callsign", "vehicle_type"],
                     how="left"
                 )
         )
@@ -181,7 +200,7 @@ class HEMSAvailability():
             Function to return description of lookup allocation choice
 
         """
-        
+
         lookup_list = [
             "No HEMS resource available",
             "Preferred HEMS care category and vehicle type match",
@@ -220,7 +239,7 @@ class HEMSAvailability():
             # CC = H70 helicopter then car, then H71 helicopter then car then CC72
             # EC = H71 helicopter then car, then CC72, then H70 helicopter then car
             # REG = if helicopter benefit then H71 then H70 otherwise return None
-            
+
 
             if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
 
