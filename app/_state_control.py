@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, date
 import pandas as pd
 import platform
 # Note: following
@@ -23,7 +23,7 @@ DEFAULT_INPUTS = {
     "warm_up_duration": 0,
     "number_of_runs_input": 10,
     "create_animation_input": False,
-    "sim_start_date_input": datetime(2023,1,1).strftime('%Y-%m-%d'),
+    "sim_start_date_input": date.today().strftime('%Y-%m-%d'),
     "sim_start_time_input": "08:00",
     "scenario_1_set": False,
     "scenario_2_set": False,
