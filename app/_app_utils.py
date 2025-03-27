@@ -247,7 +247,7 @@ def generate_quarto_report(run_quarto_check=False):
         return "failure"
 
 
-def summary_sidebar(SERVICING_SCHEDULE, quarto_string):
+def summary_sidebar(quarto_string):
     with stylable_container(css_styles="""
 hr {
     border-color: #a6093d;
@@ -281,16 +281,16 @@ hr {
 
         rota = (
             pd.read_csv("actual_data/HEMS_ROTA.csv")
-                .merge(
-                    SERVICING_SCHEDULE
-                        .merge(
-                            pd.read_csv("actual_data/callsign_registration_lookup.csv"),
-                            on="registration",
-                            how="left"
-                        ),
-                    on="callsign",
-                    how="left"
-                )
+            .merge(
+                        pd.read_csv("actual_data/callsign_registration_lookup.csv"),
+                        on="callsign",
+                        how="left"
+                    )
+            .merge(
+               pd.read_csv("actual_data/service_schedules_by_model.csv"),
+                on=["model","vehicle_type"],
+                how="left"
+            )
         )
 
         for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():

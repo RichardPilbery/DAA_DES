@@ -56,7 +56,7 @@ text_df = get_text_sheet("model")
 # u = Utils()
 # rota = u.HEMS_ROTA
 #rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
-SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
+# SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
 
 col1, col2 = st.columns([0.7, 0.3])
 
@@ -67,7 +67,7 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
-    _app_utils.summary_sidebar(SERVICING_SCHEDULE=SERVICING_SCHEDULE, quarto_string=quarto_string)
+    _app_utils.summary_sidebar(quarto_string=quarto_string)
 
 with stylable_container(key="run_buttons",
             css_styles=f"""
