@@ -1,12 +1,18 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))  # Ensure this folder is in sys.path
 import _processing_functions
 import pandas as pd
 import plotly.express as px
-from _app_utils import DAA_COLORSCHEME
+
 import _vehicle_calculation
 import _job_count_calculation
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import re
+
+from _app_utils import DAA_COLORSCHEME
+
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",

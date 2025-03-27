@@ -14,12 +14,7 @@ import re
 import plotly.express as px
 import platform
 import plotly.graph_objects as go
-from vidigi.animation import animate_activity_log, generate_animation
-from vidigi.prep import reshape_for_animations, generate_animation_df
-import _job_count_calculation
-import _vehicle_calculation
-import _utilisation_result_calculation
-import _job_time_calcs
+
 import _app_utils
 from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
                         get_text, get_text_sheet, to_military_time
@@ -39,15 +34,14 @@ from _state_control import setup_state
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
 
+import visualisation._job_count_calculation
+import visualisation._vehicle_calculation
+import visualisation._utilisation_result_calculation
+import visualisation._job_time_calcs
+
 setup_state()
 
-
-# Set up filepaths for historical data
-
-
-
-
-
+# Pull in required font
 poppins_script = """
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
@@ -56,6 +50,13 @@ poppins_script = """
 quarto_string = ""
 
 text_df = get_text_sheet("model")
+
+# Avoid reading from utils due to odd issues it seems to be introducing
+# TODO: Explore why this is happening in more detail
+# u = Utils()
+# rota = u.HEMS_ROTA
+#rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
 
 col1, col2 = st.columns([0.7, 0.3])
 
@@ -66,147 +67,7 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
-    with stylable_container(css_styles="""
-hr {
-    border-color: #a6093d;
-    background-color: #a6093d;
-    color: #a6093d;
-    height: 1px;
-  }
-""", key="hr"):
-        st.divider()
-    if 'number_of_runs_input' in st.session_state:
-        with stylable_container(key="green_buttons",
-            css_styles=f"""
-                    button {{
-                            background-color: {DAA_COLORSCHEME['teal']};
-                            color: white;
-                            border-color: white;
-                        }}
-                        """
-            ):
-            if st.button("Want to change some parameters? Click here.", type="primary", icon=":material/display_settings:"):
-                st.switch_page("setup.py")
-        st.subheader("Model Input Summary")
-        quarto_string += "## Model Input Summary\n\n"
-
-        num_helos_string = f"Number of Helicopters: {st.session_state.num_helicopters}"
-        quarto_string += "### "
-        quarto_string += num_helos_string
-        quarto_string += "\n\n"
-        st.write(num_helos_string)
-
-        # Avoid reading from utils due to odd issues it seems to be introducing
-        # TODO: Explore why this is happening in more detail
-        # u = Utils()
-        # rota = u.HEMS_ROTA
-        #rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
-        SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
-
-        rota = (
-            pd.read_csv("actual_data/HEMS_ROTA.csv")
-                .merge(
-                    SERVICING_SCHEDULE
-                        .merge(
-                            pd.read_csv("actual_data/callsign_registration_lookup.csv"),
-                            on="registration",
-                            how="left"
-                        ),
-                    on="callsign",
-                    how="left"
-                )
-        )
-
-        for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
-            per_callsign_rota = rota[rota["callsign"]==helicopter]
-            helicopter_rota_string = f"""
-{helicopter} is an {per_callsign_rota["model"].values[0]} and runs
-from {to_military_time(per_callsign_rota["summer_start"].values[0])}
-to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
-and {to_military_time(per_callsign_rota["winter_start"].values[0])}
-to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
-"""
-            # quarto_string += "🚁 "
-            quarto_string += helicopter_rota_string
-            st.caption(helicopter_rota_string)
-
-        num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
-        quarto_string += "\n\n### "
-        quarto_string += num_cars_string
-        quarto_string += "\n\n"
-        st.write(num_cars_string)
-        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
-        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
-
-
-        for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
-            per_callsign_rota = rota[rota["callsign"]==car]
-            car_rota_string = f"""
-{car} is a {per_callsign_rota["model"].values[0]} and runs
-from {to_military_time(per_callsign_rota["summer_start"].values[0])}
-to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
-and {to_military_time(per_callsign_rota["winter_start"].values[0])}
-to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
-"""
-            # quarto_string += "🚗 "
-            quarto_string += car_rota_string
-            st.caption(car_rota_string)
-
-
-        if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
-            if st.session_state.overall_demand_mult == 100:
-                demand_adjustment_string = f"Demand is based on historically observed demand with no adjustments."
-            elif st.session_state.overall_demand_mult < 100:
-                demand_adjustment_string = f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand."
-            elif st.session_state.overall_demand_mult > 100:
-                demand_adjustment_string = f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand."
-
-            st.write(demand_adjustment_string)
-
-            quarto_string += "\n\n### Simulation Parameters\n\n"
-            quarto_string += demand_adjustment_string
-            quarto_string += "\n\n"
-
-        # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
-        elif st.session_state.demand_adjust_type == "Per Season Demand Adjustment":
-            pass
-
-        elif st.session_state.demand_adjust_type == "Per AMPDS Code Demand Adjustment":
-            pass
-
-        else:
-            st.error("TELL A DEVELOPER: Check Conditional Code for demand modifier in model.py")
-
-
-        with stylable_container(css_styles="""
-hr {
-    border-color: #a6093d;
-    background-color: #a6093d;
-    color: #a6093d;
-    height: 1px;
-  }
-""", key="hr"):
-            st.divider()
-
-        replication_string = f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}."
-
-        st.write(replication_string)
-        quarto_string += replication_string.replace("will run", "ran")
-        quarto_string += "\n\n"
-
-        quarto_string += f"Activity durations are modified by a factor of {st.session_state.activity_duration_multiplier}\n\n"
-
-        if st.session_state.create_animation_input:
-            st.write("An animated output will be created.")
-            st.info("Turn off this option if the model is running very slowly!")
-        else:
-            st.write("No animated output will be created.")
-
-        if st.session_state.amb_data:
-            st.write("SWAST Ambulance Activity will be modelled.")
-        else:
-            st.write("SWAST Ambulance Activity will not be modelled.")
-
+    _app_utils.summary_sidebar(SERVICING_SCHEDULE=SERVICING_SCHEDULE, quarto_string=quarto_string)
 
 with stylable_container(key="run_buttons",
             css_styles=f"""

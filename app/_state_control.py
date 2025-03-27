@@ -6,8 +6,6 @@ import platform
 # Dmitri's approach here to avoid issues with session state setting
 # https://discuss.streamlit.io/t/mini-tutorial-initializing-widget-values-and-getting-them-to-stick-without-double-presses/31391/6
 
-
-
 DEFAULT_INPUTS = {
     'num_helicopters': 2,
     "num_cars": 1,

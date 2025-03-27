@@ -14,15 +14,18 @@ Covers variation within the simulation, and comparison with real world data.
 """
 
 import pandas as pd
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))  # Ensure this folder is in sys.path
 import _processing_functions
 import plotly.express as px
-from _app_utils import DAA_COLORSCHEME
+
 import plotly.graph_objects as go
 import numpy as np
 import datetime
 from calendar import monthrange, day_name
-from _app_utils import q10, q90
 
+from _app_utils import DAA_COLORSCHEME, q10, q90
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):

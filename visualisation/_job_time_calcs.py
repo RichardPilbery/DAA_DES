@@ -15,10 +15,11 @@ Covers variation within the simulation, and comparison with real world data.
 
 import pandas as pd
 from datetime import datetime, timedelta
-from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75
 import plotly.express as px
 from _utilisation_result_calculation import make_utilisation_model_dataframe
 import plotly.graph_objects as go
+
+from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75
 
 def create_simulation_event_duration_df(
       event_log_path="../data/run_results.csv"
