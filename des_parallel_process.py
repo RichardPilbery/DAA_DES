@@ -51,7 +51,7 @@ def write_run_params(model) -> None:
 
         # TODO: This will need adjusting for this being changeable in the frontend
         # model.utils.HEMS_ROTA.to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
-        pd.read_csv("actual_data/HEMS_ROTA.csv").to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
+        # pd.read_csv("actual_data/HEMS_ROTA.csv").to_csv(f"{Utils.RESULTS_FOLDER}/hems_rota_used.csv", index=False)
 
 try:
      __file__
