@@ -34,10 +34,10 @@ from _state_control import setup_state
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
 
-import visualisation._job_count_calculation
-import visualisation._vehicle_calculation
-import visualisation._utilisation_result_calculation
-import visualisation._job_time_calcs
+import visualisation._job_count_calculation as _job_count_calculation
+import visualisation._vehicle_calculation as _vehicle_calculation
+import visualisation._utilisation_result_calculation as _utilisation_result_calculation
+import visualisation._job_time_calcs as _job_time_calcs
 
 setup_state()
 
