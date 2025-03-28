@@ -299,7 +299,7 @@ will be available at this point
 
             st.divider()
 
-            cars = ["C70", "C71", "C72"]
+            cars = ["CC70", "CC71", "CC72"]
 
             car_metric_cols = st.columns(len(cars))
 
