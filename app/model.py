@@ -243,12 +243,14 @@ will be available at this point
 
             with t1_col2:
                 quarto_string += "\n\n## Resource Utilisation"
-                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
+                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
+                    _utilisation_result_calculation.make_utilisation_model_dataframe(
                     path="data/run_results.csv",
                     params_path="data/run_params_used.csv",
                     service_path="data/service_dates.csv",
-                    rota_path="data/hems_rota_used.csv"
-                )
+                    callsign_path="actual_data/callsign_registration_lookup.csv",
+                    rota_path="actual_data/HEMS_ROTA.csv"
+                ))
 
                 print(utilisation_df_overall)
 
@@ -580,7 +582,7 @@ Partial months are excluded for ease of interpretation.
                             get_summary=False,
                             path="data/run_results.csv",
                             params_path="data/run_params_used.csv",
-                            rota_path="data/hems_rota_used.csv",
+                            rota_path="actual_data/HEMS_ROTA.csv",
                             service_path="data/service_dates.csv"),
                         use_poppins=True
                         )
@@ -591,7 +593,7 @@ Partial months are excluded for ease of interpretation.
                             get_summary=False,
                             path="data/run_results.csv",
                             params_path="data/run_params_used.csv",
-                            rota_path="data/hems_rota_used.csv",
+                            rota_path="actual_data/HEMS_ROTA.csv",
                             service_path="data/service_dates.csv"),
                         use_poppins=False
                         ).write_html("app/fig_outputs/fig_job_durations_historical.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
