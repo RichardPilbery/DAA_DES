@@ -1,14 +1,15 @@
 """
 File containing all calculations and visualisations relating to the number of jobs undertaken
 in the simulation.
+[x] Jobs across the course of the year
+[x] Jobs across the course of the day
+[x] Jobs by day of the week
+
 [ ] Total number of jobs
 [ ] Total number of jobs by callsign
 [ ] Total number of jobs by vehicle type
 [ ] Total number of jobs by callsign group
 [ ] Jobs attended of those received (missed jobs)
-[x] Jobs across the course of the year
-[x] Jobs across the course of the day
-[x] Jobs by day of the week
 
 Covers variation within the simulation, and comparison with real world data.
 """
@@ -29,6 +30,13 @@ from _app_utils import DAA_COLORSCHEME, q10, q90
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):
+
+    """
+    Given the event log produced by running the model, create a dataframe with one row per
+    patient, but all pertinent information about each call added to that row if it would not
+    usually be present until a later entry in the log
+    """
+
     df = pd.read_csv(path)
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
@@ -42,11 +50,19 @@ def make_job_count_df(path="../data/run_results.csv",
     # the patient's arrival
     df["hems_result"] = df.groupby(['P_ID', 'run_number']).hems_result.bfill()
     df["outcome"] = df.groupby(['P_ID', 'run_number']).outcome.bfill()
+    # same for various things around allocated resource
+    df["vehicle_type"] = df.groupby(['P_ID', 'run_number']).vehicle_type.bfill()
+    df["callsign"] = df.groupby(['P_ID', 'run_number']).callsign.bfill()
+    df["registration"] = df.groupby(['P_ID', 'run_number']).registration.bfill()
 
     # TODO - see what we can do about any instances where these columns remain NA
     # Think this is likely to relate to instances where there was no resource available?
     # Would be good to populate these columns with a relevant indicator if that's the case
+
+    # Reduce down to just the 'arrival' row for each patient, giving us one row per patient
+    # per run
     call_df = df[df["time_type"] == "arrival"].drop(columns=['time_type', "event_type"])
+    call_df.to_csv("data/call_df.csv", index=False)
     return call_df
 
 def get_calls_per_run(call_df):
@@ -63,28 +79,49 @@ def get_AVERAGE_calls_per_run(call_df):
     return calls_per_run.mean()['P_ID'].round(2)
 
 def get_UNATTENDED_calls_per_run(call_df):
+    """
+    Returns a count of the unattended calls per run
+
+    This is done by looking for any instances where no callsign was assigned, indicating that
+    no resource was sent
+    """
     return call_df[call_df['callsign'].isna()].groupby('run_number')[['P_ID']].count().reset_index()
 
 def get_AVERAGE_UNATTENDED_calls_per_run(call_df):
+    """
+    Returns a count of the calls per run, averaged across all runs
+
+    This is done by looking for any instances where no callsign was assigned, indicating that
+    no resource was sent
+    """
     unattended_calls_per_run = get_UNATTENDED_calls_per_run(call_df)
     return unattended_calls_per_run.mean()['P_ID'].round(2)
 
 def display_UNTATTENDED_calls_per_run(call_df):
     """
-    Alternative to get_perc_unattended_string()
+    Alternative to get_perc_unattended_string(), using a different approach, allowing for
+    robustness testing
 
-    This approach looks at calls that never got a callsign assigned
+    Here, this is done by looking for any instances where no callsign was assigned, indicating that
+    no resource was sent
     """
     total_calls = get_AVERAGE_calls_per_run(call_df)
     unattended_calls = get_AVERAGE_UNATTENDED_calls_per_run(call_df)
 
     return f"{unattended_calls:.0f} of {total_calls:.0f} ({(unattended_calls/total_calls):.1%})"
 
-def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_month=False,
+def plot_hourly_call_counts(call_df, params_df,
+                            box_plot=False, average_per_month=False,
                             bar_colour="teal", title="Calls Per Hour", use_poppins=False,
                             error_bar_colour="charcoal", show_error_bars_bar=True,
                             show_historical=True,
                             historical_data_path="../actual_data/jobs_by_hour.csv"):
+    """
+    Produces an interactive plot showing the number of calls that were received per hour in
+    the simulation
+
+    This can be compared with the processed historical data used to inform the simulation
+    """
     hourly_calls_per_run = call_df.groupby(['hour', 'run_number'])[['P_ID']].count().reset_index().rename(columns={"P_ID": "count"})
 
     fig = go.Figure()
