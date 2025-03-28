@@ -306,12 +306,6 @@ class DES_HEMS:
             if hems_allocation != None:
                 #print(f"allocated {hems_allocation.callsign}")
 
-                if not_in_warm_up_period:
-                    self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
-
-                    if hems_group_resource_allocation != None:
-                        self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
-
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
                 #print("No HEMS resource available - non-DAAT land crew sent")
@@ -335,13 +329,21 @@ class DES_HEMS:
 
         if hems_avail:
 
-            patient.hems_callsign_group = hems_res.callsign_group
             #print(f"Patient csg is {patient.hems_callsign_group}")
-            patient.hems_vehicle_type = hems_res.vehicle_type
+            # print(patient.callsign)
+            # print(patient.registration)
 
             #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
             #print(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
             patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
+            patient.callsign = hems_res.callsign
+            patient.registration = hems_res.registration
+
+            if not_in_warm_up_period:
+                self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
+
+                if hems_res != None:
+                    self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
             # Check if HEMS result indicates that resource stodd down before going mobile or en route
             no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False
@@ -554,6 +556,8 @@ class DES_HEMS:
             "weekday"           : patient.weekday,
             "month"             : patient.month,
             "qtr"               : patient.qtr,
+            "registration"      : patient.registration, # registration of attending vehicle
+            "callsign"          : patient.callsign,
             "callsign_group"    : patient.hems_callsign_group,
             "vehicle_type"      : patient.hems_vehicle_type,
             "ampds_card"        : patient.ampds_card,
