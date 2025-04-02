@@ -247,9 +247,7 @@ class DES_HEMS:
 
         not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
-        if not_in_warm_up_period:
-            #print(f"Arrival for patient {pt.id} on run {self.run_number}")
-            self.add_patient_result_row(pt, "arrival", "arrival_departure")
+        self.add_patient_result_row(pt, "arrival", "arrival_departure")
 
         if self.amb_data:
             # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
@@ -272,9 +270,8 @@ class DES_HEMS:
                 #     print('REG call with helicopter')
 
             pt.hems_helicopter_benefit = helicopter_benefit
-            if not_in_warm_up_period:
-                self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
-                self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
+            self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
+            self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
 
             #print(f"Callsign group {pt.hems_pref_callsign_group}")
             if pt.hems_pref_callsign_group == "Other":
@@ -282,9 +279,8 @@ class DES_HEMS:
             else:
                 pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
 
-            if not_in_warm_up_period:
-                self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
-                self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
+            self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
+            self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
 
             if pt.hems_cc_or_ec == 'REG':
                 # Separate (basically the old way of doing things)
@@ -298,25 +294,15 @@ class DES_HEMS:
             # This will either contain the other resource in a callsign_group or None
             hems_group_resource_allocation = hems_res_list[2]
 
-            if not_in_warm_up_period:
-                #print(hems_res_list[1])
-                self.add_patient_result_row(pt, hems_res_list[1], "resource_preferred_outcome")
-
-                # if hems_allocation != None:
-                #     if hems_res_list[2]:
-                #         self.add_patient_result_row(pt, f"{'H' if pt.hems_pref_vehicle_type == 'helicopter' else 'CC'}{pt.hems_pref_callsign_group}", "resource_preferred_service")
-
-            # if hems_res_list[2]:
-            #     print(f"Back from allocate resource with {hems_res_list[1]} and {hems_res_list[2]}")
+            self.add_patient_result_row(pt, hems_res_list[1], "resource_preferred_outcome")
 
             if hems_allocation != None:
                 #print(f"allocated {hems_allocation.callsign}")
 
-                if not_in_warm_up_period:
-                    self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
+                self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
-                    if hems_group_resource_allocation != None:
-                        self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
+                if hems_group_resource_allocation != None:
+                    self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
 
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
@@ -368,25 +354,14 @@ class DES_HEMS:
         if self.amb_data:
             ambulance = Ambulance()
 
-        # Add boolean to determine whether the patient is still within the simulation warm-up
-        # period. If so, then we will not record the patient progress
-        # SR NOTE: I changed this from strictly less than to <= as it was causing odd behaviour
-        # if the first call came in at the start of the simulation in a scenario with 0 warm up
-        # time. Alternative could be reverting it to stricly less check but then adding an or check
-        # leading to not_in_warm_up_period being True if the warm-up duration is exactly 0.
-        # SR NOTE 2 - there is also a check implemented directly in the method add_patient_result_row
-        # so I'm not sure the additional check in this instance is actually necessary
-        not_in_warm_up_period = False if self.env.now <= self.warm_up_duration else True
-
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1 and hems_avail:
-                #print(f"Adding result row with csg {patient.hems_callsign_group}")
-                self.add_patient_result_row(patient, "HEMS call start", "queue")
+        if patient.hems_case == 1 and hems_avail:
+            #print(f"Adding result row with csg {patient.hems_callsign_group}")
+            self.add_patient_result_row(patient, "HEMS call start", "queue")
 
-            if self.amb_data:
-                self.add_patient_result_row(patient,  "AMB call start", "queue")
+        if self.amb_data:
+            self.add_patient_result_row(patient,  "AMB call start", "queue")
 
         # Allocation time --------------
 
@@ -402,16 +377,11 @@ class DES_HEMS:
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1 and hems_avail:
-                if patient.hems_result != "Stand Down Before Mobile":
-                    self.add_patient_result_row(patient, "HEMS allocated to call", "queue")
-                else:
-                    self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
-
-            if self.amb_data:
-                #print('Ambulance time to allocation')
-                yield self.env.timeout(5)
+        if patient.hems_case == 1 and hems_avail:
+            if patient.hems_result != "Stand Down Before Mobile":
+                self.add_patient_result_row(patient, "HEMS allocated to call", "queue")
+            else:
+                self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
 
 
         # Mobilisation time ---------------
@@ -429,12 +399,11 @@ class DES_HEMS:
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1 and hems_avail:
-                self.add_patient_result_row(patient,  "HEMS mobile", "queue")
+        if patient.hems_case == 1 and hems_avail:
+            self.add_patient_result_row(patient,  "HEMS mobile", "queue")
 
-            if self.amb_data:
-                print('Ambulance mobile')
+        if self.amb_data:
+            print('Ambulance mobile')
 
         # On scene ---------------
 
@@ -450,15 +419,14 @@ class DES_HEMS:
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if (patient.hems_case == 1 and hems_avail):
-                if patient.hems_result != "Stand Down En Route":
-                    self.add_patient_result_row(patient,  "HEMS on scene", "queue")
-                else:
-                    self.add_patient_result_row(patient,  "HEMS stand down en route","queue")
+        if (patient.hems_case == 1 and hems_avail):
+            if patient.hems_result != "Stand Down En Route":
+                self.add_patient_result_row(patient,  "HEMS on scene", "queue")
+            else:
+                self.add_patient_result_row(patient,  "HEMS stand down en route","queue")
 
-            if self.amb_data:
-                print('Ambulance stand down en route')
+        if self.amb_data:
+            print('Ambulance stand down en route')
 
 
         # Leaving scene ------------
@@ -473,15 +441,14 @@ class DES_HEMS:
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
-                if no_HEMS_hospital == False:
-                    self.add_patient_result_row(patient, "HEMS leaving scene", "queue")
-                else:
-                    self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "queue")
+        if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
+            if no_HEMS_hospital == False:
+                self.add_patient_result_row(patient, "HEMS leaving scene", "queue")
+            else:
+                self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "queue")
 
-            if self.amb_data:
-                print('Ambulance leaving scene time')
+        if self.amb_data:
+            print('Ambulance leaving scene time')
 
 
         # Arrived destination time ------------
@@ -496,10 +463,9 @@ class DES_HEMS:
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
+        if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
 
-                self.add_patient_result_row(patient, "HEMS arrived destination", "queue")
+            self.add_patient_result_row(patient, "HEMS arrived destination", "queue")
 
         if self.amb_data:
             print('Ambulance at destination time')
@@ -525,12 +491,11 @@ class DES_HEMS:
 
         patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if not_in_warm_up_period:
-            if patient.hems_case == 1 and hems_avail:
-                self.add_patient_result_row(patient,"HEMS clear", "queue")
+        if patient.hems_case == 1 and hems_avail:
+            self.add_patient_result_row(patient,"HEMS clear", "queue")
 
-            if self.amb_data:
-                print('Ambulance clear time')
+        if self.amb_data:
+            print('Ambulance clear time')
 
         if not_in_warm_up_period:
             #print(f"Depart for patient {patient.id} on run {self.run_number}")
@@ -577,10 +542,6 @@ class DES_HEMS:
         for key, value in kwargs.items():
              results[key] = value
 
-        # SR NOTE: I changed this from strictly less than to <= as it was causing odd behaviour
-        # if the first call came in at the start of the simulation in a scenario with 0 warm up
-        # time. Alternative could be reverting it to stricly less check but then adding an or check
-        # leading to not_in_warm_up_period being True if the warm-up duration is exactly 0.
         if self.env.now >= self.warm_up_duration:
             self.store_patient_results(results)
 
