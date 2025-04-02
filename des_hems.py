@@ -245,8 +245,6 @@ class DES_HEMS:
         pt.hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
         #print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
-        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
-
         self.add_patient_result_row(pt, "arrival", "arrival_departure")
 
         if self.amb_data:
@@ -266,8 +264,6 @@ class DES_HEMS:
             helicopter_benefit = 'y'
             if pt.hems_cc_or_ec == 'REG':
                 helicopter_benefit = 'y' if uniform(0, 1) <= 0.05 else 'n'
-                # if(helicopter_benefit == 1):
-                #     print('REG call with helicopter')
 
             pt.hems_helicopter_benefit = helicopter_benefit
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
@@ -302,7 +298,7 @@ class DES_HEMS:
                 self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
 
                 if hems_group_resource_allocation != None:
-                    self.add_patient_result_row(pt, hems_group_resource_allocation.callsign, "callsign_group_resource_use")
+                    self.add_patient_result_row(pt, hems_group_resource_allocation.callsign_group, "callsign_group_resource_use")
 
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
@@ -330,6 +326,8 @@ class DES_HEMS:
             patient.hems_callsign_group = hems_res.callsign_group
             #print(f"Patient csg is {patient.hems_callsign_group}")
             patient.hems_vehicle_type = hems_res.vehicle_type
+
+            patient.hems_registration = hems_res.registration
 
             #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
             #print(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
@@ -533,7 +531,8 @@ class DES_HEMS:
             "care_cat"          : patient.hems_cc_or_ec,
             "heli_benefit"      : patient.hems_helicopter_benefit,
             "hems_result"       : patient.hems_result,
-            "outcome"           : patient.pt_outcome
+            "outcome"           : patient.pt_outcome,
+            "hems_reg"          : patient.hems_registration
         }
 
         #print(results)

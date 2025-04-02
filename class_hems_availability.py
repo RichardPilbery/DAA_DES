@@ -58,10 +58,17 @@ class HEMSAvailability():
             function in the HEMS class
         """
         h: HEMS
+
+        GDAAS_service = False
         for h in self.store.items:
-            h.unavailable_due_to_service(current_dt)
-            # if h.unavailable_due_to_service(current_dt):
-            #     print(f"{current_dt.date()} {h.callsign} is being serviced")
+            
+            if h.registration == 'g-daas':
+                
+                GDAAS_service = h.unavailable_due_to_service(current_dt)
+
+        for h in self.store.items:
+            
+            h.service_check(current_dt, GDAAS_service) 
 
 
     def prep_HEMS_resources(self) -> None:
@@ -192,13 +199,15 @@ class HEMSAvailability():
             "HEMS EC case CC car available",
             "HEMS helicopter case EC helicopter available",
             "HEMS helicopter case CC helicopter available",
-            "HEMS REG case first resource found returned"
-            ""
+            "HEMS REG case no helicopter benefit preferred group and vehicle type allocated",
+	        "HEMS REG case no helicopter benefit preferred group allocated",
+            "No HEMS resource available (pref vehicle type = 'Other')",
+            "HEMS REG case no helicopter benefit first free resource allocated"
         ]
 
         return lookup_list[prefered_lookup]
 
-    def preferred_resource_available(self, pt: Patient, preferred_care_category: str, helicopter_benefit: str) -> list[HEMS | None, str]:
+    def preferred_resource_available(self, pt: Patient) -> list[HEMS | None, str]:
         """
             Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None, and
             an indication as to whether the resource was available, or another resource in an established hierachy of
@@ -212,6 +221,8 @@ class HEMSAvailability():
                     # is allocated given that multiple matches may be found
         preferred_lookup = 0 # This will be used to code the resource allocation choice
 
+        preferred_care_category = pt.hems_cc_or_ec,
+
         # Iterates through items **available** in store at the time the function is called
         h: HEMS
         for h in self.store.items:
@@ -219,66 +230,45 @@ class HEMSAvailability():
             # There is a hierachy of calls:
             # CC = H70 helicopter then car, then H71 helicopter then car then CC72
             # EC = H71 helicopter then car, then CC72, then H70 helicopter then car
-            # REG = if helicopter benefit then H71 then H70 otherwise return None
-            
+            # If no resources then return None
 
             if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
 
-                if preferred_care_category in ['CC', 'EC']:
+                if h.category == preferred_care_category and h.vehicle_type == "helicopter" and not h.being_serviced:
+                    hems = h
+                    preferred = 1 # Top choice
+                    preferred_lookup = 1
+                    return [hems,  self.resource_allocation_lookup(preferred_lookup)]
 
-                    if h.category == preferred_care_category and h.vehicle_type == "helicopter" and not h.being_serviced:
-                        hems = h
-                        preferred = 1 # Top choice
-                        preferred_lookup = 1
-                        return [hems, preferred_lookup]
+                elif h.category == preferred_care_category and not h.being_serviced:
+                    hems = h
+                    preferred = 2 # Second choice (correct care category, but not vehicle type)
+                    preferred_lookup = 2
 
-                    elif h.category == preferred_care_category and not h.being_serviced:
-                        hems = h
-                        preferred = 2 # Second choice (correct care category, but not vehicle type)
-                        preferred_lookup = 2
+                elif preferred_care_category == 'CC':
+                    if h.vehicle_type == 'helicopter' and h.category == 'EC' and not h.being_serviced:
+                        if preferred > 3:
+                            hems = h
+                            preferred = 3 # Third  choice (EC helicopter)
+                            preferred_lookup = 3
 
-                    elif preferred_care_category == 'CC':
-                        if h.vehicle_type == 'helicopter' and h.category == 'EC' and not h.being_serviced:
-                            if preferred > 3:
-                                hems = h
-                                preferred = 3 # Third  choice (EC helicopter)
-                                preferred_lookup = 3
-
-                        elif h.category == 'EC' and not h.being_serviced:
-                            if preferred > 4:
-                                hems = h
-                                preferred = 4
-                                preferred_lookup = 4
-
-                    elif preferred_care_category == 'EC':
-                        if h.vehicle_type == 'helicopter' and h.category == 'CC' and not h.being_serviced:
-                            if preferred > 3:
-                                hems = h
-                                preferred = 3 # CC helicopter available
-                                preferred_lookup = 5
-
-                        elif h.category == 'CC' and not h.being_serviced:
+                    elif h.category == 'EC' and not h.being_serviced:
+                        if preferred > 4:
                             hems = h
                             preferred = 4
-                            preferred_lookup = 6
+                            preferred_lookup = 4
 
-                else:
-                    if helicopter_benefit == 'y':
-                        if h.vehicle_type == 'helicopter' and h.category == 'EC' and not h.being_serviced:
+                elif preferred_care_category == 'EC':
+                    if h.vehicle_type == 'helicopter' and h.category == 'CC' and not h.being_serviced:
+                        if preferred > 3:
                             hems = h
-                            preferred = 1
-                            preferred_lookup = 7
-                            return [hems, preferred_lookup]
+                            preferred = 3 # CC helicopter available
+                            preferred_lookup = 5
 
-                        elif h.vehicle_type == 'helicopter' and not h.being_serviced:
-                            hems = h
-                            preferred = 2
-                            preferred_lookup = 8
-                    else:
-                        # Currently just return first available
-                        if not h.being_serviced:
-                            preferred_lookup = 9
-                            return [hems, preferred_lookup]
+                    elif h.category == 'CC' and not h.being_serviced:
+                        hems = h
+                        preferred = 4
+                        preferred_lookup = 6
 
         if preferred_lookup != 999:
             return [hems, self.resource_allocation_lookup(preferred_lookup)]
@@ -295,11 +285,7 @@ class HEMSAvailability():
         # - a HEMS resource object if one can be allocated otherwise None
         # - an indicator variable about the why the resource was chosen
 
-        pref_res = self.preferred_resource_available(
-            pt=pt,
-            preferred_care_category=pt.hems_cc_or_ec,
-            helicopter_benefit=pt.hems_helicopter_benefit
-        )
+        pref_res = self.preferred_resource_available(pt)
 
         resource_event: Event = self.env.event()
 
@@ -447,7 +433,7 @@ class HEMSAvailability():
 
         return [next_due_date, end_date]
 
-    def preferred_regular_group_available(self, pt: Patient, preferred_group: int, preferred_vehicle_type: str) -> list[HEMS | None, int, bool]:
+    def preferred_regular_group_available(self, pt: Patient) -> list[HEMS | None, int, bool]:
         """
             Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None,
             an indication as to whether the resource was available, or another resource in the same callsign_group, and
@@ -459,10 +445,15 @@ class HEMSAvailability():
 
         # Initialise object HEMS as a placeholder object
         hems = HEMS
-        # Initialise variable 'preferred' to False
-        preferred = 0
-        # Initialise variable 'service_status' to indicate whether resource is currently being serviced
-        service_status = False
+
+        preferred = 999 # This will be used to ensure that the most desireable resource
+                    # is allocated given that multiple matches may be found
+        preferred_lookup = 0 # This will be used to code the resource allocation choice
+
+        preferred_group = pt.hems_pref_callsign_group,
+        preferred_vehicle_type = pt.hems_pref_vehicle_type
+
+        helicopter_benefit = pt.hems_helicopter_benefit
 
         # Iterates through items **available** in store at the time the function is called
         h: HEMS
@@ -479,30 +470,49 @@ class HEMSAvailability():
 
             if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
 
-                if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type:
-                    # if h.being_serviced:
-                    #     print(f"{h.callsign} Preferred resource service status {h.being_serviced}")
-                    service_status = h.being_serviced
+                if helicopter_benefit == 'y':
+                    if h.vehicle_type == 'helicopter' and h.category == 'EC' and not h.being_serviced:
+                        hems = h
+                        preferred = 1
+                        preferred_lookup = 7
+                        return [hems,  self.resource_allocation_lookup(preferred_lookup)]
 
-                if int(h.callsign_group) == int(preferred_group) and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
-                    hems = h
-                    preferred = 1
-                    return [hems, preferred, service_status]
+                    elif h.vehicle_type == 'helicopter' and not h.being_serviced:
+                        hems = h
+                        preferred = 2
+                        preferred_lookup = 8
+                else:
+                    # No helicopter benefit
 
-                # If it's the preferred group but not the preferred vehicle type, the variable
-                # hems becomes the HEMS resource object that we are currently looking at in the store
-                # so we will basically - in the event of not finding the exact resource we want - find
-                # the next best thing from the callsign group
-                # SR note 13/1/25 - double check this logic - as we would send a critical care car over
-                # a different available helicopter if I'm interpreting this correctly. Just need to confirm
-                # this was the order of priority agreed on.
-                # RP note 13/02/2025 - Based on discussions with despatcher, sounds like closest free resource
-                # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
-                # Perhaps a TODO?
+                    if h.callsign_group == preferred_group and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
+                        hems = h
+                        preferred = 3
+                        preferred_lookup = 9
+                        print("REG job with no helicopter benefit and found preferred group and vehicle type")
+                        return [hems, self.resource_allocation_lookup(preferred_lookup)]
 
-                elif h.callsign_group == preferred_group and not h.being_serviced:
-                    hems = h
-                    preferred = 2
+                    # If it's the preferred group but not the preferred vehicle type, the variable
+                    # hems becomes the HEMS resource object that we are currently looking at in the store
+                    # so we will basically - in the event of not finding the exact resource we want - find
+                    # the next best thing from the callsign group
+                    # SR note 13/1/25 - double check this logic - as we would send a critical care car over
+                    # a different available helicopter if I'm interpreting this correctly. Just need to confirm
+                    # this was the order of priority agreed on.
+                    # RP note 13/02/2025 - Based on discussions with despatcher, sounds like closest free resource
+                    # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
+                    # Perhaps a TODO?
+
+                    elif h.callsign_group == preferred_group and not h.being_serviced:
+                        if preferred > 4:
+                            hems = h
+                            preferred = 4
+                            preferred_lookup = 10
+
+                    elif not h.being_serviced:
+                        if preferred > 5:
+                            hems = h
+                            preferred = 5
+                            preferred_lookup = 12
 
         # If we have not found an exact match for preferred callsign and vehicle type out of the
         # resources currently available in our store, we will then reach this code
@@ -511,10 +521,10 @@ class HEMSAvailability():
         # which may be relevant if there is more than one other resource within that callsign group
         # (though this is not currently a situation that occurs within the naming conventions at DAAT)
 
-        if preferred == 2:
-            return [hems, preferred, service_status]
+        if preferred != 999:
+            return [hems,  self.resource_allocation_lookup(preferred_lookup)]
         else:
-            return [None, preferred, service_status]
+            return [None, self.resource_allocation_lookup(0)]
 
 
     def allocate_regular_resource(self, pt: Patient) -> Any | Event:
@@ -531,13 +541,9 @@ class HEMSAvailability():
 
         if pt.hems_pref_vehicle_type == "Other":
             # These are missed cases
-            pref_res = [None, 0, False]
+            pref_res = [None,  self.resource_allocation_lookup(11)]
         else:
-            pref_res = self.preferred_regular_group_available(
-                pt=pt,
-                preferred_group=pt.hems_pref_callsign_group,
-                preferred_vehicle_type=pt.hems_pref_vehicle_type
-            )
+            pref_res = self.preferred_regular_group_available(pt)
 
         resource_event: Event = self.env.event()
 
@@ -557,7 +563,7 @@ class HEMSAvailability():
 
                 if pref_res[0] != None:
                    # print('A resource is available')
-                    if pref_res[1] == 1:
+                    if pref_res[1] in [ self.resource_allocation_lookup(0),  self.resource_allocation_lookup(11)]:
                         # Need to find preferred resource
                         return True if (resource.callsign_group == pref_res[0].callsign_group) and (resource.vehicle_type == pref_res[0].vehicle_type) else False
                     else:

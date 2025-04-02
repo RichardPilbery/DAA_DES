@@ -58,6 +58,7 @@ class Patient:
         self.hems_pref_callsign_group = ""
         self.hems_vehicle_type = ""
         self.hems_callsign_group = ""
+        self.hems_registration = ""
 
         self.pt_outcome = ""
 

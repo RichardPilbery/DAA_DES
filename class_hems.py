@@ -24,7 +24,8 @@ class HEMS(Ambulance):
             summer_end: str,
             winter_end: str,
             servicing_schedule: pd.DataFrame, 
-            resource_id: str = None
+            resource_id: str = None,
+            summer_season: list[int] = [2, 3]
         ):
         # Inherit all parent class functions
         super().__init__(ambulance_type = "HEMS")
@@ -43,12 +44,28 @@ class HEMS(Ambulance):
         self.winter_start = winter_start
         self.summer_end = summer_end
         self.winter_end = winter_end
+        self.summer_season = summer_season
 
         # Pre-determine the servicing schedule when the resource is created
         self.servicing_schedule = servicing_schedule
 
         self.in_use = False
         self.resource_id = resource_id
+
+
+    
+    def service_check(self, current_dt: pd.Timestamp, GDAAS_service: bool) -> bool:
+
+        if self.callsign_group == 71:
+            if GDAAS_service:
+                self.callsign_group == 70
+                self.callsign == 'CC70' if self.vehicle_type == 'car' else 'H70'
+            else:
+                self.callsign_group == 71
+                self.callsign == 'CC71' if self.vehicle_type == 'car' else 'H71'
+            # GDASS being serviced
+
+        return self.unavailable_due_to_service(current_dt)
 
 
     def unavailable_due_to_service(self, current_dt: pd.Timestamp) -> bool:
@@ -78,8 +95,8 @@ class HEMS(Ambulance):
         # Can be modified if required.
         # SR NOTE: If changing these, please also modify in
         # write_run_params() function in des_parallel_process
-        start = self.summer_start if season in [2, 3] else self.winter_start
-        end = self.summer_end if season in [2, 3] else self.winter_end
+        start = self.summer_start if season in self.summer_season else self.winter_start
+        end = self.summer_end if season in self.summer_season else self.winter_end
 
         return self.utilityClass.is_time_in_range(int(hour), int(start), int(end))
 
