@@ -85,6 +85,8 @@ activity_log %>%
     process_map(frequency("relative"))
 ```
 
+
+
 ```{r}
 activity_log %>%
     process_map(performance())
@@ -92,5 +94,34 @@ activity_log %>%
 
 ```{r}
 activity_log %>%
+    process_map(performance(FUN = max))
+```
+
+```{r}
+activity_log %>%
     trace_explorer(n_traces = 10)
+```
+
+```{r}
+activity_log %>%
+    activity_presence() %>%
+    plot()
+```
+
+```{r}
+activity_log %>%
+    processing_time("resource-activity", units = "mins") %>%
+    plot()
+```
+
+```{r}
+activity_log %>%
+    processing_time("activity", units = "mins") %>%
+    plot()
+```
+
+```{r}
+activity_log %>%
+    idle_time("resource", units = "mins") %>%
+    plot()
 ```
