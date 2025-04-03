@@ -1,0 +1,96 @@
+---
+title: Process Analytics
+---
+
+```{python}
+#| label: read-run-results
+import pandas as pd
+```
+
+```{python}
+df = pd.read_csv("../data/run_results.csv")
+
+df.head(15)
+```
+
+```{python}
+df = df[df["event_type"]=="queue"]
+
+df["activity_id"] = df.groupby("run_number").cumcount() + 1
+
+# Duplicate rows and modify them
+df_start = df.copy()
+
+df_start["lifecycle_id"] = "start"
+
+df_end = df.copy()
+df_end["lifecycle_id"] = "complete"
+
+# Shift timestamps for 'end' rows
+df_end["timestamp"] = df_end["timestamp"].shift(-1)
+df_end["timestamp_dt"] = df_end["timestamp_dt"].shift(-1)
+
+# Combine and sort
+df_combined = pd.concat([df_start, df_end]).sort_index(kind="stable")
+
+# Drop last 'end' row (since there’s no next row to get a timestamp from)
+df_combined = df_combined[:-1]
+
+df_combined.to_csv("event_log.csv", index=False)
+
+df_combined
+```
+
+
+```{r}
+library(readr)
+library(bupaverse)
+
+data <- readr::read_csv("event_log.csv")
+
+activity_log <- data %>%
+    filter(run_number==1) %>%
+    bupaR::convert_timestamps("timestamp_dt", ymd_hms) %>%
+    bupaR::eventlog(
+        case_id = "P_ID",
+        activity_id = "time_type",
+        activity_instance_id = "activity_id",
+        lifecycle_id = "lifecycle_id",
+        timestamp = "timestamp_dt",
+        resource_id = "callsign"
+        )
+
+## !!!! Note that the bupaR documentation recommmends using the
+## to_activitylog() function at the end of this set of steps.
+## This caused significant errors in testing of this code
+
+activity_log
+```
+
+
+
+```{r}
+activity_log %>%
+    process_map(frequency("absolute"))
+```
+
+
+```{r}
+activity_log %>%
+    process_map(frequency("absolute-case"))
+```
+
+```{r}
+activity_log %>%
+    process_map(frequency("relative"))
+```
+
+```{r}
+activity_log %>%
+    process_map(performance())
+```
+
+```{r}
+activity_log %>%
+    trace_explorer(n_traces = 10)
+```
