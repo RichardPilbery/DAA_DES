@@ -546,18 +546,18 @@ def prep_util_df_from_call_df(call_df):
     print("==prep_util_df_from_call_df: call_df==")
     print(call_df)
 
+    jobs_counts_by_callsign_monthly_sim = call_df[~call_df['callsign'].isna()]
+
+    print("==jobs_counts_by_callsign_monthly_sim - prior to aggregation==")
+    print(jobs_counts_by_callsign_monthly_sim)
+
     jobs_counts_by_callsign_monthly_sim = (
-        call_df
+        jobs_counts_by_callsign_monthly_sim
         .groupby(['run_number', 'month_start', 'callsign', 'callsign_group', 'vehicle_type'])['P_ID']
         .count().reset_index().rename(columns={'P_ID': 'jobs'})
         )
 
     print("==jobs_counts_by_callsign_monthly_sim==")
-    print(jobs_counts_by_callsign_monthly_sim)
-
-    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim[~jobs_counts_by_callsign_monthly_sim['callsign'].isna()]
-
-    print("==jobs_counts_by_callsign_monthly_sim - after filtering by mising callsign==")
     print(jobs_counts_by_callsign_monthly_sim)
 
     all_combinations = pd.MultiIndex.from_product([
@@ -589,6 +589,9 @@ def prep_util_df_from_call_df(call_df):
 
 
 def make_SIMULATION_stacked_callsign_util_plot(call_df):
+    print("==make_SIMULATION_stacked_callsign_util_plot - call_df==")
+    print(call_df)
+
     sim_averages = prep_util_df_from_call_df(call_df)
 
     fig = px.bar(
