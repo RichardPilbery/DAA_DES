@@ -1,5 +1,8 @@
 ---
 title: Process Analytics
+format:
+    html:
+        embed-resources: true
 ---
 
 ```{python}
