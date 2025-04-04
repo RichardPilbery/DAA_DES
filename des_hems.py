@@ -304,7 +304,7 @@ class DES_HEMS:
 
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
-                #print("No HEMS resource available - non-DAAT land crew sent")
+                #print(f"{pt.current_dt} No HEMS resource available - non-DAAT land crew sent")
                 self.env.process(self.patient_journey(None, pt, None))
 
 
@@ -341,7 +341,7 @@ class DES_HEMS:
             # Check if HEMS result indicates no leaving scene/at hospital times
             no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
 
-            patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result)
+            patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result, patient.hems_cc_or_ec)
 
             #print(f"Patient outcome is {patient.pt_outcome}")
 
