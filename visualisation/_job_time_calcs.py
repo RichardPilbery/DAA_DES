@@ -103,14 +103,16 @@ def get_total_times_model(get_summary=False,
                           path="../data/run_results.csv",
                           params_path="../data/run_params_used.csv",
                           rota_path="../actual_data/HEMS_ROTA.csv",
-                          service_path="../data/service_dates.csv"
+                          service_path="../data/service_dates.csv",
+                          callsign_path="../actual_data/callsign_registration_lookup.csv"
                           ):
 
     utilisation_model_df = make_utilisation_model_dataframe(
         path=path,
         params_path=params_path,
         rota_path=rota_path,
-        service_path=service_path
+        service_path=service_path,
+        callsign_path=callsign_path
     )[0]
 
     if get_summary:

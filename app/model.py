@@ -303,7 +303,7 @@ will be available at this point
 
             car_metric_cols = st.columns(len(cars))
 
-            historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
+            # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
 
             for idx, col in enumerate(car_metric_cols):
                 with col:
@@ -313,16 +313,16 @@ will be available at this point
                         print(utilisation_df_overall)
                         car_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']==car_callsign]['PRINT_perc'].values[0]
 
-                        quarto_string += f"\n\nAverage simulated C{car_callsign} utilisation was {car_util_fig}\n\n"
+                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
 
-                        st.metric(f"Average Simulated C{car_callsign} Utilisation",
+                        st.metric(f"Average Simulated {car_callsign} Utilisation",
                                 car_util_fig,
                                 border=True)
 
                     car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
                         historical_utilisation_df_summary, car_callsign, "mean"
                     )
-                    car_util_fig_hist = f"*The historical average utilisation of C{car_callsign} was {car_util_hist}%*\n\n"
+                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
 
                     quarto_string += car_util_fig_hist
 
@@ -583,7 +583,9 @@ Partial months are excluded for ease of interpretation.
                             path="data/run_results.csv",
                             params_path="data/run_params_used.csv",
                             rota_path="actual_data/HEMS_ROTA.csv",
-                            service_path="data/service_dates.csv"),
+                            service_path="data/service_dates.csv",
+                            callsign_path="actual_data/callsign_registration_lookup.csv"
+                            ),
                         use_poppins=True
                         )
 
@@ -594,7 +596,8 @@ Partial months are excluded for ease of interpretation.
                             path="data/run_results.csv",
                             params_path="data/run_params_used.csv",
                             rota_path="actual_data/HEMS_ROTA.csv",
-                            service_path="data/service_dates.csv"),
+                            service_path="data/service_dates.csv",
+                            callsign_path="actual_data/callsign_registration_lookup.csv"),
                         use_poppins=False
                         ).write_html("app/fig_outputs/fig_job_durations_historical.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
 
