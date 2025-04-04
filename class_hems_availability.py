@@ -221,7 +221,9 @@ class HEMSAvailability():
                     # is allocated given that multiple matches may be found
         preferred_lookup = 0 # This will be used to code the resource allocation choice
 
-        preferred_care_category = pt.hems_cc_or_ec,
+        preferred_care_category = pt.hems_cc_or_ec
+
+        #print(f"EC/CC resource with {preferred_care_category} and hour {pt.hour} and qtr {pt.qtr}")
 
         # Iterates through items **available** in store at the time the function is called
         h: HEMS
@@ -270,6 +272,8 @@ class HEMSAvailability():
                         preferred = 4
                         preferred_lookup = 6
 
+        #print(f"preferred lookup {preferred_lookup} and preferred = {preferred}")
+
         if preferred_lookup != 999:
             return [hems, self.resource_allocation_lookup(preferred_lookup)]
         else:
@@ -285,11 +289,11 @@ class HEMSAvailability():
         # - a HEMS resource object if one can be allocated otherwise None
         # - an indicator variable about the why the resource was chosen
 
-        pref_res = self.preferred_resource_available(pt)
+        pref_res: list[HEMS | None, str] = self.preferred_resource_available(pt)
 
         resource_event: Event = self.env.event()
 
-        def process(pres_res: list[HEMS | None, int, bool]) -> Generator[Any, Any, None]:
+        def process(pres_res: list[HEMS | None, str]) -> Generator[Any, Any, None]:
 
             """
             Checks whether the resource the incident wants is available in the
@@ -301,14 +305,14 @@ class HEMSAvailability():
             Otherwise, returns False
             """
             #print(f"Resource filter with hour {hour} and qtr {qtr}")
+            #print(pref_res)
 
             if pres_res[0] == None:
-                # Check if hems_attend_reg_calls is True and if so allocate a resource
-                # based on historic activity.
 
                 return resource_event.succeed([None, pref_res[1], None])
 
             else:
+
                 with self.store.get(lambda hems_resource: hems_resource == pref_res[0]) as primary_resource_member:
 
                 # Retrieve other group resource is there is one and make it unavailable.

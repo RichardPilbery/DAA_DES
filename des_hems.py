@@ -242,7 +242,8 @@ class DES_HEMS:
         #print(f"AMPDS card is {pt.ampds_card}")
         pt.age = self.utils.age_sampling(pt.ampds_card, 115)
         pt.sex = self.utils.sex_selection(pt.ampds_card)
-        pt.hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
+        hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
+        pt.hems_cc_or_ec = hems_cc_or_ec
         #print(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         self.add_patient_result_row(pt, "arrival", "arrival_departure")
@@ -284,6 +285,7 @@ class DES_HEMS:
                 hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_regular_resource(pt)
             else:
                 hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
+                #print(hems_res_list)
             
             hems_allocation = hems_res_list[0]
 
