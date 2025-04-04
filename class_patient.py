@@ -59,6 +59,7 @@ class Patient:
         # Strings relating to allocated vehicle
         self.hems_vehicle_type = ""
         self.hems_callsign_group = ""
+        self.hems_registration = ""
         self.callsign = "" # allocated vehicle callsign
         self.registration = "" # allocated vehicle registration
 
