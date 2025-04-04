@@ -36,7 +36,7 @@ class Utils:
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
-        self.pt_outcome_by_hems_result_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_probs.csv')
+        self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
         # Import maximum call duration times
         self.min_max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
 
@@ -221,15 +221,17 @@ class Utils:
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
 
-    def pt_outcome_selection(self, hems_result: str) -> int:
+    def pt_outcome_selection(self, hems_result: str, care_category: str) -> int:
         """
             This function will allocate and return an patient outcome
             based on the HEMS result
         """
 
-        #print(f"Hems result is {hems_result}")
 
-        df = self.pt_outcome_by_hems_result_df[self.pt_outcome_by_hems_result_df['hems_result'] == hems_result]
+        df = self.pt_outcome_by_hems_result_and_care_category_df[
+            (self.pt_outcome_by_hems_result_and_care_category_df['care_category'] == care_category) &
+            (self.pt_outcome_by_hems_result_and_care_category_df['hems_result'] == hems_result)
+        ]
 
         #print(df)
         return pd.Series.sample(df['pt_outcome'], weights = df['proportion']).iloc[0]

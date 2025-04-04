@@ -56,14 +56,18 @@ class HEMS(Ambulance):
     
     def service_check(self, current_dt: pd.Timestamp, GDAAS_service: bool) -> bool:
 
-        if self.callsign_group == 71:
+        if self.registration == 'g-daan':
+
             if GDAAS_service:
-                self.callsign_group == 70
-                self.callsign == 'CC70' if self.vehicle_type == 'car' else 'H70'
+                self.callsign_group = 70
+                self.callsign = 'CC70' if self.vehicle_type == 'car' else 'H70'
+
             else:
-                self.callsign_group == 71
-                self.callsign == 'CC71' if self.vehicle_type == 'car' else 'H71'
+                self.callsign_group = 71
+                self.callsign = 'CC71' if self.vehicle_type == 'car' else 'H71'
             # GDASS being serviced
+
+            #print(f"reg {self.registration} now has callsign {self.callsign}")
 
         return self.unavailable_due_to_service(current_dt)
 

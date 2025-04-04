@@ -173,7 +173,7 @@ class DistributionFitUtils():
         self.hems_result_by_care_cat_and_helicopter_benefit_probs()
 
         # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        self.pt_outcome_by_hems_result_probs()
+        self.pt_outcome_by_hems_result_and_care_category_probs()
 
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         self.vehicle_type_by_month_probs()
@@ -535,18 +535,46 @@ class DistributionFitUtils():
         hems_counts.to_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv', mode = "w+", index=False)
 
 
-    def pt_outcome_by_hems_result_probs(self):
+    def pt_outcome_by_hems_result_and_care_category_probs(self):
         """
         
             Calculates the probabilty of a specific patient outcome based on HEMS result
         
         """
-        po_counts = self.df.groupby(['pt_outcome', 'hems_result']).size().reset_index(name='count')
 
-        total_counts = po_counts.groupby(['hems_result'])['count'].transform('sum')
-        po_counts['proportion'] = round(po_counts['count'] / total_counts, 4)
+        hems_df = (
+            self.df
+            .assign(
+                helicopter_benefit=np.select(
+                    [
+                        self.df["cc_benefit"] == "y",
+                        self.df["ec_benefit"] == "y",
+                        self.df["hems_result"].isin([
+                            "Stand Down En Route", 
+                            "Landed but no patient contact", 
+                            "Stand Down Before Mobile"
+                        ])
+                    ],
+                    ["y", "y", "n"],
+                    default=self.df["helicopter_benefit"]
+                ),
+                care_category=np.select(
+                    [
+                        self.df["cc_benefit"] == "y",
+                        self.df["ec_benefit"] == "y"
+                    ],
+                    ["CC", "EC"],
+                    default="REG"
+                )
+            )
+        )
 
-        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_probs.csv', mode = "w+")
+        po_counts = hems_df.groupby(['pt_outcome', 'hems_result', 'care_category']).size().reset_index(name='count')
+
+        po_counts['total'] = po_counts.groupby(['hems_result', 'care_category'])['count'].transform('sum')
+        po_counts['proportion'] = round(po_counts['count'] / po_counts['total'], 4)
+
+        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv', mode = "w+")
 
 
     def school_holidays(self) -> None:
