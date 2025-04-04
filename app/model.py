@@ -5,6 +5,7 @@ with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 import platform
+import os
 # Data processing imports
 import pandas as pd
 import numpy as np
@@ -14,6 +15,8 @@ import re
 import plotly.express as px
 import platform
 import plotly.graph_objects as go
+
+import subprocess
 
 import _app_utils
 from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
@@ -38,6 +41,7 @@ import visualisation._job_count_calculation as _job_count_calculation
 import visualisation._vehicle_calculation as _vehicle_calculation
 import visualisation._utilisation_result_calculation as _utilisation_result_calculation
 import visualisation._job_time_calcs as _job_time_calcs
+import visualisation._process_analytics as _process_analytics
 
 setup_state()
 
@@ -582,31 +586,34 @@ Partial months are excluded for ease of interpretation.
                             'historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
                             )
 
-                fig_job_durations_historical =  _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
-                        historical_time_df,
-                        utilisation_model_df=_job_time_calcs.get_total_times_model(
+                simulated_job_time_df = _job_time_calcs.get_total_times_model(
                             get_summary=False,
                             path="data/run_results.csv",
                             params_path="data/run_params_used.csv",
                             rota_path="actual_data/HEMS_ROTA.csv",
                             service_path="data/service_dates.csv",
                             callsign_path="actual_data/callsign_registration_lookup.csv"
-                            ),
+                            )
+
+                simulated_job_time_df.to_csv("temp_test.csv")
+
+                # Create plot for inclusion in streamlit
+                fig_job_durations_historical =  _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
+                        historical_activity_times=historical_time_df,
+                        utilisation_model_df=simulated_job_time_df,
                         use_poppins=True
                         )
 
+                # Rerun plot, writing to HTML
+                # Note rerunning is necessary due to the need to pass include_poppins=False
+                # the second time around
                 _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
-                        historical_time_df,
-                        utilisation_model_df=_job_time_calcs.get_total_times_model(
-                            get_summary=False,
-                            path="data/run_results.csv",
-                            params_path="data/run_params_used.csv",
-                            rota_path="actual_data/HEMS_ROTA.csv",
-                            service_path="data/service_dates.csv",
-                            callsign_path="actual_data/callsign_registration_lookup.csv"),
+                        historical_activity_times=historical_time_df,
+                        utilisation_model_df=simulated_job_time_df,
                         use_poppins=False
                         ).write_html("app/fig_outputs/fig_job_durations_historical.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
 
+                # Include job durations plot in streamlit app
                 st.plotly_chart(
                    fig_job_durations_historical
                     )
@@ -656,7 +663,8 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2 = st.tabs(["Debug Resources", "Debug Events"])
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events",
+                                                          "Process Analytics", "Process Analytics - Resources"])
 
             with tab_4_1:
                 st.subheader("Resource Use")
@@ -983,6 +991,66 @@ Most users will not need to look at the visualisations in this tab.
 
                 patient_viz()
 
+            with tab_4_3:
+                _process_analytics.create_event_log("data/run_results.csv")
+
+                print("Current working directory:", os.getcwd())
+
+
+                # This check is a way to guess whether it's running on
+                # Streamlit community cloud
+                if platform.processor() == '':
+                    try:
+                        process1 = subprocess.Popen(["Rscript", "app/generate_bupar_outputs.R"],
+                                                    stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    text=True,
+                                                    cwd="app")
+
+                    except:
+                        # Get absolute path to the R script
+                        script_path = Path(__file__).parent / "generate_bupar_outputs.R"
+                        st.write(f"Trying path: {script_path}" )
+
+                        process1 = subprocess.Popen(["Rscript", str(script_path)],
+                                                    stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    text=True)
+
+                else:
+                    result = subprocess.run(["Rscript", "app/generate_bupar_outputs.R"],
+                                            capture_output=True, text=True)
+                try:
+                    st.subheader("Process - Absolute Frequency")
+                    st.image("visualisation/absolute_frequency.svg")
+
+                    st.html("visualisation/anim_process.html")
+
+                    # st.subheader("Process - Absolute Cases")
+                    # st.image("visualisation/absolute_case.svg")
+
+                    st.subheader("Performance - Average (Mean) Transition and Activity Times")
+                    st.image("visualisation/performance_mean.svg")
+
+                    st.subheader("Performance - Maximum Transition and Activity Times")
+                    st.image("visualisation/performance_max.svg")
+
+                    st.subheader("Activity - Processing Time - activity")
+                    st.image("visualisation/processing_time_activity.svg")
+
+                    st.subheader("Activity - Processing Time - Resource/Activity")
+                    st.image("visualisation/processing_time_resource_activity.svg")
+                except:
+                    st.warning("Process maps could not be generated")
+
+            with tab_4_4:
+                try:
+                    st.subheader("Activities - by Resource")
+                    st.image("visualisation/relative_resource_level.svg")
+
+                    st.html("visualisation/anim_resource_level.html")
+                except:
+                    st.warning("Process maps could not be generated")
 
 
         with tab5:

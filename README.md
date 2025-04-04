@@ -154,13 +154,6 @@ The core environment is provided in the `requirements.txt` file in the root fold
 
 This has been used in conjunction with Python 3.11.9.
 
-If you wish to be able to download the output from the web app as a Quarto file, you will need to also install Quarto.
-
-Quarto can be downloaded at [https://quarto.org/docs/get-started/](https://quarto.org/docs/get-started/).
-
-- It is recommended that, when asked by the installer, you add Quarto to your PATH variable.
-- It is important to note that while a [Python package for quarto exists](https://pypi.org/project/quarto/), this is not the full Quarto command line utility, which will need to be installed separately.
-
 
 ## Web App
 
@@ -169,6 +162,36 @@ Assuming you have installed the environment as above, the web app can be run usi
 `streamlit run app/app.py`
 
 When running locally, the app will attempt to use multiple cores of the user's computer to undertake several runs of the model simultaneously.
+
+### R
+
+Several additional debugging files are generated using R and the bupaverse packages.
+
+You will need R installed on your machine, with your R exe path added to your machine's PATH environment variable.
+
+You will also need to install the following R packages:
+
+```
+install.packages("readr")
+install.packages("bupaverse")
+install.packages("processanimateR")
+install.packages("processmapR")
+install.packages("DiagrammeR")
+install.packages("ggplot2")
+install.packages("htmlwidgets")
+```
+
+An warning message will be displayed in the app if these additional process maps cannot be generated due to your R configuration.
+
+### Quarto
+
+If you wish to be able to download the output from the web app as a Quarto file, you will need to also install Quarto.
+
+Quarto can be downloaded at [https://quarto.org/docs/get-started/](https://quarto.org/docs/get-started/).
+
+- It is recommended that, when asked by the installer, you add Quarto to your PATH variable.
+- It is important to note that while a [Python package for quarto exists](https://pypi.org/project/quarto/), this is not the full Quarto command line utility, which will need to be installed separately.
+
 
 ### Hosted version of web app
 
