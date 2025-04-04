@@ -267,11 +267,16 @@ def get_perc_unattended_string(event_log_df):
     'no resource in group available'
     """
     df = resource_allocation_outcomes(event_log_df)
+    print("==get_perc_unattended_string - resource_allocation_outcomes==")
+    print(df)
     try:
-        num_unattendable = df[df["Resource Allocation Attempt Outcome"] =="No resource in group available"]['Count'].values[0]
+        num_unattendable = df[df["Resource Allocation Attempt Outcome"].str.contains("No HEMS resource available")]['Count'].sum()
+        print(f"==get_perc_unattended_string - num_unattended: {num_unattendable}==")
     except:
         "Error"
+
     total_calls = df['Count'].sum()
+    print(f"==get_perc_unattended_string - total calls: {total_calls}==")
     try:
         perc_unattendable = num_unattendable/total_calls
 

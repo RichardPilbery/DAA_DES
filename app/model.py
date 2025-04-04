@@ -241,6 +241,12 @@ will be available at this point
 
                     quarto_string += missed_calls_description
 
+                    with st.expander("View Breakdown"):
+                        outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
+                        outcome_df["Count"] = (outcome_df["Count"]/st.session_state.number_of_runs_input).round(0)
+                        outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
+                        st.dataframe(outcome_df)
+
             with t1_col2:
                 quarto_string += "\n\n## Resource Utilisation"
                 resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
@@ -655,7 +661,7 @@ Most users will not need to look at the visualisations in this tab.
             with tab_4_1:
                 st.subheader("Resource Use")
 
-                resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
+                resource_use_events_only = results_all_runs[(results_all_runs["event_type"] == "resource_use") | (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True)
 
                 # Accounting for odd bug being seen in streamlit community cloud
                 if 'P_ID' not in resource_use_events_only.columns:
@@ -666,8 +672,8 @@ Most users will not need to look at the visualisations in this tab.
                 def resource_use_exploration_plots():
 
                     run_select_ruep = st.selectbox("Choose the run to show",
-                                resource_use_events_only["run_number"].unique())
-
+                            resource_use_events_only["run_number"].unique()
+                        )
 
                     with st.expander("Click here to see the timings of resource use"):
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
@@ -675,10 +681,10 @@ Most users will not need to look at the visualisations in this tab.
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
                                         .melt(id_vars=["P_ID", "time_type", "event_type"],
-                                        value_vars="timestamp_dt"))
+                                        value_vars="timestamp_dt").drop_duplicates())
 
                         resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [["P_ID", "time_type", "timestamp_dt", "event_type"]]
+                            [["P_ID", "time_type", "timestamp_dt", "event_type"]].drop_duplicates()
                             .pivot(columns="event_type", index=["P_ID","time_type"], values="timestamp_dt").reset_index())
 
                         # get the number of referrals and assign them a value
@@ -692,7 +698,6 @@ Most users will not need to look at the visualisations in this tab.
                         # Compute duration for each resource use
                         resource_use_wide["resource_use_end"] = pd.to_datetime(resource_use_wide["resource_use_end"])
                         resource_use_wide["resource_use"] = pd.to_datetime(resource_use_wide["resource_use"])
-                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
 
                         # Convert time to numeric (e.g., seconds since the first event)
                         time_origin = resource_use_wide["resource_use"].min()  # Set the reference time
@@ -700,7 +705,6 @@ Most users will not need to look at the visualisations in this tab.
                         # resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
 
                         # Compute duration
-                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end_numeric"] - resource_use_wide["resource_use_numeric"]
                         resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
 
                         # Compute duration as seconds and multiply by 1000 (to account for how datetime axis
@@ -718,6 +722,7 @@ Most users will not need to look at the visualisations in this tab.
                         # Load in the servicing schedule df
                         ######################################
                         service_schedule = pd.read_csv("data/service_dates.csv")
+                        service_schedule = service_schedule.merge(pd.read_csv("actual_data/callsign_registration_lookup.csv"))
                         # Convert to appropriate datatypes
                         service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
                         service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
@@ -725,7 +730,8 @@ Most users will not need to look at the visualisations in this tab.
                         service_schedule["duration_seconds"] = (service_schedule["service_end_date"] - service_schedule["service_start_date"]).dt.total_seconds()*1000
                         service_schedule["duration_days"] = (service_schedule["duration_seconds"] / 1000) / 60 / 60 / 24
                         # Match y position of the resource in the rest of the plot
-                        service_schedule["y_pos"] = service_schedule["resource"].map(resource_dict)
+                        print(f"resource_dict: {resource_dict}")
+                        service_schedule["y_pos"] = service_schedule["callsign"].map(resource_dict)
                         # Limit the dataframe to only contain servicing
                         service_schedule = service_schedule[(service_schedule["service_start_date"] <= resource_use_wide.resource_use.max()) &
                                         (service_schedule["service_end_date"] >= resource_use_wide.resource_use.min())]
@@ -739,7 +745,7 @@ Most users will not need to look at the visualisations in this tab.
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
 
-                        service_schedule_df = service_schedule[service_schedule["resource"]==callsign]
+                        service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
                         # Add in hatched boxes showing the servicing periods
                         if len(service_schedule_df) > 0:
@@ -754,7 +760,7 @@ Most users will not need to look at the visualisations in this tab.
                                             line=dict(color="black", width=1)
                                             ),
                                 name=f"Servicing = {callsign}",
-                                customdata=service_schedule_df[['resource','duration_days','service_start_date', 'service_end_date']],
+                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date']],
                                 hovertemplate="Servicing %{customdata[0]} lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
                             ))
 
