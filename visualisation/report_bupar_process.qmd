@@ -17,6 +17,10 @@ df.head(15)
 ```
 
 ```{python}
+df.columns
+```
+
+```{python}
 df = df[df["event_type"]=="queue"]
 
 df["activity_id"] = df.groupby("run_number").cumcount() + 1
@@ -48,6 +52,7 @@ df_combined
 ```{r}
 library(readr)
 library(bupaverse)
+library(processanimateR)
 
 data <- readr::read_csv("event_log.csv")
 
@@ -127,4 +132,31 @@ activity_log %>%
 activity_log %>%
     idle_time("resource", units = "mins") %>%
     plot()
+```
+
+
+## Animated Maps
+
+```{r}
+activity_log %>%
+    animate_process()
+```
+
+```{r}
+activity_log_2 <- data %>%
+    filter(run_number==1) %>%
+    bupaR::convert_timestamps("timestamp_dt", ymd_hms) %>%
+    bupaR::eventlog(
+        case_id = "P_ID",
+        activity_id = "callsign",
+        activity_instance_id = "activity_id",
+        lifecycle_id = "lifecycle_id",
+        timestamp = "timestamp_dt",
+        resource_id = "callsign"
+        )
+```
+
+```{r}
+activity_log_2 %>%
+    animate_process()
 ```
