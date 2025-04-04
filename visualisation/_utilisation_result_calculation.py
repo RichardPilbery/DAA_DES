@@ -551,6 +551,8 @@ def prep_util_df_from_call_df(call_df):
     print("==jobs_counts_by_callsign_monthly_sim - prior to aggregation==")
     print(jobs_counts_by_callsign_monthly_sim)
 
+    jobs_counts_by_callsign_monthly_sim['callsign_group'] = jobs_counts_by_callsign_monthly_sim["callsign"].str.extract(r'(\d+)')
+
     jobs_counts_by_callsign_monthly_sim = (
         jobs_counts_by_callsign_monthly_sim
         .groupby(['run_number', 'month_start', 'callsign', 'callsign_group', 'vehicle_type'])['P_ID']
