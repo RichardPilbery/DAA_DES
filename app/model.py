@@ -405,10 +405,11 @@ will be available at this point
         with tab3:
 
             # tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4 = st.tabs([
+            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
                 "Jobs per Month",
-                "Jobs per Hour",
-                "Jobs per Day",
+                "Jobs by Hour of Day",
+                "Jobs by Day of Week",
+                "Jobs per Day - Distribution",
                 "Job Durations - Overall",
                 # "Job Durations - Split"
                 ])
@@ -579,9 +580,38 @@ Partial months are excluded for ease of interpretation.
                         fig_day_of_week
                     )
 
+
                 plot_jobs_per_day()
 
             with tab_3_4:
+                @st.fragment()
+                def plot_days_with_job_count_hist():
+                    call_df = get_job_count_df()
+                    call_df["day"] = pd.to_datetime(call_df["timestamp_dt"]).dt.date
+                    daily_call_counts = call_df.groupby(['run_number', 'day'])['P_ID'].agg("count").reset_index().rename(columns={"P_ID": "Calls per Day"})
+
+                    call_count_hist = px.histogram(daily_call_counts, x="Calls per Day",
+                                                title="Distribution of Jobs Per Day in Simulation")
+
+                    call_count_hist.update_layout(bargap=0.03, xaxis = dict(
+                            tickmode = 'linear',
+                            tick0 = 0,
+                            dtick = 1
+                        ))
+
+                    call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html", full_html=False, include_plotlyjs='cdn')
+
+                    st.plotly_chart(call_count_hist.update_layout(font=dict(family="Poppins", size=18, color="black")))
+
+                plot_days_with_job_count_hist()
+
+                st.caption("""
+This plot looks at the number of days across all repeats of the simulation where each given number of calls was observed (i.e. on how many days was one call received, two calls, three calls, and so on).
+                           """)
+
+                st.info("The historical information about the number of calls received per day will be added when available.")
+
+            with tab_3_5:
                 historical_time_df = _job_time_calcs.get_historical_times(
                             'historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
                             )
