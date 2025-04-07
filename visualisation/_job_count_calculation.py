@@ -286,11 +286,11 @@ def plot_hourly_call_counts(call_df, params_df,
     else:
         return fig
 
-
 def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                        show_historical=False,
                        historical_monthly_job_data_path="../historical_data/historical_jobs_per_month.csv",
                        show_historical_individual_years=False):
+
     call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
 
@@ -441,17 +441,26 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
 
 
             # Add a filled range (shaded area) for the historical range
+            print("==_job_count_calculation plot_monthly_calls(): call_counts_monthly")
+            print(call_counts_monthly)
+
+            # Ensure we only have one row per month to avoid issues with filling the historical range
+            call_counts_historical_plotting_min_max = (
+                call_counts_monthly[['month_start','historic_max','historic_min']]
+                .drop_duplicates()
+                )
+
             fig.add_trace(go.Scatter(
-                x=call_counts_monthly["month_start"],
-                y=call_counts_monthly["historic_max"],
+                x=call_counts_historical_plotting_min_max["month_start"],
+                y=call_counts_historical_plotting_min_max["historic_max"],
                 mode='lines',
                 showlegend=False,
                 line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
             ))
 
             fig.add_trace(go.Scatter(
-                x=call_counts_monthly["month_start"],
-                y=call_counts_monthly["historic_min"],
+                x=call_counts_historical_plotting_min_max["month_start"],
+                y=call_counts_historical_plotting_min_max["historic_min"],
                 mode='lines',
                 name='Historical Range',
                 line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
@@ -464,10 +473,6 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
     else:
         return fig
-
-
-
-
 
 def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month=False,
                             bar_colour="teal", title="Calls Per Day", use_poppins=False,
