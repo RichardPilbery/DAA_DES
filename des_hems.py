@@ -262,6 +262,7 @@ class DES_HEMS:
             pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
             #print(f"Callsign is {pt.hems_pref_callsign_group}")
 
+            # !!!!!! ASSUMPTION !!!!!!! #
             # About 5% of 'REG' calls might have a helicopter benefit
             helicopter_benefit = 'y'
             if pt.hems_cc_or_ec == 'REG':
@@ -298,10 +299,9 @@ class DES_HEMS:
             if hems_allocation != None:
                 #print(f"allocated {hems_allocation.callsign}")
 
-                self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
-
-                if hems_group_resource_allocation != None:
-                    self.add_patient_result_row(pt, hems_group_resource_allocation.callsign_group, "callsign_group_resource_use")
+                # if hems_group_resource_allocation != None:
+                #     self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
+                #     self.add_patient_result_row(pt, hems_group_resource_allocation.callsign_group, "callsign_group_resource_use")
 
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
