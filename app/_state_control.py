@@ -21,7 +21,8 @@ DEFAULT_INPUTS = {
     "warm_up_duration": 0,
     "number_of_runs_input": 10,
     "create_animation_input": False,
-    "sim_start_date_input": date.today().strftime('%Y-%m-%d'),
+    # "sim_start_date_input": date.today().strftime('%Y-%m-%d'),
+    "sim_start_date_input": '2023-01-01',
     "sim_start_time_input": "08:00",
     "scenario_1_set": False,
     "scenario_2_set": False,
@@ -38,14 +39,14 @@ DEFAULT_INPUTS = {
 # Streamlit community cloud
 if platform.processor() == '':
     ADDITIONAL_INPUTS =   {
-        "sim_duration_input": 365,
+        "sim_duration_input": 365*2,
         "number_of_runs_input": 5
     }
 
 else:
     ADDITIONAL_INPUTS =   {
-        "sim_duration_input": 365,
-        "number_of_runs_input": 10
+        "sim_duration_input": 365*2,
+        "number_of_runs_input": 12
     }
 
 DEFAULT_INPUTS.update(ADDITIONAL_INPUTS)
