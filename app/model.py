@@ -343,17 +343,6 @@ will be available at this point
 
             t1_col3, t1_col4 = st.columns(2)
 
-#             with t1_col3:
-#                 with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
-#                     st.metric("Preferred Resource Allocated",
-#                             "907 of 1203 (75.4%)",
-#                             border=True)
-#                     st.caption("""
-# This is the percentage of time where the 'preferred' resource was available at the time of the call
-# for response.
-# """)
-
-
         with tab2:
             tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "'Missed' Calls"])
             with tab_2_1:
@@ -628,7 +617,7 @@ This plot looks at the number of days across all repeats of the simulation where
                 simulated_job_time_df.to_csv("temp_test.csv")
 
                 # Create plot for inclusion in streamlit
-                fig_job_durations_historical =  _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
+                fig_job_durations_historical =  _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
                         historical_activity_times=historical_time_df,
                         utilisation_model_df=simulated_job_time_df,
                         use_poppins=True
@@ -637,7 +626,7 @@ This plot looks at the number of days across all repeats of the simulation where
                 # Rerun plot, writing to HTML
                 # Note rerunning is necessary due to the need to pass include_poppins=False
                 # the second time around
-                _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
+                _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
                         historical_activity_times=historical_time_df,
                         utilisation_model_df=simulated_job_time_df,
                         use_poppins=False
@@ -653,38 +642,10 @@ This plot looks at the total amount of time each resource was in use during the 
 
 All simulated points are represented in the box plots.
 
-The blue bars give an indication of the historical averages
-
-We would expect the median - the central horizontal line within the box portion of the box plots -
-to fall within the blue box for each resource type, and likely to be fairly central within that
-region.
+The blue bars give an indication of the historical averages. We would expect the median - the
+central horizontal line within the box portion of the box plots - to fall within the blue box for
+each resource type, and likely to be fairly central within that region.
 """)
-
-            # with tab_3_5:
-            #     event_log_df = _job_time_calcs.create_simulation_event_duration_df(
-            #                 event_log_path="data/run_results.csv"
-            #                 )
-
-
-
-            #     st.plotly_chart(
-            #         _job_time_calcs.plot_activity_time_breakdowns(
-            #             historical_activity_times=historical_time_df,
-            #             event_log_df=event_log_df,
-            #             title="Simulation Event Times Breakdown - Helicopter",
-            #             vehicle_type="helicopter"
-            #         )
-            #     )
-
-            #     st.plotly_chart(
-            #         _job_time_calcs.plot_activity_time_breakdowns(
-            #             historical_activity_times=historical_time_df,
-            #             event_log_df=event_log_df,
-            #             title="Simulation Event Times Breakdown - Car",
-            #             vehicle_type="car"
-            #         )
-            #     )
-
         with tab4:
 
             st.caption("""

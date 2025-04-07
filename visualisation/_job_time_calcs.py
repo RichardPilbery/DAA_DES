@@ -82,8 +82,6 @@ def summarise_event_times(event_log_path="../data/run_results.csv"):
 
     return event_durations_sim
 
-
-
 def get_historical_times(
         historical_duration_path='../historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
         ):
@@ -127,14 +125,15 @@ def get_total_times_model(get_summary=False,
 
         return utilisation_model_df
 
-
-def plot_historical_utilisation_vs_simulation_overall(
+def plot_historical_job_duration_vs_simulation_overall(
         historical_activity_times,
         utilisation_model_df,
         use_poppins=True
 ):
+
     fig = go.Figure()
 
+    # Add the historical range for the car
     fig.add_trace(
         go.Bar(
             x=["Car"],
@@ -146,6 +145,7 @@ def plot_historical_utilisation_vs_simulation_overall(
         )
     )
 
+    # Add the historical range for the helicopter
     fig.add_trace(
         go.Bar(
             x=["Helicopter"],
@@ -157,7 +157,7 @@ def plot_historical_utilisation_vs_simulation_overall(
         )
     )
 
-
+    # Add duration figures for both cars and helicopters
     fig.add_trace(
         go.Box(
             y=utilisation_model_df['resource_use_duration'],
@@ -173,7 +173,6 @@ def plot_historical_utilisation_vs_simulation_overall(
         fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
 
     return fig
-
 
 def plot_activity_time_breakdowns(historical_activity_times,
                                   event_log_df,
