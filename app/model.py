@@ -827,7 +827,7 @@ Most users will not need to look at the visualisations in this tab.
 
                 resource_use_exploration_plots()
 
-            st.caption("""
+                st.caption("""
 This visual shows the resource use of each resource throughout the simulation.
 
 Grey hatched boxes indicate the time the resource was away for servicing.
@@ -836,11 +836,11 @@ Grey hatched boxes indicate the time the resource was away for servicing.
 service period for g-daas. Therefore, for the H70 line, we would expect calls to continue being allocated
 to H70 during its service period, **but we would expect H71 to consequently show no activity in that period.**
 
-For the servicing of H71 (g-daan), it is assumed that g-daan will be unavailable during that period
+- For the servicing of H71 (g-daan), it is assumed that g-daan will be unavailable during that period
 and no callsign reallocation will occur, so we would anticipate no activity occurring for H71 during that period.
 
 CC70 and CC71 are backup vehicles, for use in the event that their associated helicopter cannot fly
-for any reason (pilot unavailability, servicing, etc.)
+for any reason (pilot unavailability, servicing, etc.).
 
 It should be the case that resources from the same callsign group (H70 & CC70, H71 & CC71) cannot ever be allocated
 to a job at the same time, as it is assumed that a single crew is available for each callsign group.
@@ -848,7 +848,10 @@ to a job at the same time, as it is assumed that a single crew is available for 
 Unavailability of cars due to servicing is not modelled; cars are assumed to always be available.
 
 *The handles at the bottom of the plot can be used to zoom in to a shorter period of time, allowing
-you to more clearly see patterns of resource use.*
+you to more clearly see patterns of resource use. The '1m, 6m, YTD, 1y' buttons at the top of the plot
+can also be used to adjust the chosen time period. Double click on the plot or click on the 'reset axes'
+button at the top right - which will only appear when hovering over the plot - to reset to looking at
+the overall time period.*
             """)
 
             with tab_4_2:
