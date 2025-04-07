@@ -809,14 +809,14 @@ Most users will not need to look at the visualisations in this tab.
                     )
 
                     resource_use_fig.update_xaxes(rangeslider_visible=True,
-                    # rangeselector=dict(
-                    #     buttons=list([
-                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
-                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
-                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
-                    #         dict(step="all")
-                    #     ]))
+                    rangeselector=dict(
+                        buttons=list([
+                            dict(count=1, label="1m", step="month", stepmode="backward"),
+                            dict(count=6, label="6m", step="month", stepmode="backward"),
+                            dict(count=1, label="YTD", step="year", stepmode="todate"),
+                            dict(count=1, label="1y", step="year", stepmode="backward"),
+                            dict(step="all")
+                        ]))
                     )
 
                     resource_use_fig.write_html("app/fig_outputs/resource_use_fig.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
@@ -826,6 +826,30 @@ Most users will not need to look at the visualisations in this tab.
                     )
 
                 resource_use_exploration_plots()
+
+            st.caption("""
+This visual shows the resource use of each resource throughout the simulation.
+
+Grey hatched boxes indicate the time the resource was away for servicing.
+
+- For H70 (g-daas), it is assumed that H71 (g-daan) will be reallocated the callsign H70 during the
+service period for g-daas. Therefore, for the H70 line, we would expect calls to continue being allocated
+to H70 during its service period, **but we would expect H71 to consequently show no activity in that period.**
+
+For the servicing of H71 (g-daan), it is assumed that g-daan will be unavailable during that period
+and no callsign reallocation will occur, so we would anticipate no activity occurring for H71 during that period.
+
+CC70 and CC71 are backup vehicles, for use in the event that their associated helicopter cannot fly
+for any reason (pilot unavailability, servicing, etc.)
+
+It should be the case that resources from the same callsign group (H70 & CC70, H71 & CC71) cannot ever be allocated
+to a job at the same time, as it is assumed that a single crew is available for each callsign group.
+
+Unavailability of cars due to servicing is not modelled; cars are assumed to always be available.
+
+*The handles at the bottom of the plot can be used to zoom in to a shorter period of time, allowing
+you to more clearly see patterns of resource use.*
+            """)
 
             with tab_4_2:
                 st.subheader("Event Overview")
