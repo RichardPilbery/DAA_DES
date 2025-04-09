@@ -1045,10 +1045,16 @@ the overall time period.*
                 try:
                     st.subheader("Process - Absolute Frequency")
                     st.image("visualisation/absolute_frequency.svg")
+                except:
+                    st.warning("Process maps could not be generated")
 
+                try:
                     # st.html("visualisation/anim_process.html")
                     components.html("visualisation/anim_process.html")
+                except:
+                    st.warning("Animated Process maps could not be generated")
 
+                try:
                     # st.subheader("Process - Absolute Cases")
                     # st.image("visualisation/absolute_case.svg")
 
@@ -1066,15 +1072,19 @@ the overall time period.*
                 except:
                     st.warning("Process maps could not be generated")
 
+
             with tab_4_4:
                 try:
                     st.subheader("Activities - by Resource")
                     st.image("visualisation/relative_resource_level.svg")
+                except:
+                    st.warning("Animated process maps could not be generated")
 
+                try:
                     # st.html("visualisation/anim_resource_level.html")
                     components.html("visualisation/anim_resource_level.html")
                 except:
-                    st.warning("Process maps could not be generated")
+                    st.warning("Animated process maps could not be generated")
 
 
         with tab5:
