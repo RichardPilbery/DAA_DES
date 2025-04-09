@@ -189,6 +189,7 @@ class DistributionFitUtils():
         self.historical_median_time_of_activities_by_month_and_resource_type()
         self.historical_monthly_totals_by_hour_of_day()
         self.historical_monthly_resource_utilisation()
+        self.historical_monthly_totals_all_calls()
             
 
     def hour_by_ampds_card_probs(self):
@@ -612,7 +613,7 @@ class DistributionFitUtils():
         """
 
         # Multiple resources can be sent to the same job.
-        monthly_df = self.df[['inc_date', 'first_day_of_month', 'hems_result', 'vehicle_type']].dropna()\
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'hems_result', 'vehicle_type']]\
             .drop_duplicates(subset="inc_date", keep="first")
 
         is_stand_down = monthly_df['hems_result'].str.contains("Stand Down")
@@ -626,6 +627,18 @@ class DistributionFitUtils():
                             ).reset_index()
 
         monthly_totals_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_jobs_per_month.csv', mode="w+", index=False)
+
+    def historical_monthly_totals_all_calls(self):
+        """
+            Calculates monthly incident totals from provided dataset of historical data stratified by callsign
+        """
+
+        # Multiple resources can be sent to the same job.
+        monthly_df = self.df[['inc_date', 'first_day_of_month']].dropna()
+        
+        monthly_totals_df = monthly_df.groupby(['first_day_of_month']).count().reset_index()
+
+        monthly_totals_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_all_calls.csv', mode="w+", index=False)
 
     def historical_monthly_totals_by_callsign(self):
         """
