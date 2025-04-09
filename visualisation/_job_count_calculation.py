@@ -720,3 +720,69 @@ def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month
         return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
     else:
         return fig
+
+
+def get_historical_attendance_df(
+        attended_jobs_df_path="historical_data/historical_jobs_per_month.csv",
+        all_jobs_df_path="historical_data/historical_monthly_totals_all_calls.csv"
+):
+    attended_jobs = pd.read_csv(attended_jobs_df_path)
+    attended_jobs.rename(columns={'total_jobs': 'jobs_attended'}, inplace=True)
+
+    all_received_jobs = pd.read_csv(all_jobs_df_path)
+    all_received_jobs.rename(columns={'inc_date': 'all_received_calls'}, inplace=True)
+
+    full_jobs_df = all_received_jobs.merge(attended_jobs, on="month", how="left")
+
+    full_jobs_df['jobs_not_attended'] = full_jobs_df['all_received_calls'] - full_jobs_df['jobs_attended']
+    full_jobs_df['perc_unattended_historical'] = full_jobs_df['jobs_not_attended']/full_jobs_df['all_received_calls'].round(2)
+
+    return full_jobs_df
+
+def plot_historical_missed_jobs_data(
+        attended_jobs_df_path="historical_data/historical_jobs_per_month.csv",
+        all_jobs_df_path="historical_data/historical_monthly_totals_all_calls.csv",
+        format="stacked_bar"
+        ):
+
+    full_jobs_df = get_historical_attendance_df(attended_jobs_df_path=attended_jobs_df_path,
+                                                all_jobs_df_path=all_jobs_df_path)
+
+    if format=="stacked_bar":
+        return px.bar(
+                full_jobs_df[['month','jobs_not_attended','jobs_attended']].melt(id_vars="month"),
+                x="month",
+                y="value",
+                color="variable"
+                )
+
+    elif format=="line_not_attended_count":
+        return px.line(full_jobs_df, x="month", y="jobs_not_attended")
+
+    elif format=="line_not_attended_perc":
+        return px.line(full_jobs_df, x="month", y="perc_unattended_historical")
+
+    elif format=="string":
+        all_received_calls_period = full_jobs_df['all_received_calls'].sum()
+        all_attended_jobs_period = full_jobs_df['jobs_attended'].sum()
+
+        return (((all_received_calls_period - all_attended_jobs_period) / all_received_calls_period)*100)
+
+    else:
+        # Melt the DataFrame to long format
+        df_melted = full_jobs_df[['month', 'jobs_not_attended', 'jobs_attended']].melt(id_vars='month')
+
+        # Calculate proportions per month
+        df_melted['proportion'] = df_melted.groupby('month')['value'].transform(lambda x: x / x.sum())
+
+        # Plot proportions
+        fig = px.bar(
+            df_melted,
+            x='month',
+            y='proportion',
+            color='variable',
+            text='value',  # Optional: to still show raw values on hover
+        )
+
+        fig.update_layout(barmode='stack', yaxis_tickformat='.0%', yaxis_title='Proportion')
+        fig.show()

@@ -240,11 +240,8 @@ if button_run_pressed:
                     st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
                             perc_unattended,
                             border=True)
-
-                    st.warning("""
-Data on the number of calls that were historically not attended due to resource unavailability is being added soon - a comparison with the model's figures
-will be available at this point
-                            """)
+                    missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
+                    st.caption(f"This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically")
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
@@ -252,11 +249,11 @@ will be available at this point
 
                     quarto_string += missed_calls_description
 
-                    with st.expander("View Breakdown"):
-                        outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
-                        outcome_df["Count"] = (outcome_df["Count"]/st.session_state.number_of_runs_input).round(0)
-                        outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
-                        st.dataframe(outcome_df)
+                    # with st.expander("View Breakdown"):
+                    #     outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
+                    #     outcome_df["Count"] = (outcome_df["Count"]/st.session_state.number_of_runs_input).round(0)
+                    #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
+                    #     st.dataframe(outcome_df)
 
             with t1_col2:
                 quarto_string += "\n\n## Resource Utilisation"
