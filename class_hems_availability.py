@@ -45,6 +45,8 @@ class HEMSAvailability():
         # Create a store for HEMS resources
         self.store = FilterStore(env)
 
+        self.serviceStore = FilterStore(env)
+
         # Prepare HEMS resources for ingesting into store
         self.prep_HEMS_resources()
 
@@ -77,11 +79,23 @@ class HEMSAvailability():
 
             if h.service_check(current_dt, GDAAS_service):
                 # Vehicle being serviced
+
                 if h in self.store.items:
-                    self.store.get(lambda item: item == h)
-            else:
-                if h not in self.store.items:
-                    self.store.put(h)
+                    print("****************")
+                    print(f"{h.callsign} being serviced so remove from store")
+                    service_h = yield self.store.get(lambda item: item == h)
+                    print(service_h)
+                    yield self.serviceStore.put(service_h)
+                    print(self.serviceStore.items)
+                    print("***********")
+
+        s: HEMS
+        if len(self.serviceStore.items) > 0:
+            print("Service store has items")
+            for s in list(self.serviceStore.items):
+                if s.service_check(current_dt, GDAAS_service):
+                    h = yield self.serviceStore.get(lambda item: item == s)
+                    yield self.store.put(h)
 
 
     def prep_HEMS_resources(self) -> None:
@@ -248,7 +262,7 @@ class HEMSAvailability():
 
             h: HEMS
             for h in self.store.items:
-                current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(pt.hour, pt.qtr)})")
+                current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(pt.hour, pt.qtr)} {h.registration})")
 
             return current_store_items
 
