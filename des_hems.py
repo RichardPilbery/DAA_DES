@@ -51,6 +51,7 @@ class DES_HEMS:
         self.patient_counter = 0
         self.calls_today = 0
         self.new_day = pd.to_datetime("1900-01-01").date
+        self.new_hour = -1
 
         self.hems_resources = HEMSAvailability(self.env, sim_start_date, sim_duration)
 
@@ -173,6 +174,11 @@ class DES_HEMS:
             # Get current day of week and hour of day
             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
+            if(self.new_hour != hod):
+                self.new_hour = hod
+
+                #print("new hour")             
+
             # If it is a new day, need to calculate how many calls
             # in the next 24 hours
             if(self.new_day != current_dt.date()):
@@ -291,7 +297,7 @@ class DES_HEMS:
 
             hems_allocation = hems_res_list[0]
 
-            # This will either contain the other resource in a callsign_group or None
+            # This will either contain the other resource in a callsign_group and HEMS category (EC/CC) or None
             hems_group_resource_allocation = hems_res_list[2]
 
             self.add_patient_result_row(pt, hems_res_list[1], "resource_preferred_outcome")
@@ -505,9 +511,8 @@ class DES_HEMS:
         if self.amb_data:
             print('Ambulance clear time')
 
-        if not_in_warm_up_period:
-            #print(f"Depart for patient {patient.id} on run {self.run_number}")
-            self.add_patient_result_row(patient, "depart", "arrival_departure")
+        #print(f"Depart for patient {patient.id} on run {self.run_number}")
+        self.add_patient_result_row(patient, "depart", "arrival_departure")
 
 
 
@@ -537,6 +542,7 @@ class DES_HEMS:
             "callsign"          : patient.callsign,
             "callsign_group"    : patient.hems_callsign_group,
             "vehicle_type"      : patient.hems_vehicle_type,
+            "hems_res_category" : patient.hems_category,
             "ampds_card"        : patient.ampds_card,
             "age"               : patient.age,
             "sex"               : patient.sex,
