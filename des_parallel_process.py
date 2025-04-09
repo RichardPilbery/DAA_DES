@@ -69,7 +69,8 @@ def runSim(run: int,
            amb_data: bool,
            save_params_csv: bool = True,
            demand_increase_percent: float = 1.0,
-           activity_duration_multiplier: float = 1.0):
+           activity_duration_multiplier: float = 1.0,
+           print_debug_messages: bool = False):
     #print(f"Inside runSim and {sim_start_date} and {what_if_sim_run}")
 
     print(f'{Utils.current_time()}: Demand increase set to {demand_increase_percent*100}%')
@@ -87,7 +88,8 @@ def runSim(run: int,
                         sim_start_date=sim_start_date,
                         amb_data=amb_data,
                         demand_increase_percent=demand_increase_percent,
-                        activity_duration_multiplier=activity_duration_multiplier
+                        activity_duration_multiplier=activity_duration_multiplier,
+                        print_debug_messages=print_debug_messages
                         )
     daa_model.run()
 
@@ -133,9 +135,13 @@ def parallelProcessJoblib(total_runs: int,
                           amb_data: bool,
                           save_params_csv: bool = True,
                           demand_increase_percent: float = 1.0,
-                          activity_duration_multiplier: float = 1.0):
+                          activity_duration_multiplier: float = 1.0,
+                          print_debug_messages: bool = False):
 
-    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time, sim_start_date, amb_data, save_params_csv, demand_increase_percent, activity_duration_multiplier) for run in range(total_runs))
+    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time,
+                                               sim_start_date, amb_data, save_params_csv,
+                                               demand_increase_percent, activity_duration_multiplier,
+                                               print_debug_messages) for run in range(total_runs))
 
 if __name__ == "__main__":
     removeExistingResults()
