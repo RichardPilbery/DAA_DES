@@ -73,6 +73,8 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
+    debug_messages = st.toggle("Turn on debugging messages", False,
+                               help="This will turn on display of messages in the developer terminal")
     _app_utils.summary_sidebar(quarto_string=quarto_string)
 
 with stylable_container(key="run_buttons",
@@ -130,7 +132,8 @@ if button_run_pressed:
                             ),
                         amb_data=st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
+                        print_debug_messages=debug_messages
                     )
 
                 results.append(
@@ -159,7 +162,9 @@ if button_run_pressed:
                             ),
                         amb_data = st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
+                        print_debug_messages=debug_messages
+
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -1017,7 +1022,6 @@ the overall time period.*
                 _process_analytics.create_event_log("data/run_results.csv")
 
                 print("Current working directory:", os.getcwd())
-
 
                 # This check is a way to guess whether it's running on
                 # Streamlit community cloud
