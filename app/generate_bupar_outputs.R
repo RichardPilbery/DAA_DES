@@ -26,21 +26,18 @@ activity_log <- data %>%
 
 activity_log %>%
     process_map(frequency("absolute"), render=FALSE) %>%
-    processmapR::export_graph("visualisation/absolute_frequency.svg",
-                         file_type = "svg")
+    processmapR::export_graph("visualisation/absolute_frequency.svg", file_type = "svg")
 
 ##### Absolute case
 
 activity_log %>%
     process_map(frequency("absolute-case"), render=FALSE) %>%
-    processmapR::export_graph("visualisation/absolute_case.svg",
-                         file_type = "svg")
+    processmapR::export_graph("visualisation/absolute_case.svg", file_type = "svg")
 
 #### Relative
 activity_log %>%
     process_map(frequency("relative"), render=FALSE) %>%
-    processmapR::export_graph("visualisation/relative_case.svg",
-                         file_type = "svg")
+    processmapR::export_graph("visualisation/relative_case.svg", file_type = "svg")
 
 
 ### Performance maps
@@ -48,15 +45,13 @@ activity_log %>%
 #### Mean Times
 activity_log %>%
     process_map(performance(), render=FALSE) %>%
-    processmapR::export_graph("visualisation/performance_mean.svg",
-                         file_type = "svg")
+    processmapR::export_graph("visualisation/performance_mean.svg", file_type = "svg")
 
 
 #### Max Times
 activity_log %>%
     process_map(performance(FUN = max), render=FALSE) %>%
-    processmapR::export_graph("visualisation/performance_max.svg",
-                         file_type = "svg")
+    processmapR::export_graph("visualisation/performance_max.svg", file_type = "svg")
 
 ### Common Routes
 activity_log %>%
@@ -96,8 +91,7 @@ ggsave("visualisation/idle_time_resource.svg")
 ## Animated Maps
 activity_log %>%
     animate_process() %>%
-    saveWidget("visualisation/anim_process.html", selfcontained = FALSE)
-
+    saveWidget("visualisation/anim_process.html", selfcontained = TRUE)
 
 ## ==== Resource level pathing ==== ##
 activity_log_2 <- data %>%
@@ -114,9 +108,8 @@ activity_log_2 <- data %>%
 
 activity_log_2 %>%
     process_map(frequency("relative"), render=FALSE) %>%
-    processmapR::export_graph("visualisation/relative_resource_level.svg",
-                         file_type = "svg")
+    processmapR::export_graph("visualisation/relative_resource_level.svg", file_type = "svg")
 
 activity_log_2 %>%
     animate_process() %>%
-    saveWidget("visualisation/anim_resource_level.html", selfcontained = FALSE)
+    saveWidget("visualisation/anim_resource_level.html", selfcontained = TRUE)

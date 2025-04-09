@@ -18,6 +18,8 @@ import plotly.graph_objects as go
 
 import subprocess
 
+import streamlit.components.v1 as components
+
 import _app_utils
 from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
                         get_text, get_text_sheet, to_military_time
@@ -1042,7 +1044,8 @@ the overall time period.*
                     st.subheader("Process - Absolute Frequency")
                     st.image("visualisation/absolute_frequency.svg")
 
-                    st.html("visualisation/anim_process.html")
+                    # st.html("visualisation/anim_process.html")
+                    components.html("visualisation/anim_process.html")
 
                     # st.subheader("Process - Absolute Cases")
                     # st.image("visualisation/absolute_case.svg")
@@ -1066,7 +1069,8 @@ the overall time period.*
                     st.subheader("Activities - by Resource")
                     st.image("visualisation/relative_resource_level.svg")
 
-                    st.html("visualisation/anim_resource_level.html")
+                    # st.html("visualisation/anim_resource_level.html")
+                    components.html("visualisation/anim_resource_level.html")
                 except:
                     st.warning("Process maps could not be generated")
 
