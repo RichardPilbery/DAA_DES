@@ -243,7 +243,7 @@ class HEMSAvailability():
 
         preferred_care_category = pt.hems_cc_or_ec
 
-        #print(f"EC/CC resource with {preferred_care_category} and hour {pt.hour} and qtr {pt.qtr}")
+        print(f"EC/CC resource with {preferred_care_category} and hour {pt.hour} and qtr {pt.qtr}")
 
         h: HEMS
         for h in self.store.items:
@@ -291,7 +291,7 @@ class HEMSAvailability():
                         preferred = 4
                         preferred_lookup = 6
 
-        #print(f"preferred lookup {preferred_lookup} and preferred = {preferred}")
+        print(f"preferred lookup {preferred_lookup} and preferred = {preferred}")
 
         if preferred_lookup != 999:
             return [hems, self.resource_allocation_lookup(preferred_lookup)]
@@ -315,7 +315,7 @@ class HEMSAvailability():
 
         def process() -> Generator[Any, Any, None]:
 
-            #print(f"Allocating resource for {pt.id} and care cat {pt.hems_cc_or_ec}")
+            print(f"Allocating resource for {pt.id} and care cat {pt.hems_cc_or_ec}")
 
             """
             Checks whether the resource the incident wants is available in the
@@ -336,7 +336,7 @@ class HEMSAvailability():
 
             else:
                 
-                #print(self.current_store_status(pt))
+                print(self.current_store_status(pt))
 
                 with self.store.get(lambda hems_resource: hems_resource == pref_res[0]) as primary_resource_member:
 
@@ -345,7 +345,7 @@ class HEMSAvailability():
                     resource = yield primary_resource_member | self.env.timeout(0.1)
 
                     if primary_resource_member in resource:
-                        #print(f"Allocating HEMS resource {resource[primary_resource_member].callsign} at time {self.env.now:.3f}")
+                        print(f"Allocating HEMS resource {resource[primary_resource_member].callsign} at time {self.env.now:.3f}")
                         resource.in_use = True
                         pt.hems_callsign_group = resource[primary_resource_member].callsign_group
                         pt.hems_vehicle_type = resource[primary_resource_member].vehicle_type
@@ -368,8 +368,8 @@ class HEMSAvailability():
                             return_resource2_value = None
 
                             if secondary_callsign_group_member in resource2:
-                                # print(f"Secondary callsign group resource being allocated {resource2[secondary_callsign_group_member].callsign}")
-                                # print('------------------')
+                                print(f"Secondary callsign group resource being allocated {resource2[secondary_callsign_group_member].callsign}")
+                                print('------------------')
                                 resource2.in_use = True
                                 return_resource2_value = resource2[secondary_callsign_group_member]
 
@@ -625,7 +625,7 @@ class HEMSAvailability():
                     else:
                         return False
                     
-            #print(self.current_store_status(pt))
+            print(self.current_store_status(pt))
 
             with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as primary_callsign_group_member:
 
@@ -634,7 +634,7 @@ class HEMSAvailability():
                 resource = yield primary_callsign_group_member | self.env.timeout(0.1)
 
                 if primary_callsign_group_member in resource:
-                    #print(f"{pt.id} Allocating HEMS resource {resource[primary_callsign_group_member].callsign} cat: {resource[primary_callsign_group_member].category} at time {pt.current_dt}")
+                    print(f"{pt.id} Allocating HEMS resource {resource[primary_callsign_group_member].callsign} cat: {resource[primary_callsign_group_member].category} at time {pt.current_dt}")
                     resource.in_use = True
                     pt.hems_callsign_group = resource[primary_callsign_group_member].callsign_group
                     pt.hems_vehicle_type = resource[primary_callsign_group_member].vehicle_type
@@ -656,18 +656,18 @@ class HEMSAvailability():
                         return_resource2_value = None
 
                         if secondary_callsign_group_member in resource2:
-                            # print('Secondary callsign group resource being allocated')
-                            #print(f"Secondary resource is {resource2[secondary_callsign_group_member].callsign} and cat: {resource2[secondary_callsign_group_member].category}")
+                            print('Secondary callsign group resource being allocated')
+                            print(f"Secondary resource is {resource2[secondary_callsign_group_member].callsign} and cat: {resource2[secondary_callsign_group_member].category}")
                             resource2.in_use = True
                             return_resource2_value = resource2[secondary_callsign_group_member]
 
 
                     resource_event.succeed([resource[primary_callsign_group_member], pref_res[1], return_resource2_value])
                 else:
-                    #print(f"No HEMS (helimed or ccc) resource available; using Non-DAAT land ambulance")
+                    print(f"No HEMS (helimed or ccc) resource available; using Non-DAAT land ambulance")
                     resource_event.succeed([None, pref_res[1], None])
 
-        #print('----------------------')
+        print('----------------------')
 
         self.env.process(process())
 
