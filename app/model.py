@@ -438,7 +438,8 @@ will be available at this point
                             use_poppins=True,
                             show_historical=show_real_data,
                             show_historical_individual_years=show_historical_individual_years,
-                            historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
+                            historical_monthly_job_data_path="historical_data/historical_monthly_totals_all_calls.csv",
+                            job_count_col="inc_date"
                             )
 
                     _job_count_calculation.plot_monthly_calls(
@@ -447,7 +448,8 @@ will be available at this point
                             use_poppins=False,
                             show_historical=show_real_data,
                             show_historical_individual_years=show_historical_individual_years,
-                            historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
+                            historical_monthly_job_data_path="historical_data/historical_monthly_totals_all_calls.csv",
+                            job_count_col="inc_date"
                             ).write_html("app/fig_outputs/fig_monthly_calls.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
 
 

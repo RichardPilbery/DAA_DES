@@ -289,7 +289,8 @@ def plot_hourly_call_counts(call_df, params_df,
 def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                        show_historical=False,
                        historical_monthly_job_data_path="../historical_data/historical_jobs_per_month.csv",
-                       show_historical_individual_years=False):
+                       show_historical_individual_years=False,
+                       job_count_col="total_jobs"):
 
     call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
@@ -392,7 +393,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
 
         historical_summary = (
             historical_jobs_per_month
-            .groupby('Month_Numeric')['total_jobs']
+            .groupby('Month_Numeric')[job_count_col]
             .agg(["max","min"])
             .reset_index()
             .rename(columns={"max": "historic_max", "min": "historic_min"})
@@ -407,8 +408,8 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         #     .apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
         #     )
 
-        if (historical_jobs_per_month["total_jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
-            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["total_jobs"].max() * 1.1)})
+        if (historical_jobs_per_month[job_count_col].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
+            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month[job_count_col].max() * 1.1)})
 
         if show_historical_individual_years:
             for idx, year  in enumerate(historical_jobs_per_month["Year_Numeric"].unique()):
@@ -423,7 +424,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                 # Add the trace for the current year
                 fig.add_trace(go.Scatter(
                     x=new_df["month_start"],
-                    y=new_df["total_jobs"],
+                    y=new_df[job_count_col],
                     mode='lines+markers',
                     opacity=0.7,
                     name=str(year),  # Using the year as the trace name
