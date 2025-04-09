@@ -60,11 +60,11 @@ class HEMS(Ambulance):
 
             if GDAAS_service:
                 self.callsign_group = 70
-                self.callsign = 'CC70' if self.vehicle_type == 'car' else 'H70'
+                self.callsign = 'H70'
 
             else:
                 self.callsign_group = 71
-                self.callsign = 'CC71' if self.vehicle_type == 'car' else 'H71'
+                self.callsign = 'H71'
             # GDASS being serviced
 
             #print(f"reg {self.registration} now has callsign {self.callsign}")

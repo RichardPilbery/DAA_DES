@@ -42,6 +42,8 @@ class HEMSAvailability():
         # Create a store for HEMS resources
         self.store = FilterStore(env)
 
+        self.serviceStore = FilterStore(env)
+
         # Prepare HEMS resources for ingesting into store
         self.prep_HEMS_resources()
 
@@ -70,11 +72,23 @@ class HEMSAvailability():
             
             if h.service_check(current_dt, GDAAS_service):
                 # Vehicle being serviced
+                
                 if h in self.store.items:
-                    self.store.get(lambda item: item == h)
-            else:
-                if h not in self.store.items:
-                    self.store.put(h)
+                    print("****************")
+                    print(f"{h.callsign} being serviced so remove from store")
+                    service_h = yield self.store.get(lambda item: item == h)
+                    print(service_h)
+                    yield self.serviceStore.put(service_h)
+                    print(self.serviceStore.items)
+                    print("***********")
+
+        s: HEMS
+        if len(self.serviceStore.items) > 0:
+            print("Service store has items")
+            for s in list(self.serviceStore.items):
+                if s.service_check(current_dt, GDAAS_service):
+                    h = yield self.serviceStore.get(lambda item: item == s)
+                    yield self.store.put(h)
 
 
     def prep_HEMS_resources(self) -> None:
@@ -222,7 +236,7 @@ class HEMSAvailability():
 
             h: HEMS
             for h in self.store.items:
-                current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(pt.hour, pt.qtr)})")
+                current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(pt.hour, pt.qtr)} {h.registration})")
 
             return current_store_items
 
@@ -243,7 +257,7 @@ class HEMSAvailability():
 
         preferred_care_category = pt.hems_cc_or_ec
 
-        print(f"EC/CC resource with {preferred_care_category} and hour {pt.hour} and qtr {pt.qtr}")
+        #print(f"EC/CC resource with {preferred_care_category} and hour {pt.hour} and qtr {pt.qtr}")
 
         h: HEMS
         for h in self.store.items:
@@ -656,7 +670,7 @@ class HEMSAvailability():
                         return_resource2_value = None
 
                         if secondary_callsign_group_member in resource2:
-                            print('Secondary callsign group resource being allocated')
+                            #print('Secondary callsign group resource being allocated')
                             print(f"Secondary resource is {resource2[secondary_callsign_group_member].callsign} and cat: {resource2[secondary_callsign_group_member].category}")
                             resource2.in_use = True
                             return_resource2_value = resource2[secondary_callsign_group_member]
