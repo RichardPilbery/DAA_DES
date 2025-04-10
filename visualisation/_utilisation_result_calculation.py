@@ -1,17 +1,25 @@
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))  # Ensure this folder is in sys.path
 import _processing_functions
 import pandas as pd
 import plotly.express as px
-from _app_utils import DAA_COLORSCHEME
+
 import _vehicle_calculation
 import _job_count_calculation
 import plotly.graph_objects as go
 from datetime import datetime, timedelta
 import re
 
+from _app_utils import DAA_COLORSCHEME
+
+
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",
-                                     rota_path="../data/hems_rota_used.csv",
-                                     service_path="../data/service_dates.csv"):
+                                     rota_path="../data/HEMS_ROTA.csv",
+                                     callsign_path="../actual_data/callsign_registration_lookup.csv",
+                                     service_path="../data/service_dates.csv",
+                                     ):
     df = pd.read_csv(path)
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
@@ -21,13 +29,24 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
             params_df,
             rota_data=pd.read_csv(rota_path),
             service_data=pd.read_csv(service_path),
+            callsign_data=pd.read_csv(callsign_path),
             output_by_month=False,
             long_format_df=False
                     )
                 )
 
-    total_avail_minutes["callsign"] = total_avail_minutes["callsign"].str.replace("CC", "C")
 
+    print("==_utilisation_result_calculation - make_utilisation_model_dataframe - run_vehicle_calculation.calculate_available_hours_v2==")
+    print("daily_availability")
+    print(daily_availability)
+
+    print("total_avail_minutes")
+    print(total_avail_minutes)
+
+    # total_avail_minutes["callsign"] = total_avail_minutes["callsign"].str.replace("CC", "C")
+
+    print("df")
+    print(df)
     # Add callsign column if not already present in the dataframe passed to the function
     if 'callsign' not in df.columns:
         df = _processing_functions.make_callsign_column(df)
@@ -37,6 +56,8 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
 
     del df
 
+    print("==resource_use_only==")
+    print(resource_use_only)
     # Pivot to wide-format dataframe with one row per patient/call
     # and columns for start and end types
     resource_use_wide = (
@@ -48,6 +69,8 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
 
     del resource_use_only
 
+    print("==resource_use_wide - initial==")
+    print(resource_use_wide)
     # If utilisation end date is missing then set to end of model
     # as we can assume this is a call that didn't finish before the model did
     resource_use_wide = _processing_functions.fill_missing_values(
@@ -96,10 +119,16 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
     utilisation_df_per_run["PRINT_perc"] = utilisation_df_per_run["perc_time_in_use"].apply(
         lambda x: f"{x:.1%}")
 
+    print("==utilisation_df_per_run==")
+    print(utilisation_df_per_run)
+
     # ============================================================ #
     # Calculage averge utilisation across simulation,
     # stratified by callsign group
     # ============================================================ #
+    print("==resource_use_wide==")
+    print(resource_use_wide)
+
     utilisation_df_per_run_by_csg = (
         resource_use_wide.groupby(['callsign_group'])
         [["resource_use_duration"]]
@@ -113,7 +142,15 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
 
     utilisation_df_per_run_by_csg = utilisation_df_per_run_by_csg.reset_index()
 
+    print("==utilisation_df_per_run_by_csg==")
+    print(utilisation_df_per_run_by_csg)
+
     total_avail_minutes_per_csg = total_avail_minutes.groupby('callsign_group').head(1).drop(columns='callsign')
+    print("==utilisation_df_per_run_by_csg==")
+    print(utilisation_df_per_run_by_csg)
+
+    print("==total_avail_minutes_per_csg")
+    print(total_avail_minutes_per_csg)
     total_avail_minutes_per_csg['callsign_group'] =  total_avail_minutes_per_csg['callsign_group'].astype('float')
 
     utilisation_df_per_run_by_csg = utilisation_df_per_run_by_csg.merge(
@@ -300,25 +337,31 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall,
 def make_RWC_utilisation_dataframe(
         historical_df_path="../historical_data/historical_monthly_resource_utilisation.csv",
         rota_path="../actual_data/HEMS_ROTA.csv",
+        callsign_path="../actual_data/callsign_registration_lookup.csv",
         service_path="../data/service_dates.csv"):
+
     historical_utilisation_df = pd.read_csv(historical_df_path)
 
     def calculate_theoretical_time(
-        historical_data,
-        rota_data,
-        service_data,
+        historical_df,
+        rota_df,
+        service_df,
+        callsign_df,
         long_format_df=True):
         """
         Note that this function has been partially provided by ChatGPT.
         """
 
-        # Convert data into DataFrames
-        historical_df = pd.DataFrame(historical_data)
-        rota_df = pd.DataFrame(rota_data)
-        service_df = pd.DataFrame(service_data)
+        rota_df = rota_df.merge(callsign_df, on="callsign")
+        service_df = service_df.merge(callsign_df, on="registration")
+        print("==calculate_theoretical_time - rota_df after merging with callsign_df==")
+        print(rota_df)
 
         # Convert date columns to datetime format
         historical_df['month'] = pd.to_datetime(historical_df['month'])
+        print("==historical_df==")
+        print(historical_df)
+
         service_df['service_start_date'] = pd.to_datetime(service_df['service_start_date'])
         service_df['service_end_date'] = pd.to_datetime(service_df['service_end_date'])
 
@@ -336,6 +379,7 @@ def make_RWC_utilisation_dataframe(
 
             for _, rota in rota_df.iterrows():
                 callsign = rota['callsign']
+                print(callsign)
 
                 # Determine summer or winter schedule
                 is_summer = month_start.month in range(3, 11)
@@ -352,7 +396,7 @@ def make_RWC_utilisation_dataframe(
 
                 # Adjust for servicing periods
                 service_downtime = 0
-                for _, service in service_df[service_df['resource'] == callsign].iterrows():
+                for _, service in service_df[service_df['callsign'] == callsign].iterrows():
                     service_start = max(service['service_start_date'], month_start)
                     service_end = min(service['service_end_date'], month_end)
 
@@ -361,6 +405,8 @@ def make_RWC_utilisation_dataframe(
                         service_downtime += service_days * daily_available_time * 60
 
                 # Final available time after accounting for servicing
+                # print("==_utilisation_result_calculation.py - make_RWC_utilisation_dataframe - calculate_theoretical_time: Monthly Available Time==")
+                # print(month_data)
                 month_data[callsign] = total_available_time - service_downtime
 
             theoretical_availability[month_start.strftime('%Y-%m-01')] = month_data
@@ -371,6 +417,9 @@ def make_RWC_utilisation_dataframe(
         # theoretical_availability_df = theoretical_availability_df.add_prefix("theoretical_availability_")
 
         theoretical_availability_df.fillna(0.0)
+
+        print("==_utilisation_result_calculation.py - make_RWC_utilisation_dataframe - theoretical availability df==")
+        print(theoretical_availability_df)
 
         if long_format_df:
             theoretical_availability_df = (
@@ -386,11 +435,16 @@ def make_RWC_utilisation_dataframe(
         return theoretical_availability_df
 
     theoretical_availability_df = calculate_theoretical_time(
-        historical_data=historical_utilisation_df,
-        rota_data=pd.read_csv(rota_path),
-        service_data=pd.read_csv(service_path),
-        long_format_df= True
+        historical_df=historical_utilisation_df,
+        rota_df=pd.read_csv(rota_path),
+        callsign_df=pd.read_csv(callsign_path),
+        service_df=pd.read_csv(service_path),
+        long_format_df=True
     )
+
+    print("==theoretical_availability_df==")
+    print(theoretical_availability_df)
+    theoretical_availability_df['month'] = pd.to_datetime(theoretical_availability_df['month'])
 
     historical_utilisation_df_times = (
         historical_utilisation_df.set_index('month')
@@ -408,6 +462,9 @@ def make_RWC_utilisation_dataframe(
         )
 
     historical_utilisation_df_times = historical_utilisation_df_times.fillna(0)
+
+    print(historical_utilisation_df_times)
+    print(theoretical_availability_df)
 
     historical_utilisation_df_complete = pd.merge(
         left=historical_utilisation_df_times,
@@ -430,6 +487,12 @@ def make_RWC_utilisation_dataframe(
         .groupby('callsign')['percentage_utilisation']
         .agg(['min', 'max', 'mean', 'median'])*100
         ).round(1)
+
+    print("==historical_utilisation_df_complete==")
+    print(historical_utilisation_df_complete)
+
+    print("==historical_utilisation_df_summary==")
+    print(historical_utilisation_df_summary)
 
     return historical_utilisation_df_complete, historical_utilisation_df_summary
 
@@ -475,21 +538,29 @@ def make_SIMULATION_utilisation_headline_figure(vehicle_type, utilisation_df_ove
             print("Invalid vehicle type entered. Please use 'helicopter', 'solo car' or 'helicopter backup car'")
 
 
-def make_SIMULATION_fleet_utilisation_headline_figure(vehicle_type, utilisation_df_overall):
-    pass
-
-
 def prep_util_df_from_call_df(call_df):
+
     call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
 
+    print("==prep_util_df_from_call_df: call_df==")
+    print(call_df)
+
+    jobs_counts_by_callsign_monthly_sim = call_df[~call_df['callsign'].isna()]
+
+    print("==jobs_counts_by_callsign_monthly_sim - prior to aggregation==")
+    print(jobs_counts_by_callsign_monthly_sim)
+
+    jobs_counts_by_callsign_monthly_sim['callsign_group'] = jobs_counts_by_callsign_monthly_sim["callsign"].str.extract(r'(\d+)')
+
     jobs_counts_by_callsign_monthly_sim = (
-        call_df
+        jobs_counts_by_callsign_monthly_sim
         .groupby(['run_number', 'month_start', 'callsign', 'callsign_group', 'vehicle_type'])['P_ID']
         .count().reset_index().rename(columns={'P_ID': 'jobs'})
         )
 
-    jobs_counts_by_callsign_monthly_sim = jobs_counts_by_callsign_monthly_sim[~jobs_counts_by_callsign_monthly_sim['callsign'].isna()]
+    print("==jobs_counts_by_callsign_monthly_sim==")
+    print(jobs_counts_by_callsign_monthly_sim)
 
     all_combinations = pd.MultiIndex.from_product([
         jobs_counts_by_callsign_monthly_sim["month_start"].unique(),
@@ -520,6 +591,9 @@ def prep_util_df_from_call_df(call_df):
 
 
 def make_SIMULATION_stacked_callsign_util_plot(call_df):
+    print("==make_SIMULATION_stacked_callsign_util_plot - call_df==")
+    print(call_df)
+
     sim_averages = prep_util_df_from_call_df(call_df)
 
     fig = px.bar(
@@ -585,6 +659,9 @@ def create_UTIL_rwc_plot(call_df,
     ###############
 
     sim_averages = prep_util_df_from_call_df(call_df)
+
+    print("==utilisation_result_calculation.py - create_UTIL_rwc_plot - sim_averages==")
+    print(sim_averages)
 
     fig = go.Figure()
 

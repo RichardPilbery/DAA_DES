@@ -176,3 +176,12 @@ session_data.json
 /app/fig_outputs/*.html
 /app/outputs/*.html
 app/outputs/.gitkeep
+visualisation/event_log.csv
+visualisation/*.svg
+visualisation/*.html
+Rplots.pdf
+app/*test*.ipynb
+visualisation/*test*.ipynb
+event_log.csv
+temp_test.csv
+visualisation/anim_process_files/*

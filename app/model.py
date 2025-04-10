@@ -5,6 +5,7 @@ with open("app/style.css") as css:
     st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
 
 import platform
+import os
 # Data processing imports
 import pandas as pd
 import numpy as np
@@ -14,12 +15,11 @@ import re
 import plotly.express as px
 import platform
 import plotly.graph_objects as go
-from vidigi.animation import animate_activity_log, generate_animation
-from vidigi.prep import reshape_for_animations, generate_animation_df
-import _job_count_calculation
-import _vehicle_calculation
-import _utilisation_result_calculation
-import _job_time_calcs
+
+import subprocess
+
+import streamlit.components.v1 as components
+
 import _app_utils
 from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
                         get_text, get_text_sheet, to_military_time
@@ -39,15 +39,15 @@ from _state_control import setup_state
 from streamlit_extras.stylable_container import stylable_container
 from streamlit_extras.metric_cards import style_metric_cards
 
+import visualisation._job_count_calculation as _job_count_calculation
+import visualisation._vehicle_calculation as _vehicle_calculation
+import visualisation._utilisation_result_calculation as _utilisation_result_calculation
+import visualisation._job_time_calcs as _job_time_calcs
+import visualisation._process_analytics as _process_analytics
+
 setup_state()
 
-
-# Set up filepaths for historical data
-
-
-
-
-
+# Pull in required font
 poppins_script = """
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
@@ -56,6 +56,13 @@ poppins_script = """
 quarto_string = ""
 
 text_df = get_text_sheet("model")
+
+# Avoid reading from utils due to odd issues it seems to be introducing
+# TODO: Explore why this is happening in more detail
+# u = Utils()
+# rota = u.HEMS_ROTA
+#rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+# SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
 
 col1, col2 = st.columns([0.7, 0.3])
 
@@ -66,147 +73,9 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
-    with stylable_container(css_styles="""
-hr {
-    border-color: #a6093d;
-    background-color: #a6093d;
-    color: #a6093d;
-    height: 1px;
-  }
-""", key="hr"):
-        st.divider()
-    if 'number_of_runs_input' in st.session_state:
-        with stylable_container(key="green_buttons",
-            css_styles=f"""
-                    button {{
-                            background-color: {DAA_COLORSCHEME['teal']};
-                            color: white;
-                            border-color: white;
-                        }}
-                        """
-            ):
-            if st.button("Want to change some parameters? Click here.", type="primary", icon=":material/display_settings:"):
-                st.switch_page("setup.py")
-        st.subheader("Model Input Summary")
-        quarto_string += "## Model Input Summary\n\n"
-
-        num_helos_string = f"Number of Helicopters: {st.session_state.num_helicopters}"
-        quarto_string += "### "
-        quarto_string += num_helos_string
-        quarto_string += "\n\n"
-        st.write(num_helos_string)
-
-        # Avoid reading from utils due to odd issues it seems to be introducing
-        # TODO: Explore why this is happening in more detail
-        # u = Utils()
-        # rota = u.HEMS_ROTA
-        #rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
-        SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
-
-        rota = (
-            pd.read_csv("actual_data/HEMS_ROTA.csv")
-                .merge(
-                    SERVICING_SCHEDULE
-                        .merge(
-                            pd.read_csv("actual_data/callsign_registration_lookup.csv"),
-                            on="registration",
-                            how="left"
-                        ),
-                    on="callsign",
-                    how="left"
-                )
-        )
-
-        for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
-            per_callsign_rota = rota[rota["callsign"]==helicopter]
-            helicopter_rota_string = f"""
-{helicopter} is an {per_callsign_rota["model"].values[0]} and runs
-from {to_military_time(per_callsign_rota["summer_start"].values[0])}
-to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
-and {to_military_time(per_callsign_rota["winter_start"].values[0])}
-to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
-"""
-            # quarto_string += "🚁 "
-            quarto_string += helicopter_rota_string
-            st.caption(helicopter_rota_string)
-
-        num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
-        quarto_string += "\n\n### "
-        quarto_string += num_cars_string
-        quarto_string += "\n\n"
-        st.write(num_cars_string)
-        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
-        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
-
-
-        for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
-            per_callsign_rota = rota[rota["callsign"]==car]
-            car_rota_string = f"""
-{car} is a {per_callsign_rota["model"].values[0]} and runs
-from {to_military_time(per_callsign_rota["summer_start"].values[0])}
-to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
-and {to_military_time(per_callsign_rota["winter_start"].values[0])}
-to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
-"""
-            # quarto_string += "🚗 "
-            quarto_string += car_rota_string
-            st.caption(car_rota_string)
-
-
-        if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
-            if st.session_state.overall_demand_mult == 100:
-                demand_adjustment_string = f"Demand is based on historically observed demand with no adjustments."
-            elif st.session_state.overall_demand_mult < 100:
-                demand_adjustment_string = f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand."
-            elif st.session_state.overall_demand_mult > 100:
-                demand_adjustment_string = f"Modelled demand is {st.session_state.overall_demand_mult-100}% more than historically observed demand."
-
-            st.write(demand_adjustment_string)
-
-            quarto_string += "\n\n### Simulation Parameters\n\n"
-            quarto_string += demand_adjustment_string
-            quarto_string += "\n\n"
-
-        # TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted
-        elif st.session_state.demand_adjust_type == "Per Season Demand Adjustment":
-            pass
-
-        elif st.session_state.demand_adjust_type == "Per AMPDS Code Demand Adjustment":
-            pass
-
-        else:
-            st.error("TELL A DEVELOPER: Check Conditional Code for demand modifier in model.py")
-
-
-        with stylable_container(css_styles="""
-hr {
-    border-color: #a6093d;
-    background-color: #a6093d;
-    color: #a6093d;
-    height: 1px;
-  }
-""", key="hr"):
-            st.divider()
-
-        replication_string = f"The model will run {st.session_state.number_of_runs_input} replications of {st.session_state.sim_duration_input} days, starting from {datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').strftime('%A %d %B %Y')}."
-
-        st.write(replication_string)
-        quarto_string += replication_string.replace("will run", "ran")
-        quarto_string += "\n\n"
-
-        quarto_string += f"Activity durations are modified by a factor of {st.session_state.activity_duration_multiplier}\n\n"
-
-        if st.session_state.create_animation_input:
-            st.write("An animated output will be created.")
-            st.info("Turn off this option if the model is running very slowly!")
-        else:
-            st.write("No animated output will be created.")
-
-        if st.session_state.amb_data:
-            st.write("SWAST Ambulance Activity will be modelled.")
-        else:
-            st.write("SWAST Ambulance Activity will not be modelled.")
-
+    debug_messages = st.toggle("Turn on debugging messages", False,
+                               help="This will turn on display of messages in the developer terminal")
+    _app_utils.summary_sidebar(quarto_string=quarto_string)
 
 with stylable_container(key="run_buttons",
             css_styles=f"""
@@ -263,7 +132,8 @@ if button_run_pressed:
                             ),
                         amb_data=st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
+                        print_debug_messages=debug_messages
                     )
 
                 results.append(
@@ -292,7 +162,9 @@ if button_run_pressed:
                             ),
                         amb_data = st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier)
+                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
+                        print_debug_messages=debug_messages
+
             )
             collateRunResults()
             results_all_runs = pd.read_csv("data/run_results.csv")
@@ -348,6 +220,7 @@ if button_run_pressed:
                 _utilisation_result_calculation.make_RWC_utilisation_dataframe(
                     historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
                     rota_path="actual_data/HEMS_ROTA.csv",
+                    callsign_path="actual_data/callsign_registration_lookup.csv",
                     service_path="data/service_dates.csv"
                     )
                 )
@@ -367,11 +240,8 @@ if button_run_pressed:
                     st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
                             perc_unattended,
                             border=True)
-
-                    st.warning("""
-Data on the number of calls that were historically not attended due to resource unavailability is being added soon - a comparison with the model's figures
-will be available at this point
-                            """)
+                    missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
+                    st.caption(f"This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically")
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
@@ -379,14 +249,22 @@ will be available at this point
 
                     quarto_string += missed_calls_description
 
+                    # with st.expander("View Breakdown"):
+                    #     outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
+                    #     outcome_df["Count"] = (outcome_df["Count"]/st.session_state.number_of_runs_input).round(0)
+                    #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
+                    #     st.dataframe(outcome_df)
+
             with t1_col2:
                 quarto_string += "\n\n## Resource Utilisation"
-                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = _utilisation_result_calculation.make_utilisation_model_dataframe(
+                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
+                    _utilisation_result_calculation.make_utilisation_model_dataframe(
                     path="data/run_results.csv",
                     params_path="data/run_params_used.csv",
                     service_path="data/service_dates.csv",
-                    rota_path="data/hems_rota_used.csv"
-                )
+                    callsign_path="actual_data/callsign_registration_lookup.csv",
+                    rota_path="actual_data/HEMS_ROTA.csv"
+                ))
 
                 print(utilisation_df_overall)
 
@@ -435,11 +313,11 @@ will be available at this point
 
             st.divider()
 
-            cars = ["C70", "C71", "C72"]
+            cars = ["CC70", "CC71", "CC72"]
 
             car_metric_cols = st.columns(len(cars))
 
-            historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
+            # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
 
             for idx, col in enumerate(car_metric_cols):
                 with col:
@@ -449,16 +327,16 @@ will be available at this point
                         print(utilisation_df_overall)
                         car_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']==car_callsign]['PRINT_perc'].values[0]
 
-                        quarto_string += f"\n\nAverage simulated C{car_callsign} utilisation was {car_util_fig}\n\n"
+                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
 
-                        st.metric(f"Average Simulated C{car_callsign} Utilisation",
+                        st.metric(f"Average Simulated {car_callsign} Utilisation",
                                 car_util_fig,
                                 border=True)
 
                     car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
                         historical_utilisation_df_summary, car_callsign, "mean"
                     )
-                    car_util_fig_hist = f"*The historical average utilisation of C{car_callsign} was {car_util_hist}%*\n\n"
+                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
 
                     quarto_string += car_util_fig_hist
 
@@ -468,17 +346,6 @@ will be available at this point
 
 
             t1_col3, t1_col4 = st.columns(2)
-
-#             with t1_col3:
-#                 with iconMetricContainer(key="preferred_response_metric", icon_unicode="e838", family="outline"):
-#                     st.metric("Preferred Resource Allocated",
-#                             "907 of 1203 (75.4%)",
-#                             border=True)
-#                     st.caption("""
-# This is the percentage of time where the 'preferred' resource was available at the time of the call
-# for response.
-# """)
-
 
         with tab2:
             tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "'Missed' Calls"])
@@ -531,10 +398,11 @@ will be available at this point
         with tab3:
 
             # tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4 = st.tabs([
+            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
                 "Jobs per Month",
-                "Jobs per Hour",
-                "Jobs per Day",
+                "Jobs by Hour of Day",
+                "Jobs by Day of Week",
+                "Jobs per Day - Distribution",
                 "Job Durations - Overall",
                 # "Job Durations - Split"
                 ])
@@ -572,7 +440,8 @@ will be available at this point
                             use_poppins=True,
                             show_historical=show_real_data,
                             show_historical_individual_years=show_historical_individual_years,
-                            historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
+                            historical_monthly_job_data_path="historical_data/historical_monthly_totals_all_calls.csv",
+                            job_count_col="inc_date"
                             )
 
                     _job_count_calculation.plot_monthly_calls(
@@ -581,7 +450,8 @@ will be available at this point
                             use_poppins=False,
                             show_historical=show_real_data,
                             show_historical_individual_years=show_historical_individual_years,
-                            historical_monthly_job_data_path="historical_data/historical_jobs_per_month.csv"
+                            historical_monthly_job_data_path="historical_data/historical_monthly_totals_all_calls.csv",
+                            job_count_col="inc_date"
                             ).write_html("app/fig_outputs/fig_monthly_calls.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
 
 
@@ -705,35 +575,70 @@ Partial months are excluded for ease of interpretation.
                         fig_day_of_week
                     )
 
+
                 plot_jobs_per_day()
 
             with tab_3_4:
+                @st.fragment()
+                def plot_days_with_job_count_hist():
+                    call_df = get_job_count_df()
+                    call_df["day"] = pd.to_datetime(call_df["timestamp_dt"]).dt.date
+                    daily_call_counts = call_df.groupby(['run_number', 'day'])['P_ID'].agg("count").reset_index().rename(columns={"P_ID": "Calls per Day"})
+
+                    call_count_hist = px.histogram(daily_call_counts, x="Calls per Day",
+                                                title="Distribution of Jobs Per Day in Simulation")
+
+                    call_count_hist.update_layout(bargap=0.03, xaxis = dict(
+                            tickmode = 'linear',
+                            tick0 = 0,
+                            dtick = 1
+                        ))
+
+                    call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html", full_html=False, include_plotlyjs='cdn')
+
+                    st.plotly_chart(call_count_hist.update_layout(font=dict(family="Poppins", size=18, color="black")))
+
+                plot_days_with_job_count_hist()
+
+                st.caption("""
+This plot looks at the number of days across all repeats of the simulation where each given number of calls was observed (i.e. on how many days was one call received, two calls, three calls, and so on).
+                           """)
+
+                st.info("The historical information about the number of calls received per day will be added when available.")
+
+            with tab_3_5:
                 historical_time_df = _job_time_calcs.get_historical_times(
                             'historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
                             )
 
-                fig_job_durations_historical =  _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
-                        historical_time_df,
-                        utilisation_model_df=_job_time_calcs.get_total_times_model(
+                simulated_job_time_df = _job_time_calcs.get_total_times_model(
                             get_summary=False,
                             path="data/run_results.csv",
                             params_path="data/run_params_used.csv",
-                            rota_path="data/hems_rota_used.csv",
-                            service_path="data/service_dates.csv"),
+                            rota_path="actual_data/HEMS_ROTA.csv",
+                            service_path="data/service_dates.csv",
+                            callsign_path="actual_data/callsign_registration_lookup.csv"
+                            )
+
+                simulated_job_time_df.to_csv("temp_test.csv")
+
+                # Create plot for inclusion in streamlit
+                fig_job_durations_historical =  _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
+                        historical_activity_times=historical_time_df,
+                        utilisation_model_df=simulated_job_time_df,
                         use_poppins=True
                         )
 
-                _job_time_calcs.plot_historical_utilisation_vs_simulation_overall(
-                        historical_time_df,
-                        utilisation_model_df=_job_time_calcs.get_total_times_model(
-                            get_summary=False,
-                            path="data/run_results.csv",
-                            params_path="data/run_params_used.csv",
-                            rota_path="data/hems_rota_used.csv",
-                            service_path="data/service_dates.csv"),
+                # Rerun plot, writing to HTML
+                # Note rerunning is necessary due to the need to pass include_poppins=False
+                # the second time around
+                _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
+                        historical_activity_times=historical_time_df,
+                        utilisation_model_df=simulated_job_time_df,
                         use_poppins=False
                         ).write_html("app/fig_outputs/fig_job_durations_historical.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
 
+                # Include job durations plot in streamlit app
                 st.plotly_chart(
                    fig_job_durations_historical
                     )
@@ -743,38 +648,10 @@ This plot looks at the total amount of time each resource was in use during the 
 
 All simulated points are represented in the box plots.
 
-The blue bars give an indication of the historical averages
-
-We would expect the median - the central horizontal line within the box portion of the box plots -
-to fall within the blue box for each resource type, and likely to be fairly central within that
-region.
+The blue bars give an indication of the historical averages. We would expect the median - the
+central horizontal line within the box portion of the box plots - to fall within the blue box for
+each resource type, and likely to be fairly central within that region.
 """)
-
-            # with tab_3_5:
-            #     event_log_df = _job_time_calcs.create_simulation_event_duration_df(
-            #                 event_log_path="data/run_results.csv"
-            #                 )
-
-
-
-            #     st.plotly_chart(
-            #         _job_time_calcs.plot_activity_time_breakdowns(
-            #             historical_activity_times=historical_time_df,
-            #             event_log_df=event_log_df,
-            #             title="Simulation Event Times Breakdown - Helicopter",
-            #             vehicle_type="helicopter"
-            #         )
-            #     )
-
-            #     st.plotly_chart(
-            #         _job_time_calcs.plot_activity_time_breakdowns(
-            #             historical_activity_times=historical_time_df,
-            #             event_log_df=event_log_df,
-            #             title="Simulation Event Times Breakdown - Car",
-            #             vehicle_type="car"
-            #         )
-            #     )
-
         with tab4:
 
             st.caption("""
@@ -783,12 +660,13 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2 = st.tabs(["Debug Resources", "Debug Events"])
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events",
+                                                          "Process Analytics", "Process Analytics - Resources"])
 
             with tab_4_1:
                 st.subheader("Resource Use")
 
-                resource_use_events_only = results_all_runs[results_all_runs["event_type"].str.contains("resource_use")]
+                resource_use_events_only = results_all_runs[(results_all_runs["event_type"] == "resource_use") | (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True)
 
                 # Accounting for odd bug being seen in streamlit community cloud
                 if 'P_ID' not in resource_use_events_only.columns:
@@ -799,8 +677,8 @@ Most users will not need to look at the visualisations in this tab.
                 def resource_use_exploration_plots():
 
                     run_select_ruep = st.selectbox("Choose the run to show",
-                                resource_use_events_only["run_number"].unique())
-
+                            resource_use_events_only["run_number"].unique()
+                        )
 
                     with st.expander("Click here to see the timings of resource use"):
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
@@ -808,10 +686,10 @@ Most users will not need to look at the visualisations in this tab.
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
                                         .melt(id_vars=["P_ID", "time_type", "event_type"],
-                                        value_vars="timestamp_dt"))
+                                        value_vars="timestamp_dt").drop_duplicates())
 
                         resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [["P_ID", "time_type", "timestamp_dt", "event_type"]]
+                            [["P_ID", "time_type", "timestamp_dt", "event_type"]].drop_duplicates()
                             .pivot(columns="event_type", index=["P_ID","time_type"], values="timestamp_dt").reset_index())
 
                         # get the number of referrals and assign them a value
@@ -825,7 +703,6 @@ Most users will not need to look at the visualisations in this tab.
                         # Compute duration for each resource use
                         resource_use_wide["resource_use_end"] = pd.to_datetime(resource_use_wide["resource_use_end"])
                         resource_use_wide["resource_use"] = pd.to_datetime(resource_use_wide["resource_use"])
-                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
 
                         # Convert time to numeric (e.g., seconds since the first event)
                         time_origin = resource_use_wide["resource_use"].min()  # Set the reference time
@@ -833,7 +710,6 @@ Most users will not need to look at the visualisations in this tab.
                         # resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
 
                         # Compute duration
-                        # resource_use_wide["duration"] = resource_use_wide["resource_use_end_numeric"] - resource_use_wide["resource_use_numeric"]
                         resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
 
                         # Compute duration as seconds and multiply by 1000 (to account for how datetime axis
@@ -851,6 +727,7 @@ Most users will not need to look at the visualisations in this tab.
                         # Load in the servicing schedule df
                         ######################################
                         service_schedule = pd.read_csv("data/service_dates.csv")
+                        service_schedule = service_schedule.merge(pd.read_csv("actual_data/callsign_registration_lookup.csv"))
                         # Convert to appropriate datatypes
                         service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
                         service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
@@ -858,7 +735,8 @@ Most users will not need to look at the visualisations in this tab.
                         service_schedule["duration_seconds"] = (service_schedule["service_end_date"] - service_schedule["service_start_date"]).dt.total_seconds()*1000
                         service_schedule["duration_days"] = (service_schedule["duration_seconds"] / 1000) / 60 / 60 / 24
                         # Match y position of the resource in the rest of the plot
-                        service_schedule["y_pos"] = service_schedule["resource"].map(resource_dict)
+                        print(f"resource_dict: {resource_dict}")
+                        service_schedule["y_pos"] = service_schedule["callsign"].map(resource_dict)
                         # Limit the dataframe to only contain servicing
                         service_schedule = service_schedule[(service_schedule["service_start_date"] <= resource_use_wide.resource_use.max()) &
                                         (service_schedule["service_end_date"] >= resource_use_wide.resource_use.min())]
@@ -872,7 +750,7 @@ Most users will not need to look at the visualisations in this tab.
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
 
-                        service_schedule_df = service_schedule[service_schedule["resource"]==callsign]
+                        service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
                         # Add in hatched boxes showing the servicing periods
                         if len(service_schedule_df) > 0:
@@ -887,7 +765,7 @@ Most users will not need to look at the visualisations in this tab.
                                             line=dict(color="black", width=1)
                                             ),
                                 name=f"Servicing = {callsign}",
-                                customdata=service_schedule_df[['resource','duration_days','service_start_date', 'service_end_date']],
+                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date']],
                                 hovertemplate="Servicing %{customdata[0]} lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
                             ))
 
@@ -928,14 +806,14 @@ Most users will not need to look at the visualisations in this tab.
                     )
 
                     resource_use_fig.update_xaxes(rangeslider_visible=True,
-                    # rangeselector=dict(
-                    #     buttons=list([
-                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
-                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
-                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
-                    #         dict(step="all")
-                    #     ]))
+                    rangeselector=dict(
+                        buttons=list([
+                            dict(count=1, label="1m", step="month", stepmode="backward"),
+                            dict(count=6, label="6m", step="month", stepmode="backward"),
+                            dict(count=1, label="YTD", step="year", stepmode="todate"),
+                            dict(count=1, label="1y", step="year", stepmode="backward"),
+                            dict(step="all")
+                        ]))
                     )
 
                     resource_use_fig.write_html("app/fig_outputs/resource_use_fig.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
@@ -945,6 +823,33 @@ Most users will not need to look at the visualisations in this tab.
                     )
 
                 resource_use_exploration_plots()
+
+                st.caption("""
+This visual shows the resource use of each resource throughout the simulation.
+
+Grey hatched boxes indicate the time the resource was away for servicing.
+
+- For H70 (g-daas), it is assumed that H71 (g-daan) will be reallocated the callsign H70 during the
+service period for g-daas. Therefore, for the H70 line, we would expect calls to continue being allocated
+to H70 during its service period, **but we would expect H71 to consequently show no activity in that period.**
+
+- For the servicing of H71 (g-daan), it is assumed that g-daan will be unavailable during that period
+and no callsign reallocation will occur, so we would anticipate no activity occurring for H71 during that period.
+
+CC70 and CC71 are backup vehicles, for use in the event that their associated helicopter cannot fly
+for any reason (pilot unavailability, servicing, etc.).
+
+It should be the case that resources from the same callsign group (H70 & CC70, H71 & CC71) cannot ever be allocated
+to a job at the same time, as it is assumed that a single crew is available for each callsign group.
+
+Unavailability of cars due to servicing is not modelled; cars are assumed to always be available.
+
+*The handles at the bottom of the plot can be used to zoom in to a shorter period of time, allowing
+you to more clearly see patterns of resource use. The '1m, 6m, YTD, 1y' buttons at the top of the plot
+can also be used to adjust the chosen time period. Double click on the plot or click on the 'reset axes'
+button at the top right - which will only appear when hovering over the plot - to reset to looking at
+the overall time period.*
+            """)
 
             with tab_4_2:
                 st.subheader("Event Overview")
@@ -1110,6 +1015,77 @@ Most users will not need to look at the visualisations in this tab.
 
                 patient_viz()
 
+            with tab_4_3:
+                _process_analytics.create_event_log("data/run_results.csv")
+
+                print("Current working directory:", os.getcwd())
+
+                # This check is a way to guess whether it's running on
+                # Streamlit community cloud
+                if platform.processor() == '':
+                    try:
+                        process1 = subprocess.Popen(["Rscript", "app/generate_bupar_outputs.R"],
+                                                    stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    text=True,
+                                                    cwd="app")
+
+                    except:
+                        # Get absolute path to the R script
+                        script_path = Path(__file__).parent / "generate_bupar_outputs.R"
+                        st.write(f"Trying path: {script_path}" )
+
+                        process1 = subprocess.Popen(["Rscript", str(script_path)],
+                                                    stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    text=True)
+
+                else:
+                    result = subprocess.run(["Rscript", "app/generate_bupar_outputs.R"],
+                                            capture_output=True, text=True)
+                try:
+                    st.subheader("Process - Absolute Frequency")
+                    st.image("visualisation/absolute_frequency.svg")
+                except:
+                    st.warning("Process maps could not be generated")
+
+                try:
+                    # st.html("visualisation/anim_process.html")
+                    components.html("visualisation/anim_process.html")
+                except:
+                    st.warning("Animated Process maps could not be generated")
+
+                try:
+                    # st.subheader("Process - Absolute Cases")
+                    # st.image("visualisation/absolute_case.svg")
+
+                    st.subheader("Performance - Average (Mean) Transition and Activity Times")
+                    st.image("visualisation/performance_mean.svg")
+
+                    st.subheader("Performance - Maximum Transition and Activity Times")
+                    st.image("visualisation/performance_max.svg")
+
+                    st.subheader("Activity - Processing Time - activity")
+                    st.image("visualisation/processing_time_activity.svg")
+
+                    st.subheader("Activity - Processing Time - Resource/Activity")
+                    st.image("visualisation/processing_time_resource_activity.svg")
+                except:
+                    st.warning("Process maps could not be generated")
+
+
+            with tab_4_4:
+                try:
+                    st.subheader("Activities - by Resource")
+                    st.image("visualisation/relative_resource_level.svg")
+                except:
+                    st.warning("Animated process maps could not be generated")
+
+                try:
+                    # st.html("visualisation/anim_resource_level.html")
+                    components.html("visualisation/anim_resource_level.html")
+                except:
+                    st.warning("Animated process maps could not be generated")
 
 
         with tab5:

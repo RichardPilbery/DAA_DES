@@ -36,24 +36,6 @@ with col2:
 
 st.caption(get_text("page_description", text_df))
 
-# with st.expander(get_text("expander_title_template", text_df)):
-#     st.caption(get_text("expander_description_template", text_df))
-#     col_template_1, col_template_2 = st.columns(2)
-
-#     with col_template_1:
-#         st.file_uploader(get_text("file_uploader_button", text_df), type="xlsx",
-#                          disabled=True)
-
-
-#     with col_template_2:
-#         st.write(get_text("file_template_download_hint", text_df))
-#         st.download_button(data="parameter_template.xlsx",
-#                            label=get_text("file_template_download_button", text_df),
-#                            file_name="daa_simulation_model_parameters_TEMPLATE.xlsx",
-#                            disabled=True)
-
-# st.divider()
-
 st.button(get_text("reset_parameters_button", text_df),
           type="primary",
           on_click=reset_to_defaults,
@@ -82,7 +64,9 @@ the fleet, this is planned for a future version of the model.*
             disabled=True,
             value=st.session_state.num_helicopters,
             help=get_text("help_helicopters", text_df),
-            on_change= lambda: setattr(st.session_state, 'num_helicopters', st.session_state.key_num_helicopters),
+            on_change= lambda: setattr(st.session_state,
+                                       'num_helicopters',
+                                       st.session_state.key_num_helicopters),
             key="key_num_helicopters"
             )
 
@@ -94,14 +78,25 @@ the fleet, this is planned for a future version of the model.*
             disabled=True,
             value=st.session_state.num_cars,
             help=get_text("help_cars", text_df),
-            on_change= lambda: setattr(st.session_state, 'num_cars', st.session_state.key_num_cars),
+            on_change= lambda: setattr(st.session_state,
+                                       'num_cars',
+                                       st.session_state.key_num_cars),
             key="key_num_cars"
             )
 
-    # st.subheader(get_text("header_fleet_makeup", text_df))
-
+    # TODO: Refactor - pick these up from utils file instead of reading in at this stage
     original_rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
-    original_rota["callsign_count"] = original_rota.groupby('callsign_group')['callsign_group'].transform('count')
+    callsign_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+    models = pd.read_csv("actual_data/service_schedules_by_model.csv")
+
+    original_rota = original_rota.merge(callsign_lookup, how="left", on="callsign")
+
+    original_rota = original_rota.merge(models,
+                                        how="left", on=['vehicle_type','model'])
+
+    original_rota["callsign_count"] = (
+        original_rota.groupby('callsign_group')['callsign_group'].transform('count')
+        )
 
     default_helos = original_rota[original_rota["vehicle_type"]=="helicopter"]
     default_cars = original_rota[(original_rota["vehicle_type"]=="car") &
@@ -111,7 +106,8 @@ the fleet, this is planned for a future version of the model.*
 
     if st.session_state.num_helicopters == 1:
         fleet_makeup_list.append(default_helos.head(1))
-        defaul_helos = default_helos.head(1)
+        default_helos = default_helos.head(1)
+
     elif st.session_state.num_helicopters >= 2:
         fleet_makeup_list.append(default_helos)
 
@@ -137,7 +133,8 @@ the fleet, this is planned for a future version of the model.*
             "winter_start"         : 7,
             "summer_end"           : 19,
             "winter_end"           : 17,
-            "model"                : "Airbus H145"
+            "model"                : "Airbus H145",
+            "registration"         : "g-zzzz"
         }
             )
 
@@ -148,9 +145,10 @@ the fleet, this is planned for a future version of the model.*
     # that is created
     if st.session_state.num_cars > 1:
         for i in range(1, st.session_state.num_cars):
+            callsign_generated_car = f"CC{initial_fleet_df['callsign_group'].astype('int').max()+st.session_state.num_helicopters+i}"
             fleet_additional_car_list.append(
                 {
-            "callsign"             : f"CC{initial_fleet_df['callsign_group'].astype('int').max()+st.session_state.num_helicopters+i}",
+            "callsign"             : callsign_generated_car,
             "category"             : "CC",
             "vehicle_type"         : "car",
             "callsign_group"       : initial_fleet_df['callsign_group'].astype('int').max()+st.session_state.num_helicopters+i,
@@ -158,7 +156,8 @@ the fleet, this is planned for a future version of the model.*
             "winter_start"         : 8,
             "summer_end"           : 18,
             "winter_end"           : 18,
-            "model"                : "Volvo XC90"
+            "model"                : "Volvo XC90",
+            "registration"         : callsign_generated_car
         }
             )
 
@@ -189,7 +188,13 @@ the fleet, this is planned for a future version of the model.*
 
     return final_helo_df, final_car_df
 
+# Setup up the initial fleet dataframes using default values
 final_helo_df, final_car_df = fleet_setup()
+print("=== Initial Fleet Dataframes ===")
+print("Helos")
+print(final_helo_df)
+print("Car")
+print(final_car_df)
 
 st.markdown("#### Set the Fleet Details")
 
@@ -199,25 +204,29 @@ with col_summer:
 with col_winter:
     st.caption(get_text("winter_rota_help", text_df))
 
-
-
 @st.fragment
 def fleet_editors(final_helo_df, final_car_df):
     # Create an editable dataframe for people to modify the parameters in
     st.markdown("##### Helicopters")
+
+    st.info("Single resources with different levels of care at different times will be represented as two rows with non-overlapping rota times")
+
     st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
 
     updated_helo_df = st.data_editor(
         final_helo_df.reset_index(),
         disabled=["vehicle_type"],
         hide_index=True,
-        column_order=["vehicle_type", "callsign", "category", "model",
+        column_order=["vehicle_type", "callsign", "registration", "category", "model",
                     "summer_start", "summer_end", "winter_start", "winter_end"],
         column_config={
             "vehicle_type": "Vehicle Type",
             "callsign": st.column_config.TextColumn(
                 "Callsign", disabled=True
                 ),
+            "registration": st.column_config.TextColumn(
+                "Registration", disabled=True
+            ),
             "category": st.column_config.SelectboxColumn(
                 "Care Type",
                 options=["EC", "CC"],
@@ -258,17 +267,23 @@ In the table below you can also alter the parameters of the *additional* cars th
 group and operate as a totally separate resource to the helicopters.""")
     st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
 
+
     final_car_df["vehicle_type"] = final_car_df["vehicle_type"].apply(lambda x: x.title())
 
     updated_car_df = st.data_editor(final_car_df.reset_index(),
                                     hide_index=True,
                                     disabled=["vehicle_type"],
-                                    column_order=["vehicle_type", "callsign", "category", "model", "summer_start", "summer_end", "winter_start", "winter_end"],
+                                    column_order=["vehicle_type", "callsign", "registration", "category",
+                                                  "model", "summer_start", "summer_end",
+                                                  "winter_start", "winter_end"],
                                     column_config={
             "vehicle_type": "Vehicle Type",
             "callsign": st.column_config.TextColumn(
                 "Callsign", disabled=True
                 ),
+            "registration": st.column_config.TextColumn(
+                "Registration", disabled=True
+            ),
             "category": st.column_config.SelectboxColumn(
                 "Care Type", options=["EC", "CC"],
                 disabled=True
@@ -306,9 +321,27 @@ group and operate as a totally separate resource to the helicopters.""")
     # Add callsign group column back in
     final_rota["callsign_group"] = final_rota["callsign"].str.extract("(\d+)")
 
+    # print(final_rota)
+
+    # # Merge with service schedule df to get actual servicing intervals for chosen model
+    # final_rota = final_rota.merge(
+    #     u.SERVICING_SCHEDULES_BY_MODEL.merge(
+    #         pd.read_csv("actual_data/callsign_registration_lookup.csv"), how="left", on="model"),
+    #     on=["model","registration"], how="left"
+    #     )
+
+    print("Final Rota - Before Companion Cars")
+    print(final_rota)
+
+    ###############
+    # Companion Cars
+    ###############
+
     # Take a copy of the helicopter df to allow us to create the cars that go alongside it
     # We can assume operating hours and care category will be the same
     companion_car_df = updated_helo_df.copy()
+    print("Initial Companion Car df")
+    print(companion_car_df)
 
     # TODO: For now, we have hardcoded companion cars to be Volvo XC90s
     companion_car_df["model"] = "Volvo XC90"
@@ -319,7 +352,16 @@ group and operate as a totally separate resource to the helicopters.""")
     # Add callsign group column
     companion_car_df["callsign_group"] = companion_car_df["callsign"].str.extract("(\d+)")
     # Remove 'last_service' date
-    companion_car_df = companion_car_df.drop(columns=["last_service"])
+    # SR UPDATE 26/3 - no longer needed due to RP redesign of this df
+    # companion_car_df = companion_car_df.drop(columns=["last_service"])
+
+    # Merge with service schedule df to get actual servicing intervals for chosen model
+    companion_car_df.drop(columns=["service_schedule_months", "service_duration_weeks"])
+
+    companion_car_df = companion_car_df.merge(
+        u.SERVICING_SCHEDULES_BY_MODEL,
+        on=["model","vehicle_type"], how="left"
+        )
 
     # Join this onto the list of helicopters and separate cars, then sort
     final_rota = (pd.concat([final_rota, companion_car_df])
@@ -329,16 +371,15 @@ group and operate as a totally separate resource to the helicopters.""")
 
     # Remove the servicing columns as they will reflect the originally set models in the
     # default rota
-    final_rota = final_rota.drop(columns=["service_schedule_months","service_duration_weeks"])
+    # SR Comment 26/3 - testing removal after RP redesign of service schedule monitoring
+    # final_rota = final_rota.drop(columns=["service_schedule_months","service_duration_weeks"])
 
+    print("Generated Rota")
     print(final_rota)
 
-    # Merge with service schedule df to get actual servicing intervals for chosen model
-    # of helicopter
-    final_rota = final_rota.merge(u.SERVICING_SCHEDULES_BY_MODEL, on="model", how="left")
-
+    print("Servicing Schedules by Model")
     print(u.SERVICING_SCHEDULES_BY_MODEL)
-
+    print("Final Rota after Merge with Servicing Schedules")
     print(final_rota)
 
     # Convert the time columns back to something the model can understand
@@ -346,13 +387,15 @@ group and operate as a totally separate resource to the helicopters.""")
         final_rota[col] = final_rota[col].apply(lambda x: x.hour)
 
     # Sort the columns into the order of the original rota
-    column_order = u.HEMS_ROTA_DEFAULT.columns
-    final_rota = final_rota[column_order]
-
-    # print(final_rota)
-
+    # Write back
+    final_rota_cols = pd.read_csv('actual_data/HEMS_ROTA_DEFAULT.csv').columns
     # Write the rota back to a csv
-    final_rota.to_csv('actual_data/HEMS_ROTA.csv', index=False)
+    final_rota[final_rota_cols].to_csv('actual_data/HEMS_ROTA.csv', index=False)
+
+    callsign_registration_lookup_cols = pd.read_csv('actual_data/callsign_registration_lookup_DEFAULT.csv').columns
+    callsign_output = final_rota[callsign_registration_lookup_cols].drop_duplicates()
+    callsign_output['registration'] = callsign_output.apply(lambda x: x["callsign"].lower() if "CC" in x["callsign"] else x["registration"], axis=1)
+    callsign_output.to_csv('actual_data/callsign_registration_lookup.csv', index=False)
 
 fleet_editors(final_helo_df, final_car_df)
 
@@ -441,45 +484,6 @@ if demand_adjust_type == "Overall Demand Adjustment":
 
 st.divider()
 
-# st.subheader(get_text("header_scenario", text_df))
-
-# # TODO: Make these do something more than just display a notification!
-# st.caption(get_text("scenario_comparison_help", text_df))
-# scenario_1_button_col, scenario_2_button_col = st.columns(2)
-
-# with scenario_1_button_col:
-#     with stylable_container(
-#         css_styles="""
-#                 button {
-#                         background-color: #00205b;
-#                         color: white;
-#                     }
-#                     """,
-#         key="blue_buttons"
-#         ):
-#         st.button(
-#             "Set Scenario 1 to Current Parameters",
-#             on_click=set_scenario_1_params,
-#             disabled=True
-#             )
-
-# with scenario_2_button_col:
-#     with stylable_container(
-#         css_styles="""
-#                 button {
-#                         background-color: #00205b;
-#                         color: white;
-#                     }
-#                     """,
-#         key="blue_buttons"
-#         ):
-#         st.button(
-#         "Set Scenario 2 to Current Parameters",
-#         type="primary",
-#         disabled=True,
-#         on_click=set_scenario_2_params
-#         )
-
 # st.divider()
 
 st.header(get_text("additional_params_header", text_df))
@@ -521,7 +525,9 @@ def additional_params_expander():
         "Select the starting day for the simulation",
         value=st.session_state.sim_start_date_input,
         on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input.strftime("%Y-%m-%d")),
-        key="key_sim_start_date_input"
+        key="key_sim_start_date_input",
+        min_value="today",
+        max_value="2027-01-01"
     ).strftime("%Y-%m-%d")
 
     sim_start_time_input = st.time_input(
@@ -561,21 +567,6 @@ with st.expander(get_text("additional_params_expander_title", text_df)):
 
 st.divider()
 
-# st.subheader(get_text("header_params_reuse", text_df))
-
-# st.caption(get_text("params_reuse_description", text_df))
-
-# # TODO - This just currently redownloads the blank template
-# # Will need to populate this
-# st.download_button(data="parameter_template.xlsx",
-#                     label="Click to Download the Parameter File",
-#                     type="primary",
-#                     disabled=True,
-#                     file_name=f"daa_simulation_model_parameters_{datetime.now()}.xlsx"
-# )
-
-# st.divider()
-
 with st.sidebar:
     with stylable_container(
         css_styles=f"""
@@ -589,6 +580,3 @@ with st.sidebar:
         if st.button("Finished setting up parameters?\n\nClick here to go to the model page",
                      icon=":material/play_circle:"):
             st.switch_page("model.py")
-        # if st.button("Set up two scenarios you want to compare? Click here to go to the scenario comparison page",
-        #              icon=":material/compare:"):
-        #     st.switch_page("compare_scenarios.py")

@@ -16,7 +16,7 @@ import pandas as pd
 import re
 
 def calculate_available_hours(params_df,
-        rota_path="../data/hems_rota_used.csv",
+        rota_path="../actual_data/HEMS_ROTA.csv",
         # service_data_path="../data/service_dates.csv"
         ):
     """
@@ -110,7 +110,7 @@ def calculate_available_hours(params_df,
 
     # TODO: There is a mismatch here and need to investigate further where it's actually occurring
     # Fixing here for now, but will need to remove this if it's sorted elsewhere
-    total_avail_hours.index = total_avail_hours.index.str.replace("CC", "C")
+    # total_avail_hours.index = total_avail_hours.index.str.replace("CC", "C")
 
     total_avail_hours.columns = ["total_available_hours_in_sim"]
 
@@ -125,8 +125,9 @@ def calculate_available_hours(params_df,
 
 
 def calculate_available_hours_v2(params_df,
-    rota_data,#=pd.read_csv("../data/hems_rota_used.csv"),
+    rota_data,#=pd.read_csv("../actual_data/HEMS_ROTA.csv"),
     service_data,#=pd.read_csv("../data/service_dates.csv"),
+    callsign_data,
     output_by_month=False,
     long_format_df=False
 ):
@@ -157,6 +158,11 @@ def calculate_available_hours_v2(params_df,
 #     daily_df = pd.DataFrame(daily_data)
     rota_df = pd.DataFrame(rota_data)
     service_df = pd.DataFrame(service_data)
+
+    callsign_df = pd.DataFrame(callsign_data)
+
+    rota_df = rota_df.merge(callsign_df, on="callsign")
+    service_df = service_df.merge(callsign_df, on="registration")
 
     # Convert date columns to datetime format
     daily_df['date'] = pd.to_datetime(daily_df['date'])
@@ -191,7 +197,7 @@ def calculate_available_hours_v2(params_df,
 
             # Adjust for servicing periods
             service_downtime = 0
-            for _, service in service_df[service_df['resource'] == callsign].iterrows():
+            for _, service in service_df[service_df['callsign'] == callsign].iterrows():
                 if service['service_start_date'] <= current_date <= service['service_end_date']:
                     service_downtime = daily_available_time * 60
                     break
@@ -208,7 +214,6 @@ def calculate_available_hours_v2(params_df,
 
     theoretical_availability_df.fillna(0.0)
 
-
     theoretical_availability_df_long = (
         theoretical_availability_df
         .melt(id_vars="month")
@@ -219,6 +224,7 @@ def calculate_available_hours_v2(params_df,
 
     daily_available_minutes = theoretical_availability_df_long.copy()
 
+    print("==Daily Available Minutes==")
     print(daily_available_minutes)
 
     total_avail_minutes = daily_available_minutes.groupby('callsign')[['theoretical_availability']].sum(numeric_only=True).reset_index().rename(columns={'theoretical_availability':'total_available_minutes_in_sim'})
@@ -232,13 +238,17 @@ def calculate_available_hours_v2(params_df,
 
 def resource_allocation_outcomes(event_log_df):
     n_runs = len(event_log_df["run_number"].unique())
-    return (
+    resource_allocation_outcomes_df = (
         (event_log_df[event_log_df['event_type']=="resource_preferred_outcome"]
          .groupby(['time_type'])[['time_type']].count()/n_runs)
          .round(0).astype('int')
          .rename(columns={'time_type': 'Count'})
          .reset_index().rename(columns={'time_type': 'Resource Allocation Attempt Outcome'})
     )
+    print("==_vehicle_calculation.py - resource_allocation_outcomes==")
+    print(resource_allocation_outcomes_df)
+    return resource_allocation_outcomes_df
+
 
 def resource_allocation_outcomes_run_variation(event_log_df):
     n_runs = len(event_log_df["run_number"].unique())
@@ -257,10 +267,22 @@ def get_perc_unattended_string(event_log_df):
     'no resource in group available'
     """
     df = resource_allocation_outcomes(event_log_df)
-    num_unattendable = df[df["Resource Allocation Attempt Outcome"] =="No resource in group available"]['Count'].values[0]
+    print("==get_perc_unattended_string - resource_allocation_outcomes==")
+    print(df)
+    try:
+        num_unattendable = df[df["Resource Allocation Attempt Outcome"].str.contains("No HEMS resource available")]['Count'].sum()
+        print(f"==get_perc_unattended_string - num_unattended: {num_unattendable}==")
+    except:
+        "Error"
+
     total_calls = df['Count'].sum()
-    perc_unattendable = num_unattendable/total_calls
-    if perc_unattendable < 0.01:
-        return f"{num_unattendable} of {total_calls} (< 0.1%)"
-    else:
-        return f"{num_unattendable} of {total_calls} ({perc_unattendable:.1%})"
+    print(f"==get_perc_unattended_string - total calls: {total_calls}==")
+    try:
+        perc_unattendable = num_unattendable/total_calls
+
+        if perc_unattendable < 0.01:
+            return f"{num_unattendable} of {total_calls} (< 0.1%)"
+        else:
+            return f"{num_unattendable} of {total_calls} ({perc_unattendable:.1%})"
+    except:
+        return "Error"

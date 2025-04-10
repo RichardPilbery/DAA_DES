@@ -1,31 +1,42 @@
 """
 File containing all calculations and visualisations relating to the number of jobs undertaken
 in the simulation.
+[x] Jobs across the course of the year
+[x] Jobs across the course of the day
+[x] Jobs by day of the week
+
 [ ] Total number of jobs
 [ ] Total number of jobs by callsign
 [ ] Total number of jobs by vehicle type
 [ ] Total number of jobs by callsign group
 [ ] Jobs attended of those received (missed jobs)
-[x] Jobs across the course of the year
-[x] Jobs across the course of the day
-[x] Jobs by day of the week
 
 Covers variation within the simulation, and comparison with real world data.
 """
 
 import pandas as pd
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.dirname(__file__)))  # Ensure this folder is in sys.path
 import _processing_functions
 import plotly.express as px
-from _app_utils import DAA_COLORSCHEME
+
 import plotly.graph_objects as go
 import numpy as np
 import datetime
 from calendar import monthrange, day_name
-from _app_utils import q10, q90
 
+from _app_utils import DAA_COLORSCHEME, q10, q90
 
 def make_job_count_df(path="../data/run_results.csv",
                       params_path="../data/run_params_used.csv"):
+
+    """
+    Given the event log produced by running the model, create a dataframe with one row per
+    patient, but all pertinent information about each call added to that row if it would not
+    usually be present until a later entry in the log
+    """
+
     df = pd.read_csv(path)
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
@@ -39,11 +50,19 @@ def make_job_count_df(path="../data/run_results.csv",
     # the patient's arrival
     df["hems_result"] = df.groupby(['P_ID', 'run_number']).hems_result.bfill()
     df["outcome"] = df.groupby(['P_ID', 'run_number']).outcome.bfill()
+    # same for various things around allocated resource
+    df["vehicle_type"] = df.groupby(['P_ID', 'run_number']).vehicle_type.bfill()
+    df["callsign"] = df.groupby(['P_ID', 'run_number']).callsign.bfill()
+    df["registration"] = df.groupby(['P_ID', 'run_number']).registration.bfill()
 
     # TODO - see what we can do about any instances where these columns remain NA
     # Think this is likely to relate to instances where there was no resource available?
     # Would be good to populate these columns with a relevant indicator if that's the case
+
+    # Reduce down to just the 'arrival' row for each patient, giving us one row per patient
+    # per run
     call_df = df[df["time_type"] == "arrival"].drop(columns=['time_type', "event_type"])
+    call_df.to_csv("data/call_df.csv", index=False)
     return call_df
 
 def get_calls_per_run(call_df):
@@ -60,28 +79,49 @@ def get_AVERAGE_calls_per_run(call_df):
     return calls_per_run.mean()['P_ID'].round(2)
 
 def get_UNATTENDED_calls_per_run(call_df):
+    """
+    Returns a count of the unattended calls per run
+
+    This is done by looking for any instances where no callsign was assigned, indicating that
+    no resource was sent
+    """
     return call_df[call_df['callsign'].isna()].groupby('run_number')[['P_ID']].count().reset_index()
 
 def get_AVERAGE_UNATTENDED_calls_per_run(call_df):
+    """
+    Returns a count of the calls per run, averaged across all runs
+
+    This is done by looking for any instances where no callsign was assigned, indicating that
+    no resource was sent
+    """
     unattended_calls_per_run = get_UNATTENDED_calls_per_run(call_df)
     return unattended_calls_per_run.mean()['P_ID'].round(2)
 
 def display_UNTATTENDED_calls_per_run(call_df):
     """
-    Alternative to get_perc_unattended_string()
+    Alternative to get_perc_unattended_string(), using a different approach, allowing for
+    robustness testing
 
-    This approach looks at calls that never got a callsign assigned
+    Here, this is done by looking for any instances where no callsign was assigned, indicating that
+    no resource was sent
     """
     total_calls = get_AVERAGE_calls_per_run(call_df)
     unattended_calls = get_AVERAGE_UNATTENDED_calls_per_run(call_df)
 
     return f"{unattended_calls:.0f} of {total_calls:.0f} ({(unattended_calls/total_calls):.1%})"
 
-def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_month=False,
+def plot_hourly_call_counts(call_df, params_df,
+                            box_plot=False, average_per_month=False,
                             bar_colour="teal", title="Calls Per Hour", use_poppins=False,
                             error_bar_colour="charcoal", show_error_bars_bar=True,
                             show_historical=True,
                             historical_data_path="../actual_data/jobs_by_hour.csv"):
+    """
+    Produces an interactive plot showing the number of calls that were received per hour in
+    the simulation
+
+    This can be compared with the processed historical data used to inform the simulation
+    """
     hourly_calls_per_run = call_df.groupby(['hour', 'run_number'])[['P_ID']].count().reset_index().rename(columns={"P_ID": "count"})
 
     fig = go.Figure()
@@ -246,11 +286,12 @@ def plot_hourly_call_counts(call_df, params_df, box_plot=False, average_per_mont
     else:
         return fig
 
-
 def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                        show_historical=False,
                        historical_monthly_job_data_path="../historical_data/historical_jobs_per_month.csv",
-                       show_historical_individual_years=False):
+                       show_historical_individual_years=False,
+                       job_count_col="total_jobs"):
+
     call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
 
@@ -352,7 +393,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
 
         historical_summary = (
             historical_jobs_per_month
-            .groupby('Month_Numeric')['total_jobs']
+            .groupby('Month_Numeric')[job_count_col]
             .agg(["max","min"])
             .reset_index()
             .rename(columns={"max": "historic_max", "min": "historic_min"})
@@ -367,8 +408,8 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         #     .apply(lambda x: datetime.date(year=first_month.year,day=1,month=x.month))
         #     )
 
-        if (historical_jobs_per_month["total_jobs"].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
-            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month["total_jobs"].max() * 1.1)})
+        if (historical_jobs_per_month[job_count_col].max() * 1.1) > (call_counts_monthly["monthly_calls"].max()*1.1):
+            fig = fig.update_yaxes({'range': (0, historical_jobs_per_month[job_count_col].max() * 1.1)})
 
         if show_historical_individual_years:
             for idx, year  in enumerate(historical_jobs_per_month["Year_Numeric"].unique()):
@@ -383,7 +424,7 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
                 # Add the trace for the current year
                 fig.add_trace(go.Scatter(
                     x=new_df["month_start"],
-                    y=new_df["total_jobs"],
+                    y=new_df[job_count_col],
                     mode='lines+markers',
                     opacity=0.7,
                     name=str(year),  # Using the year as the trace name
@@ -401,17 +442,26 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
 
 
             # Add a filled range (shaded area) for the historical range
+            print("==_job_count_calculation plot_monthly_calls(): call_counts_monthly")
+            print(call_counts_monthly)
+
+            # Ensure we only have one row per month to avoid issues with filling the historical range
+            call_counts_historical_plotting_min_max = (
+                call_counts_monthly[['month_start','historic_max','historic_min']]
+                .drop_duplicates()
+                )
+
             fig.add_trace(go.Scatter(
-                x=call_counts_monthly["month_start"],
-                y=call_counts_monthly["historic_max"],
+                x=call_counts_historical_plotting_min_max["month_start"],
+                y=call_counts_historical_plotting_min_max["historic_max"],
                 mode='lines',
                 showlegend=False,
                 line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
             ))
 
             fig.add_trace(go.Scatter(
-                x=call_counts_monthly["month_start"],
-                y=call_counts_monthly["historic_min"],
+                x=call_counts_historical_plotting_min_max["month_start"],
+                y=call_counts_historical_plotting_min_max["historic_min"],
                 mode='lines',
                 name='Historical Range',
                 line=dict(color='rgba(0,0,0,0)'),  # Invisible line (just the area)
@@ -424,10 +474,6 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
         return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
     else:
         return fig
-
-
-
-
 
 def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month=False,
                             bar_colour="teal", title="Calls Per Day", use_poppins=False,
@@ -674,3 +720,69 @@ def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month
         return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
     else:
         return fig
+
+
+def get_historical_attendance_df(
+        attended_jobs_df_path="historical_data/historical_jobs_per_month.csv",
+        all_jobs_df_path="historical_data/historical_monthly_totals_all_calls.csv"
+):
+    attended_jobs = pd.read_csv(attended_jobs_df_path)
+    attended_jobs.rename(columns={'total_jobs': 'jobs_attended'}, inplace=True)
+
+    all_received_jobs = pd.read_csv(all_jobs_df_path)
+    all_received_jobs.rename(columns={'inc_date': 'all_received_calls'}, inplace=True)
+
+    full_jobs_df = all_received_jobs.merge(attended_jobs, on="month", how="left")
+
+    full_jobs_df['jobs_not_attended'] = full_jobs_df['all_received_calls'] - full_jobs_df['jobs_attended']
+    full_jobs_df['perc_unattended_historical'] = full_jobs_df['jobs_not_attended']/full_jobs_df['all_received_calls'].round(2)
+
+    return full_jobs_df
+
+def plot_historical_missed_jobs_data(
+        attended_jobs_df_path="historical_data/historical_jobs_per_month.csv",
+        all_jobs_df_path="historical_data/historical_monthly_totals_all_calls.csv",
+        format="stacked_bar"
+        ):
+
+    full_jobs_df = get_historical_attendance_df(attended_jobs_df_path=attended_jobs_df_path,
+                                                all_jobs_df_path=all_jobs_df_path)
+
+    if format=="stacked_bar":
+        return px.bar(
+                full_jobs_df[['month','jobs_not_attended','jobs_attended']].melt(id_vars="month"),
+                x="month",
+                y="value",
+                color="variable"
+                )
+
+    elif format=="line_not_attended_count":
+        return px.line(full_jobs_df, x="month", y="jobs_not_attended")
+
+    elif format=="line_not_attended_perc":
+        return px.line(full_jobs_df, x="month", y="perc_unattended_historical")
+
+    elif format=="string":
+        all_received_calls_period = full_jobs_df['all_received_calls'].sum()
+        all_attended_jobs_period = full_jobs_df['jobs_attended'].sum()
+
+        return (((all_received_calls_period - all_attended_jobs_period) / all_received_calls_period)*100)
+
+    else:
+        # Melt the DataFrame to long format
+        df_melted = full_jobs_df[['month', 'jobs_not_attended', 'jobs_attended']].melt(id_vars='month')
+
+        # Calculate proportions per month
+        df_melted['proportion'] = df_melted.groupby('month')['value'].transform(lambda x: x / x.sum())
+
+        # Plot proportions
+        fig = px.bar(
+            df_melted,
+            x='month',
+            y='proportion',
+            color='variable',
+            text='value',  # Optional: to still show raw values on hover
+        )
+
+        fig.update_layout(barmode='stack', yaxis_tickformat='.0%', yaxis_title='Proportion')
+        fig.show()

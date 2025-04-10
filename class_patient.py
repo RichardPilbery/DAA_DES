@@ -56,10 +56,13 @@ class Patient:
         self.hems_result = ""
         self.hems_pref_vehicle_type = ""
         self.hems_pref_callsign_group = ""
+        # Strings relating to allocated vehicle
         self.hems_vehicle_type = ""
         self.hems_callsign_group = ""
         self.hems_registration = ""
         self.hems_category = ""
+        self.callsign = "" # allocated vehicle callsign
+        self.registration = "" # allocated vehicle registration
 
         self.pt_outcome = ""
 
@@ -77,4 +80,3 @@ class Patient:
         self.dispatcher_intervention = 0
 
         self.time_to_first_respone = 0
-

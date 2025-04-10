@@ -15,10 +15,11 @@ Covers variation within the simulation, and comparison with real world data.
 
 import pandas as pd
 from datetime import datetime, timedelta
-from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75
 import plotly.express as px
 from _utilisation_result_calculation import make_utilisation_model_dataframe
 import plotly.graph_objects as go
+
+from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75
 
 def create_simulation_event_duration_df(
       event_log_path="../data/run_results.csv"
@@ -81,8 +82,6 @@ def summarise_event_times(event_log_path="../data/run_results.csv"):
 
     return event_durations_sim
 
-
-
 def get_historical_times(
         historical_duration_path='../historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
         ):
@@ -101,15 +100,17 @@ def get_historical_times(
 def get_total_times_model(get_summary=False,
                           path="../data/run_results.csv",
                           params_path="../data/run_params_used.csv",
-                          rota_path="../data/hems_rota_used.csv",
-                          service_path="../data/service_dates.csv"
+                          rota_path="../actual_data/HEMS_ROTA.csv",
+                          service_path="../data/service_dates.csv",
+                          callsign_path="../actual_data/callsign_registration_lookup.csv"
                           ):
 
     utilisation_model_df = make_utilisation_model_dataframe(
         path=path,
         params_path=params_path,
         rota_path=rota_path,
-        service_path=service_path
+        service_path=service_path,
+        callsign_path=callsign_path
     )[0]
 
     if get_summary:
@@ -124,14 +125,15 @@ def get_total_times_model(get_summary=False,
 
         return utilisation_model_df
 
-
-def plot_historical_utilisation_vs_simulation_overall(
+def plot_historical_job_duration_vs_simulation_overall(
         historical_activity_times,
         utilisation_model_df,
         use_poppins=True
 ):
+
     fig = go.Figure()
 
+    # Add the historical range for the car
     fig.add_trace(
         go.Bar(
             x=["Car"],
@@ -143,6 +145,7 @@ def plot_historical_utilisation_vs_simulation_overall(
         )
     )
 
+    # Add the historical range for the helicopter
     fig.add_trace(
         go.Bar(
             x=["Helicopter"],
@@ -154,7 +157,7 @@ def plot_historical_utilisation_vs_simulation_overall(
         )
     )
 
-
+    # Add duration figures for both cars and helicopters
     fig.add_trace(
         go.Box(
             y=utilisation_model_df['resource_use_duration'],
@@ -170,7 +173,6 @@ def plot_historical_utilisation_vs_simulation_overall(
         fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
 
     return fig
-
 
 def plot_activity_time_breakdowns(historical_activity_times,
                                   event_log_df,
