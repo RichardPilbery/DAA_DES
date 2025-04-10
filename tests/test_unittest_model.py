@@ -76,16 +76,80 @@ Implemented tests are listed below with a [x].
 
 import pandas as pd
 import pytest
-from des_parallel_process import removeExistingResults, parallelProcessJoblib
+from datetime import datetime
 
+# Workaround to deal with relative import issues
+# https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-
+from des_parallel_process import parallelProcessJoblib, collateRunResults
 
 def test_warmup_only():
-    """
-    Ensures no results are recorded during the warm-up phase.
+   """
+   Ensures no results are recorded during the warm-up phase.
 
-    This is tested by running the simulation model with only a warm-up period,
-    and then checking that results are all zero or empty.
-    """
-    pass
+   This is tested by running the simulation model with only a warm-up period,
+   and then checking that results are all zero or empty.
+   """
+   parallelProcessJoblib(
+      total_runs=5,
+      sim_duration=24*7*60,
+      warm_up_time=24*7*60,
+      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+      amb_data=False
+      )
+
+   collateRunResults()
+
+   results = pd.read_csv("data/run_results.csv")
+
+   assert len(results) == 0
+
+
+def test_simultaneous_allocation_same_resource_group():
+      parallelProcessJoblib(
+         total_runs=5,
+         sim_duration= 60 * 24 * 7 * 10,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
+
+      collateRunResults()
+
+      results = pd.read_csv("data/run_results.csv")
+
+      resource_use_start_and_end = results[results["event_type"].isin(["resource_use","resource_use_end"])][['P_ID','run_number','event_type','callsign','callsign_group','timestamp_dt']]
+
+      resource_use_start = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use"].rename(columns={'timestamp_dt':'resource_use_start'}).drop(columns="event_type")
+      resource_use_end = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use_end"].rename(columns={'timestamp_dt':'resource_use_end'}).drop(columns="event_type")
+
+      resource_use_wide = resource_use_start.merge(resource_use_end, how="outer", on=["P_ID","run_number","callsign", "callsign_group"]).sort_values(["run_number", "P_ID"])
+
+      resource_use_wide['resource_use_start'] = pd.to_datetime(resource_use_wide['resource_use_start'])
+      resource_use_wide['resource_use_end'] = pd.to_datetime(resource_use_wide['resource_use_end'])
+
+      callsign_groups = resource_use_wide["callsign_group"].unique()
+
+      for callsign_group in callsign_groups:
+
+         single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign_group]
+
+         # Sort by group and start time
+         df_sorted = single_callsign.sort_values(by=["callsign_group", "resource_use_start"])
+
+         # Shift end times within each group to compare with the next start
+         df_sorted["prev_end"] = df_sorted.groupby("callsign_group")["resource_use_end"].shift()
+
+         # Find overlaps
+         df_sorted["overlap"] = df_sorted["resource_use_start"] < df_sorted["prev_end"]
+
+         # Filter to overlapping rows
+         overlaps = df_sorted[df_sorted["overlap"]]
+
+         print(f"Callsign Group {callsign_group} - instances: {len(single_callsign)}")
+         print(f"Callsign Group {callsign_group} - overlaps: {len(overlaps)}")
+
+         assert len(overlaps) == 0
