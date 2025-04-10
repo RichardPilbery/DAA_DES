@@ -1,0 +1,7 @@
+time,min_value_mins,max_value_mins
+time_allocation,0.0,119.0
+time_mobile,0.0,29.0
+time_to_scene,1.0,59.0
+time_on_scene,1.0,119.0
+time_to_hospital,1.0,139.0
+time_to_clear,1.0,89.0

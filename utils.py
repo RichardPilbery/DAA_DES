@@ -11,10 +11,15 @@ class Utils:
     RESULTS_FOLDER = 'data'
     ALL_RESULTS_CSV = f'{RESULTS_FOLDER}/all_results.csv'
     RUN_RESULTS_CSV = f'{RESULTS_FOLDER}/run_results.csv'
+    HISTORICAL_FOLDER = 'historical_data'
+    DISTRIBUTION_FOLDER = 'distribution_data'
 
     # External file containing details of resources
     # hours of operation and servicing schedules
+    HEMS_ROTA_DEFAULT = pd.read_csv('actual_data/HEMS_ROTA_DEFAULT.csv')
     HEMS_ROTA = pd.read_csv('actual_data/HEMS_ROTA.csv')
+
+    SERVICING_SCHEDULES_BY_MODEL = pd.read_csv('actual_data/service_schedules_by_model.csv')
 
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
@@ -26,10 +31,14 @@ class Utils:
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
         self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_ampds_card_probs.csv')
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
+        self.care_cat_by_ampds_df = pd.read_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv')
         self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
-        self.pt_outcome_by_hems_result_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_probs.csv')
+        self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
+        self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
+        # Import maximum call duration times
+        self.min_max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
 
         # Read in age distribution data into a dictionary
         age_data = []
@@ -146,6 +155,19 @@ class Utils:
             # Range crosses midnight
             return current >= start or current < end
 
+    def care_category_selection(self, ampds_card: str) -> str:
+        """
+            This function will allocate and return an care category
+            based on AMPDS card
+        """
+
+        #print(f"Callsign group selection with {hour} and {ampds_card}")
+
+        df = self.care_cat_by_ampds_df[
+            (self.care_cat_by_ampds_df['ampds_card'] == ampds_card)
+        ]
+
+        return  pd.Series.sample(df['care_category'], weights = df['proportion']).iloc[0]
 
     def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
         """
@@ -164,8 +186,8 @@ class Utils:
 
     def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
         """
-            This function will allocate and return an callsign group
-            based on the hour of day and AMPDS card
+            This function will allocate and return a vehicle type
+            based on the month and callsign group
         """
 
         df = self.vehicle_type_by_month_df[
@@ -186,16 +208,30 @@ class Utils:
         ]
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
-
-    def pt_outcome_selection(self, hems_result: str) -> int:
+    
+    def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
         """
-            This function will allocate and return an AMPDS card category
-            based on the hour of day
+            This function will allocate a HEMS result based on care category and helicopter benefit
         """
 
-        #print(f"Hems result is {hems_result}")
+        df = self.hems_result_by_care_category_and_helicopter_benefit_df[
+            (self.hems_result_by_care_category_and_helicopter_benefit_df['care_cat'] == care_category) &
+            (self.hems_result_by_care_category_and_helicopter_benefit_df['helicopter_benefit'] == helicopter_benefit)
+        ]
 
-        df = self.pt_outcome_by_hems_result_df[self.pt_outcome_by_hems_result_df['hems_result'] == hems_result]
+        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
+
+    def pt_outcome_selection(self, hems_result: str, care_category: str) -> int:
+        """
+            This function will allocate and return an patient outcome
+            based on the HEMS result
+        """
+
+
+        df = self.pt_outcome_by_hems_result_and_care_category_df[
+            (self.pt_outcome_by_hems_result_and_care_category_df['care_category'] == care_category) &
+            (self.pt_outcome_by_hems_result_and_care_category_df['hems_result'] == hems_result)
+        ]
 
         #print(df)
         return pd.Series.sample(df['pt_outcome'], weights = df['proportion']).iloc[0]
@@ -245,13 +281,20 @@ class Utils:
 
         distribution = {}
 
+        # Calculate the maximum time allowed for given type of job cycle time
+        max_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].max_value_mins.iloc[0]
+        min_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].min_value_mins.iloc[0]
+
         for i in self.activity_time_distr:
             #print(i)
             if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
                 #print('Match')
                 distribution = i['best_fit']
 
-        sampled_time = self.sample_from_distribution(distribution)
+        sampled_time = -1000
+
+        while (min_time > sampled_time) or (sampled_time > max_time):
+            sampled_time = self.sample_from_distribution(distribution)
 
         return sampled_time
 
@@ -263,15 +306,24 @@ class Utils:
 
         """
 
+        season = 'summer' if quarter in [2, 3] else 'winter'
+
         distribution = {}
+        max_n = 0
+        min_n = 0
 
         for i in self.inc_per_day_distr:
             #print(i)
-            if (i['quarter'] == quarter):
+            if (i['season'] == season):
                 #print('Match')
                 distribution = i['best_fit']
+                max_n = i['max_n_per_day']
+                min_n = i['min_n_per_day']
 
-        sampled_inc_per_day = self.sample_from_distribution(distribution)
+        sampled_inc_per_day = -1
+        
+        while not (sampled_inc_per_day >= min_n and sampled_inc_per_day <= max_n):
+            sampled_inc_per_day = self.sample_from_distribution(distribution)
 
         return sampled_inc_per_day
 
@@ -340,14 +392,14 @@ class Utils:
 
         #print(f"Year {year} - start_date: {start_date} and term_start is {jan_term_start}")
 
-        holidays.append({'start_date': start_date, 'end_date' : jan_term_start - timedelta(days = 1)})
+        holidays.append({'year': int(year), 'start_date': start_date, 'end_date' : jan_term_start - timedelta(days = 1)})
 
         # Spring half-term
 
         spring_half_term_start = self.get_nth_weekday(year, 2, calendar.MONDAY, 2)
         spring_half_term_end = spring_half_term_start + timedelta(days = 4)
 
-        holidays.append({'start_date': spring_half_term_start, 'end_date' : spring_half_term_end})
+        holidays.append({'year': int(year), 'start_date': spring_half_term_start, 'end_date' : spring_half_term_end})
 
         # Easter hols
 
@@ -369,8 +421,9 @@ class Utils:
                 end_date = start_date + timedelta(days = 14)
             else:
                 end_date = start_date + timedelta(days = 13)
-            
+
         holidays.append({
+            'year': int(year),
             'start_date': start_date,
             'end_date' : end_date
         })
@@ -381,6 +434,7 @@ class Utils:
         summer_half_term_end = summer_half_term_start + timedelta(days = 6)
 
         holidays.append({
+            'year': int(year),
             'start_date': summer_half_term_start,
             'end_date' : summer_half_term_end
         })
@@ -391,6 +445,7 @@ class Utils:
         summer_end = self.get_nth_weekday(year, 9, calendar.MONDAY, 1)
 
         holidays.append({
+            'year': int(year),
             'start_date': summer_start,
             'end_date' : summer_end
         })
@@ -405,21 +460,22 @@ class Utils:
         autumn_half_term_end = autumn_half_term_start + timedelta(days = 6)
 
         holidays.append({
+            'year': int(year),
             'start_date': autumn_half_term_start,
-            'end_date' : autumn_half_term_end 
-        })   
+            'end_date' : autumn_half_term_end
+        })
 
         # Christmas Hols
 
         start_date = self.get_last_weekday(year, 12, calendar.MONDAY) - timedelta(days = 7)
 
         holidays.append({
+            'year': int(year),
             'start_date': start_date,
             'end_date' : datetime(year, 12, 31)
-        })   
+        })
 
         return pd.DataFrame(holidays)
-
 
     def calculate_easter(self, year):
 
@@ -445,7 +501,21 @@ class Utils:
         day = ((h + l - 7 * m + 114) % 31) + 1
 
         return datetime(year, month, day)
-    
 
-    def years_between(self, start_date, end_date):
+    def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
+    
+    def biased_mean(series: pd.Series, bias: float = .6) -> float:
+        """
+
+        Compute a weighted mean, favoring the larger value since demand
+        likely to only increase with time
+
+        """
+
+        if len(series) == 1:
+            return series.iloc[0]  # Return the only value if there's just one
+        
+        sorted_vals = np.sort(series)  # Ensure values are sorted
+        weights = np.linspace(1, bias * 2, len(series))  # Increasing weights with larger values
+        return np.average(sorted_vals, weights=weights)

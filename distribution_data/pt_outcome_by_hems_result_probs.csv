@@ -1,8 +1,0 @@
-,pt_outcome,hems_result,count,proportion
-0,Airlifted,Patient Conveyed,429,0.3705
-1,Conveyed by land with DAA,Patient Conveyed,729,0.6295
-2,Conveyed by land without DAA,Patient Treated (not conveyed),718,0.6137
-3,Deceased,Patient Treated (not conveyed),452,0.3863
-4,Unknown,Landed but no patient contact,362,1.0
-5,Unknown,Stand Down Before Mobile,73,1.0
-6,Unknown,Stand Down En Route,1025,1.0
