@@ -787,7 +787,8 @@ Most users will not need to look at the visualisations in this tab.
                             orientation="h",
                             width=0.4,
                             marker=dict(color=list(DAA_COLORSCHEME.values())[idx],
-                                        line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
+                                        line=dict(color="#FFA400", width=0.2)
+                                        #line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
                                         ),
                             name=callsign,
                             customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
@@ -897,17 +898,6 @@ the overall time period.*
                     # Remove facet labels
                     fig.for_each_annotation(lambda x: x.update(text=""))
 
-                    # fig.update_xaxes(rangeslider_visible=True,
-                    # rangeselector=dict(
-                    #     buttons=list([
-                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
-                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
-                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
-                    #         dict(step="all")
-                    #     ]))
-                    # )
-
                     st.plotly_chart(
                         fig,
                             use_container_width=True
@@ -939,16 +929,6 @@ the overall time period.*
                         .pivot(index="run_number", columns="time_type", values="count")
                 )
                 event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
-
-                # st.plotly_chart(
-                #         px.bar(
-                #             event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
-                #             x="run_number",
-                #             y="value",
-                #             facet_col="time_type",
-                #             height=600
-                #     )
-                # )
 
                 @st.fragment
                 def event_funnel_plot():
@@ -982,19 +962,6 @@ the overall time period.*
                     )
 
                 event_funnel_plot()
-
-                # amb_events = ["arrival", "AMB call start", "AMB clear"]
-
-                # st.plotly_chart(
-                #         px.funnel(
-                #             event_counts_long[event_counts_long["time_type"].isin(amb_events)],
-                #             facet_col="run_number",
-                #             x="value",
-                #             y="time_type",
-                #             category_orders={"time_type": amb_events[::-1]},
-
-                #     )
-                # )
 
                 @st.fragment
                 def patient_viz():
