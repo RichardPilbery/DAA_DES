@@ -79,7 +79,7 @@ class DES_HEMS:
 
     def debug(self, message: str):
         if self.print_debug_messages:
-            self.debug(message)
+            print(message)
 
     def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
         """
