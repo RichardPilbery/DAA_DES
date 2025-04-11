@@ -7,6 +7,8 @@ import pandas as pd
 from class_hems import HEMS
 from simpy import FilterStore, Event
 
+import logging
+
 class HEMSAvailability():
     """
         # The HEMS Availability class
@@ -55,47 +57,78 @@ class HEMSAvailability():
 
         # Daily servicing check (in case sim starts during a service)
         [dow, hod, weekday, month, qtr, current_dt] = self.utilityClass.date_time_of_call(self.sim_start_date, self.env.now)
-        self.daily_servicing_check(current_dt)
+
+        self.daily_servicing_check(current_dt, hod, qtr)
 
     def debug(self, message: str):
-            if self.print_debug_messages:
-                print(message)
+        if self.print_debug_messages:
+            logging.debug(message)
+            #print(message)
 
-    def daily_servicing_check(self, current_dt: datetime) -> None:
+    def daily_servicing_check(self, current_dt: datetime, hour: int, qtr: int):
         """
             Function to iterate through the store and trigger the service check
             function in the HEMS class
         """
         h: HEMS
 
+        self.debug('------ DAILY SERVICING CHECK -------')
+
         GDAAS_service = False
+        if len(self.serviceStore.items) > 0:
+            for h in self.serviceStore.items:
+                if h.registration == 'g-daas':
+                    GDAAS_service = h.unavailable_due_to_service(current_dt)
+
+        self.debug(f"Checked service items and GDAAS_service is {GDAAS_service}")
+
         for h in self.store.items:
-
             if h.registration == 'g-daas':
-
                 GDAAS_service = h.unavailable_due_to_service(current_dt)
 
-        for h in self.store.items:
+        self.debug(f"Checked store items and GDAAS_service is {GDAAS_service}")
 
-            if h.service_check(current_dt, GDAAS_service):
-                # Vehicle being serviced
+        # --- Return from serviceStore to store ---
+        to_return = [
+            (s.category, s.registration)
+            for s in self.serviceStore.items
+            if not s.service_check(current_dt, GDAAS_service) # Note the NOT here!
+        ]
 
-                if h in self.store.items:
-                    print("****************")
-                    print(f"{h.callsign} being serviced so remove from store")
-                    service_h = yield self.store.get(lambda item: item == h)
-                    print(service_h)
-                    yield self.serviceStore.put(service_h)
-                    print(self.serviceStore.items)
-                    print("***********")
+        if to_return:
+            self.debug("Service store has items to return")
 
-        s: HEMS
-        if len(self.serviceStore.items) > 0:
-            print("Service store has items")
-            for s in list(self.serviceStore.items):
-                if s.service_check(current_dt, GDAAS_service):
-                    h = yield self.serviceStore.get(lambda item: item == s)
-                    yield self.store.put(h)
+        for category, registration in to_return:
+            s = yield self.serviceStore.get(
+                lambda item: item.category == category and item.registration == registration
+            )
+            yield self.store.put(s)
+            self.debug(f"Returned [{s.category} / {s.registration}] from service to store")
+
+        # --- Send from store to serviceStore ---
+        to_service = [
+            (h.category, h.registration)
+            for h in self.store.items
+            if h.service_check(current_dt, GDAAS_service)
+        ]
+
+        for category, registration in to_service:
+            self.debug("****************")
+            self.debug(f"HEMS [{category} / {registration}] being serviced, removing from store")
+
+            h = yield self.store.get(
+                lambda item: item.category == category and item.registration == registration
+            )
+
+            self.debug(f"HEMS [{h.category} / {h.registration}] successfully removed from store")
+            yield self.serviceStore.put(h)
+            self.debug(f"HEMS [{h.category} / {h.registration}] moved to service store")
+            self.debug("***********")
+
+        self.debug(self.current_store_status(hour, qtr))
+        self.debug(self.current_store_status(hour, qtr, 'service'))
+
+        self.debug('------ END OF DAILY SERVICING CHECK -------')
 
 
     def prep_HEMS_resources(self) -> None:
@@ -216,8 +249,8 @@ class HEMSAvailability():
 
         h: HEMS
         for h in self.HEMS_resources_list:
-            #self.debug(f"Populating resource store: HEMS({h.callsign})")
-            #self.debug(h.servicing_schedule)
+            self.debug(f"Populating resource store: HEMS({h.callsign})")
+            self.debug(h.servicing_schedule)
             self.store.put(h)
 
 
@@ -253,7 +286,7 @@ class HEMSAvailability():
 
         return lookup_list[prefered_lookup]
 
-    def current_store_status(self, pt: Patient) -> list[str]:
+    def current_store_status(self, hour, qtr, store = 'resource') -> list[str]:
             """
                 Debugging function to return current state of store
             """
@@ -261,8 +294,13 @@ class HEMSAvailability():
             current_store_items = []
 
             h: HEMS
-            for h in self.store.items:
-                current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(pt.hour, pt.qtr)} {h.registration})")
+
+            if store == 'resource':
+                for h in self.store.items:
+                    current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(hour, qtr)} {h.registration})")
+            else:
+                for h in self.serviceStore.items:
+                    current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(hour, qtr)} {h.registration})")
 
             return current_store_items
 
@@ -376,7 +414,7 @@ class HEMSAvailability():
 
             else:
 
-                self.debug(self.current_store_status(pt))
+                self.debug(self.current_store_status(pt.hour, pt.qtr))
 
                 with self.store.get(lambda hems_resource: hems_resource == pref_res[0]) as primary_resource_member:
 
@@ -665,7 +703,7 @@ class HEMSAvailability():
                     else:
                         return False
 
-            self.debug(self.current_store_status(pt))
+            self.debug(self.current_store_status(pt.hour, pt.qtr))
 
             with self.store.get(lambda hems_resource: resource_filter(hems_resource, pref_res)) as primary_callsign_group_member:
 

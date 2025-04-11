@@ -185,3 +185,5 @@ visualisation/*test*.ipynb
 event_log.csv
 temp_test.csv
 visualisation/anim_process_files/*
+
+log.txt

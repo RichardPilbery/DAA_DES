@@ -16,6 +16,9 @@ import numpy as np
 from math import floor
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
+import logging
+logging.basicConfig(filename='log.txt', filemode="w", level=logging.DEBUG, format='')
+
 class DES_HEMS:
     """
         # The DES_HEMS class
@@ -79,7 +82,8 @@ class DES_HEMS:
 
     def debug(self, message: str):
         if self.print_debug_messages:
-            print(message)
+            logging.debug(message)
+            #print(message)
 
     def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
         """
@@ -125,12 +129,12 @@ class DES_HEMS:
 
         for i in range(0, self.calls_today):
             hour = pd.Series.sample(hourly_activity_for_qtr['hour'], weights = hourly_activity_for_qtr['proportion']).iloc[0]
-            self.debug(f"Chosen hour is {hour}")
+            #self.debug(f"Chosen hour is {hour}")
             calls_in_hours.append(hour)
 
         calls_in_hours.sort()
 
-        self.debug(calls_in_hours)
+        #self.debug(calls_in_hours)
 
         d = {}
 
@@ -207,7 +211,7 @@ class DES_HEMS:
                 #self.debug(ia_dict)
 
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
-                self.hems_resources.daily_servicing_check(current_dt)
+                yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, qtr))
 
             if self.calls_today > 0:
                 # Work out how long until next incident
