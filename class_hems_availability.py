@@ -59,7 +59,7 @@ class HEMSAvailability():
 
     def debug(self, message: str):
             if self.print_debug_messages:
-                self.debug(message)
+                print(message)
 
     def daily_servicing_check(self, current_dt: datetime) -> None:
         """
