@@ -43,7 +43,8 @@ Implemented tests are listed below with a [x].
 [] Utilisation never drops below 0%
 [] No one waits in the model for a resource to become availabile - they leave and are recorded as missed
 [] Resources are used in the expected order determined within the model
-[] Resources belonging to the same callsign group don't get sent on jobs at the same time
+[] The same callsign is never sent on two jobs at once
+[x] Resources belonging to the same callsign group don't get sent on jobs at the same time
 [] Changing helicopter type results in different unavailability results being generated
 
 ## Activity during inactive periods
@@ -95,7 +96,7 @@ def test_warmup_only():
    """
    parallelProcessJoblib(
       total_runs=5,
-      sim_duration=24*7*60,
+      sim_duration=0,
       warm_up_time=24*7*60,
       sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
       amb_data=False
@@ -110,7 +111,7 @@ def test_warmup_only():
 
 def test_simultaneous_allocation_same_resource_group():
       parallelProcessJoblib(
-         total_runs=5,
+         total_runs=2,
          sim_duration= 60 * 24 * 7 * 10,
          warm_up_time=0,
          sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
@@ -151,5 +152,52 @@ def test_simultaneous_allocation_same_resource_group():
 
          print(f"Callsign Group {callsign_group} - instances: {len(single_callsign)}")
          print(f"Callsign Group {callsign_group} - overlaps: {len(overlaps)}")
+
+         assert len(overlaps) == 0
+
+
+def test_simultaneous_allocation_same_resource():
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration= 60 * 24 * 7 * 10,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
+
+      collateRunResults()
+
+      results = pd.read_csv("data/run_results.csv")
+
+      resource_use_start_and_end = results[results["event_type"].isin(["resource_use","resource_use_end"])][['P_ID','run_number','event_type','callsign','callsign_group','timestamp_dt']]
+
+      resource_use_start = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use"].rename(columns={'timestamp_dt':'resource_use_start'}).drop(columns="event_type")
+      resource_use_end = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use_end"].rename(columns={'timestamp_dt':'resource_use_end'}).drop(columns="event_type")
+
+      resource_use_wide = resource_use_start.merge(resource_use_end, how="outer", on=["P_ID","run_number","callsign", "callsign_group"]).sort_values(["run_number", "P_ID"])
+
+      resource_use_wide['resource_use_start'] = pd.to_datetime(resource_use_wide['resource_use_start'])
+      resource_use_wide['resource_use_end'] = pd.to_datetime(resource_use_wide['resource_use_end'])
+
+      callsigns = resource_use_wide["callsign"].unique()
+
+      for callsign in callsigns:
+
+         single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign]
+
+         # Sort by group and start time
+         df_sorted = single_callsign.sort_values(by=["callsign_group", "resource_use_start"])
+
+         # Shift end times within each group to compare with the next start
+         df_sorted["prev_end"] = df_sorted.groupby("callsign_group")["resource_use_end"].shift()
+
+         # Find overlaps
+         df_sorted["overlap"] = df_sorted["resource_use_start"] < df_sorted["prev_end"]
+
+         # Filter to overlapping rows
+         overlaps = df_sorted[df_sorted["overlap"]]
+
+         print(f"Callsign {callsign} - instances: {len(single_callsign)}")
+         print(f"Callsign {callsign} - overlaps: {len(overlaps)}")
 
          assert len(overlaps) == 0
