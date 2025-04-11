@@ -343,14 +343,12 @@ class DES_HEMS:
 
             #self.debug(f"Patient csg is {patient.hems_callsign_group}")
             patient.hems_vehicle_type = hems_res.vehicle_type
-
             patient.hems_registration = hems_res.registration
 
             #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
             #self.debug(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
             patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
             patient.callsign = hems_res.callsign
-            patient.registration = hems_res.registration
 
             if not_in_warm_up_period:
                 self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
@@ -547,10 +545,10 @@ class DES_HEMS:
             "weekday"           : patient.weekday,
             "month"             : patient.month,
             "qtr"               : patient.qtr,
-            "registration"      : patient.registration, # registration of attending vehicle
-            "callsign"          : patient.callsign,
-            "callsign_group"    : patient.hems_callsign_group,
-            "vehicle_type"      : patient.hems_vehicle_type,
+            "registration"      : patient.hems_registration, # registration of allocated/attending vehicle
+            "callsign"          : patient.callsign, # callsign of allocated/attending vehicle
+            "callsign_group"    : patient.hems_callsign_group, # callsign group of allocated/attending vehicle
+            "vehicle_type"      : patient.hems_vehicle_type, # vehicle type (car/helicopter) of allocated/attending vehicle
             "hems_res_category" : patient.hems_category,
             "ampds_card"        : patient.ampds_card,
             "age"               : patient.age,
