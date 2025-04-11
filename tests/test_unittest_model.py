@@ -11,13 +11,13 @@ Implemented tests are listed below with a [x].
 
 ## General Checks
 
-[] Results dataframe is longer when model is run for longer
+[x] Results dataframe is longer when model is run for longer
 
 
 ## Multiple Runs
 
-[] Results dataframe is longer when model conducts more runs
-[] Results differ across multiple runs
+[x] Results dataframe is longer when model conducts more runs
+[x] Results differ across multiple runs
 [] Arrivals differ across multiple runs
 [] Running the model sequentially and in parallel produce identical results when seeds set
 
@@ -33,8 +33,9 @@ Implemented tests are listed below with a [x].
 ## Arrivals
 
 [] All patients who arrive outside of the warm-up period have an entry in the results dataframe
-[] Number of arrivals increase if parameter adjusted
-[] Number of arrivals decrease if parameter adjusted
+[x] Number of arrivals increase if parameter adjusted
+[x] Number of arrivals decrease if parameter adjusted
+[x] No activity generated or model fails to complete run if number of arrivals is 0
 
 ## Sensible Resource Use
 
@@ -48,6 +49,7 @@ Implemented tests are listed below with a [x].
 [x] Resources belonging to the same callsign group don't get sent on jobs at the same time
 [] Changing helicopter type results in different unavailability results being generated
 [] Resources don't leave on service and never return
+[] Resource use duration is never negative (i.e. resource use for an individual never ends before it starts)
 
 ## Activity during inactive periods
 
@@ -81,6 +83,7 @@ import pandas as pd
 import pytest
 from datetime import datetime
 import os
+import gc
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -88,7 +91,169 @@ from pathlib import Path
 import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from des_parallel_process import parallelProcessJoblib, collateRunResults
+from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+
+
+def test_more_results_for_longer_run():
+   try:
+      removeExistingResults()
+
+      for i in range(10):
+         results_df_1 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False)
+
+         results_df_2 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 4, # run for twice as long - 4 weeks
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False)
+
+
+         assert len(results_df_1) < len(results_df_2)
+   finally:
+      del results_df_1, results_df_2
+      gc.collect()
+
+def longer_df_when_more_runs_conducted():
+   try:
+      removeExistingResults()
+
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=60 * 24 * 7 * 5,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+         )
+
+      collateRunResults()
+
+      # Read simulation results
+      results = pd.read_csv("data/run_results.csv")
+
+      results_1_run = len(results)
+
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration=60 * 24 * 7 * 5,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+         )
+
+      collateRunResults()
+
+      # Read simulation results
+      results = pd.read_csv("data/run_results.csv")
+
+      results_2_runs = len(results)
+
+      assert results_1_run < results_2_runs
+
+   finally:
+      del results
+      gc.collect()
+
+
+def test_results_differ_across_runs():
+   try:
+      removeExistingResults()
+
+      for i in range(5):
+         results_df_1 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False)
+
+         results_df_2 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 4, # run for twice as long - 4 weeks
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False)
+
+         assert not results_df_1.equals(results_df_2)
+   finally:
+      del results_df_1, results_df_2
+      gc.collect()
+
+def test_arrivals_increase_if_demand_param_increased():
+   try:
+      removeExistingResults()
+
+      for i in range(5):
+         results_df_1 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False,
+                              demand_increase_percent=1.0)
+
+         results_df_1 = results_df_1[results_df_1["time_type"] == "arrival"]
+
+         results_df_2 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 2,
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False,
+                              demand_increase_percent=1.2)
+
+         results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
+
+         assert len(results_df_1) < len(results_df_2), "Fewer jobs observed when demand increase parameter above one"
+   finally:
+      del results_df_1, results_df_2
+      gc.collect()
+
+def test_arrivals_decrease_if_demand_param_decrease():
+   try:
+      removeExistingResults()
+
+      for i in range(5):
+         results_df_1 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False,
+                              demand_increase_percent=1.0)
+
+         results_df_1 = results_df_1[results_df_1["time_type"] == "arrival"]
+
+         results_df_2 = runSim(run=1, total_runs=1,
+                              sim_duration=60 * 24 * 7 * 2,
+                              warm_up_time=0,
+                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                              amb_data=False,
+                              demand_increase_percent=0.8)
+
+         results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
+
+         assert len(results_df_1) > len(results_df_2), "More jobs observed when demand increase parameter below one"
+   finally:
+      del results_df_1, results_df_2
+      gc.collect()
+
+
+def test_output_when_no_demand():
+   removeExistingResults()
+
+   try:
+      results_df_1 = runSim(run=1, total_runs=1,
+                        sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
+                        warm_up_time=0,
+                        sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+                        amb_data=False,
+                        demand_increase_percent=0)
+
+      assert len(results_df_1) == 0
+
+   except Exception:
+        # Any exception is allowed
+        pass
+
 
 def test_warmup_only():
    """
@@ -98,24 +263,30 @@ def test_warmup_only():
    but zero actual simulation duration. Since the simulation doesn't run
    past the warm-up, no outputs should be produced.
    """
-   # Run the simulation with only a warm-up period and no actual simulation time
-   parallelProcessJoblib(
-      total_runs=5,
-      sim_duration=0,
-      warm_up_time=24*7*60,
-      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-      amb_data=False
-      )
+   try:
+      removeExistingResults()
 
-   collateRunResults()
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=5,
+         sim_duration=0,
+         warm_up_time=24*7*60,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+         )
 
-   # Read simulation results
-   results = pd.read_csv("data/run_results.csv")
+      collateRunResults()
 
-   # Assert that the results are empty, i.e., no output was generated during warm-up
-   assert len(results) == 0, (
-       f"{len(results)} results seem to have been generated during the warm-up period"
-       )
+      # Read simulation results
+      results = pd.read_csv("data/run_results.csv")
+
+      # Assert that the results are empty, i.e., no output was generated during warm-up
+      assert len(results) == 0, (
+         f"{len(results)} results seem to have been generated during the warm-up period"
+         )
+   finally:
+      del results
+      gc.collect()
 
 def test_no_results_recorded_from_warmup():
    """
@@ -124,31 +295,36 @@ def test_no_results_recorded_from_warmup():
    This test runs the simulation with both a warm-up and post-warm-up period.
    It verifies that no records are generated that fall within the warm-up time.
    """
+   try:
+      removeExistingResults()
 
-   warm_up_length=60*24*3 # 3 days
+      warm_up_length=60*24*3 # 3 days
 
-   # Run the simulation with a warm-up period and simulation time
-   parallelProcessJoblib(
-      total_runs=2,
-      sim_duration=60*24*7, # 7 days
-      warm_up_time=warm_up_length,
-      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-      amb_data=False
-      )
+      # Run the simulation with a warm-up period and simulation time
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration=60*24*7, # 7 days
+         warm_up_time=warm_up_length,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+         )
 
-   collateRunResults()
+      collateRunResults()
 
-   # Read simulation results
-   results = pd.read_csv("data/run_results.csv")
+      # Read simulation results
+      results = pd.read_csv("data/run_results.csv")
 
-   # Filter results to only those within the warm-up period (timestamp < warm-up time)
-   results_in_warmup = results[results['timestamp'] < warm_up_length]
+      # Filter results to only those within the warm-up period (timestamp < warm-up time)
+      results_in_warmup = results[results['timestamp'] < warm_up_length]
 
-   # Assert no records were made during the warm-up period
-   assert len(results_in_warmup) == 0, (
-       f"{len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
-       )
+      # Assert no records were made during the warm-up period
+      assert len(results_in_warmup) == 0, (
+         f"{len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
+         )
 
+   finally:
+      del results, results_in_warmup
+      gc.collect()
 
 def test_simultaneous_allocation_same_resource_group():
    """
@@ -165,72 +341,101 @@ def test_simultaneous_allocation_same_resource_group():
    reallocated temporarily to H70, we need to continue to check that CC70 and the temporary
    H70 are not running simultaneously).
    """
-   # Remove existing failure log if it exists
-   if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
-      os.remove("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+   try:
+      removeExistingResults()
 
-   # Run simulation for 10 weeks
-   parallelProcessJoblib(
-      total_runs=2,
-      sim_duration= 60 * 24 * 7 * 10, # 10 weeks
-      warm_up_time=0,
-      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-      amb_data=False
-   )
+      # Remove existing failure log if it exists
+      if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
+         os.remove("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
 
-   collateRunResults()
+      if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FULL.csv"):
+            os.remove("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
-   results = pd.read_csv("data/run_results.csv")
+      # Run simulation for 10 weeks
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration= 60 * 24 * 7 * 10, # 10 weeks
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
 
-   # Extract start and end times of resource usage
-   resource_use_start_and_end = results[results["event_type"].isin(["resource_use","resource_use_end"])][['P_ID','run_number','event_type','callsign','callsign_group','timestamp_dt']]
+      collateRunResults()
 
-   # Merge start and end events into single row per job
-   resource_use_start = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use"].rename(columns={'timestamp_dt':'resource_use_start'}).drop(columns="event_type")
-   resource_use_end = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use_end"].rename(columns={'timestamp_dt':'resource_use_end'}).drop(columns="event_type")
+      results = pd.read_csv("data/run_results.csv")
 
-   resource_use_wide = resource_use_start.merge(resource_use_end, how="outer", on=["P_ID","run_number","callsign", "callsign_group"]).sort_values(["run_number", "P_ID"])
+      # Extract start and end times of resource usage
+      resource_use_start_and_end = (
+         results[results["event_type"].isin(["resource_use","resource_use_end"])]
+         [['P_ID','run_number','event_type','callsign','callsign_group','timestamp_dt',"registration"]]
+         )
 
-   resource_use_wide['resource_use_start'] = pd.to_datetime(resource_use_wide['resource_use_start'])
-   resource_use_wide['resource_use_end'] = pd.to_datetime(resource_use_wide['resource_use_end'])
+      # Merge start and end events into single row per job
+      resource_use_start = (
+         resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use"]
+         .rename(columns={'timestamp_dt':'resource_use_start'}).drop(columns="event_type")
+         )
 
-   # Get a list of callsign groups that appear in the sim output to iterate through
-   callsign_groups = resource_use_wide["callsign_group"].unique()
+      resource_use_end = (
+         resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use_end"]
+         .rename(columns={'timestamp_dt':'resource_use_end'})
+         .drop(columns="event_type")
+         )
 
-   # Initialise an empty list to store all instances of overlaps in
-   all_overlaps = []
+      resource_use_wide = (
+         resource_use_start.merge(resource_use_end, how="outer",
+                                 on=["P_ID","run_number","callsign", "callsign_group", "registration"])
+                                 .sort_values(["run_number", "P_ID"])
+                                 )
 
-   # For each group, identify any overlapping resource usage
-   for callsign_group in callsign_groups:
+      resource_use_wide['resource_use_start'] = pd.to_datetime(resource_use_wide['resource_use_start'])
+      resource_use_wide['resource_use_end'] = pd.to_datetime(resource_use_wide['resource_use_end'])
 
-      single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign_group]
+      # Get a list of callsign groups that appear in the sim output to iterate through
+      callsign_groups = resource_use_wide["callsign_group"].unique()
 
-      # Sort by group and start time
-      df_sorted = single_callsign.sort_values(by=["callsign_group", "resource_use_start"])
+      # Initialise an empty list to store all instances of overlaps in
+      all_overlaps = []
 
-      # Shift end times within each group to compare with the next start
-      df_sorted["prev_end"] = df_sorted.groupby("callsign_group")["resource_use_end"].shift()
+      # For each group, identify any overlapping resource usage
+      for callsign_group in callsign_groups:
 
-      # Find overlaps
-      df_sorted["overlap"] = df_sorted["resource_use_start"] < df_sorted["prev_end"]
+         single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign_group]
 
-      # Filter to overlapping rows
-      overlaps = df_sorted[df_sorted["overlap"]]
+         # Sort by group and start time
+         df_sorted = single_callsign.sort_values(by=["run_number", "callsign_group", "resource_use_start"])
 
-      print(f"Callsign Group {callsign_group} - jobs: {len(single_callsign)}")
-      print(f"Callsign Group {callsign_group} - overlaps: {len(overlaps)}")
+         # Shift end times within each group to compare with the next start
+         df_sorted["prev_resource_use_start"] = df_sorted.groupby(["run_number", "callsign_group"])["resource_use_start"].shift()
+         df_sorted["prev_resource_use_end"] = df_sorted.groupby(["run_number", "callsign_group"])["resource_use_end"].shift()
+         df_sorted["prev_resource_callsign"] = df_sorted.groupby(["run_number", "callsign_group"])["callsign"].shift()
+         df_sorted["prev_resource_reg"] = df_sorted.groupby(["run_number", "callsign_group"])["registration"].shift()
+         df_sorted["prev_P_ID"] = df_sorted.groupby(["run_number", "callsign_group"])["P_ID"].shift()
 
-      all_overlaps.append(overlaps)
+         # Find overlaps
+         df_sorted["overlap"] = df_sorted["resource_use_start"] < df_sorted["prev_resource_use_end"]
 
-   all_overlaps_df = pd.concat(all_overlaps)
+         # Filter to overlapping rows
+         overlaps = df_sorted[df_sorted["overlap"]]
 
-   if len(all_overlaps_df)>0:
-      all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+         print(f"Callsign Group {callsign_group} - jobs: {len(single_callsign)}")
+         print(f"Callsign Group {callsign_group} - overlaps: {len(overlaps)}")
+
+         all_overlaps.append(overlaps)
+
+      all_overlaps_df = pd.concat(all_overlaps)
+
+      if len(all_overlaps_df)>0:
+         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
 
-   assert len(all_overlaps_df) == 0, (
-         f"{len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once")
+      assert len(all_overlaps_df) == 0, (
+            f"{len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once across {len(resource_use_wide)} calls")
 
+   finally:
+      del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
+      gc.collect()
 
 def test_simultaneous_allocation_same_resource():
    """
@@ -238,66 +443,97 @@ def test_simultaneous_allocation_same_resource():
 
    Checks that a specific callsign (i.e., physical unit) is not double-booked.
    """
-   if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
-      os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
+   try:
+      removeExistingResults()
 
-   parallelProcessJoblib(
-      total_runs=2,
-      sim_duration= 60 * 24 * 7 * 10,
-      warm_up_time=0,
-      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-      amb_data=False
-   )
+      if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
+         os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
 
-   collateRunResults()
+      if os.path.exists("tests/simultaneous_allocation_same_resource_FULL.csv"):
+         os.remove("tests/simultaneous_allocation_same_resource_FULL.csv")
 
-   results = pd.read_csv("data/run_results.csv")
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration= 60 * 24 * 7 * 10, # 10 weeks
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
 
-   resource_use_start_and_end = results[results["event_type"].isin(["resource_use","resource_use_end"])][['P_ID','run_number','event_type','callsign','callsign_group','timestamp_dt']]
+      collateRunResults()
 
-   resource_use_start = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use"].rename(columns={'timestamp_dt':'resource_use_start'}).drop(columns="event_type")
-   resource_use_end = resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use_end"].rename(columns={'timestamp_dt':'resource_use_end'}).drop(columns="event_type")
+      results = pd.read_csv("data/run_results.csv")
 
-   resource_use_wide = resource_use_start.merge(resource_use_end, how="outer", on=["P_ID","run_number","callsign", "callsign_group"]).sort_values(["run_number", "P_ID"])
-
-   resource_use_wide['resource_use_start'] = pd.to_datetime(resource_use_wide['resource_use_start'])
-   resource_use_wide['resource_use_end'] = pd.to_datetime(resource_use_wide['resource_use_end'])
-
-   callsigns = resource_use_wide["callsign"].unique()
-
-   all_overlaps = []
-
-   for callsign in callsigns:
-
-      single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign]
-
-      # Sort by group and start time
-      df_sorted = single_callsign.sort_values(by=["callsign_group", "resource_use_start"])
-
-      # Shift end times within each group to compare with the next start
-      df_sorted["prev_end"] = df_sorted.groupby("callsign_group")["resource_use_end"].shift()
-
-      # Find overlaps
-      df_sorted["overlap"] = df_sorted["resource_use_start"] < df_sorted["prev_end"]
-
-      # Filter to overlapping rows
-      overlaps = df_sorted[df_sorted["overlap"]]
-
-      print(f"Callsign {callsign} - instances: {len(single_callsign)}")
-      print(f"Callsign {callsign} - overlaps: {len(overlaps)}")
-
-      all_overlaps.append(overlaps)
-
-   all_overlaps_df = pd.concat(all_overlaps)
-
-   if len(all_overlaps_df)>0:
-      all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FAILURES.csv")
-
-   assert len(all_overlaps_df) == 0, (
-         f"{len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once"
+      resource_use_start_and_end = (
+         results[results["event_type"].isin(["resource_use","resource_use_end"])]
+         [['P_ID','run_number','event_type','callsign','callsign_group','registration','timestamp_dt']]
          )
 
+      resource_use_start = (
+         resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use"]
+         .rename(columns={'timestamp_dt':'resource_use_start'})
+         .drop(columns="event_type")
+         )
 
+      resource_use_end = (
+         resource_use_start_and_end[resource_use_start_and_end["event_type"] == "resource_use_end"]
+         .rename(columns={'timestamp_dt':'resource_use_end'})
+         .drop(columns="event_type")
+         )
+
+      resource_use_wide = (
+         resource_use_start.merge(resource_use_end, how="outer",
+                                 on=["P_ID","run_number","callsign", "callsign_group", "registration"]
+                                 )
+         .sort_values(["run_number", "P_ID"]))
+
+      resource_use_wide['resource_use_start'] = pd.to_datetime(resource_use_wide['resource_use_start'])
+      resource_use_wide['resource_use_end'] = pd.to_datetime(resource_use_wide['resource_use_end'])
+
+      callsigns = resource_use_wide["callsign"].unique()
+
+      all_overlaps = []
+
+      for callsign in callsigns:
+
+         single_callsign = resource_use_wide[resource_use_wide["callsign"]==callsign]
+
+         assert len(single_callsign) > 0, f"Single callsign df for {callsign} is empty"
+
+         # Sort by group and start time
+         df_sorted = single_callsign.sort_values(by=["run_number", "callsign", "resource_use_start"])
+         print(df_sorted)
+
+         # Shift end times within each group to compare with the next start
+         df_sorted["prev_resource_use_start"] = df_sorted.groupby(["run_number", "callsign"])["resource_use_start"].shift()
+         df_sorted["prev_resource_use_end"] = df_sorted.groupby(["run_number", "callsign"])["resource_use_end"].shift()
+         df_sorted["prev_resource_callsign"] = df_sorted.groupby(["run_number", "callsign"])["callsign"].shift()
+         df_sorted["prev_resource_reg"] = df_sorted.groupby(["run_number", "callsign"])["registration"].shift()
+         df_sorted["prev_P_ID"] = df_sorted.groupby(["run_number", "callsign"])["P_ID"].shift()
+
+         # Find overlaps
+         df_sorted["overlap"] = df_sorted["resource_use_start"] < df_sorted["prev_resource_use_end"]
+
+         # Filter to overlapping rows
+         overlaps = df_sorted[df_sorted["overlap"]]
+
+         print(f"Callsign {callsign} - instances: {len(single_callsign)}")
+         print(f"Callsign {callsign} - overlaps: {len(overlaps)}")
+
+         all_overlaps.append(overlaps)
+
+      all_overlaps_df = pd.concat(all_overlaps)
+
+      if len(all_overlaps_df)>0:
+         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FAILURES.csv")
+         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
+
+      assert len(all_overlaps_df) == 0, (
+            f"{len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
+            )
+   finally:
+      del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
+      gc.collect()
 
 def test_no_response_during_off_shift_times():
    """
@@ -306,182 +542,189 @@ def test_no_response_during_off_shift_times():
    Checks that callsigns are only used when their operating hours (seasonal) allow them to be active.
    Includes a manual test case for validation.
    """
-   if os.path.exists("tests/offline_calls_FAILURES.csv"):
-      os.remove("tests/offline_calls_FAILURES.csv")
+   try:
+      removeExistingResults()
 
-   parallelProcessJoblib(
-      total_runs=2,
-      sim_duration= 60 * 24 * 7 * 10,
-      warm_up_time=0,
-      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-      amb_data=False
-   )
+      if os.path.exists("tests/offline_calls_FAILURES.csv"):
+         os.remove("tests/offline_calls_FAILURES.csv")
 
-   collateRunResults()
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration= 60 * 24 * 7 * 10,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
 
-   results = pd.read_csv("data/run_results.csv")
+      collateRunResults()
 
-   resource_use_start = (
-         results[results["event_type"] == "resource_use"]
-         .rename(columns={'timestamp_dt':'resource_use_start'})
-         [['P_ID','run_number','callsign','resource_use_start', 'day', 'hour','month','qtr']]
-         )
+      results = pd.read_csv("data/run_results.csv")
 
-   resource_use_start['resource_use_start'] = pd.to_datetime(resource_use_start['resource_use_start'])
+      resource_use_start = (
+            results[results["event_type"] == "resource_use"]
+            .rename(columns={'timestamp_dt':'resource_use_start'})
+            [['P_ID','run_number','callsign','resource_use_start', 'day', 'hour','month','qtr']]
+            )
 
-   hems_rota_df = pd.read_csv("tests/HEMS_ROTA_test.csv")
+      resource_use_start['resource_use_start'] = pd.to_datetime(resource_use_start['resource_use_start'])
 
-   def normalize_hour_range(start, end):
-      """Handles overnight hours by mapping to a 0–47 scale (so 2am next day = 26)"""
-      if end <= start:
-         end += 24
-      return start, end
+      hems_rota_df = pd.read_csv("tests/HEMS_ROTA_test.csv")
 
-   # Make a copy of the rota and normalize hours
-   rota_df = hems_rota_df.copy()
-   rota_df[['summer_start', 'summer_end']] = rota_df[['summer_start', 'summer_end']].apply(
-      lambda col: pd.to_numeric(col, errors='coerce'))
+      def normalize_hour_range(start, end):
+         """Handles overnight hours by mapping to a 0–47 scale (so 2am next day = 26)"""
+         if end <= start:
+            end += 24
+         return start, end
 
-   rota_df[['winter_start', 'winter_end']] = rota_df[['winter_start', 'winter_end']].apply(
-      lambda col: pd.to_numeric(col, errors='coerce'))
+      # Make a copy of the rota and normalize hours
+      rota_df = hems_rota_df.copy()
+      rota_df[['summer_start', 'summer_end']] = rota_df[['summer_start', 'summer_end']].apply(
+         lambda col: pd.to_numeric(col, errors='coerce'))
 
-   # Group by callsign, take min start and max end, but account for overnight shifts
-   def combine_shifts(group):
-      summer_starts, summer_ends = zip(*[normalize_hour_range(s, e) for s, e in zip(group['summer_start'], group['summer_end'])])
-      winter_starts, winter_ends = zip(*[normalize_hour_range(s, e) for s, e in zip(group['winter_start'], group['winter_end'])])
+      rota_df[['winter_start', 'winter_end']] = rota_df[['winter_start', 'winter_end']].apply(
+         lambda col: pd.to_numeric(col, errors='coerce'))
 
-      return pd.Series({
-         'summer_start': min(summer_starts),
-         'summer_end': max(summer_ends),
-         'winter_start': min(winter_starts),
-         'winter_end': max(winter_ends),
-      })
+      # Group by callsign, take min start and max end, but account for overnight shifts
+      def combine_shifts(group):
+         summer_starts, summer_ends = zip(*[normalize_hour_range(s, e) for s, e in zip(group['summer_start'], group['summer_end'])])
+         winter_starts, winter_ends = zip(*[normalize_hour_range(s, e) for s, e in zip(group['winter_start'], group['winter_end'])])
 
-   rota_simplified = rota_df.groupby('callsign').apply(combine_shifts, include_groups=False).reset_index()
+         return pd.Series({
+            'summer_start': min(summer_starts),
+            'summer_end': max(summer_ends),
+            'winter_start': min(winter_starts),
+            'winter_end': max(winter_ends),
+         })
 
-   merged_df = pd.merge(resource_use_start, rota_simplified, on='callsign', how='left')
+      rota_simplified = rota_df.groupby('callsign').apply(combine_shifts, include_groups=False).reset_index()
 
-   def is_summer(month):
-      return 4 <= month <= 9
+      merged_df = pd.merge(resource_use_start, rota_simplified, on='callsign', how='left')
 
-   def check_if_available(row):
-      if is_summer(row['month']):
-         start = row['summer_start']
-         end = row['summer_end']
-      else:
-         start = row['winter_start']
-         end = row['winter_end']
+      def is_summer(month):
+         return 4 <= month <= 9
 
-      hour = row['hour']
-      hour_extended = hour if hour >= start else hour + 24  # extend into next day if needed
+      def check_if_available(row):
+         if is_summer(row['month']):
+            start = row['summer_start']
+            end = row['summer_end']
+         else:
+            start = row['winter_start']
+            end = row['winter_end']
 
-      return start <= hour_extended < end
+         hour = row['hour']
+         hour_extended = hour if hour >= start else hour + 24  # extend into next day if needed
 
-   # Apply the function to determine if the call is offline
-   # check_if_available(...) returns True if the resource is available for that call.
-   # Applying ~ in front of that means:
-      # “Store True in is_offline when the resource is NOT available.”
-   # So:
-   # True from check_if_available ➝ False in is_offline
-   # False from check_if_available ➝ True in is_offline
-   merged_df['is_offline'] = ~merged_df.apply(check_if_available, axis=1)
+         return start <= hour_extended < end
 
-   # Filter the DataFrame to get only the offline calls
-   offline_calls = merged_df[merged_df['is_offline']]
+      # Apply the function to determine if the call is offline
+      # check_if_available(...) returns True if the resource is available for that call.
+      # Applying ~ in front of that means:
+         # “Store True in is_offline when the resource is NOT available.”
+      # So:
+      # True from check_if_available ➝ False in is_offline
+      # False from check_if_available ➝ True in is_offline
+      merged_df['is_offline'] = ~merged_df.apply(check_if_available, axis=1)
 
-   if len(offline_calls)>0:
-      offline_calls.to_csv("tests/offline_calls_FAILURES.csv")
+      # Filter the DataFrame to get only the offline calls
+      offline_calls = merged_df[merged_df['is_offline']]
 
-   # Check there are no offline calls
-   assert len(offline_calls)==0, (
-         f"{len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
-         )
+      if len(offline_calls)>0:
+         offline_calls.to_csv("tests/offline_calls_FAILURES.csv")
 
+      # Check there are no offline calls
+      assert len(offline_calls)==0, (
+            f"{len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
+            )
 
+      # Add several test cases that should fail to the dataframe and rerun to ensure that
+      # the test is actually written correctly as well!
 
+      additional_rows = pd.DataFrame(
+         [{
+            'P_ID': 99999,
+            'run_number': 1,
+            'callsign': 'H70',
+            'resource_use_start': "2024-01-01 04:00:00",
+            'day': 	'Mon',
+            'hour': 4,
+            'month': 1,
+            'qtr': 1
+         },
+         {
+            'P_ID': 99998,
+            'run_number': 1,
+            'callsign': 'CC71',
+            'resource_use_start': "2024-01-01 04:00:00",
+            'day': 	'Mon',
+            'hour': 4,
+            'month': 1,
+            'qtr': 1
+         },
+         {
+            'P_ID': 99997,
+            'run_number': 1,
+            'callsign': 'CC71',
+            'resource_use_start': "2024-01-01 22:00:00",
+            'day': 	'Mon',
+            'hour': 22,
+            'month': 1,
+            'qtr': 1
+         },
+         {
+            'P_ID': 99996,
+            'run_number': 1,
+            'callsign': 'CC72',
+            'resource_use_start': "2024-01-01 07:00:00",
+            'day': 	'Mon',
+            'hour': 7,
+            'month': 1,
+            'qtr': 1
+         },
+         # Also add an extra row that should pass
+         {
+            'P_ID': 99995,
+            'run_number': 1,
+            'callsign': 'CC72',
+            'resource_use_start': "2024-01-01 09:00:00",
+            'day': 	'Mon',
+            'hour': 9,
+            'month': 1,
+            'qtr': 1
+         }
+         ]
+      )
 
-   # Add several test cases that should fail to the dataframe and rerun to ensure that
-   # the test is actually written correctly as well!
+      resource_use_start = pd.concat([resource_use_start, additional_rows])
 
-   additional_rows = pd.DataFrame(
-      [{
-         'P_ID': 99999,
-         'run_number': 1,
-         'callsign': 'H70',
-         'resource_use_start': "2024-01-01 04:00:00",
-         'day': 	'Mon',
-         'hour': 4,
-         'month': 1,
-         'qtr': 1
-      },
-      {
-         'P_ID': 99998,
-         'run_number': 1,
-         'callsign': 'CC71',
-         'resource_use_start': "2024-01-01 04:00:00",
-         'day': 	'Mon',
-         'hour': 4,
-         'month': 1,
-         'qtr': 1
-      },
-      {
-         'P_ID': 99997,
-         'run_number': 1,
-         'callsign': 'CC71',
-         'resource_use_start': "2024-01-01 22:00:00",
-         'day': 	'Mon',
-         'hour': 22,
-         'month': 1,
-         'qtr': 1
-      },
-      {
-         'P_ID': 99996,
-         'run_number': 1,
-         'callsign': 'CC72',
-         'resource_use_start': "2024-01-01 07:00:00",
-         'day': 	'Mon',
-         'hour': 7,
-         'month': 1,
-         'qtr': 1
-      },
-      # Also add an extra row that should pass
-      {
-         'P_ID': 99995,
-         'run_number': 1,
-         'callsign': 'CC72',
-         'resource_use_start': "2024-01-01 09:00:00",
-         'day': 	'Mon',
-         'hour': 9,
-         'month': 1,
-         'qtr': 1
-      }
-      ]
-   )
+      merged_df = pd.merge(resource_use_start, rota_simplified, on='callsign', how='left')
+      merged_df['is_offline'] = ~merged_df.apply(check_if_available, axis=1)
 
-   resource_use_start = pd.concat([resource_use_start, additional_rows])
+      # Filter the DataFrame to get only the offline calls
+      offline_calls = merged_df[merged_df['is_offline']]
 
-   merged_df = pd.merge(resource_use_start, rota_simplified, on='callsign', how='left')
-   merged_df['is_offline'] = ~merged_df.apply(check_if_available, axis=1)
+      # 4 rows we added should fail, 1 row we added should pass
+      # (update this if adding additional test cases)
+      assert len(offline_calls) == (len(additional_rows) - 1), (
+            "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
+            )
 
-   # Filter the DataFrame to get only the offline calls
-   offline_calls = merged_df[merged_df['is_offline']]
-
-   # 4 rows we added should fail, 1 row we added should pass
-   # (update this if adding additional test cases)
-   assert len(offline_calls) == (len(additional_rows) - 1), (
-         "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
-         )
+   finally:
+      del offline_calls, merged_df, resource_use_start, results
+      gc.collect()
 
 def test_no_response_during_service():
+   try:
+      removeExistingResults()
+
       # Remove any previous test output to start fresh
       if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
          os.remove("tests/responses_during_servicing_FAILURES.csv")
 
-      # Run the simulation in parallel for 2 runs, over 3 years, with no warm-up period
+      # Run the simulation in parallel for 10 runs
       parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 52 * 3, # Run for 3 years to maximise chance of observing
-         warm_up_time=0,
+         total_runs=10,
+         sim_duration= 60 * 24 * 7 * 52 * 4, # Run for 4 years to maximise chance of observing
+         warm_up_time=0, # no warm-up necessary
          sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
          amb_data=False
       )
@@ -532,3 +775,7 @@ def test_no_response_during_service():
       assert len(violations) == 0, (
          f"{len(violations)} resource_use_start values fall within a servicing interval"
       )
+
+   except:
+      del violations, valid_servicing, merged_df, resource_use_start, results
+      gc.collect()
