@@ -683,6 +683,8 @@ Most users will not need to look at the visualisations in this tab.
                     with st.expander("Click here to see the timings of resource use"):
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
 
+                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep][['callsign', 'callsign_group', 'registration']].drop_duplicates())
+
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
                                         .melt(id_vars=["P_ID", "time_type", "event_type"],
@@ -765,11 +767,13 @@ Most users will not need to look at the visualisations in this tab.
                                             line=dict(color="black", width=1)
                                             ),
                                 name=f"Servicing = {callsign}",
-                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date']],
-                                hovertemplate="Servicing %{customdata[0]} lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
+                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date', 'registration']],
+                                hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
                             ))
 
                         # Add in boxes showing the duration of individual calls
+                        print("==callsign_df - for resource use debugging plot==")
+                        print(callsign_df.head(5))
                         resource_use_fig.add_trace(go.Bar(
                             x=callsign_df["duration_seconds"],  # Duration (Timedelta)
                             y=callsign_df["y_pos"],
@@ -780,9 +784,11 @@ Most users will not need to look at the visualisations in this tab.
                                         line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
                                         ),
                             name=callsign,
-                            # customdata=np.stack((callsign_df['resource_use'], callsign_df['resource_use_end']), axis=-1),
+                            # customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
+                            # hovertemplate="Response from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
                             customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
                             hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+
                         ))
 
                     # Layout tweaks
