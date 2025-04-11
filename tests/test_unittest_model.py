@@ -106,7 +106,7 @@ def test_warmup_only():
 
    results = pd.read_csv("data/run_results.csv")
 
-   assert len(results) == 0
+   assert len(results) == 0, "Results seem to have been generated during the warm-up period"
 
 
 def test_simultaneous_allocation_same_resource_group():
@@ -134,6 +134,8 @@ def test_simultaneous_allocation_same_resource_group():
 
       callsign_groups = resource_use_wide["callsign_group"].unique()
 
+      all_overlaps = []
+
       for callsign_group in callsign_groups:
 
          single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign_group]
@@ -150,10 +152,14 @@ def test_simultaneous_allocation_same_resource_group():
          # Filter to overlapping rows
          overlaps = df_sorted[df_sorted["overlap"]]
 
-         print(f"Callsign Group {callsign_group} - instances: {len(single_callsign)}")
+         print(f"Callsign Group {callsign_group} - jobs: {len(single_callsign)}")
          print(f"Callsign Group {callsign_group} - overlaps: {len(overlaps)}")
 
-         assert len(overlaps) == 0
+         all_overlaps.append(overlaps)
+
+      all_overlaps_df = pd.concat(all_overlaps)
+
+      assert len(all_overlaps_df) == 0, "Instances found of resources from the same callsign group being sent on two or more jobs at once"
 
 
 def test_simultaneous_allocation_same_resource():
@@ -181,6 +187,8 @@ def test_simultaneous_allocation_same_resource():
 
       callsigns = resource_use_wide["callsign"].unique()
 
+      all_overlaps = []
+
       for callsign in callsigns:
 
          single_callsign = resource_use_wide[resource_use_wide["callsign_group"]==callsign]
@@ -200,4 +208,120 @@ def test_simultaneous_allocation_same_resource():
          print(f"Callsign {callsign} - instances: {len(single_callsign)}")
          print(f"Callsign {callsign} - overlaps: {len(overlaps)}")
 
-         assert len(overlaps) == 0
+         all_overlaps.append(overlaps)
+
+      all_overlaps_df = pd.concat(all_overlaps)
+
+      assert len(all_overlaps_df) == 0, "Instances found of resources being sent on two or more jobs at once"
+
+
+def test_no_response_during_off_shift_times():
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration= 60 * 24 * 7 * 10,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
+
+      collateRunResults()
+
+      results = pd.read_csv("data/run_results.csv")
+
+      resource_use_start = (
+          results[results["event_type"] == "resource_use"]
+          .rename(columns={'timestamp_dt':'resource_use_start'})
+          [['P_ID','run_number','callsign','resource_use_start', 'day', 'hour','month','qtr']]
+          )
+
+      resource_use_start['resource_use_start'] = pd.to_datetime(resource_use_start['resource_use_start'])
+
+      hems_rota_df = pd.read_csv("tests/HEMS_ROTA_test.csv")
+
+      def normalize_hour_range(start, end):
+         """Handles overnight hours by mapping to a 0–47 scale (so 2am next day = 26)"""
+         if end <= start:
+            end += 24
+         return start, end
+
+      # Make a copy of the rota and normalize hours
+      rota_df = hems_rota_df.copy()
+      rota_df[['summer_start', 'summer_end']] = rota_df[['summer_start', 'summer_end']].apply(
+         lambda col: pd.to_numeric(col, errors='coerce'))
+
+      rota_df[['winter_start', 'winter_end']] = rota_df[['winter_start', 'winter_end']].apply(
+         lambda col: pd.to_numeric(col, errors='coerce'))
+
+      # Group by callsign, take min start and max end, but account for overnight shifts
+      def combine_shifts(group):
+         summer_starts, summer_ends = zip(*[normalize_hour_range(s, e) for s, e in zip(group['summer_start'], group['summer_end'])])
+         winter_starts, winter_ends = zip(*[normalize_hour_range(s, e) for s, e in zip(group['winter_start'], group['winter_end'])])
+
+         return pd.Series({
+            'summer_start': min(summer_starts),
+            'summer_end': max(summer_ends),
+            'winter_start': min(winter_starts),
+            'winter_end': max(winter_ends),
+         })
+
+      rota_simplified = rota_df.groupby('callsign').apply(combine_shifts, include_groups=False).reset_index()
+
+      merged_df = pd.merge(resource_use_start, rota_simplified, on='callsign', how='left')
+
+      def is_summer(month):
+         return 4 <= month <= 9
+
+      def check_if_available(row):
+         if is_summer(row['month']):
+            start = row['summer_start']
+            end = row['summer_end']
+         else:
+            start = row['winter_start']
+            end = row['winter_end']
+
+         hour = row['hour']
+         hour_extended = hour if hour >= start else hour + 24  # extend into next day if needed
+
+         return start <= hour_extended < end
+
+      # Apply the function to determine if the call is offline
+      # check_if_available(...) returns True if the resource is available for that call.
+      # Applying ~ in front of that means:
+         # “Store True in is_offline when the resource is NOT available.”
+      # So:
+      # True from check_if_available ➝ False in is_offline
+      # False from check_if_available ➝ True in is_offline
+      merged_df['is_offline'] = ~merged_df.apply(check_if_available, axis=1)
+
+      # Filter the DataFrame to get only the offline calls
+      offline_calls = merged_df[merged_df['is_offline']]
+
+      # Check there are no offline calls
+      assert len(offline_calls)==0, "Calls appear to have had a response initiated outside of rota'd hours"
+
+
+      # Add several test cases that should fail to the dataframe and rerun to ensure that
+      # the test is actually written correctly as well!
+
+      additional_rows = pd.DataFrame(
+         [{
+            'P_ID': 99999,
+            'run_number': 1,
+            'callsign': 'H70',
+            'resource_use_start': "2024-01-01 04:00:00",
+            'day': 	'Mon',
+            'hour': 4,
+            'month': 1,
+            'qtr': 1
+         }]
+      )
+
+      resource_use_start = pd.concat([resource_use_start, additional_rows])
+
+      merged_df = pd.merge(resource_use_start, rota_simplified, on='callsign', how='left')
+      merged_df['is_offline'] = ~merged_df.apply(check_if_available, axis=1)
+
+      # Filter the DataFrame to get only the offline calls
+      offline_calls = merged_df[merged_df['is_offline']]
+
+      assert len(offline_calls) == 1, "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
