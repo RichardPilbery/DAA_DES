@@ -98,11 +98,17 @@ If editing the files, you should use the .drawio versions, which can be opened w
 
 It is recommended that you edit and export the diagrams in light mode, and export using a 50 pixel border, to ensure a consistent appearance is maintained.
 
-### tests (currently only on *pytest* branch)
+### tests
 
 This folder contains files that will be picked up by the pytest framework. They are planned to contain various tests including validation/verification tests, and unit tests.
 
+To run all tests, use the command `pytest` in a terminal, running from the root folder of the project.
 
+To run a subset of tests, you can choose subsets of tests. For example, to run all resource-related tests, run `pytest -m resources`. More options can be seen [here](https://docs.pytest.org/en/stable/example/markers.html).
+
+Alternatively, see the [pytest documentation](https://docs.pytest.org/en/stable/how-to/usage.html) for additional ways to manage groups of tests.
+
+To generate a code coverage report, run `pytest --cov=. --cov-report=html`.
 
 ## API Documentation
 

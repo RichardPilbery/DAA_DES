@@ -60,9 +60,8 @@ class Patient:
         self.hems_vehicle_type = ""
         self.hems_callsign_group = ""
         self.hems_registration = ""
-        self.hems_category = ""
+        self.hems_category = "" # allocated vehicle registration
         self.callsign = "" # allocated vehicle callsign
-        self.registration = "" # allocated vehicle registration
 
         self.pt_outcome = ""
 

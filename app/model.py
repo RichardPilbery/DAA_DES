@@ -681,7 +681,15 @@ Most users will not need to look at the visualisations in this tab.
                         )
 
                     with st.expander("Click here to see the timings of resource use"):
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
+                        st.dataframe(
+                            resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
+                            )
+
+                        st.dataframe(
+                            resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
+                            [['callsign', 'callsign_group', 'registration']]
+                            .value_counts()
+                            )
 
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
@@ -689,8 +697,8 @@ Most users will not need to look at the visualisations in this tab.
                                         value_vars="timestamp_dt").drop_duplicates())
 
                         resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [["P_ID", "time_type", "timestamp_dt", "event_type"]].drop_duplicates()
-                            .pivot(columns="event_type", index=["P_ID","time_type"], values="timestamp_dt").reset_index())
+                            [["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
+                            .pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index())
 
                         # get the number of referrals and assign them a value
                         resources = resource_use_wide.time_type.unique()
@@ -749,6 +757,8 @@ Most users will not need to look at the visualisations in this tab.
                     # Add horizontal bars using actual datetime values
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
+                        print(f"==callsign_df - {callsign} - for resource use debugging plot==")
+                        print(callsign_df.head(5))
 
                         service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
@@ -765,8 +775,8 @@ Most users will not need to look at the visualisations in this tab.
                                             line=dict(color="black", width=1)
                                             ),
                                 name=f"Servicing = {callsign}",
-                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date']],
-                                hovertemplate="Servicing %{customdata[0]} lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
+                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date', 'registration']],
+                                hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
                             ))
 
                         # Add in boxes showing the duration of individual calls
@@ -777,12 +787,15 @@ Most users will not need to look at the visualisations in this tab.
                             orientation="h",
                             width=0.4,
                             marker=dict(color=list(DAA_COLORSCHEME.values())[idx],
-                                        line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
+                                        line=dict(color="#FFA400", width=0.2)
+                                        #line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
                                         ),
                             name=callsign,
-                            # customdata=np.stack((callsign_df['resource_use'], callsign_df['resource_use_end']), axis=-1),
-                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
-                            hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
+                            hovertemplate="Response from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                            #customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
+                            #hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+
                         ))
 
                     # Layout tweaks
@@ -885,17 +898,6 @@ the overall time period.*
                     # Remove facet labels
                     fig.for_each_annotation(lambda x: x.update(text=""))
 
-                    # fig.update_xaxes(rangeslider_visible=True,
-                    # rangeselector=dict(
-                    #     buttons=list([
-                    #         dict(count=1, label="1m", step="month", stepmode="backward"),
-                    #         dict(count=6, label="6m", step="month", stepmode="backward"),
-                    #         dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    #         dict(count=1, label="1y", step="year", stepmode="backward"),
-                    #         dict(step="all")
-                    #     ]))
-                    # )
-
                     st.plotly_chart(
                         fig,
                             use_container_width=True
@@ -927,16 +929,6 @@ the overall time period.*
                         .pivot(index="run_number", columns="time_type", values="count")
                 )
                 event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
-
-                # st.plotly_chart(
-                #         px.bar(
-                #             event_counts_long[event_counts_long["time_type"].isin(["arrival", "AMB call start", "HEMS call start"])],
-                #             x="run_number",
-                #             y="value",
-                #             facet_col="time_type",
-                #             height=600
-                #     )
-                # )
 
                 @st.fragment
                 def event_funnel_plot():
@@ -970,19 +962,6 @@ the overall time period.*
                     )
 
                 event_funnel_plot()
-
-                # amb_events = ["arrival", "AMB call start", "AMB clear"]
-
-                # st.plotly_chart(
-                #         px.funnel(
-                #             event_counts_long[event_counts_long["time_type"].isin(amb_events)],
-                #             facet_col="run_number",
-                #             x="value",
-                #             y="time_type",
-                #             category_orders={"time_type": amb_events[::-1]},
-
-                #     )
-                # )
 
                 @st.fragment
                 def patient_viz():
