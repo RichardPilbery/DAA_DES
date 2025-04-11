@@ -113,6 +113,35 @@ def test_warmup_only():
        f"{len(results)} results seem to have been generated during the warm-up period"
        )
 
+def test_no_results_recorded_from_warmup():
+   """
+   Ensures no results are recorded during the warm-up phase.
+
+   This is tested by running the simulation model with only a warm-up period,
+   and then checking that results are all zero or empty.
+   """
+
+   warm_up_length=60*24*3 # 3 days
+
+   parallelProcessJoblib(
+      total_runs=2,
+      sim_duration=60*24*7, # 7 days
+      warm_up_time=warm_up_length,
+      sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+      amb_data=False
+      )
+
+   collateRunResults()
+
+   results = pd.read_csv("data/run_results.csv")
+
+   # Filter to only timestamps before the specified period
+   results_in_warmup = results[results['timestamp'] < warm_up_length]
+
+   assert len(results_in_warmup) == 0, (
+       f"{len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
+       )
+
 
 def test_simultaneous_allocation_same_resource_group():
       if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
@@ -408,7 +437,7 @@ def test_no_response_during_service():
 
       parallelProcessJoblib(
          total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10,
+         sim_duration= 60 * 24 * 7 * 52 * 3, # Run for 3 years to maximise chance of observing
          warm_up_time=0,
          sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
          amb_data=False
