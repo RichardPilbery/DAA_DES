@@ -28,6 +28,7 @@ Implemented tests are listed below with a [x].
 ## Warm-up period impact
 
 [] Data is not present in results dataframe for warm-up period
+[x] Results dataframe is empty if only a warm-up period is provided
 
 ## Arrivals
 
@@ -43,13 +44,15 @@ Implemented tests are listed below with a [x].
 [] Utilisation never drops below 0%
 [] No one waits in the model for a resource to become availabile - they leave and are recorded as missed
 [] Resources are used in the expected order determined within the model
-[] The same callsign is never sent on two jobs at once
+[x] The same callsign is never sent on two jobs at once
 [x] Resources belonging to the same callsign group don't get sent on jobs at the same time
 [] Changing helicopter type results in different unavailability results being generated
+[] Resources don't leave on service and never return
 
 ## Activity during inactive periods
 
-[] Resources do not respond during times they are meant to be off shift
+[x] Resources do not respond during times they are meant to be off shift
+[] Resources aren't used during their service interval (determined by reg, not callsign)
 [] Calls do not generate activity if they arrive during times the resource is meant to be off shift
 [] Inactive periods correctly change across seasons if set to do so
 
@@ -66,7 +69,6 @@ Implemented tests are listed below with a [x].
 
 [] Utilisation is lower when resource is kept consistent but demand decreases
 [] 'Missed' calls are lower when resource is kept consistent but demand decreases
-
 
 ## Failure to run under nonsensical conditions
 
@@ -313,7 +315,49 @@ def test_no_response_during_off_shift_times():
             'hour': 4,
             'month': 1,
             'qtr': 1
-         }]
+         },
+         {
+            'P_ID': 99998,
+            'run_number': 1,
+            'callsign': 'CC71',
+            'resource_use_start': "2024-01-01 04:00:00",
+            'day': 	'Mon',
+            'hour': 4,
+            'month': 1,
+            'qtr': 1
+         },
+         {
+            'P_ID': 99997,
+            'run_number': 1,
+            'callsign': 'CC71',
+            'resource_use_start': "2024-01-01 22:00:00",
+            'day': 	'Mon',
+            'hour': 22,
+            'month': 1,
+            'qtr': 1
+         },
+         {
+            'P_ID': 99996,
+            'run_number': 1,
+            'callsign': 'CC72',
+            'resource_use_start': "2024-01-01 07:00:00",
+            'day': 	'Mon',
+            'hour': 7,
+            'month': 1,
+            'qtr': 1
+         },
+         # Also add an extra row that should pass
+         {
+            'P_ID': 99995,
+            'run_number': 1,
+            'callsign': 'CC72',
+            'resource_use_start': "2024-01-01 09:00:00",
+            'day': 	'Mon',
+            'hour': 9,
+            'month': 1,
+            'qtr': 1
+         }
+         ]
       )
 
       resource_use_start = pd.concat([resource_use_start, additional_rows])
@@ -324,4 +368,4 @@ def test_no_response_during_off_shift_times():
       # Filter the DataFrame to get only the offline calls
       offline_calls = merged_df[merged_df['is_offline']]
 
-      assert len(offline_calls) == 1, "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
+      assert len(offline_calls) == (len(additional_rows) - 1), "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
