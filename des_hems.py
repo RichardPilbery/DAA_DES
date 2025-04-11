@@ -355,9 +355,8 @@ class DES_HEMS:
             patient.callsign = hems_res.callsign
 
             if not_in_warm_up_period:
-                self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
-
                 if hems_res != None:
+                    self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
                     self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
             # Check if HEMS result indicates that resource stodd down before going mobile or en route
