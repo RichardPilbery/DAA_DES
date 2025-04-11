@@ -254,7 +254,7 @@ def test_output_when_no_demand():
         # Any exception is allowed
         pass
 
-
+@pytest.mark.warmup
 def test_warmup_only():
    """
    Ensures no results are recorded during the warm-up phase.
@@ -288,6 +288,7 @@ def test_warmup_only():
       del results
       gc.collect()
 
+@pytest.mark.warmup
 def test_no_results_recorded_from_warmup():
    """
    Ensures no results are recorded during the warm-up phase.
@@ -326,6 +327,7 @@ def test_no_results_recorded_from_warmup():
       del results, results_in_warmup
       gc.collect()
 
+@pytest.mark.resources
 def test_simultaneous_allocation_same_resource_group():
    """
    Ensures no two jobs are allocated to resources from the same resource group at overlapping times.
@@ -437,6 +439,7 @@ def test_simultaneous_allocation_same_resource_group():
       del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
       gc.collect()
 
+@pytest.mark.resources
 def test_simultaneous_allocation_same_resource():
    """
    Ensures no single resource is allocated to multiple jobs at the same time.
@@ -535,6 +538,7 @@ def test_simultaneous_allocation_same_resource():
       del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
       gc.collect()
 
+@pytest.mark.resources
 def test_no_response_during_off_shift_times():
    """
    Ensures no response is initiated outside of a resource's rota'd hours.
@@ -712,6 +716,7 @@ def test_no_response_during_off_shift_times():
       del offline_calls, merged_df, resource_use_start, results
       gc.collect()
 
+@pytest.mark.resources
 def test_no_response_during_service():
    try:
       removeExistingResults()
