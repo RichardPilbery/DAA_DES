@@ -432,9 +432,11 @@ def test_no_response_during_off_shift_times():
           )
 
 def test_no_response_during_service():
+      # Remove any previous test output to start fresh
       if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
          os.remove("tests/responses_during_servicing_FAILURES.csv")
 
+      # Run the simulation in parallel for 2 runs, over 3 years, with no warm-up period
       parallelProcessJoblib(
          total_runs=2,
          sim_duration= 60 * 24 * 7 * 52 * 3, # Run for 3 years to maximise chance of observing
@@ -442,33 +444,37 @@ def test_no_response_during_service():
          sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
          amb_data=False
       )
-
+      # Combine results from the simulation runs
       collateRunResults()
 
+      # Load key data files produced by the simulation - results and generated service intervals
       results = pd.read_csv("data/run_results.csv")
-
       services = pd.read_csv("data/service_dates.csv")
 
-      callsign_reg_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+      # Ensure service start and end dates are datetimes
+      services['service_start_date'] = pd.to_datetime(services['service_start_date'], format="%Y-%m-%d", errors='coerce')
+      services['service_end_date'] = pd.to_datetime(services['service_end_date'], format="%Y-%m-%d", errors='coerce')
 
-      services_full = pd.merge(services, callsign_reg_lookup, how="left", on="registration")
-      services_full['service_start_date'] = pd.to_datetime(services_full['service_start_date'], errors='coerce')
-      services_full['service_end_date'] = pd.to_datetime(services_full['service_end_date'], errors='coerce')
-
+      # Extract 'resource_use' events from the results and parse relevant info
       resource_use_start = (
           results[results["event_type"] == "resource_use"]
           .rename(columns={'timestamp_dt':'resource_use_start'})
-          [['P_ID','run_number','callsign','resource_use_start', 'day', 'hour','month','qtr']]
+          # Note we are going to be using registration here as our identifier - not the callsign
+          [['P_ID','run_number','registration', 'callsign', 'resource_use_start', 'day', 'hour','month','qtr']]
           )
 
       resource_use_start['resource_use_start'] = pd.to_datetime(resource_use_start['resource_use_start'])
 
-      resource_use_start_full = pd.merge(resource_use_start, callsign_reg_lookup, how="left", on="callsign")
+      # Merge resource usage with service records via registration
+      # Note that registration is the area of importance for servicing - not the callsign
+      # g-daas (H70) should borrow g-daan (H71) during servicing, leading to the callsign H70 remaining
+      # in action during the servicing, and H71 showing no activity during servicing of g-daas.
+      merged_df = pd.merge(resource_use_start, services, on='registration', how='left')
 
-      # Merge the data on the registration column
-      merged_df = pd.merge(resource_use_start_full, services_full, on='registration', how='left')
-
-      # Only consider rows where there is a valid servicing interval
+      # Keep only rows where service start and end dates are valid
+      # (i.e. discard any rows where no servicing exists in the servicing dataframe)
+      # At present we don't have any servicing of cars (standalone or helicopter backup cars)
+      # so those rows will not be of interest to us.
       valid_servicing = merged_df.dropna(subset=['service_start_date', 'service_end_date'])
 
       # Identify any rows where the resource_use_start falls within the servicing interval
@@ -477,9 +483,11 @@ def test_no_response_during_service():
          (valid_servicing['resource_use_start'] <= valid_servicing['service_end_date'])
       ]
 
+      # Save violations to file if any are found
       if len(violations)>0:
          violations.to_csv("tests/responses_during_servicing_FAILURES.csv")
 
+      # Assert that no responses occurred during servicing periods
       assert len(violations) == 0, (
          f"{len(violations)} resource_use_start values fall within a servicing interval"
       )
