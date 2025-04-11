@@ -108,6 +108,8 @@ To run a subset of tests, you can choose subsets of tests. For example, to run a
 
 Alternatively, see the [pytest documentation](https://docs.pytest.org/en/stable/how-to/usage.html) for additional ways to manage groups of tests.
 
+To generate a code coverage report, run `pytest --cov=. --cov-report=html`.
+
 ## API Documentation
 
 The function and class documentation can be accessed at the following link: [https://richardpilbery.github.io/DAA_DES/](https://richardpilbery.github.io/DAA_DES/)
