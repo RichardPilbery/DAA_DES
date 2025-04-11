@@ -188,3 +188,5 @@ visualisation/anim_process_files/*
 
 tests/BUILDING_TESTS.ipynb
 tests/*FAILURES.csv
+
+log.txt
