@@ -80,6 +80,7 @@ Implemented tests are listed below with a [x].
 import pandas as pd
 import pytest
 from datetime import datetime
+import os
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -108,10 +109,15 @@ def test_warmup_only():
 
    results = pd.read_csv("data/run_results.csv")
 
-   assert len(results) == 0, "Results seem to have been generated during the warm-up period"
+   assert len(results) == 0, (
+       f"{len(results)} results seem to have been generated during the warm-up period"
+       )
 
 
 def test_simultaneous_allocation_same_resource_group():
+      if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
+         os.remove("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+
       parallelProcessJoblib(
          total_runs=2,
          sim_duration= 60 * 24 * 7 * 10,
@@ -161,10 +167,18 @@ def test_simultaneous_allocation_same_resource_group():
 
       all_overlaps_df = pd.concat(all_overlaps)
 
-      assert len(all_overlaps_df) == 0, "Instances found of resources from the same callsign group being sent on two or more jobs at once"
+      if len(all_overlaps_df)>0:
+         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+
+
+      assert len(all_overlaps_df) == 0, (
+          f"{len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once")
 
 
 def test_simultaneous_allocation_same_resource():
+      if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
+         os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
+
       parallelProcessJoblib(
          total_runs=2,
          sim_duration= 60 * 24 * 7 * 10,
@@ -214,10 +228,19 @@ def test_simultaneous_allocation_same_resource():
 
       all_overlaps_df = pd.concat(all_overlaps)
 
-      assert len(all_overlaps_df) == 0, "Instances found of resources being sent on two or more jobs at once"
+      if len(all_overlaps_df)>0:
+         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FAILURES.csv")
+
+      assert len(all_overlaps_df) == 0, (
+          f"{len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once"
+          )
+
 
 
 def test_no_response_during_off_shift_times():
+      if os.path.exists("tests/offline_calls_FAILURES.csv"):
+         os.remove("tests/offline_calls_FAILURES.csv")
+
       parallelProcessJoblib(
          total_runs=2,
          sim_duration= 60 * 24 * 7 * 10,
@@ -298,8 +321,15 @@ def test_no_response_during_off_shift_times():
       # Filter the DataFrame to get only the offline calls
       offline_calls = merged_df[merged_df['is_offline']]
 
+      if len(offline_calls)>0:
+         offline_calls.to_csv("tests/offline_calls_FAILURES.csv")
+
       # Check there are no offline calls
-      assert len(offline_calls)==0, "Calls appear to have had a response initiated outside of rota'd hours"
+      assert len(offline_calls)==0, (
+          f"{len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
+          )
+
+
 
 
       # Add several test cases that should fail to the dataframe and rerun to ensure that
@@ -368,4 +398,59 @@ def test_no_response_during_off_shift_times():
       # Filter the DataFrame to get only the offline calls
       offline_calls = merged_df[merged_df['is_offline']]
 
-      assert len(offline_calls) == (len(additional_rows) - 1), "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
+      assert len(offline_calls) == (len(additional_rows) - 1), (
+          "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
+          )
+
+def test_no_response_during_service():
+      if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
+         os.remove("tests/responses_during_servicing_FAILURES.csv")
+
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration= 60 * 24 * 7 * 10,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+      )
+
+      collateRunResults()
+
+      results = pd.read_csv("data/run_results.csv")
+
+      services = pd.read_csv("data/service_dates.csv")
+
+      callsign_reg_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+
+      services_full = pd.merge(services, callsign_reg_lookup, how="left", on="registration")
+      services_full['service_start_date'] = pd.to_datetime(services_full['service_start_date'], errors='coerce')
+      services_full['service_end_date'] = pd.to_datetime(services_full['service_end_date'], errors='coerce')
+
+      resource_use_start = (
+          results[results["event_type"] == "resource_use"]
+          .rename(columns={'timestamp_dt':'resource_use_start'})
+          [['P_ID','run_number','callsign','resource_use_start', 'day', 'hour','month','qtr']]
+          )
+
+      resource_use_start['resource_use_start'] = pd.to_datetime(resource_use_start['resource_use_start'])
+
+      resource_use_start_full = pd.merge(resource_use_start, callsign_reg_lookup, how="left", on="callsign")
+
+      # Merge the data on the registration column
+      merged_df = pd.merge(resource_use_start_full, services_full, on='registration', how='left')
+
+      # Only consider rows where there is a valid servicing interval
+      valid_servicing = merged_df.dropna(subset=['service_start_date', 'service_end_date'])
+
+      # Identify any rows where the resource_use_start falls within the servicing interval
+      violations = valid_servicing[
+         (valid_servicing['resource_use_start'] >= valid_servicing['service_start_date']) &
+         (valid_servicing['resource_use_start'] <= valid_servicing['service_end_date'])
+      ]
+
+      if len(violations)>0:
+         violations.to_csv("tests/responses_during_servicing_FAILURES.csv")
+
+      assert len(violations) == 0, (
+         f"{len(violations)} resource_use_start values fall within a servicing interval"
+      )
