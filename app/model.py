@@ -681,9 +681,15 @@ Most users will not need to look at the visualisations in this tab.
                         )
 
                     with st.expander("Click here to see the timings of resource use"):
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep])
+                        st.dataframe(
+                            resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
+                            )
 
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep][['callsign', 'callsign_group', 'registration']].drop_duplicates())
+                        st.dataframe(
+                            resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
+                            [['callsign', 'callsign_group', 'registration']]
+                            .value_counts()
+                            )
 
                         st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
                                         [["P_ID", "time_type", "timestamp_dt", "event_type"]]
@@ -691,8 +697,8 @@ Most users will not need to look at the visualisations in this tab.
                                         value_vars="timestamp_dt").drop_duplicates())
 
                         resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [["P_ID", "time_type", "timestamp_dt", "event_type"]].drop_duplicates()
-                            .pivot(columns="event_type", index=["P_ID","time_type"], values="timestamp_dt").reset_index())
+                            [["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
+                            .pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index())
 
                         # get the number of referrals and assign them a value
                         resources = resource_use_wide.time_type.unique()
@@ -751,6 +757,8 @@ Most users will not need to look at the visualisations in this tab.
                     # Add horizontal bars using actual datetime values
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
+                        print(f"==callsign_df - {callsign} - for resource use debugging plot==")
+                        print(callsign_df.head(5))
 
                         service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
@@ -772,8 +780,6 @@ Most users will not need to look at the visualisations in this tab.
                             ))
 
                         # Add in boxes showing the duration of individual calls
-                        print("==callsign_df - for resource use debugging plot==")
-                        print(callsign_df.head(5))
                         resource_use_fig.add_trace(go.Bar(
                             x=callsign_df["duration_seconds"],  # Duration (Timedelta)
                             y=callsign_df["y_pos"],
@@ -784,10 +790,10 @@ Most users will not need to look at the visualisations in this tab.
                                         line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
                                         ),
                             name=callsign,
-                            # customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
-                            # hovertemplate="Response from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
-                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
-                            hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
+                            hovertemplate="Response from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                            #customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
+                            #hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
 
                         ))
 
