@@ -16,6 +16,8 @@ import plotly.express as px
 import platform
 import plotly.graph_objects as go
 
+import gc
+
 from scipy.stats import ks_2samp
 
 import subprocess
@@ -108,6 +110,9 @@ if not st.session_state["visited_setup_page"]:
                     st.switch_page("setup.py")
 
 if button_run_pressed:
+
+    gc.collect()
+
     progress_text = "Simulation in progress. Please wait."
     # This check is a way to guess whether it's running on
     # Streamlit community cloud
@@ -400,13 +405,13 @@ will be available at this point
         with tab3:
 
             # tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
+            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
                 "Jobs per Month",
                 "Jobs by Hour of Day",
                 "Jobs by Day of Week",
                 "Jobs per Day - Distribution",
                 "Job Durations - Overall",
-                # "Job Durations - Split"
+                "Job Durations - Split"
                 ])
 
             with tab_3_1:
@@ -580,6 +585,10 @@ Partial months are excluded for ease of interpretation.
 
                 plot_jobs_per_day()
 
+            #######################################
+            # Histogram of calls received per day #
+            #######################################
+
             with tab_3_4:
                 @st.fragment()
                 def plot_days_with_job_count_hist():
@@ -636,6 +645,9 @@ Partial months are excluded for ease of interpretation.
                                                full_html=False, include_plotlyjs='cdn')
                     st.plotly_chart(call_count_hist)
 
+                    st.caption("""
+This plot looks at the number of days across all repeats of the simulation where each given number of calls was observed (i.e. on how many days was one call received, two calls, three calls, and so on).
+                           """)
 
                     statistic, p_value = ks_2samp(daily_call_counts["Calls per Day"],
                                                   historical_daily_calls["calls_in_day"])
@@ -693,15 +705,13 @@ reflect the patterns of demand observed historically.
 
                 plot_days_with_job_count_hist()
 
-                st.caption("""
-This plot looks at the number of days across all repeats of the simulation where each given number of calls was observed (i.e. on how many days was one call received, two calls, three calls, and so on).
-                           """)
-
-                st.info("The historical information about the number of calls received per day will be added when available.")
+            ##############################################
+            # Historical Job Durations - Overall Summary #
+            ##############################################
 
             with tab_3_5:
-                historical_time_df = _job_time_calcs.get_historical_times(
-                            'historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
+                historical_time_df = _job_time_calcs.get_historical_times_breakdown(
+                            'historical_data/historical_job_durations_breakdown.csv'
                             )
 
                 simulated_job_time_df = _job_time_calcs.get_total_times_model(
@@ -713,23 +723,14 @@ This plot looks at the number of days across all repeats of the simulation where
                             callsign_path="actual_data/callsign_registration_lookup.csv"
                             )
 
-                simulated_job_time_df.to_csv("temp_test.csv")
-
                 # Create plot for inclusion in streamlit
                 fig_job_durations_historical =  _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
                         historical_activity_times=historical_time_df,
                         utilisation_model_df=simulated_job_time_df,
-                        use_poppins=True
+                        use_poppins = True,
+                        write_to_html = True,
+                        html_output_filepath = "app/fig_outputs/fig_job_durations_historical.html"
                         )
-
-                # Rerun plot, writing to HTML
-                # Note rerunning is necessary due to the need to pass include_poppins=False
-                # the second time around
-                _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
-                        historical_activity_times=historical_time_df,
-                        utilisation_model_df=simulated_job_time_df,
-                        use_poppins=False
-                        ).write_html("app/fig_outputs/fig_job_durations_historical.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
 
                 # Include job durations plot in streamlit app
                 st.plotly_chart(
@@ -745,6 +746,43 @@ The blue bars give an indication of the historical averages. We would expect the
 central horizontal line within the box portion of the box plots - to fall within the blue box for
 each resource type, and likely to be fairly central within that region.
 """)
+
+                historical_time_df_cars_only = historical_time_df[historical_time_df["vehicle_type"] == "car"]
+                historical_time_df_helos_only = historical_time_df[historical_time_df["vehicle_type"] == "helicopter"]
+
+                simulated_job_time_df_cars_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "car"]
+                simulated_job_time_df_helos_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "helicopter"]
+
+                _job_time_calcs.calculate_ks_for_job_durations(
+                    historical_data_series=historical_time_df_helos_only[historical_time_df_helos_only["name"]=="total_duration"]["value"],
+                    simulated_data_series=simulated_job_time_df_helos_only["resource_use_duration"],
+                    what="helicopters"
+                    )
+
+                _job_time_calcs.calculate_ks_for_job_durations(
+                    historical_data_series=historical_time_df_cars_only[historical_time_df_cars_only["name"]=="total_duration"]["value"],
+                    simulated_data_series=simulated_job_time_df_cars_only["resource_use_duration"],
+                    what="cars"
+                    )
+
+            ############################
+            # Historical Job Durations - Breakdown #
+            ############################
+
+            with tab_3_6:
+                st.info("Coming Soon!")
+                # _job_time_calcs.plot_activity_time_breakdowns(historical_activity_times=historical_time_df,
+                #                   event_log_df=simulated_job_time_df,
+                #                   title="Helicopter",
+                #                   vehicle_type="helicopter",
+                #                   use_poppins=True)
+
+                # _job_time_calcs.plot_activity_time_breakdowns(historical_activity_times=historical_time_df,
+                #                   event_log_df=simulated_job_time_df,
+                #                   title="Car",
+                #                   vehicle_type="car",
+                #                   use_poppins=True)
+
         with tab4:
 
             st.caption("""
