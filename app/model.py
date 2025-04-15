@@ -16,13 +16,15 @@ import plotly.express as px
 import platform
 import plotly.graph_objects as go
 
+from scipy.stats import ks_2samp
+
 import subprocess
 
 import streamlit.components.v1 as components
 
 import _app_utils
 from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
-                        get_text, get_text_sheet, to_military_time
+                        get_text, get_text_sheet, to_military_time, format_sigfigs
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -630,8 +632,64 @@ Partial months are excluded for ease of interpretation.
                     )
 
                     # Save and display
-                    call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html", full_html=False, include_plotlyjs='cdn')
+                    call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html",
+                                               full_html=False, include_plotlyjs='cdn')
                     st.plotly_chart(call_count_hist)
+
+
+                    statistic, p_value = ks_2samp(daily_call_counts["Calls per Day"],
+                                                  historical_daily_calls["calls_in_day"])
+
+                    if p_value > 0.05:
+                        st.success(f"""There is no statistically significant difference between
+                                 the distributions of call data from historical data and the
+                                 simulation (p = {format_sigfigs(p_value)})
+
+                                 This means that the pattern of calls produced by the simulation
+                                 matches the pattern seen in the real-world data —
+                                 for example, the frequency or variability of daily calls
+                                 is sufficiently similar to what has been observed historically.
+                                 """)
+                    else:
+                        ks_text_string_sig = f"""
+There is a statistically significant difference between the
+distributions of call data from historical data and
+the simulation (p = {format_sigfigs(p_value)}).
+
+This means that the pattern of calls produced by the simulation
+does not match the pattern seen in the real-world data —
+for example, the frequency or variability of daily calls
+may be different.
+
+The simulation may need to be adjusted to better
+reflect the patterns of demand observed historically.
+
+"""
+
+                        if statistic < 0.1:
+                            st.info(ks_text_string_sig + f"""Although the difference is
+                                    statistically significant, the actual magnitude
+                                    of the difference (D = {format_sigfigs(statistic)}) is small.
+                                    This suggests the simulation's call volume pattern is reasonably
+                                    close to reality.
+                                    """)
+
+                        elif statistic < 0.2:
+                            st.warning(ks_text_string_sig + f"""The KS statistic (D = {format_sigfigs(statistic)})
+                                    indicates a moderate difference in
+                                    distribution. You may want to review the simulation model to
+                                    ensure it adequately reflects real-world variability.
+                                    """)
+
+                        else:
+                                st.error(ks_text_string_sig + f"""The KS statistic (D = {format_sigfigs(statistic)})
+                                   suggests a large difference in call volume patterns.
+                                   The simulation may not accurately reflect historical
+                                   demand and may need adjustment.
+                                    """)
+
+
+
 
                 plot_days_with_job_count_hist()
 
