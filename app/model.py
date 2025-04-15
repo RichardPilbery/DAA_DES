@@ -585,18 +585,53 @@ Partial months are excluded for ease of interpretation.
                     call_df["day"] = pd.to_datetime(call_df["timestamp_dt"]).dt.date
                     daily_call_counts = call_df.groupby(['run_number', 'day'])['P_ID'].agg("count").reset_index().rename(columns={"P_ID": "Calls per Day"})
 
-                    call_count_hist = px.histogram(daily_call_counts, x="Calls per Day",
-                                                title="Distribution of Jobs Per Day in Simulation")
+                    historical_daily_calls = pd.read_csv("historical_data/historical_daily_calls_breakdown.csv")
 
-                    call_count_hist.update_layout(bargap=0.03, xaxis = dict(
-                            tickmode = 'linear',
-                            tick0 = 0,
-                            dtick = 1
-                        ))
+                    # Create histogram with two traces
+                    call_count_hist = go.Figure()
 
+                    # Simulated data
+                    call_count_hist.add_trace(go.Histogram(
+                        x=daily_call_counts["Calls per Day"],
+                        name="Simulated",
+                        histnorm='percent',
+                        xbins=dict( # bins used for histogram
+                            start=0.0,
+                            end=max(daily_call_counts["Calls per Day"])+1,
+                            size=1.0
+                        ),
+                        opacity=0.75
+                    ))
+
+                    # Historical data
+                    call_count_hist.add_trace(go.Histogram(
+                        x=historical_daily_calls["calls_in_day"],
+                        xbins=dict( # bins used for histogram
+                            start=0.0,
+                            end=max(historical_daily_calls["calls_in_day"])+1,
+                            size=1.0
+                        ),
+                        name="Historical",
+                        histnorm='percent',
+                        opacity=0.75
+                    ))
+
+                    # Update layout
+                    call_count_hist.update_layout(
+                        title="Distribution of Jobs Per Day: Simulated vs Historical",
+                        barmode='overlay',
+                        bargap=0.03,
+                        xaxis=dict(
+                            tickmode='linear',
+                            tick0=0,
+                            dtick=1
+                        ),
+                        font=dict(family="Poppins", size=18, color="black")
+                    )
+
+                    # Save and display
                     call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html", full_html=False, include_plotlyjs='cdn')
-
-                    st.plotly_chart(call_count_hist.update_layout(font=dict(family="Poppins", size=18, color="black")))
+                    st.plotly_chart(call_count_hist)
 
                 plot_days_with_job_count_hist()
 
