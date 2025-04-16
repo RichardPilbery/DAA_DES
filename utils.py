@@ -11,6 +11,7 @@ from scipy.stats import (
     betabinom, pearson3, cauchy, chi2, expon, exponpow,
     gamma, lognorm, norm, powerlaw, rayleigh, uniform
 )
+import logging
 
 class Utils:
 
@@ -30,8 +31,10 @@ class Utils:
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
 
-    def __init__(self, master_seed=42):
+    def __init__(self, master_seed=42, print_debug_messages=False):
         self.master_seed = master_seed
+        self.seed_sequence = SeedSequence(self.master_seed)
+        self.print_debug_messages = print_debug_messages
         # Load in mean inter_arrival_times
         self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
@@ -73,7 +76,11 @@ class Utils:
             for _, row in self.min_max_values_df.iterrows()
         }
 
-        self.build_seeded_distributions()
+        self.build_seeded_distributions(self.seed_sequence)
+
+    def debug(self, message: str):
+        if self.print_debug_messages:
+            logging.debug(message)
 
     def current_time() -> str:
         """
@@ -328,6 +335,8 @@ class Utils:
 
         try:
             min_time, max_time = self.min_max_cache[time_type]
+            # print(f"Min time {time_type}: {min_time}")
+            # print(f"Max time {time_type}: {max_time}")
         except KeyError:
             raise ValueError(f"Min/max bounds not found for time_type='{time_type}'")
 
@@ -335,7 +344,7 @@ class Utils:
         while not (min_time <= sampled_time <= max_time):
             sampled_time = dist.sample()
 
-        print(sampled_time)
+        # print(sampled_time)
 
         return sampled_time
 
@@ -570,7 +579,7 @@ class Utils:
     #         all_dist_seeds.append(dist_ints)
     #     return all_dist_seeds
 
-    def build_seeded_distributions(self):
+    def build_seeded_distributions(self, seed_seq):
         """
         Build a dictionary of seeded distributions keyed by (vehicle_type, time_type)
 
@@ -583,7 +592,6 @@ class Utils:
         ('helicopter', 'time_mobile'): <utils.SeededDistribution object at 0x0000015216267E90>}
         """
         n = len(self.activity_time_distr)
-        seed_seq = SeedSequence(self.master_seed)
         rngs = [default_rng(s) for s in seed_seq.spawn(n)]
 
         dist_map = {
@@ -623,7 +631,7 @@ class Utils:
             # dist_name = best_fit['dist'].lower()
             dist_name = list(best_fit.keys())[0]
             dist_cls = dist_map.get(dist_name)
-            print(f"{i}/{len(self.activity_time_distr)} for {vt} {tt} set up {dist_name} {dist_cls} with params: {best_fit[dist_name]}")
+            self.debug(f"{i}/{len(self.activity_time_distr)} for {vt} {tt} set up {dist_name} {dist_cls} with params: {best_fit[dist_name]}")
 
             if dist_cls is None:
                 raise ValueError(f"Unsupported distribution type: {dist_name}")

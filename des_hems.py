@@ -45,15 +45,16 @@ class DES_HEMS:
         self.sim_duration = sim_duration
         self.warm_up_duration = warm_up_duration
         self.sim_start_date = sim_start_date
+        self.random_seed = random_seed
 
         self.demand_increase_percent = demand_increase_percent
 
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
         #self.debug(f"Ambulance data values is {self.amb_data}")
-
-        self.utils = Utils(master_seed=random_seed)
         self.print_debug_messages = print_debug_messages
+
+        self.utils = Utils(master_seed=self.random_seed, print_debug_messages=self.print_debug_messages)
 
         self.all_results_location = self.utils.ALL_RESULTS_CSV
         self.run_results_location = self.utils.RUN_RESULTS_CSV
@@ -67,7 +68,8 @@ class DES_HEMS:
         self.hems_resources = HEMSAvailability(env=self.env,
                                                sim_start_date=sim_start_date,
                                                sim_duration=sim_duration,
-                                               print_debug_messages=self.print_debug_messages
+                                               print_debug_messages=self.print_debug_messages,
+                                               master_seed=self.random_seed
                                                )
 
         # Set up empty list to store results prior to conversion to dataframe
@@ -86,7 +88,7 @@ class DES_HEMS:
 
         self.activity_duration_multiplier = activity_duration_multiplier
 
-        self.random_seed = random_seed
+
 
         # self.seeded_dists = self.utils.build_seeded_distributions(
         #     self.utils.activity_time_distr,
