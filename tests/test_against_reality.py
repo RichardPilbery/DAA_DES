@@ -13,7 +13,7 @@ Implemented tests are listed below with a [x].
 
 ## Arrivals
 
-[] Total number of calls over period
+[x] Total number of calls over period
 [] Pattern of calls across the course of a day
 [] Pattern of calls across seasons
 [] Split of calls across AMPDS cards
@@ -29,4 +29,104 @@ Implemented tests are listed below with a [x].
 [] Utilisation at different times of day
 [] Utlisation across seasons
 
+## Job durations
+
+[] Average total job durations by vehicle type
+[] Distribution of total job durations by vehicle type
+[] Average total job stage durations by vehicle type
+[] Distribution of job stage durations by vehicle type
+
 """
+
+import numpy as np
+from scipy import stats
+import pandas as pd
+from datetime import datetime
+import gc
+
+import pytest
+import warnings
+
+# Workaround to deal with relative import issues
+# https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+
+##################################
+# Calls in period                #
+##################################
+def test_average_calls_in_period():
+    try:
+        removeExistingResults()
+
+        parallelProcessJoblib(
+         total_runs=20,
+         sim_duration=60 * 24 * 7 * 52 * 1,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+         )
+
+        collateRunResults()
+
+        # Read simulation results
+        event_df = pd.read_csv("data/run_results.csv")
+
+        arrivals = event_df[event_df["time_type"] == "arrival"].copy()
+        # Check we have one row per patient before proceeding
+        assert len(arrivals) == len(arrivals.drop_duplicates(['P_ID', 'run_number']))
+
+        arrivals["timestamp_dt"] = pd.to_datetime(arrivals["timestamp_dt"])
+
+        arrivals["month"] = arrivals["timestamp_dt"].dt.strftime('%Y-%m-01')
+        monthly_jobs_per_run = arrivals[['P_ID', 'run_number', 'month']].groupby(['run_number','month']).count()
+
+        average_monthly_jobs = monthly_jobs_per_run.groupby('month').mean().round(3).reset_index()
+
+        # Pull in historical data
+        historical_monthly_jobs = pd.read_csv("historical_data/historical_monthly_totals_all_calls.csv")
+
+        # Pull out daily number of calls across simulation and reality
+        sim_calls = np.array(average_monthly_jobs['P_ID'])  # simulated data
+        real_calls = np.array(historical_monthly_jobs['inc_date'])  # real data
+
+        # Welch’s t-test (does not assume equal variances)
+        t_stat, p_value = stats.ttest_ind(sim_calls, real_calls, equal_var=False)
+
+        # Mean difference and effect size
+        mean_diff = np.mean(sim_calls) - np.mean(real_calls)
+        pooled_std = np.sqrt((np.std(sim_calls, ddof=1) ** 2 + np.std(real_calls, ddof=1) ** 2) / 2)
+        cohen_d = mean_diff / pooled_std
+
+        # Thresholds
+        p_thresh = 0.05
+        warn_effect = 0.2
+        fail_effect = 0.5
+
+        # Output for debugging
+
+        # Decision logic
+        # Will only fail if significance threshold is met and cohen's D is sufficiently large
+        if p_value < p_thresh and abs(cohen_d) > fail_effect:
+            pytest.fail(f"""Mean monthly calls significantly different between simulation and reality
+                        (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+                        Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
+                        Mean diff: {mean_diff:.2f}.""")
+        # Else will provide appropriate warning
+        elif p_value < p_thresh and abs(cohen_d) > warn_effect:
+            warnings.warn(f"""Possible practical difference in mean daily monthly between simulation and reality
+                          (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+                          Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
+                          Mean diff: {mean_diff:.2f}.""", UserWarning)
+        elif abs(cohen_d) > warn_effect:
+            warnings.warn(f"""Possible practical difference in mean monthly calls between simulation and reality
+                          (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value threshold for significance.
+                          Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
+                          Mean diff: {mean_diff:.2f}.""", UserWarning)
+
+    finally:
+        del event_df
+        gc.collect()
