@@ -58,6 +58,7 @@ from des_parallel_process import parallelProcessJoblib, collateRunResults, runSi
 ##################################
 # Calls in period                #
 ##################################
+@pytest.mark.calls
 def test_average_calls_in_period():
     try:
         removeExistingResults()
@@ -111,22 +112,87 @@ def test_average_calls_in_period():
         # Decision logic
         # Will only fail if significance threshold is met and cohen's D is sufficiently large
         if p_value < p_thresh and abs(cohen_d) > fail_effect:
-            pytest.fail(f"""Mean monthly calls significantly different between simulation and reality
-                        (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+            pytest.fail(f"""[SIM-QC][FAIL] **Mean monthly calls** significantly different between
+                        simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                         Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                         Mean diff: {mean_diff:.2f}.""")
         # Else will provide appropriate warning
         elif p_value < p_thresh and abs(cohen_d) > warn_effect:
-            warnings.warn(f"""Possible practical difference in mean daily monthly between simulation and reality
-                          (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+            warnings.warn(f"""[SIM-QC][WARN] Possible practical difference in **mean monthly calls**
+                          between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                           Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                           Mean diff: {mean_diff:.2f}.""", UserWarning)
         elif abs(cohen_d) > warn_effect:
-            warnings.warn(f"""Possible practical difference in mean monthly calls between simulation and reality
-                          (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value threshold for significance.
+            warnings.warn(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                          difference in **mean monthly calls** between simulation and reality
+                          (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
+                          threshold for significance.
                           Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                           Mean diff: {mean_diff:.2f}.""", UserWarning)
 
     finally:
-        del event_df
+        del event_df, arrivals
+        gc.collect()
+
+
+
+#############################################
+# Distribution of Calls Received per Day    #
+#############################################
+
+@pytest.mark.calls
+def test_distribution_daily_calls():
+    try:
+        removeExistingResults()
+
+        parallelProcessJoblib(
+         total_runs=2,
+         sim_duration=60 * 24 * 7 * 52 * 2,
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False
+         )
+
+        collateRunResults()
+
+        # Read simulation results
+        event_df = pd.read_csv("data/run_results.csv")
+
+        arrivals = event_df[event_df["time_type"] == "arrival"].copy()
+        # Check we have one row per patient before proceeding
+        assert len(arrivals) == len(arrivals.drop_duplicates(['P_ID', 'run_number']))
+
+        arrivals["timestamp_dt"] = pd.to_datetime(arrivals["timestamp_dt"])
+        arrivals["date"] = arrivals["timestamp_dt"].dt.strftime('%Y-%m-%d')
+        sim_daily_call_counts = arrivals.groupby(['run_number', 'date'])[['P_ID']].count().reset_index().rename(columns={'P_ID':'calls_in_day'})
+        historical_daily_calls = pd.read_csv("historical_data/historical_daily_calls_breakdown.csv")
+
+        assert len(sim_daily_call_counts) > 0, "No simulated daily calls found"
+        assert len(historical_daily_calls) > 0, "No historical data found"
+
+        statistic, p_value = stats.ks_2samp(sim_daily_call_counts['calls_in_day'],
+                                        historical_daily_calls["calls_in_day"])
+
+        # Thresholds
+        p_thresh = 0.05
+        warn_effect = 0.1 #  A KS statistic of 0.1 implies up to a 10% difference between CDFs — reasonable as a caution threshold.
+        fail_effect = 0.2 # A 20% difference netweem CDFs is substantial — reasonable for failure.
+
+        if p_value < p_thresh and statistic > fail_effect:
+            pytest.fail(f"""[SIM-QC][FAIL] Significant and large difference in distribution of
+                        **daily calls** between simulation and reality
+                        (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
+        # Else will provide appropriate warning
+        elif p_value < p_thresh and statistic > warn_effect:
+            warnings.warn(f"""[SIM-QC][WARN] Possible practical difference in distribution of
+                          **daily calls** between simulation and reality
+                          (p={p_value:.4f}, KS statistic={statistic:.2f}).""", UserWarning)
+        elif statistic > warn_effect:
+            warnings.warn(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                          difference in distribution of **daily calls** between simulation
+                          and reality (p={p_value:.4f}, KS statistic={statistic:.2f}) but did not
+                          meet the p-value threshold for significance.""", UserWarning)
+
+    finally:
+        del event_df, arrivals
         gc.collect()
