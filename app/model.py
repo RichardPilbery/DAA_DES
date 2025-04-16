@@ -636,13 +636,15 @@ Partial months are excluded for ease of interpretation.
                             tickmode='linear',
                             tick0=0,
                             dtick=1
-                        ),
-                        font=dict(family="Poppins", size=18, color="black")
+                        )
                     )
 
                     # Save and display
                     call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html",
                                                full_html=False, include_plotlyjs='cdn')
+
+                    call_count_hist.update_layout(font=dict(family="Poppins", size=18, color="black"))
+
                     st.plotly_chart(call_count_hist)
 
                     st.caption("""

@@ -148,35 +148,6 @@ def plot_historical_job_duration_vs_simulation_overall(
 
     fig = go.Figure()
 
-    ## OLD METHOD - filled box
-
-    # # Add the historical range for the car
-    # historical_activity_times_car = historical_activity_times[historical_activity_times["vehicle_type"]=="car"]
-    # fig.add_trace(
-    #     go.Bar(
-    #         x=["Car"],
-    #         y=[q75(historical_activity_times_car['value']) - q25(historical_activity_times_car['value'])],  # Height of the box
-    #         base=[q25(historical_activity_times_car['value'])],  # Start from q25
-    #         marker=dict(color="rgba(0, 176, 185, 0.3)"),
-    #         showlegend=True,
-    #         name="Usual Historical Range - Car"
-    #     )
-    # )
-
-    # # Add the historical range for the helicopter
-    # historical_activity_times_helicopter = historical_activity_times[historical_activity_times["vehicle_type"]=="helicopter"]
-
-    # fig.add_trace(
-    #     go.Bar(
-    #         x=["Helicopter"],
-    #         y=[q75(historical_activity_times_helicopter['value']) - q25(historical_activity_times_helicopter['value'])],  # Height of the box
-    #         base=[q25(historical_activity_times_helicopter['value'])],  # Start from q25
-    #         marker=dict(color="rgba(0, 176, 185, 0.3)"),
-    #         showlegend=True,
-    #         name="Usual Historical Range - Helicoper"
-    #     )
-    # )
-
     historical_activity_times_overall = historical_activity_times[historical_activity_times["name"]=="total_duration"]
 
     historical_activity_times_overall['what'] = 'Historical'
@@ -184,15 +155,6 @@ def plot_historical_job_duration_vs_simulation_overall(
     historical_activity_times_overall.rename(columns={'value': 'resource_use_duration'}, inplace=True)
 
     full_activity_duration_df = pd.concat([historical_activity_times_overall, utilisation_model_df])
-
-    # Add **historical** duration figures for cars and helicopters
-    # fig.add_trace(
-    #     go.Box(
-    #         y=full_activity_duration_df['resource_use_duration'],
-    #         x=full_activity_duration_df['vehicle_type'].str.title(),
-    #         color=full_activity_duration_df['what']
-    #     )
-    # )
 
     if violin:
         fig = px.violin(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",

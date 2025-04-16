@@ -27,8 +27,7 @@ Implemented tests are listed below with a [x].
 
 [] Total utilisation
 [] Utilisation split across different resources
-[] Utilisation at different times of day
-[] Utlisation across seasons
+[] Average jobs per day per vehicle
 
 ## Job durations
 
