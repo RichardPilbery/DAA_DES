@@ -5,6 +5,12 @@ import pandas as pd
 import ast
 import scipy
 import calendar
+from numpy.random import SeedSequence, default_rng
+from scipy.stats import (
+    poisson, bernoulli, triang, erlang, weibull_min, exponweib,
+    betabinom, pearson3, cauchy, chi2, expon, exponpow,
+    gamma, lognorm, norm, powerlaw, rayleigh, uniform
+)
 
 class Utils:
 
@@ -24,8 +30,8 @@ class Utils:
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
 
-    def __init__(self):
-
+    def __init__(self, master_seed=42):
+        self.master_seed = master_seed
         # Load in mean inter_arrival_times
         self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
@@ -55,12 +61,19 @@ class Utils:
         self.activity_time_distr = activity_time_data
 
         # Read in incident per day distribution data into a dictionary
-        activity_time_data = []
+        inc_per_day_data = []
         with open("distribution_data/inc_per_day_distributions.txt", "r") as inFile:
             inc_per_day_data = ast.literal_eval(inFile.read())
         inFile.close()
         self.inc_per_day_distr = inc_per_day_data
 
+        # One-time setup at model init
+        self.min_max_cache = {
+            row['time']: (row['min_value_mins'], row['max_value_mins'])
+            for _, row in self.min_max_values_df.iterrows()
+        }
+
+        self.build_seeded_distributions()
 
     def current_time() -> str:
         """
@@ -182,7 +195,7 @@ class Utils:
             (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
         ]
 
-        return  pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
 
     def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
         """
@@ -208,7 +221,7 @@ class Utils:
         ]
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
-    
+
     def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
         """
             This function will allocate a HEMS result based on care category and helicopter benefit
@@ -279,22 +292,50 @@ class Utils:
 
         """
 
-        distribution = {}
+        # distribution = {}
 
-        # Calculate the maximum time allowed for given type of job cycle time
-        max_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].max_value_mins.iloc[0]
-        min_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].min_value_mins.iloc[0]
+        # # Calculate the maximum time allowed for given type of job cycle time
+        # max_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].max_value_mins.iloc[0]
+        # min_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].min_value_mins.iloc[0]
 
-        for i in self.activity_time_distr:
-            #print(i)
-            if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
-                #print('Match')
-                distribution = i['best_fit']
+        # for i in self.activity_time_distr:
+        #     #print(i)
+        #     if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
+        #         #print('Match')
+        #         distribution = i['best_fit']
 
-        sampled_time = -1000
+        # sampled_time = -1000
 
-        while (min_time > sampled_time) or (sampled_time > max_time):
-            sampled_time = self.sample_from_distribution(distribution)
+        # while (min_time > sampled_time) or (sampled_time > max_time):
+        #     sampled_time = self.sample_from_distribution(distribution)
+
+        # return sampled_time
+        # print(self.activity_time_distr)
+        # lookup = {
+        #     (entry['vehicle_type'], entry['time_type']): entry
+        #     for entry in self.activity_time_distr
+        # }
+        # print(lookup)
+
+        dist = self.activity_time_distr.get((vehicle_type, time_type))
+        # print(dist)
+
+        if dist is None:
+            raise ValueError(f"No distribution found for ({vehicle_type}, {time_type})")
+
+        # min_time = self.min_max_values_df.loc[self.min_max_values_df['time'] == time_type, 'min_value_mins'].iloc[0]
+        # max_time = self.min_max_values_df.loc[self.min_max_values_df['time'] == time_type, 'max_value_mins'].iloc[0]
+
+        try:
+            min_time, max_time = self.min_max_cache[time_type]
+        except KeyError:
+            raise ValueError(f"Min/max bounds not found for time_type='{time_type}'")
+
+        sampled_time = -1
+        while not (min_time <= sampled_time <= max_time):
+            sampled_time = dist.sample()
+
+        print(sampled_time)
 
         return sampled_time
 
@@ -321,7 +362,7 @@ class Utils:
                 min_n = i['min_n_per_day']
 
         sampled_inc_per_day = -1
-        
+
         while not (sampled_inc_per_day >= min_n and sampled_inc_per_day <= max_n):
             sampled_inc_per_day = self.sample_from_distribution(distribution)
 
@@ -504,7 +545,7 @@ class Utils:
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
-    
+
     def biased_mean(series: pd.Series, bias: float = .6) -> float:
         """
 
@@ -515,7 +556,90 @@ class Utils:
 
         if len(series) == 1:
             return series.iloc[0]  # Return the only value if there's just one
-        
+
         sorted_vals = np.sort(series)  # Ensure values are sorted
         weights = np.linspace(1, bias * 2, len(series))  # Increasing weights with larger values
         return np.average(sorted_vals, weights=weights)
+
+    # def get_distribution_seeds(master_seed, n_replications, n_dists_per_rep):
+    #     rep_seqs = SeedSequence(master_seed).spawn(n_replications)
+    #     all_dist_seeds = []
+    #     for seq in rep_seqs:
+    #         dist_seqs = seq.spawn(n_dists_per_rep)
+    #         dist_ints = [s.generate_state(1)[0] for s in dist_seqs]
+    #         all_dist_seeds.append(dist_ints)
+    #     return all_dist_seeds
+
+    def build_seeded_distributions(self):
+        """
+        Build a dictionary of seeded distributions keyed by (vehicle_type, time_type)
+
+        Returns
+        -------
+        dict of (vehicle_type, time_type) -> SeededDistribution
+
+        e.g. {('helicopter', 'time_allocation'): <utils.SeededDistribution object at 0x000001521627C750>,
+        ('car', 'time_allocation'): <utils.SeededDistribution object at 0x000001521627D410>,
+        ('helicopter', 'time_mobile'): <utils.SeededDistribution object at 0x0000015216267E90>}
+        """
+        n = len(self.activity_time_distr)
+        seed_seq = SeedSequence(self.master_seed)
+        rngs = [default_rng(s) for s in seed_seq.spawn(n)]
+
+        dist_map = {
+            'poisson': poisson,
+            'bernoulli': bernoulli,
+            'triang': triang,
+            'erlang': erlang,
+            'weibull_min': weibull_min,
+            'expon_weib': exponweib,
+            'betabinom': betabinom,
+            'pearson3': pearson3,
+            'cauchy': cauchy,
+            'chi2': chi2,
+            'expon': expon,
+            'exponential': expon,       # alias for consistency
+            'exponpow': exponpow,
+            'gamma': gamma,
+            'lognorm': lognorm,
+            'norm': norm,
+            'normal': norm,             # alias for consistency
+            'powerlaw': powerlaw,
+            'rayleigh': rayleigh,
+            'uniform': uniform
+        }
+
+        seeded_distributions = {}
+
+        # print(activity_time_distr)
+        print(len(self.activity_time_distr))
+        i = 0
+        for entry, rng in zip(self.activity_time_distr, rngs):
+            i += 1
+            vt = entry['vehicle_type']
+            tt = entry['time_type']
+            best_fit = entry['best_fit']
+
+            # dist_name = best_fit['dist'].lower()
+            dist_name = list(best_fit.keys())[0]
+            dist_cls = dist_map.get(dist_name)
+            print(f"{i}/{len(self.activity_time_distr)} for {vt} {tt} set up {dist_name} {dist_cls} with params: {best_fit[dist_name]}")
+
+            if dist_cls is None:
+                raise ValueError(f"Unsupported distribution type: {dist_name}")
+
+            params = best_fit[dist_name]
+
+            seeded_distributions[(vt, tt)] = SeededDistribution(dist_cls, rng, **params)
+
+        self.activity_time_distr =  seeded_distributions
+
+        return seeded_distributions
+
+class SeededDistribution:
+    def __init__(self, dist, rng, **kwargs):
+        self.dist = dist(**kwargs)
+        self.rng = rng
+
+    def sample(self, size=None):
+        return self.dist.rvs(size=size, random_state=self.rng)

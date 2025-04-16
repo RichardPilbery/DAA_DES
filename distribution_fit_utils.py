@@ -21,24 +21,24 @@ class DistributionFitUtils():
         wrangling and then determine distributions and probabilities required
         for the Discrete Event Simulation
 
-        example usage: 
+        example usage:
             my_data = DistributionFitUtils('data/my_data.csv')
             my_data.import_and_wrangle()
-  
+
     """
 
     def __init__(self, file_path: str, calculate_school_holidays = False, school_holidays_years = 0):
-       
+
         self.file_path = file_path
         self.df = pd.DataFrame()
-        
+
         # The number of additional years of school holidays
         # that will be calculated over that maximum date in the provided dataset
-        self.school_holidays_years = school_holidays_years 
-        self.calculate_school_holidays = calculate_school_holidays 
-        
+        self.school_holidays_years = school_holidays_years
+        self.calculate_school_holidays = calculate_school_holidays
+
         self.times_to_fit = [
-            {"hems_result": "Patient Treated (not conveyed)", 
+            {"hems_result": "Patient Treated (not conveyed)",
             "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear']},
             {"hems_result": "Patient Conveyed" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']},
             {"hems_result": "Stand Down Before Mobile" , "times_to_fit" : ['time_allocation', 'time_to_clear']},
@@ -55,7 +55,20 @@ class DistributionFitUtils():
             "expon_weib",
             "betabinom",
             "pearson3",
-        ] + get_common_distributions()
+            "cauchy",
+            "chi2",
+            "expon",
+            "exponpow",
+            "gamma",
+            "lognorm",
+            "norm",
+            "powerlaw",
+            "rayleigh",
+            "uniform"
+        ]
+        # SR 16-04-2025 Have hardcoded the common distributions
+        # to make setup for random number generation more robust
+        #+ get_common_distributions()
 
     def removeExistingResults(self, folder: str) -> None:
             """
@@ -72,19 +85,19 @@ class DistributionFitUtils():
 
     def getBestFit(self, q_times, distr=get_common_distributions(), show_summary=False):
         """
-        
-            Convenience function for Fitter. 
+
+            Convenience function for Fitter.
             Returns model and parameters that is considered
             the 'best fit'.
 
             TODO: Determine how Fitter works this out
-        
+
         """
 
         if(q_times.size > 0):
             if(len(distr) > 0):
                 f = Fitter(q_times, timeout=60, distributions=distr)
-            else:  
+            else:
                 f = Fitter(q_times, timeout=60)
             f.fit()
             if show_summary == True:
@@ -96,20 +109,20 @@ class DistributionFitUtils():
 
     def import_and_wrangle(self):
         """
-        
+
             Function to import CSV, add additional columns that are required
             and then sequentially execute other class functions to generate
             the probabilities and distributions required for the DES.
 
             TODO: Additional logic is required to check the imported CSV
             for missing values, incorrect columns names etc.
-        
+
         """
 
         try:
             df = pd.read_csv(self.file_path, quoting=QUOTE_ALL)
             self.df = df
-            
+
             # Perhaps run some kind of checking function here.
 
         except FileNotFoundError:
@@ -121,7 +134,7 @@ class DistributionFitUtils():
         self.df['hour'] = self.df['inc_date'].dt.hour                      # Hour of the day
         self.df['day_of_week'] = self.df['inc_date'].dt.day_name()         # Day of the week (e.g., Monday)
         self.df['month'] = self.df['inc_date'].dt.month
-        self.df['quarter'] = self.df['inc_date'].dt.quarter   
+        self.df['quarter'] = self.df['inc_date'].dt.quarter
         self.df['first_day_of_month'] = self.df['inc_date'].to_numpy().astype('datetime64[M]')
 
         # Replacing a upper quartile limit on job cycle times and
@@ -137,7 +150,7 @@ class DistributionFitUtils():
 
         self.removeExistingResults(Utils.HISTORICAL_FOLDER)
         self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
-        
+
 
         #get proportions of AMPDS card by hour of day
         self.hour_by_ampds_card_probs()
@@ -190,16 +203,16 @@ class DistributionFitUtils():
         self.historical_monthly_totals_by_hour_of_day()
         self.historical_monthly_resource_utilisation()
         self.historical_monthly_totals_all_calls()
-            
+
 
     def hour_by_ampds_card_probs(self):
         """
-        
-            Calculates the proportions of calls that are triaged with 
+
+            Calculates the proportions of calls that are triaged with
             a specific AMPDS card. This is stratified by hour of day
 
             TODO: Determine whether this should also be stratified by yearly quarter
-        
+
         """
         category_counts = self.df.groupby(['hour', 'ampds_card']).size().reset_index(name='count')
         total_counts = category_counts.groupby('hour')['count'].transform('sum')
@@ -212,10 +225,10 @@ class DistributionFitUtils():
 
     def sex_by_ampds_card_probs(self):
         """
-        
+
             Calculates the probability that the patient will be female
             stratified by AMPDS card.
-        
+
         """
         age_df = self.df
         category_counts = age_df.groupby(['ampds_card', 'sex']).size().reset_index(name='count')
@@ -227,17 +240,17 @@ class DistributionFitUtils():
 
     def activity_time_distributions(self):
         """
-        
+
             Determine the 'best' distribution for each phase of a call
             i.e. Allocation time, Mobilisation time, Time to scene
             Time on scene, Travel time to hospital and handover, Time to clear.
             Not all times will apply to all cases, so the class 'times_to_fit'
             variable is a list of dictionaries, which contains the times to fit
-            
+
             The data is currently stratitied by HEMS_result and vehicle type fields.
-        
+
         """
-       
+
         vehicle_type = self.df['vehicle_type'].dropna().unique()
 
         # We'll need to make sure that where a distribution is missing that the time is set to 0 in the model.
@@ -260,15 +273,15 @@ class DistributionFitUtils():
                         # which is causing issues with fitting. For time on scene, will
                         # use a simplified fitting ignoring hems_result as a category
                         fit_times = self.df[
-                            (self.df.vehicle_type == vt) & 
-                            (self.df[ttf] >= min_time) & 
-                            (self.df[ttf] <= max_time) 
+                            (self.df.vehicle_type == vt) &
+                            (self.df[ttf] >= min_time) &
+                            (self.df[ttf] <= max_time)
                         ][ttf]
                     else:
                         fit_times = self.df[
-                            (self.df.vehicle_type == vt) & 
-                            (self.df[ttf] >= min_time) & 
-                            (self.df[ttf] <= max_time) & 
+                            (self.df.vehicle_type == vt) &
+                            (self.df[ttf] >= min_time) &
+                            (self.df[ttf] <= max_time) &
                             (self.df.hems_result == row['hems_result'])
                         ][ttf]
                     #print(fit_times[:10])
@@ -284,10 +297,10 @@ class DistributionFitUtils():
 
     def age_distributions(self):
         """
-        
+
             Determine the 'best' distribution for age stratified by
             AMPDS card
-        
+
         """
 
         age_distr = []
@@ -309,10 +322,10 @@ class DistributionFitUtils():
 
     def inter_arrival_times(self):
         """
-        
+
             Calculate the mean inter-arrival times for patients
             stratified by hour, and and yearly quarter
-        
+
         """
 
         ia_df = self.df[['date_only', 'quarter', 'hour']].dropna()
@@ -325,7 +338,7 @@ class DistributionFitUtils():
                 # max_arrivals_per_hour=('n', lambda x: round(60 / np.max(x), 3)),
                 # min_arrivals_per_hour=('n', lambda x: round(60 / np.min(x),3)),
                 mean_cases=('n', lambda x: round(x.mean(), 1)),
-                # sd_cases=('n', lambda x: round(x.std(), 3)), 
+                # sd_cases=('n', lambda x: round(x.std(), 3)),
                 mean_iat=('n', lambda x: 60 / x.mean())
                 # n=('n', 'size')
             )
@@ -340,10 +353,10 @@ class DistributionFitUtils():
 
     def incidents_per_day(self):
         """
-        
+
             Determine the best fitting distribution for incidents per
             day stratified by quarter
-        
+
         """
 
         inc_df = self.df[['inc_date', 'date_only', 'quarter']]
@@ -375,19 +388,19 @@ class DistributionFitUtils():
         for season in seasons:
 
             # Added ceiling to convert mean to integer values
-            fit_season = mean_jobs_df[mean_jobs_df['season'] == season]['mean_jobs_per_day'].apply(math.ceil) 
-            
+            fit_season = mean_jobs_df[mean_jobs_df['season'] == season]['mean_jobs_per_day'].apply(math.ceil)
+
             # Compute best fit distribution
             best_fit = self.getBestFit(fit_season, distr=self.sim_tools_distr_plus)
 
             return_dict = {
                 "season": season,
                 "best_fit": best_fit,
-                "min_n_per_day": min_n_per_day,  
+                "min_n_per_day": min_n_per_day,
                 "max_n_per_day": max_n_per_day,
                 "mean_n_per_day": fit_season.mean()
             }
-            
+
             jpd_distr.append(return_dict)
 
         # Step 7: Save results to file
@@ -397,10 +410,10 @@ class DistributionFitUtils():
 
     def enhanced_or_critical_care_by_ampds_card_probs(self):
         """
-        
+
             Calculates the probabilty of enhanced or critica care resource beign required
-            based on the AMPDS card 
-        
+            based on the AMPDS card
+
         """
 
         ec_df = self.df[['ampds_card', 'ec_benefit', 'cc_benefit']].copy()
@@ -414,7 +427,7 @@ class DistributionFitUtils():
                 return 'EC'
             else:
                 return 'REG'
-            
+
         ec_df['care_category'] = ec_df.apply(assign_care_category, axis = 1)
 
         care_cat_counts = ec_df.groupby(['ampds_card', 'care_category']).size().reset_index(name='count')
@@ -428,10 +441,10 @@ class DistributionFitUtils():
 
     def hourly_arrival_by_qtr_probs(self):
         """
-        
+
             Calculates the proportions of calls arriving in any given hour
             stratified by yearly quarter
-        
+
         """
 
         ia_df = self.df[['quarter', 'hour']].dropna()
@@ -445,10 +458,10 @@ class DistributionFitUtils():
 
     def callsign_group_by_ampds_card_and_hour_probs(self):
         """
-        
+
             Calculates the probabilty of a specific callsign being allocated to
             a call based on the AMPDS card category and hour of day
-        
+
         """
         callsign_counts = self.df.groupby(['ampds_card', 'hour', 'callsign_group']).size().reset_index(name='count')
 
@@ -460,10 +473,10 @@ class DistributionFitUtils():
 
     def vehicle_type_by_month_probs(self):
         """
-        
+
             Calculates the probabilty of a car/helicopter being allocated to
             a call based on the callsign group and month of the year
-        
+
         """
         callsign_counts = self.df.groupby(['callsign_group', 'month', 'vehicle_type']).size().reset_index(name='count')
 
@@ -475,13 +488,13 @@ class DistributionFitUtils():
 
     def hems_result_by_callsign_group_and_vehicle_type_probs(self):
         """
-        
+
             Calculates the probabilty of a specific HEMS result being allocated to
             a call based on the callsign group and hour of day
 
             TODO: These probability calculation functions could probably be refactored into a single
             function and just specify columns and output name
-        
+
         """
         hems_counts = self.df.groupby(['hems_result', 'callsign_group', 'vehicle_type']).size().reset_index(name='count')
 
@@ -490,13 +503,13 @@ class DistributionFitUtils():
 
         hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+", index=False)
 
-        
+
     def hems_result_by_care_cat_and_helicopter_benefit_probs(self):
         """
-        
+
             Calculates the probabilty of a specific HEMS result being allocated to
             a call based on the care category amd whether a helicopter is beneficial
-        
+
         """
 
         # Wrangle the data...trying numpy for a change
@@ -509,8 +522,8 @@ class DistributionFitUtils():
                         self.df["cc_benefit"] == "y",
                         self.df["ec_benefit"] == "y",
                         self.df["hems_result"].isin([
-                            "Stand Down En Route", 
-                            "Landed but no patient contact", 
+                            "Stand Down En Route",
+                            "Landed but no patient contact",
                             "Stand Down Before Mobile"
                         ])
                     ],
@@ -538,9 +551,9 @@ class DistributionFitUtils():
 
     def pt_outcome_by_hems_result_and_care_category_probs(self):
         """
-        
+
             Calculates the probabilty of a specific patient outcome based on HEMS result
-        
+
         """
 
         hems_df = (
@@ -551,8 +564,8 @@ class DistributionFitUtils():
                         self.df["cc_benefit"] == "y",
                         self.df["ec_benefit"] == "y",
                         self.df["hems_result"].isin([
-                            "Stand Down En Route", 
-                            "Landed but no patient contact", 
+                            "Stand Down En Route",
+                            "Landed but no patient contact",
                             "Stand Down Before Mobile"
                         ])
                     ],
@@ -635,7 +648,7 @@ class DistributionFitUtils():
 
         # Multiple resources can be sent to the same job.
         monthly_df = self.df[['inc_date', 'first_day_of_month']].dropna()
-        
+
         monthly_totals_df = monthly_df.groupby(['first_day_of_month']).count().reset_index()
 
         monthly_totals_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_all_calls.csv', mode="w+", index=False)
@@ -647,7 +660,7 @@ class DistributionFitUtils():
 
         # Multiple resources can be sent to the same job.
         monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign']].dropna()
-        
+
         monthly_totals_df = monthly_df.groupby(['first_day_of_month', 'callsign']).count().reset_index()
 
         #print(monthly_totals_df.head())
@@ -666,7 +679,7 @@ class DistributionFitUtils():
         # Multiple resources can be sent to the same job.
         monthly_df = self.df[['inc_date', 'first_day_of_month', 'hour']].dropna()\
             .drop_duplicates(subset="inc_date", keep="first")
-        
+
         monthly_totals_df = monthly_df.groupby(['first_day_of_month', 'hour']).count().reset_index()
 
         #print(monthly_totals_df.head())
@@ -685,7 +698,7 @@ class DistributionFitUtils():
         # Multiple resources can be sent to the same job.
         monthly_df = self.df[['inc_date', 'first_day_of_month', 'day_of_week']].dropna()\
             .drop_duplicates(subset="inc_date", keep="first")
-        
+
         monthly_totals_df = monthly_df.groupby(['first_day_of_month', 'day_of_week']).count().reset_index()
 
         #print(monthly_totals_df.head())
@@ -695,14 +708,14 @@ class DistributionFitUtils():
         #print(monthly_totals_pivot_df.head())
 
         monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_totals_by_day_of_week.csv', mode="w+", index=False)
-    
+
     def historical_median_time_of_activities_by_month_and_resource_type(self):
         """
             Calculate the median time for each of the job cycle phases stratified by month and vehicle type
         """
 
         median_df = self.df[['first_day_of_month', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
-        
+
         median_df['total_job_time'] = median_df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].sum(axis=1)
 
         # Replacing zeros with NaN to exclude from median calculation
@@ -722,7 +735,7 @@ class DistributionFitUtils():
         pivot_data = pivot_data.reset_index()
 
         pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
-    
+
     def historical_monthly_resource_utilisation(self):
         """
             Calculates number of, and time spent on, incidents per month stratified by callsign
@@ -732,7 +745,7 @@ class DistributionFitUtils():
         monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
-        
+
         monthly_totals_df = monthly_df.groupby(['callsign', 'first_day_of_month'], as_index=False)\
             .agg(n = ('callsign', 'size'), total_time = ('total_time', 'sum'))
 
@@ -757,7 +770,7 @@ class DistributionFitUtils():
 
         print(median_df.quantile(.75))
         # pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
-    
+
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils

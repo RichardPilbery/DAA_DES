@@ -4,7 +4,7 @@ from random import expovariate, uniform
 from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 # from random import expovariate
-from utils import Utils
+from utils import Utils, SeededDistribution
 from class_patient import Patient
 # Revised class for HEMS availability
 from class_hems_availability import HEMSAvailability
@@ -15,6 +15,11 @@ import warnings
 import numpy as np
 from math import floor
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+# import all distributions
+import ast
+from numpy.random import SeedSequence
+from typing import List, Dict, Tuple
+from numpy.random import SeedSequence, default_rng
 
 import logging
 logging.basicConfig(filename='log.txt', filemode="w", level=logging.DEBUG, format='')
@@ -32,7 +37,8 @@ class DES_HEMS:
 
     def __init__(self,
                 run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str,
-                amb_data: bool, demand_increase_percent: float, activity_duration_multiplier: float,
+                amb_data: bool, random_seed: int, demand_increase_percent: float,
+                activity_duration_multiplier: float,
                 print_debug_messages: bool):
 
         self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
@@ -46,7 +52,7 @@ class DES_HEMS:
         self.amb_data = amb_data
         #self.debug(f"Ambulance data values is {self.amb_data}")
 
-        self.utils = Utils()
+        self.utils = Utils(master_seed=random_seed)
         self.print_debug_messages = print_debug_messages
 
         self.all_results_location = self.utils.ALL_RESULTS_CSV
@@ -80,38 +86,51 @@ class DES_HEMS:
 
         self.activity_duration_multiplier = activity_duration_multiplier
 
+        self.random_seed = random_seed
+
+        # self.seeded_dists = self.utils.build_seeded_distributions(
+        #     self.utils.activity_time_distr,
+        #     master_seed=self.random_seed
+        #     )
+
     def debug(self, message: str):
         if self.print_debug_messages:
             logging.debug(message)
             #print(message)
 
-    def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
-        """
-            Convenience function to return the time between incidents
-            using either NSPPThinning or sampling the exponential
-            distribution
+    # SR NOTE 2025-04-16: Commented out as believe this is no longer in use
+    # To my knowledge this approach was dropped as it was incorrectly estimating
+    # the number of calls and has been replaced with the use of calls_per_hour
+    # and predetermine_call_arrivals
+    # def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
+    #     """
+    #         Convenience function to return the time between incidents
+    #         using either NSPPThinning or sampling the exponential
+    #         distribution
 
-            Arrivals distribution using NSPPThinning
-            HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
+    #         Arrivals distribution using NSPPThinning
+    #         HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
 
-        """
+    #     """
 
-        if NSPPThin:
-           # Determine the inter-arrival time usiong NSPPThinning
-            arrivals_dist = NSPPThinning(
-                data = self.inter_arrival_times_df[
-                    (self.inter_arrival_times_df['quarter'] == qtr)
-                ],
-                random_seed1 = self.run_number * 112,
-                random_seed2 = self.run_number * 999
-            )
+    #     if NSPPThin:
+    #        # Determine the inter-arrival time usiong NSPPThinning
+    #         arrivals_dist = NSPPThinning(
+    #             data = self.inter_arrival_times_df[
+    #                 (self.inter_arrival_times_df['quarter'] == qtr)
+    #             ],
+    #             random_seed1 = self.run_number * 112,
+    #             random_seed2 = self.run_number * 999
+    #         )
 
-            return arrivals_dist.sample(hour)
+    #         return arrivals_dist.sample(hour)
 
-        else:
-            # Or just regular exponential distrib.
-            inter_time = self.utils.inter_arrival_rate(hour, qtr)
-            return expovariate(1.0 / inter_time)
+    #     else:
+    #         # Or just regular exponential distrib.
+    #         # inter_time = self.utils.inter_arrival_rate(hour, qtr)
+    #         # return expovariate(1.0 / inter_time)
+    #         # return Exponential(inter_time, random_seed=self.random_seeds[0])
+    #         return self.arrival_dist.sample()
 
 
     def calls_per_hour(self, quarter: int) -> dict:
