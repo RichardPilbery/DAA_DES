@@ -10,15 +10,16 @@ Implemented tests are listed below with a [x].
 ## Additional Helicopters
 
 [] Adding an additional helicopter results in more calls being answered
+[] Removing a helicopter results in fewer calls being answered
 
 ## Additional cars
 
 [] Adding an additional car results in more calls being answered
+[] Removing a car results in fewer calls being answered
 
 ## Adjusting operating hours
 
 [] Extending operating hours results in more calls being answered
 [] Decreasing operating hours results in fewer calls being answered
-
 
 """
