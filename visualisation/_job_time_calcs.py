@@ -18,8 +18,10 @@ from datetime import datetime, timedelta
 import plotly.express as px
 from _utilisation_result_calculation import make_utilisation_model_dataframe
 import plotly.graph_objects as go
+from scipy.stats import ks_2samp
+import streamlit as st
 
-from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75
+from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75, format_sigfigs
 
 def create_simulation_event_duration_df(
       event_log_path="../data/run_results.csv"
@@ -82,7 +84,7 @@ def summarise_event_times(event_log_path="../data/run_results.csv"):
 
     return event_durations_sim
 
-def get_historical_times(
+def get_historical_times_summary(
         historical_duration_path='../historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv'
         ):
     historical_activity_times = pd.read_csv(
@@ -93,6 +95,15 @@ def get_historical_times(
     # Parse month manually as more controllable
     historical_activity_times['month'] = pd.to_datetime(
         historical_activity_times['month'], format="%Y-%m-%d"
+        )
+
+    return historical_activity_times
+
+def get_historical_times_breakdown(
+        historical_duration_path='../historical_data/historical_job_durations_breakdown.csv'
+        ):
+    historical_activity_times = pd.read_csv(
+        historical_duration_path
         )
 
     return historical_activity_times
@@ -128,131 +139,101 @@ def get_total_times_model(get_summary=False,
 def plot_historical_job_duration_vs_simulation_overall(
         historical_activity_times,
         utilisation_model_df,
-        use_poppins=True
+        use_poppins=True,
+        write_to_html=False,
+        html_output_filepath="fig_job_durations_historical.html",
+        violin=False
+
 ):
 
     fig = go.Figure()
 
-    # Add the historical range for the car
-    fig.add_trace(
-        go.Bar(
-            x=["Car"],
-            y=[q75(historical_activity_times['median_car_total_job_time']) - q25(historical_activity_times['median_car_total_job_time'])],  # Height of the box
-            base=[q25(historical_activity_times['median_car_total_job_time'])],  # Start from q10
-            marker=dict(color="rgba(0, 176, 185, 0.3)"),
-            showlegend=True,
-            name="Usual Historical Range - Car"
-        )
-    )
+    historical_activity_times_overall = historical_activity_times[historical_activity_times["name"]=="total_duration"]
 
-    # Add the historical range for the helicopter
-    fig.add_trace(
-        go.Bar(
-            x=["Helicopter"],
-            y=[q75(historical_activity_times['median_helicopter_total_job_time']) - q25(historical_activity_times['median_helicopter_total_job_time'])],  # Height of the box
-            base=[q25(historical_activity_times['median_helicopter_total_job_time'])],  # Start from q10
-            marker=dict(color="rgba(0, 176, 185, 0.3)"),
-            showlegend=True,
-            name="Usual Historical Range - Helicoper"
-        )
-    )
+    historical_activity_times_overall['what'] = 'Historical'
+    utilisation_model_df['what'] = 'Simulated'
+    historical_activity_times_overall.rename(columns={'value': 'resource_use_duration'}, inplace=True)
 
-    # Add duration figures for both cars and helicopters
-    fig.add_trace(
-        go.Box(
-            y=utilisation_model_df['resource_use_duration'],
-            x=utilisation_model_df['vehicle_type'].str.title(),
-            name="Simulated Range"
-        )
-    )
+    full_activity_duration_df = pd.concat([historical_activity_times_overall, utilisation_model_df])
+
+    if violin:
+        fig = px.violin(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
+                    color="what")
+    else:
+        fig = px.box(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
+            color="what")
 
     fig.update_layout(title="Resource Utilisation Duration vs Historical Averages")
 
-    # Adjust font to match DAA style
-    if use_poppins:
-        fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
-
-    return fig
-
-def plot_activity_time_breakdowns(historical_activity_times,
-                                  event_log_df,
-                                  title,
-                                  vehicle_type="helicopter",
-                                  use_poppins=True):
-
-    single_vehicle_type_df = event_log_df[event_log_df["vehicle_type"]==vehicle_type]
-
-    historical_single_vehicle_type = historical_activity_times.set_index("month").filter(like=vehicle_type).reset_index()
-
-    str_map = {
-        f"median_{vehicle_type}_time_allocation": "HEMS allocated to call",
-        f"median_{vehicle_type}_time_mobile": "HEMS mobile",
-        f'median_{vehicle_type}_time_on_scene': "HEMS on scene",
-        f'median_{vehicle_type}_time_to_clear': "HEMS clear",
-        f'median_{vehicle_type}_time_to_hospital': "HEMS leaving scene",
-        f'median_{vehicle_type}_time_to_scene': "HEMS arrived destination",
-        f'median_{vehicle_type}_total_job_time': "HEMS total job time",
-    }
-
-    historical_single_vehicle_type_long = historical_single_vehicle_type.melt(id_vars="month")
-
-    historical_single_vehicle_type_long['Event'] = historical_single_vehicle_type_long['variable'].apply(
-        lambda x: str_map[x]
-        )
-
-    fig = go.Figure()
-
-    fig.add_trace(
-        go.Box(
-            x=single_vehicle_type_df['time_type'],
-            y=single_vehicle_type_df['time_elapsed_minutes'],
-            name="Simulated Range"
-        )
-    )
-
-    for idx, event_type in enumerate(single_vehicle_type_df['time_type'].unique()):
-
-        historical_df = historical_single_vehicle_type_long[historical_single_vehicle_type_long["Event"]==event_type]
-
-        fig.add_trace(
-            go.Bar(
-                x=[event_type],
-                y=[q90(historical_df['value']) - q10(historical_df['value'])],  # Height of the box
-                base=[q10(historical_df['value'])],  # Start from q10
-                marker=dict(color="rgba(0, 176, 185, 0.3)"),
-                showlegend=True if idx==0 else False,
-                name="Usual Historical Range"
-            )
-        )
-
-
-    fig.update_layout(title=title)
-
-    order_of_events = [
-        'HEMS call start',
-        # 'No HEMS available',
-        'HEMS allocated to call',
-        # 'HEMS stand down before mobile',
-        'HEMS mobile',
-        # 'HEMS stand down en route',
-        'HEMS on scene',
-        # 'HEMS landed but no patient contact',
-        'HEMS leaving scene',
-        # 'HEMS patient treated (not conveyed)',
-        'HEMS arrived destination',
-        'HEMS clear'
-        ]
-
-    fig.update_xaxes(
-        categoryorder='array',
-        categoryarray=order_of_events
-        )
+    if write_to_html:
+        fig.write_html(html_output_filepath, full_html=False, include_plotlyjs='cdn')
 
     # Adjust font to match DAA style
     if use_poppins:
         fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
 
     return fig
+
+# def plot_activity_time_breakdowns(historical_activity_times,
+#                                   event_log_df,
+#                                   title,
+#                                   vehicle_type="helicopter",
+#                                   use_poppins=True):
+
+#     single_vehicle_type_df = event_log_df[event_log_df["vehicle_type"]==vehicle_type]
+
+#     historical_single_vehicle_type = historical_activity_times[historical_activity_times["vehicle_type"]==vehicle_type]
+
+#     single_vehicle_type_df['what'] = 'Simulated'
+#     historical_single_vehicle_type['what'] = 'Historical'
+
+#     fig = go.Figure()
+
+#     # Add **historical** duration figures for all event types
+#     fig.add_trace(
+#         go.Box(
+#             y=historical_single_vehicle_type['resource_use_duration'],
+#             x=historical_single_vehicle_type['name'],
+#             name="Simulated Data"
+#         )
+#     )
+
+#     # Add **simulated** duration figures for all event types
+#     fig.add_trace(
+#         go.Box(
+#             x=single_vehicle_type_df['time_type'],
+#             y=single_vehicle_type_df['time_elapsed_minutes'],
+#             name="Simulated Range"
+#         )
+#     )
+
+#     fig.update_layout(title=title)
+
+#     order_of_events = [
+#         'HEMS call start',
+#         # 'No HEMS available',
+#         'HEMS allocated to call',
+#         # 'HEMS stand down before mobile',
+#         'HEMS mobile',
+#         # 'HEMS stand down en route',
+#         'HEMS on scene',
+#         # 'HEMS landed but no patient contact',
+#         'HEMS leaving scene',
+#         # 'HEMS patient treated (not conveyed)',
+#         'HEMS arrived destination',
+#         'HEMS clear'
+#         ]
+
+#     fig.update_xaxes(
+#         categoryorder='array',
+#         categoryarray=order_of_events
+#         )
+
+#     # Adjust font to match DAA style
+#     if use_poppins:
+#         fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
+
+#     return fig
 
 def plot_total_times(utilisation_model_df, by_run=False):
 
@@ -279,3 +260,66 @@ def plot_total_times(utilisation_model_df, by_run=False):
             })
 
     return fig
+
+
+
+def calculate_ks_for_job_durations(historical_data_series, simulated_data_series,
+                                   what="cars"):
+
+    statistic, p_value = ks_2samp(
+        historical_data_series,
+        simulated_data_series
+        )
+
+    if p_value > 0.05:
+        st.success(f"""There is no statistically significant difference between
+                    the distributions of overall job durations for **{what}** in historical data and the
+                    simulation (p = {format_sigfigs(p_value)})
+
+                    This means that the pattern of total job durations produced by the simulation
+                    matches the pattern seen in the real-world data —
+                    for example, the average duration and variability of overall job durations
+                    is sufficiently similar to what has been observed historically.
+                    """)
+    else:
+        if p_value < 0.0001:
+            p_value_formatted = "< 0.0001"
+        else:
+            p_value_formatted = format_sigfigs(p_value)
+
+        ks_text_string_sig = f"""
+There is a statistically significant difference between the
+distributions of overall job durations from historical data and the
+simulation (p = {p_value_formatted}) for **{what}**.
+
+This means that the pattern of total job durations produced by the simulation
+does not match the pattern seen in the real-world data —
+for example, the average duration or variability of overall job durations
+may be different.
+
+The simulation may need to be adjusted to better
+reflect the patterns of job durations observed historically.
+
+"""
+
+        if statistic < 0.1:
+            st.info(ks_text_string_sig + f"""Although the difference is
+                    statistically significant, the actual magnitude
+                    of the difference (D = {format_sigfigs(statistic, 3)}) is small.
+                    This suggests the simulation's total job duration pattern is reasonably
+                    close to reality.
+                    """)
+
+        elif statistic < 0.2:
+            st.warning(ks_text_string_sig + f"""The KS statistic (D = {format_sigfigs(statistic, 3)})
+                    indicates a moderate difference in
+                    distribution. You may want to review the simulation model to
+                    ensure it adequately reflects real-world variability.
+                    """)
+
+        else:
+            st.error(ks_text_string_sig + f"""The KS statistic (D = {format_sigfigs(statistic, 3)})
+                suggests a large difference in overall job duration patterns.
+                The simulation may not accurately reflect historical
+                patterns and may need adjustment.
+                """)
