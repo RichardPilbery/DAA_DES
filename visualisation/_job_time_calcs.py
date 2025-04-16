@@ -141,7 +141,8 @@ def plot_historical_job_duration_vs_simulation_overall(
         utilisation_model_df,
         use_poppins=True,
         write_to_html=False,
-        html_output_filepath="fig_job_durations_historical.html"
+        html_output_filepath="fig_job_durations_historical.html",
+        violin=False
 
 ):
 
@@ -193,8 +194,12 @@ def plot_historical_job_duration_vs_simulation_overall(
     #     )
     # )
 
-    fig = px.box(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
-                 color="what", points="all")
+    if violin:
+        fig = px.violin(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
+                    color="what")
+    else:
+        fig = px.box(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
+            color="what")
 
     fig.update_layout(title="Resource Utilisation Duration vs Historical Averages")
 

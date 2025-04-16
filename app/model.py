@@ -710,60 +710,68 @@ reflect the patterns of demand observed historically.
             ##############################################
 
             with tab_3_5:
-                historical_time_df = _job_time_calcs.get_historical_times_breakdown(
-                            'historical_data/historical_job_durations_breakdown.csv'
+
+                @st.fragment
+                def create_job_duration_plot():
+                    historical_time_df = _job_time_calcs.get_historical_times_breakdown(
+                                'historical_data/historical_job_durations_breakdown.csv'
+                                )
+
+                    simulated_job_time_df = _job_time_calcs.get_total_times_model(
+                                get_summary=False,
+                                path="data/run_results.csv",
+                                params_path="data/run_params_used.csv",
+                                rota_path="actual_data/HEMS_ROTA.csv",
+                                service_path="data/service_dates.csv",
+                                callsign_path="actual_data/callsign_registration_lookup.csv"
+                                )
+
+                    plot_violin=st.toggle("Violin Plot?", value=False)
+
+                    # Create plot for inclusion in streamlit
+                    fig_job_durations_historical =  _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
+                            historical_activity_times=historical_time_df,
+                            utilisation_model_df=simulated_job_time_df,
+                            use_poppins = True,
+                            write_to_html = True,
+                            html_output_filepath = "app/fig_outputs/fig_job_durations_historical.html",
+                            violin=plot_violin
                             )
 
-                simulated_job_time_df = _job_time_calcs.get_total_times_model(
-                            get_summary=False,
-                            path="data/run_results.csv",
-                            params_path="data/run_params_used.csv",
-                            rota_path="actual_data/HEMS_ROTA.csv",
-                            service_path="data/service_dates.csv",
-                            callsign_path="actual_data/callsign_registration_lookup.csv"
-                            )
-
-                # Create plot for inclusion in streamlit
-                fig_job_durations_historical =  _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
-                        historical_activity_times=historical_time_df,
-                        utilisation_model_df=simulated_job_time_df,
-                        use_poppins = True,
-                        write_to_html = True,
-                        html_output_filepath = "app/fig_outputs/fig_job_durations_historical.html"
+                    # Include job durations plot in streamlit app
+                    st.plotly_chart(
+                    fig_job_durations_historical
                         )
 
-                # Include job durations plot in streamlit app
-                st.plotly_chart(
-                   fig_job_durations_historical
-                    )
+                    st.caption("""
+    This plot looks at the total amount of time each resource was in use during the simulation.
 
-                st.caption("""
-This plot looks at the total amount of time each resource was in use during the simulation.
+    All simulated points are represented in the box plots.
 
-All simulated points are represented in the box plots.
+    The blue bars give an indication of the historical averages. We would expect the median - the
+    central horizontal line within the box portion of the box plots - to fall within the blue box for
+    each resource type, and likely to be fairly central within that region.
+    """)
 
-The blue bars give an indication of the historical averages. We would expect the median - the
-central horizontal line within the box portion of the box plots - to fall within the blue box for
-each resource type, and likely to be fairly central within that region.
-""")
+                    historical_time_df_cars_only = historical_time_df[historical_time_df["vehicle_type"] == "car"]
+                    historical_time_df_helos_only = historical_time_df[historical_time_df["vehicle_type"] == "helicopter"]
 
-                historical_time_df_cars_only = historical_time_df[historical_time_df["vehicle_type"] == "car"]
-                historical_time_df_helos_only = historical_time_df[historical_time_df["vehicle_type"] == "helicopter"]
+                    simulated_job_time_df_cars_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "car"]
+                    simulated_job_time_df_helos_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "helicopter"]
 
-                simulated_job_time_df_cars_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "car"]
-                simulated_job_time_df_helos_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "helicopter"]
+                    _job_time_calcs.calculate_ks_for_job_durations(
+                        historical_data_series=historical_time_df_helos_only[historical_time_df_helos_only["name"]=="total_duration"]["value"],
+                        simulated_data_series=simulated_job_time_df_helos_only["resource_use_duration"],
+                        what="helicopters"
+                        )
 
-                _job_time_calcs.calculate_ks_for_job_durations(
-                    historical_data_series=historical_time_df_helos_only[historical_time_df_helos_only["name"]=="total_duration"]["value"],
-                    simulated_data_series=simulated_job_time_df_helos_only["resource_use_duration"],
-                    what="helicopters"
-                    )
+                    _job_time_calcs.calculate_ks_for_job_durations(
+                        historical_data_series=historical_time_df_cars_only[historical_time_df_cars_only["name"]=="total_duration"]["value"],
+                        simulated_data_series=simulated_job_time_df_cars_only["resource_use_duration"],
+                        what="cars"
+                        )
 
-                _job_time_calcs.calculate_ks_for_job_durations(
-                    historical_data_series=historical_time_df_cars_only[historical_time_df_cars_only["name"]=="total_duration"]["value"],
-                    simulated_data_series=simulated_job_time_df_cars_only["resource_use_duration"],
-                    what="cars"
-                    )
+                create_job_duration_plot()
 
             ############################
             # Historical Job Durations - Breakdown #
