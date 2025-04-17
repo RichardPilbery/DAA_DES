@@ -18,8 +18,8 @@ Implemented tests are listed below with a [x].
 
 [x] Results dataframe is longer when model conducts more runs
 [x] Results differ across multiple runs
-[] Arrivals differ across multiple runs
-[] Running the model sequentially and in parallel produce identical results when seeds set
+[x] Arrivals differ across multiple runs
+[x] Running the model sequentially and in parallel produce identical results when seeds set
 
 ## Seeds
 
@@ -96,8 +96,8 @@ from des_parallel_process import parallelProcessJoblib, collateRunResults, runSi
 
 @pytest.mark.quick
 def test_model_runs():
-   # try:
-      removeExistingResults()
+   try:
+      removeExistingResults(remove_run_results_csv=True)
 
       parallelProcessJoblib(
          total_runs=1,
@@ -114,26 +114,26 @@ def test_model_runs():
 
       assert len(results_df) > 50
 
-   # finally:
-   #    del results_df
-   #    gc.collect()
+   finally:
+      del results_df
+      gc.collect()
 
 def test_more_results_for_longer_run():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       for i in range(10):
          results_df_1 = runSim(run=1, total_runs=1,
                               sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
+                              amb_data=False).reset_index()
 
          results_df_2 = runSim(run=1, total_runs=1,
                               sim_duration=60 * 24 * 7 * 4, # run for twice as long - 4 weeks
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
+                              amb_data=False).reset_index()
 
 
          assert len(results_df_1) < len(results_df_2)
@@ -143,7 +143,7 @@ def test_more_results_for_longer_run():
 
 def longer_df_when_more_runs_conducted():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       parallelProcessJoblib(
          total_runs=1,
@@ -159,6 +159,8 @@ def longer_df_when_more_runs_conducted():
       results = pd.read_csv("data/run_results.csv")
 
       results_1_run = len(results)
+
+      removeExistingResults(remove_run_results_csv=True)
 
       parallelProcessJoblib(
          total_runs=2,
@@ -181,32 +183,474 @@ def longer_df_when_more_runs_conducted():
       del results
       gc.collect()
 
-
-def test_results_differ_across_runs():
+@pytest.mark.reproducibility
+def test_results_differ_across_runs_runSim():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
-      for i in range(5):
-         results_df_1 = runSim(run=1, total_runs=1,
-                              sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
-                              warm_up_time=0,
-                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
+      RUN = 1
+      TOTAL_RUNS = 1
+      SIM_DURATION = 60 * 24 * 7 * 2 # 2 weeks
+      WARM_UP_TIME = 0
+      SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+      AMB_DATA = False
 
-         results_df_2 = runSim(run=1, total_runs=1,
-                              sim_duration=60 * 24 * 7 * 4, # run for twice as long - 4 weeks
-                              warm_up_time=0,
-                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
+      # Should only differ in random seed
+      results_df_1 = runSim(run=RUN,
+                           total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=42).reset_index()
 
-         assert not results_df_1.equals(results_df_2)
+      results_df_2 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=13).reset_index()
+
+      assert not results_df_1.equals(results_df_2)
+
    finally:
       del results_df_1, results_df_2
       gc.collect()
 
+@pytest.mark.reproducibility
+def test_results_differ_across_runs_parallelProcessJobLib():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      SIM_DURATION = 60 * 24 * 7 * 2 # 2 weeks
+      WARM_UP_TIME = 0
+      SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+      AMB_DATA = False
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=2,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df = pd.read_csv("data/run_results.csv")
+
+      results_df_run_1 = results_df[results_df["run_number"]==1]
+      results_df_run_2 = results_df[results_df["run_number"]==2]
+      assert len(results_df_run_1) > 0, "Results df for run 1 is empty"
+      assert len(results_df_run_2) > 0, "Results df for run 2 is empty"
+
+      assert not results_df_run_1.equals(results_df_run_2), "Results for run 1 and run 2 in parallel execution are identical"
+
+   finally:
+      del results_df, results_df_run_1, results_df_run_2
+      gc.collect()
+
+@pytest.mark.reproducibility
+def test_arrivals_differ_across_runs_runSim():
+   """
+   When passing different seeds to the runSim method, check arrivals differ
+   """
+   # try:
+   removeExistingResults(remove_run_results_csv=True)
+
+   RUN = 1
+   TOTAL_RUNS = 1
+   SIM_DURATION = 60 * 24 * 7 * 2 # 2 weeks
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   # Should only differ in random seed
+   results_df_1 = runSim(run=RUN,
+                        total_runs=TOTAL_RUNS,
+                        sim_duration=SIM_DURATION,
+                        warm_up_time=WARM_UP_TIME,
+                        sim_start_date=SIM_START_DATE,
+                        amb_data=AMB_DATA,
+                        random_seed=42).reset_index()
+
+   arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+
+   results_df_2 = runSim(run=RUN,
+                           total_runs=TOTAL_RUNS,
+                        sim_duration=SIM_DURATION,
+                        warm_up_time=WARM_UP_TIME,
+                        sim_start_date=SIM_START_DATE,
+                        amb_data=AMB_DATA,
+                        random_seed=13).reset_index()
+
+
+   arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+
+   assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+   assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+   assert not arrivals_df_1.equals(arrivals_df_2), "Arrivals are the same when different random seed provided (runSim function)"
+
+   # finally:
+   #    del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+   #    gc.collect()
+
+@pytest.mark.reproducibility
+def test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib():
+   """
+   When passing different seeds to the parallelProcessJoblib method, check arrivals differ
+   """
+   SIM_DURATION = 60 * 24 * 7 * 2
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=13
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+      assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      assert not arrivals_df_1.equals(arrivals_df_2), "Arrivals are the same when different random seed provided (parallelProcessJoblib function)"
+
+   finally:
+      del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+      gc.collect()
+
+
+
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_arrival_pattern_runSim():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      RUN = 1
+      TOTAL_RUNS = 1
+      SIM_DURATION = 60 * 24 * 7 * 2
+      WARM_UP_TIME = 0
+      SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+      AMB_DATA = False
+      RANDOM_SEED=42
+
+      # Should only differ in random seed
+      results_df_1 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+
+      results_df_2 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+      assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
+
+   finally:
+      del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+      gc.collect()
+
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib():
+   SIM_DURATION = 60 * 24 * 7 * 2
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+   RANDOM_SEED=42
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=RANDOM_SEED
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=RANDOM_SEED
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+      assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
+
+   finally:
+      del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+      gc.collect()
+
+
+
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      RUN = 1
+      TOTAL_RUNS = 1
+      SIM_DURATION = 60 * 24 * 7 * 2
+      WARM_UP_TIME = 0
+      SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+      AMB_DATA = False
+      RANDOM_SEED=42
+
+      # Should only differ in random seed
+      results_df_1 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_one_helicopter_simple.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      results_df_2 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+      assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and other aspects varied (runSim function)"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+      gc.collect()
+
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelProcessJoblib():
+   SIM_DURATION = 60 * 24 * 7 * 2
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+   RANDOM_SEED=42
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=RANDOM_SEED
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=RANDOM_SEED
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+      assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and other aspects varied (parallelProcessJoblib function)"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+      gc.collect()
+
+
+
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_results_pattern_runSim():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      RUN = 1
+      TOTAL_RUNS = 1
+      SIM_DURATION = 60 * 24 * 7 * 2
+      WARM_UP_TIME = 0
+      SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+      AMB_DATA = False
+      RANDOM_SEED=42
+
+      # Should only differ in random seed
+      results_df_1 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+
+      results_df_2 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+      assert len(results_df_1) > 0, "Results df 1 is empty"
+      assert len(results_df_2) > 0, "Results df 2 is empty"
+
+      assert results_df_1.equals(results_df_2), "Results are not the same when same random seed provided (runSim function)"
+
+   finally:
+      del results_df_1, results_df_2
+      gc.collect()
+
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_results_parallelProcessJoblib():
+   SIM_DURATION = 60 * 24 * 7 * 2
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+   RANDOM_SEED=42
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=RANDOM_SEED
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=RANDOM_SEED
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      assert len(results_df_1) > 0, "Results df 1 is empty"
+      assert len(results_df_2) > 0, "Results df 2 is empty"
+
+      assert results_df_1.equals(results_df_2), "Results are not the same when same random seed provided (parallelProcessJoblib function)"
+
+   finally:
+      del results_df_1, results_df_2
+      gc.collect()
+
+
+
 def test_arrivals_increase_if_demand_param_increased():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       for i in range(5):
          results_df_1 = runSim(run=1, total_runs=1,
@@ -214,7 +658,7 @@ def test_arrivals_increase_if_demand_param_increased():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=1.0)
+                              demand_increase_percent=1.0).reset_index()
 
          results_df_1 = results_df_1[results_df_1["time_type"] == "arrival"]
 
@@ -223,7 +667,7 @@ def test_arrivals_increase_if_demand_param_increased():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=1.2)
+                              demand_increase_percent=1.2).reset_index()
 
          results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
 
@@ -234,7 +678,7 @@ def test_arrivals_increase_if_demand_param_increased():
 
 def test_arrivals_decrease_if_demand_param_decrease():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       for i in range(5):
          results_df_1 = runSim(run=1, total_runs=1,
@@ -242,7 +686,7 @@ def test_arrivals_decrease_if_demand_param_decrease():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=1.0)
+                              demand_increase_percent=1.0).reset_index()
 
          results_df_1 = results_df_1[results_df_1["time_type"] == "arrival"]
 
@@ -251,7 +695,7 @@ def test_arrivals_decrease_if_demand_param_decrease():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=0.8)
+                              demand_increase_percent=0.8).reset_index()
 
          results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
 
@@ -262,7 +706,7 @@ def test_arrivals_decrease_if_demand_param_decrease():
 
 
 def test_output_when_no_demand():
-   removeExistingResults()
+   removeExistingResults(remove_run_results_csv=True)
 
    try:
       results_df_1 = runSim(run=1, total_runs=1,
@@ -270,7 +714,7 @@ def test_output_when_no_demand():
                         warm_up_time=0,
                         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                         amb_data=False,
-                        demand_increase_percent=0)
+                        demand_increase_percent=0).reset_index()
 
       assert len(results_df_1) == 0
 
@@ -288,7 +732,7 @@ def test_warmup_only():
    past the warm-up, no outputs should be produced.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       # Run the simulation with only a warm-up period and no actual simulation time
       parallelProcessJoblib(
@@ -321,7 +765,7 @@ def test_no_results_recorded_from_warmup():
    It verifies that no records are generated that fall within the warm-up time.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       warm_up_length=60*24*3 # 3 days
 
@@ -368,7 +812,7 @@ def test_simultaneous_allocation_same_resource_group():
    H70 are not running simultaneously).
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       # Remove existing failure log if it exists
       if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
@@ -471,7 +915,7 @@ def test_simultaneous_allocation_same_resource():
    Checks that a specific callsign (i.e., physical unit) is not double-booked.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
          os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
@@ -571,7 +1015,7 @@ def test_no_response_during_off_shift_times():
    Includes a manual test case for validation.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       if os.path.exists("tests/offline_calls_FAILURES.csv"):
          os.remove("tests/offline_calls_FAILURES.csv")
@@ -743,7 +1187,7 @@ def test_no_response_during_off_shift_times():
 @pytest.mark.resources
 def test_no_response_during_service():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       # Remove any previous test output to start fresh
       if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
@@ -807,4 +1251,86 @@ def test_no_response_during_service():
 
    except:
       del violations, valid_servicing, merged_df, resource_use_start, results
+      gc.collect()
+
+
+@pytest.mark.performance
+def test_reducing_helo_resource():
+   TOTAL_RUNS = 10
+   SIM_DURATION = 60 * 24 * 7 * 52 * 2
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_2_helos'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_one_helicopter_simple.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_1_helo'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_1_helo'] > hems_unavailable['hems_unavailable_2_helos']
+
+      print(hems_unavailable)
+      # hems_unavailable.to_csv("hems_unavailable.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
       gc.collect()
