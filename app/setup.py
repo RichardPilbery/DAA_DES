@@ -526,7 +526,7 @@ def additional_params_expander():
         value=st.session_state.sim_start_date_input,
         on_change=lambda: setattr(st.session_state, 'sim_start_date_input', st.session_state.key_sim_start_date_input.strftime("%Y-%m-%d")),
         key="key_sim_start_date_input",
-        min_value="today",
+        min_value="2023-01-01",
         max_value="2027-01-01"
     ).strftime("%Y-%m-%d")
 
