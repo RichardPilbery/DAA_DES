@@ -217,7 +217,8 @@ class Utils:
             (self.care_cat_by_ampds_df['ampds_card'] == ampds_card)
         ]
 
-        return  pd.Series.sample(df['care_category'], weights = df['proportion']).iloc[0]
+        return  pd.Series.sample(df['care_category'], weights = df['proportion'],
+                                random_state=self.rngs["care_category_selection"]).iloc[0]
 
     def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
         """
@@ -232,7 +233,8 @@ class Utils:
             (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
         ]
 
-        return pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['callsign_group'], weights = df['proportion'],
+                                random_state=self.rngs["callsign_group_selection"]).iloc[0]
 
     def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
         """
@@ -245,7 +247,8 @@ class Utils:
             (self.vehicle_type_by_month_df['callsign_group'] == int(callsign_group))
         ]
 
-        return pd.Series.sample(df['vehicle_type'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
+                                random_state=self.rngs["vehicle_type_selection"]).iloc[0]
 
     def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
         """
@@ -257,7 +260,8 @@ class Utils:
             (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
         ]
 
-        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['hems_result'], weights = df['proportion'],
+                                random_state=self.rngs["hems_result_by_callsign_group_and_vehicle_type_selection"]).iloc[0]
 
     def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
         """
@@ -269,7 +273,8 @@ class Utils:
             (self.hems_result_by_care_category_and_helicopter_benefit_df['helicopter_benefit'] == helicopter_benefit)
         ]
 
-        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['hems_result'], weights = df['proportion'],
+                                random_state=self.rngs["hems_result_by_care_category_and_helicopter_benefit_selection"]).iloc[0]
 
     def pt_outcome_selection(self, hems_result: str, care_category: str) -> int:
         """
@@ -284,8 +289,10 @@ class Utils:
         ]
 
         #print(df)
-        return pd.Series.sample(df['pt_outcome'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['pt_outcome'], weights = df['proportion'],
+                                random_state=self.rngs["pt_outcome_selection"]).iloc[0]
 
+    # TODO: RANDOM SEED SETTING
     def sex_selection(self, ampds_card: int) -> str:
         """
             This function will allocate and return the patient sex
@@ -296,6 +303,7 @@ class Utils:
 
         return 'Female' if (random.uniform(0, 1) < prob_female.iloc[0]) else 'Male'
 
+    # TODO: RANDOM SEED SETTING
     def age_sampling(self, ampds_card: int, max_age: int) -> float:
         """
             This function will return the patient's age based
@@ -350,6 +358,7 @@ class Utils:
 
         return sampled_time
 
+    # TODO: RANDOM SEED SETTING
     def inc_per_day(self, quarter: int) -> float:
         """
             This function will return a dictionary containing

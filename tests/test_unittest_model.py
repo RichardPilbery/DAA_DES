@@ -23,7 +23,8 @@ Implemented tests are listed below with a [x].
 
 ## Seeds
 
-[] Model behaves consistently across repeated runs when provided with a seed
+[] Model behaves consistently across repeated runs when provided with a seed and no parameters change
+[] Arrivals are identical across simulations when provided with a seed even when other parameters are varied
 
 ## Warm-up period impact
 
@@ -93,6 +94,29 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
 
+@pytest.mark.quick
+def test_model_runs():
+   # try:
+      removeExistingResults()
+
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=60 * 24 * 7 * 5, # Run for five weeks
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False,
+         )
+
+      collateRunResults()
+
+      # Read simulation results
+      results_df = pd.read_csv("data/run_results.csv")
+
+      assert len(results_df) > 50
+
+   # finally:
+   #    del results_df
+   #    gc.collect()
 
 def test_more_results_for_longer_run():
    try:
