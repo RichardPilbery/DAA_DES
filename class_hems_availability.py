@@ -6,6 +6,7 @@ from utils import Utils
 import pandas as pd
 from class_hems import HEMS
 from simpy import FilterStore, Event
+from numpy.random import SeedSequence
 
 import logging
 
@@ -21,7 +22,7 @@ class HEMSAvailability():
 
     def __init__(self, env, sim_start_date, sim_duration, servicing_overlap_allowed = False,
                  servicing_buffer_weeks = 4, servicing_preferred_month = 1,
-                 print_debug_messages = False, master_seed=42):
+                 print_debug_messages = False, master_seed=SeedSequence(42)):
 
         self.env = env
         self.print_debug_messages = print_debug_messages

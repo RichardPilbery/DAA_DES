@@ -31,9 +31,36 @@ class Utils:
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
 
-    def __init__(self, master_seed=42, print_debug_messages=False):
-        self.master_seed = master_seed
-        self.seed_sequence = SeedSequence(self.master_seed)
+    def __init__(self, master_seed=SeedSequence(42), print_debug_messages=False):
+
+        #########################################################
+        # Control generation of required random number streams  #
+        #########################################################
+        # Record the primary master seed sequence passed in to the sequence
+        self.master_seed_sequence = master_seed
+        # Spawn substreams for major simulation modules
+        module_keys = [
+            "activity_times",
+            "ampds_code_selection",
+            "care_category_selection",
+            "callsign_group_selection",
+            "vehicle_type_selection",
+            "hems_result_by_callsign_group_and_vehicle_type_selection",
+            "hems_result_by_care_category_and_helicopter_benefit_selection",
+            "pt_outcome_selection",
+            "sex_selection",
+            "age_sampling",
+        ]
+        # Efficiently spawn substreams
+        spawned = self.master_seed_sequence.spawn(len(module_keys))
+
+        # Map substreams and RNGs to keys
+        self.seed_substreams = dict(zip(module_keys, spawned))
+        self.rngs = {key: default_rng(ss) for key, ss in self.seed_substreams.items()}
+
+        ###############################
+        # Set up remaining attributes #
+        ###############################
         self.print_debug_messages = print_debug_messages
         # Load in mean inter_arrival_times
         self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
@@ -70,13 +97,14 @@ class Utils:
         inFile.close()
         self.inc_per_day_distr = inc_per_day_data
 
-        # One-time setup at model init
+        # Turn the min-max activity times data into a format that supports easier/faster
+        # lookups
         self.min_max_cache = {
             row['time']: (row['min_value_mins'], row['max_value_mins'])
             for _, row in self.min_max_values_df.iterrows()
         }
 
-        self.build_seeded_distributions(self.seed_sequence)
+        self.build_seeded_distributions(self.master_seed_sequence)
 
     def debug(self, message: str):
         if self.print_debug_messages:
@@ -122,24 +150,25 @@ class Utils:
 
         return [dow, current_hour, weekday, current_month, current_quarter, current_dt]
 
+    # SR 2025-04-17: Commenting out as I believe this is no longer used due to changes
+    # in the way inter-arrival times for calls are managed
+    # def inter_arrival_rate(self, hour: int, quarter: int) -> float:
+    #     """
+    #         This function will return the current mean inter_arrival rate in minutes
+    #         for the provided hour of day and yearly quarter
 
-    def inter_arrival_rate(self, hour: int, quarter: int) -> float:
-        """
-            This function will return the current mean inter_arrival rate in minutes
-            for the provided hour of day and yearly quarter
+    #         NOTE: not used with NSPPThinning
+    #     """
 
-            NOTE: not used with NSPPThinning
-        """
+    #     #print(f"IA with values hour {hour} and quarter {quarter}")
+    #     df = self.inter_arrival_rate_df
+    #     mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_iat']
 
-        #print(f"IA with values hour {hour} and quarter {quarter}")
-        df = self.inter_arrival_rate_df
-        mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_iat']
+    #     # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
+    #     # then iloc value broken. Set default to 120 in that case.
 
-        # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
-        # then iloc value broken. Set default to 120 in that case.
-
-        return 120 if len(mean_ia) == 0 else mean_ia.iloc[0]
-        #return mean_ia.iloc[0]
+    #     return 120 if len(mean_ia) == 0 else mean_ia.iloc[0]
+    #     #return mean_ia.iloc[0]
 
 
     def ampds_code_selection(self, hour: int) -> int:
@@ -150,7 +179,8 @@ class Utils:
 
         df = self.hour_by_ampds_df[self.hour_by_ampds_df['hour'] == hour]
 
-        return pd.Series.sample(df['ampds_card'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['ampds_card'], weights = df['proportion'],
+                                random_state=self.rngs["ampds_code_selection"]).iloc[0]
 
 
     def is_time_in_range(self, current: int, start: int, end: int) -> bool:
@@ -299,39 +329,11 @@ class Utils:
 
         """
 
-        # distribution = {}
-
-        # # Calculate the maximum time allowed for given type of job cycle time
-        # max_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].max_value_mins.iloc[0]
-        # min_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].min_value_mins.iloc[0]
-
-        # for i in self.activity_time_distr:
-        #     #print(i)
-        #     if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
-        #         #print('Match')
-        #         distribution = i['best_fit']
-
-        # sampled_time = -1000
-
-        # while (min_time > sampled_time) or (sampled_time > max_time):
-        #     sampled_time = self.sample_from_distribution(distribution)
-
-        # return sampled_time
-        # print(self.activity_time_distr)
-        # lookup = {
-        #     (entry['vehicle_type'], entry['time_type']): entry
-        #     for entry in self.activity_time_distr
-        # }
-        # print(lookup)
-
         dist = self.activity_time_distr.get((vehicle_type, time_type))
         # print(dist)
 
         if dist is None:
             raise ValueError(f"No distribution found for ({vehicle_type}, {time_type})")
-
-        # min_time = self.min_max_values_df.loc[self.min_max_values_df['time'] == time_type, 'min_value_mins'].iloc[0]
-        # max_time = self.min_max_values_df.loc[self.min_max_values_df['time'] == time_type, 'max_value_mins'].iloc[0]
 
         try:
             min_time, max_time = self.min_max_cache[time_type]

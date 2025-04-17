@@ -13,17 +13,17 @@ class HEMS(Ambulance):
     """
 
     def __init__(
-            self, 
-            callsign: str, 
-            callsign_group: str, 
-            vehicle_type: str, 
-            category: str, 
+            self,
+            callsign: str,
+            callsign_group: str,
+            vehicle_type: str,
+            category: str,
             registration: str,
             summer_start: str,
             winter_start: str,
             summer_end: str,
             winter_end: str,
-            servicing_schedule: pd.DataFrame, 
+            servicing_schedule: pd.DataFrame,
             resource_id: str = None,
             summer_season: list[int] = [2, 3]
         ):
@@ -53,7 +53,7 @@ class HEMS(Ambulance):
         self.resource_id = resource_id
 
 
-    
+
     def service_check(self, current_dt: pd.Timestamp, GDAAS_service: bool) -> bool:
 
         if self.registration == 'g-daan':
@@ -94,7 +94,7 @@ class HEMS(Ambulance):
             Function to determine whether the HEMS resource is within
             its operational hours
         """
-        
+
         # Assuming summer hours are quarters 2 and 3 i.e. April-September
         # Can be modified if required.
         # SR NOTE: If changing these, please also modify in
@@ -103,5 +103,3 @@ class HEMS(Ambulance):
         end = self.summer_end if season in self.summer_season else self.winter_end
 
         return self.utilityClass.is_time_in_range(int(hour), int(start), int(end))
-
-        

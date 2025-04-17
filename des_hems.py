@@ -36,8 +36,13 @@ class DES_HEMS:
     """
 
     def __init__(self,
-                run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str,
-                amb_data: bool, random_seed: int, demand_increase_percent: float,
+                run_number: int,
+                sim_duration: int,
+                warm_up_duration: int,
+                sim_start_date: str,
+                amb_data: bool,
+                random_seed: int,
+                demand_increase_percent: float,
                 activity_duration_multiplier: float,
                 print_debug_messages: bool):
 
@@ -45,16 +50,22 @@ class DES_HEMS:
         self.sim_duration = sim_duration
         self.warm_up_duration = warm_up_duration
         self.sim_start_date = sim_start_date
+
         self.random_seed = random_seed
+        self.random_seed_sequence = SeedSequence(self.random_seed)
+
+        self.print_debug_messages = print_debug_messages
+
+        self.utils = Utils(
+            master_seed=self.random_seed_sequence.spawn(1)[0],
+            print_debug_messages=self.print_debug_messages
+            )
 
         self.demand_increase_percent = demand_increase_percent
 
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
         #self.debug(f"Ambulance data values is {self.amb_data}")
-        self.print_debug_messages = print_debug_messages
-
-        self.utils = Utils(master_seed=self.random_seed, print_debug_messages=self.print_debug_messages)
 
         self.all_results_location = self.utils.ALL_RESULTS_CSV
         self.run_results_location = self.utils.RUN_RESULTS_CSV
@@ -69,7 +80,7 @@ class DES_HEMS:
                                                sim_start_date=sim_start_date,
                                                sim_duration=sim_duration,
                                                print_debug_messages=self.print_debug_messages,
-                                               master_seed=self.random_seed
+                                               master_seed=self.random_seed_sequence
                                                )
 
         # Set up empty list to store results prior to conversion to dataframe
