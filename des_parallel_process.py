@@ -173,30 +173,35 @@ def runSim(run: int,
     return daa_model.results_df
 
 def collateRunResults() -> None:
-        """
-        Collates results from a series of runs into a single csv
-        """
-        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
+    """
+    Collates results from a series of runs into a single csv
+    """
+    matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
-        combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
+    combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
 
-        combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
+    combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
 
-        for file in matching_files:
-             os.remove(file)
+    for file in matching_files:
+            os.remove(file)
 
-def removeExistingResults() -> None:
-        """
-        Removes results from previous simulation runs
-        """
-        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
+def removeExistingResults(remove_run_results_csv=False) -> None:
+    """
+    Removes results from previous simulation runs
+    """
+    matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
-        for file in matching_files:
-             os.remove(file)
+    for file in matching_files:
+            os.remove(file)
 
-        all_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "all_results.csv")
-        if os.path.isfile(all_results_file_path):
-            os.unlink(all_results_file_path)
+    all_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "all_results.csv")
+    if os.path.isfile(all_results_file_path):
+        os.unlink(all_results_file_path)
+
+    if remove_run_results_csv:
+            run_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "run_results.csv")
+            if os.path.isfile(run_results_file_path):
+                os.unlink(run_results_file_path)
 
 def parallelProcessJoblib(total_runs: int,
                           sim_duration: int,
