@@ -492,14 +492,59 @@ st.caption(get_text("additional_params_help", text_df))
 
 @st.fragment
 def additional_params_expander():
+    st.markdown("### Replications")
+
     number_of_runs_input = st.slider(
             "Number of Runs",
             min_value=1,
             max_value=30,
             value=st.session_state.number_of_runs_input,
             on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
-            key="key_number_of_runs_input"
+            key="key_number_of_runs_input",
+            help="""
+This controls how many times the simulation will repeat. On each repeat, while the core parameters
+will stay the same, slight randomness will occur in the patterns of arrivals and in choices like which
+resource responds, what the outcome of each job is, and more.
+\n\n
+Think of it like watching 10 different versions of the same day in an emergency control room.
+In one run, a call comes in five minutes earlier. In another, a different crew is dispatched.
+A patient might recover quickly in one case, or need extra help in another.
+\n\n
+By running the simulation multiple times, we get a better sense of the range of things that *could*
+happen — not just a single outcome, but the full picture of what’s likely and what’s possible.
+For example, by running 10 replications of 1 year, we can get a better sense of how well the model
+will cope in busier and quieter times, helping to understand the likely range of performance that
+might be observed in the real world.
+"""
             )
+
+    st.markdown("### Simulation and Warm-up Duration")
+
+    col_button_1, col_button_2, col_button_3, col_button_4 = st.columns(4)
+
+    col_button_1.button(
+        "Set sim duration to 4 weeks",
+        on_click = lambda: setattr(st.session_state, 'sim_duration_input', 7 * 4),
+
+    )
+
+    col_button_2.button(
+        "Set sim duration to 1 year",
+        on_click = lambda: setattr(st.session_state, 'sim_duration_input', 365),
+
+    )
+
+    col_button_3.button(
+        "Set sim duration to 2 years",
+        on_click = lambda: setattr(st.session_state, 'sim_duration_input', 365*2),
+
+    )
+
+    col_button_4.button(
+        "Set sim duration to 3 years",
+        on_click = lambda: setattr(st.session_state, 'sim_duration_input', 365*3),
+
+    )
 
     sim_duration_input =  st.slider(
         "Simulation Duration (days)",
@@ -509,6 +554,7 @@ def additional_params_expander():
         on_change= lambda: setattr(st.session_state, 'sim_duration_input', st.session_state.key_sim_duration_input),
         key="key_sim_duration_input"
         )
+
 
     warm_up_duration =  st.slider(
         "Warm-up Duration (hours)",
@@ -520,6 +566,13 @@ def additional_params_expander():
         )
 
     st.caption(f"The simulation will not start recording metrics until {(warm_up_duration / 24):.2f} days have elapsed")
+
+    st.markdown("### Dates")
+
+    st.caption("""
+This affects when the simulation will start. The simulation time affects the rota that is used,
+as well as the demand (average number of jobs received).
+""")
 
     sim_start_date_input = st.date_input(
         "Select the starting day for the simulation",
@@ -537,13 +590,24 @@ def additional_params_expander():
         key="key_sim_start_time_input"
         ).strftime("%H:%M")
 
+    st.markdown("### Other Modifiers")
+
     activity_duration_multiplier = st.slider(
         "Apply a multiplier to activity times",
         value=st.session_state.activity_duration_multiplier,
         max_value=2.0,
         min_value=0.7,
         on_change=lambda: setattr(st.session_state, 'activity_duration_multiplier', st.session_state.key_activity_duration_multiplier),
-        key="key_activity_duration_multiplier"
+        key="key_activity_duration_multiplier",
+        help="""
+This lengthens or shortens all generated activity times by the selected multiplier.
+\n\n
+For example, if a journey time of 10 minutes was generated, this would be shortened to 8 minutes if
+this multiplier is set to 0.8, or lengthened to 12 minutes if the multiplier was set to 1.2.
+\n\n
+This can be useful for experimenting with the impact of longer or shorter activity times, or for
+temporarily adjusting the model if activity times are not accurately reflecting reality.
+"""
     )
 
     create_animation_input = st.toggle(
@@ -551,7 +615,8 @@ def additional_params_expander():
         value=st.session_state.create_animation_input,
         on_change= lambda: setattr(st.session_state, 'create_animation_input', st.session_state.key_create_animation_input),
         key="key_create_animation_input",
-        disabled=True
+        disabled=True,
+        help="Coming soon!"
         )
 
     amb_data = st.toggle(
@@ -559,7 +624,8 @@ def additional_params_expander():
         value=st.session_state.amb_data,
         on_change= lambda: setattr(st.session_state, 'amb_data', st.session_state.key_amb_data),
         key="key_amb_data",
-        disabled=True
+        disabled=True,
+        help="Coming soon!"
         )
 
 with st.expander(get_text("additional_params_expander_title", text_df)):
