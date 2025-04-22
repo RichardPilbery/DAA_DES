@@ -10,16 +10,460 @@ Implemented tests are listed below with a [x].
 ## Additional Helicopters
 
 [] Adding an additional helicopter results in more calls being answered
-[] Removing a helicopter results in fewer calls being answered
+[x] Removing a helicopter results in fewer calls being answered
 
 ## Additional cars
 
-[] Adding an additional car results in more calls being answered
-[] Removing a car results in fewer calls being answered
+[x] Adding an additional car results in more calls being answered
+[x] Removing a car results in fewer calls being answered
 
 ## Adjusting operating hours
 
-[] Extending operating hours results in more calls being answered
-[] Decreasing operating hours results in fewer calls being answered
+[x] Extending operating hours results in more calls being answered
+[x] Decreasing operating hours results in fewer calls being answered
 
 """
+
+import pandas as pd
+import pytest
+from datetime import datetime
+import os
+import gc
+
+# Workaround to deal with relative import issues
+# https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+
+
+@pytest.mark.performance
+def test_reducing_helo_resource():
+   TOTAL_RUNS = 10
+   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_2_helos'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_one_helicopter_simple.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_1_helo'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_1_helo'] > hems_unavailable['hems_unavailable_2_helos']
+
+      print(hems_unavailable)
+      # hems_unavailable.to_csv("hems_unavailable.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Removing a helicopter does not reliably reduce the number of calls responded to"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
+      gc.collect()
+
+@pytest.mark.performance
+def test_no_solo_car():
+   TOTAL_RUNS = 10
+   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_solo_car'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_two_helicopters_no_solo_car.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_no_solo_car'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_no_solo_car'] > hems_unavailable['hems_unavailable_solo_car']
+
+      print(hems_unavailable)
+      # hems_unavailable.to_csv("hems_unavailable.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Removing the solo car does not reliably reduce the number of calls responded to"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
+      gc.collect()
+
+
+@pytest.mark.performance
+def test_shorter_operating_hours():
+   TOTAL_RUNS = 10
+   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_two_helicopters_simple.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_standard_hours'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_reduced_operating_hours.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_reduced_operating_hours'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_reduced_operating_hours'] > hems_unavailable['hems_unavailable_standard_hours']
+
+      print(hems_unavailable)
+      # hems_unavailable.to_csv("hems_unavailable.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Reducing the operating hours of the helicopters does not reliably reduce the number of calls responded to"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
+      gc.collect()
+
+
+
+@pytest.mark.performance
+def test_longer_operating_hours():
+   TOTAL_RUNS = 10
+   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_two_helicopters_simple.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_standard_hours'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_two_helicopters_extended_operating_hours.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_extended_operating_hours'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_extended_operating_hours'] < hems_unavailable['hems_unavailable_standard_hours']
+
+      print(hems_unavailable)
+      # hems_unavailable.to_csv("hems_unavailable.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Increasing the operating hours of the helicopters does not reliably increase the number of calls responded to"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
+      gc.collect()
+
+
+@pytest.mark.performance
+def test_extra_solo_car():
+   TOTAL_RUNS = 10
+   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_one_helicopter_simple.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_one_solo_car'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # We need to change more of the files here to reflect the extra car
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_one_helicopter_two_solo_cars.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      service_history = pd.read_csv("tests/service_history_test_extra_solo_car.csv")
+
+      service_history.to_csv("actual_data/service_history.csv", index=False)
+
+      callsign_registration_lookup = pd.read_csv("tests/callsign_registration_lookup_extra_solo_car.csv")
+
+      callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_two_solo_cars'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_one_solo_car'] > hems_unavailable['hems_unavailable_two_solo_cars']
+
+      print(hems_unavailable)
+    #   hems_unavailable.to_csv("hems_unavailable.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Adding an extra solo car does not reliably increase the number of calls responded to"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      default_service_history = pd.read_csv("actual_data/service_history_DEFAULT.csv")
+      default_service_history.to_csv("actual_data/service_history.csv", index=False)
+
+    #   default_service_schedules = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
+    #   default_service_schedules.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+      default_callsign_registration_lookup = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
+      default_callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
+      gc.collect()

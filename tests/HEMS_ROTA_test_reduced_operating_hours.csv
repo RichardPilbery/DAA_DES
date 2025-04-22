@@ -1,0 +1,6 @@
+callsign,category,vehicle_type,callsign_group,summer_start,winter_start,summer_end,winter_end
+H70,CC,helicopter,70,7,7,16,16
+CC70,CC,car,70,7,7,16,16
+H71,EC,helicopter,71,10,10,15,15
+CC71,EC,car,71,10,10,15,15
+CC72,EC,car,72,11,11,17,17
