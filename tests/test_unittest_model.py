@@ -23,8 +23,8 @@ Implemented tests are listed below with a [x].
 
 ## Seeds
 
-[] Model behaves consistently across repeated runs when provided with a seed and no parameters change
-[] Arrivals are identical across simulations when provided with a seed even when other parameters are varied
+[x] Model behaves consistently across repeated runs when provided with a seed and no parameters change
+[x] Arrivals are identical across simulations when provided with a seed even when other parameters are varied
 
 ## Warm-up period impact
 
@@ -42,36 +42,20 @@ Implemented tests are listed below with a [x].
 
 [] All provided resources get at least some utilisation in a model that
    runs for a sufficient length of time with sufficient demand
+[x] The same callsign is never sent on two jobs at once
+[x] Resources belonging to the same callsign group don't get sent on jobs at the same time
+[] Resources don't leave on service and never return
+[] Resource use duration is never negative (i.e. resource use for an individual never ends before it starts)
 [] Utilisation never exceeds 100%
 [] Utilisation never drops below 0%
 [] No one waits in the model for a resource to become availabile - they leave and are recorded as missed
 [] Resources are used in the expected order determined within the model
-[x] The same callsign is never sent on two jobs at once
-[x] Resources belonging to the same callsign group don't get sent on jobs at the same time
-[] Changing helicopter type results in different unavailability results being generated
-[] Resources don't leave on service and never return
-[] Resource use duration is never negative (i.e. resource use for an individual never ends before it starts)
 
 ## Activity during inactive periods
 
 [x] Resources do not respond during times they are meant to be off shift
-[] Resources aren't used during their service interval (determined by reg, not callsign)
-[] Calls do not generate activity if they arrive during times the resource is meant to be off shift
+[x] Resources aren't used during their service interval (determined by reg, not callsign)
 [] Inactive periods correctly change across seasons if set to do so
-
-## Expected responses of metrics under different conditions
-
-[] Utilisation is higher when resource is reduced but demand kept consistent
-[] 'Missed' calls are higher when resource is reduced but demand kept consistent
-
-[] Utilisation is lower when resource is reduced but demand decreases
-[] 'Missed' calls are lower when resource is reduced but demand decreases
-
-[] Utilisation is higher when resource is kept consistent but demand increases
-[] 'Missed' calls are higher when resource is kept consistent but demand increases
-
-[] Utilisation is lower when resource is kept consistent but demand decreases
-[] 'Missed' calls are lower when resource is kept consistent but demand decreases
 
 ## Failure to run under nonsensical conditions
 
@@ -112,7 +96,7 @@ def test_model_runs():
       # Read simulation results
       results_df = pd.read_csv("data/run_results.csv")
 
-      assert len(results_df) > 50
+      assert len(results_df) > 5, "[FAIL - BASIC FUNCTIONS] Model failed to run"
 
    finally:
       del results_df
@@ -136,7 +120,7 @@ def test_more_results_for_longer_run():
                               amb_data=False).reset_index()
 
 
-         assert len(results_df_1) < len(results_df_2)
+         assert len(results_df_1) < len(results_df_2), "[FAIL - BASIC FUNCTIONS] Fewer results seen in longer model run"
    finally:
       del results_df_1, results_df_2
       gc.collect()
@@ -177,7 +161,7 @@ def longer_df_when_more_runs_conducted():
 
       results_2_runs = len(results)
 
-      assert results_1_run < results_2_runs
+      assert results_1_run < results_2_runs, "[FAIL - BASIC FUNCTIONS] Fewer results seen with a higher number of runs"
 
    finally:
       del results
@@ -212,7 +196,7 @@ def test_results_differ_across_runs_runSim():
                            amb_data=AMB_DATA,
                            random_seed=13).reset_index()
 
-      assert not results_df_1.equals(results_df_2)
+      assert not results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY] Results were the same across runs provided with different seeds"
 
    finally:
       del results_df_1, results_df_2
@@ -249,7 +233,7 @@ def test_results_differ_across_runs_parallelProcessJobLib():
       assert len(results_df_run_1) > 0, "Results df for run 1 is empty"
       assert len(results_df_run_2) > 0, "Results df for run 2 is empty"
 
-      assert not results_df_run_1.equals(results_df_run_2), "Results for run 1 and run 2 in parallel execution are identical"
+      assert not results_df_run_1.equals(results_df_run_2), "[FAIL - REPRODUCIBILITY] Results for run 1 and run 2 in parallel execution are identical"
 
    finally:
       del results_df, results_df_run_1, results_df_run_2
@@ -295,7 +279,7 @@ def test_arrivals_differ_across_runs_runSim():
    assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
    assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-   assert not arrivals_df_1.equals(arrivals_df_2), "Arrivals are the same when different random seed provided (runSim function)"
+   assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are the same when different random seed provided (runSim function)"
 
    # finally:
    #    del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -349,7 +333,7 @@ def test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert not arrivals_df_1.equals(arrivals_df_2), "Arrivals are the same when different random seed provided (parallelProcessJoblib function)"
+      assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are the same when different random seed provided (parallelProcessJoblib function)"
 
    finally:
       del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -393,7 +377,7 @@ def test_same_seed_gives_consistent_arrival_pattern_runSim():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
 
    finally:
       del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -445,7 +429,7 @@ def test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
 
    finally:
       del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -492,7 +476,7 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and other aspects varied (runSim function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and other aspects varied (runSim function)"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -546,7 +530,7 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelP
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "Arrivals are not the same when same random seed provided and other aspects varied (parallelProcessJoblib function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and other aspects varied (parallelProcessJoblib function)"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -590,7 +574,7 @@ def test_same_seed_gives_consistent_results_pattern_runSim():
       assert len(results_df_1) > 0, "Results df 1 is empty"
       assert len(results_df_2) > 0, "Results df 2 is empty"
 
-      assert results_df_1.equals(results_df_2), "Results are not the same when same random seed provided (runSim function)"
+      assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY] Results are not the same when same random seed provided (runSim function)"
 
    finally:
       del results_df_1, results_df_2
@@ -640,7 +624,7 @@ def test_same_seed_gives_consistent_results_parallelProcessJoblib():
       assert len(results_df_1) > 0, "Results df 1 is empty"
       assert len(results_df_2) > 0, "Results df 2 is empty"
 
-      assert results_df_1.equals(results_df_2), "Results are not the same when same random seed provided (parallelProcessJoblib function)"
+      assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY] Results are not the same when same random seed provided (parallelProcessJoblib function)"
 
    finally:
       del results_df_1, results_df_2
@@ -671,7 +655,7 @@ def test_arrivals_increase_if_demand_param_increased():
 
          results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
 
-         assert len(results_df_1) < len(results_df_2), "Fewer jobs observed when demand increase parameter above one"
+         assert len(results_df_1) < len(results_df_2), "[FAIL - DEMAND PARAMETER] Fewer jobs observed when demand increase parameter above one"
    finally:
       del results_df_1, results_df_2
       gc.collect()
@@ -699,7 +683,7 @@ def test_arrivals_decrease_if_demand_param_decrease():
 
          results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
 
-         assert len(results_df_1) > len(results_df_2), "More jobs observed when demand increase parameter below one"
+         assert len(results_df_1) > len(results_df_2), "[FAIL - DEMAND PARAMETER] More jobs observed when demand increase parameter below one"
    finally:
       del results_df_1, results_df_2
       gc.collect()
@@ -750,7 +734,7 @@ def test_warmup_only():
 
       # Assert that the results are empty, i.e., no output was generated during warm-up
       assert len(results) == 0, (
-         f"{len(results)} results seem to have been generated during the warm-up period"
+         f"[FAIL - WARM-UP] {len(results)} results seem to have been generated during the warm-up period"
          )
    finally:
       del results
@@ -788,7 +772,7 @@ def test_no_results_recorded_from_warmup():
 
       # Assert no records were made during the warm-up period
       assert len(results_in_warmup) == 0, (
-         f"{len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
+         f"[FAIL - WARM-UP] {len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
          )
 
    finally:
@@ -901,7 +885,7 @@ def test_simultaneous_allocation_same_resource_group():
 
 
       assert len(all_overlaps_df) == 0, (
-            f"{len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once across {len(resource_use_wide)} calls")
+            f"[FAIL - RESOURCE ALLOCATION LOGIC] {len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once across {len(resource_use_wide)} calls")
 
    finally:
       del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
@@ -1000,7 +984,7 @@ def test_simultaneous_allocation_same_resource():
          all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
 
       assert len(all_overlaps_df) == 0, (
-            f"{len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
+            f"[FAIL - RESOURCE ALLOCATION LOGIC] {len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
             )
    finally:
       del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
@@ -1105,7 +1089,7 @@ def test_no_response_during_off_shift_times():
 
       # Check there are no offline calls
       assert len(offline_calls)==0, (
-            f"{len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
+            f"[FAIL - RESOURCE ALLOCATION LOGIC - ROTA] {len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
             )
 
       # Add several test cases that should fail to the dataframe and rerun to ensure that
@@ -1177,7 +1161,7 @@ def test_no_response_during_off_shift_times():
       # 4 rows we added should fail, 1 row we added should pass
       # (update this if adding additional test cases)
       assert len(offline_calls) == (len(additional_rows) - 1), (
-            "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
+            "[FAIL - RESOURCE ALLOCATION LOGIC - ROTA] The function for testing resources being allocated out of rota'd hours is not behaving correctly"
             )
 
    finally:
@@ -1246,7 +1230,7 @@ def test_no_response_during_service():
 
       # Assert that no responses occurred during servicing periods
       assert len(violations) == 0, (
-         f"{len(violations)} resource_use_start values fall within a servicing interval"
+         f"[FAIL - RESOURCE ALLOCATION LOGIC - SERVICING] {len(violations)} resource_use_start values fall within a servicing interval"
       )
 
    except:

@@ -22,6 +22,24 @@ Implemented tests are listed below with a [x].
 [x] Extending operating hours results in more calls being answered
 [x] Decreasing operating hours results in fewer calls being answered
 
+## Vehicle Models
+
+[] Changing helicopter type results in different unavailability results being generated
+
+## Expected responses of metrics under different conditions
+
+[] Utilisation is higher when resource is reduced but demand kept consistent
+[] 'Missed' calls are higher when resource is reduced but demand kept consistent
+
+[] Utilisation is lower when resource is reduced but demand decreases
+[] 'Missed' calls are lower when resource is reduced but demand decreases
+
+[] Utilisation is higher when resource is kept consistent but demand increases
+[] 'Missed' calls are higher when resource is kept consistent but demand increases
+
+[] Utilisation is lower when resource is kept consistent but demand decreases
+[] 'Missed' calls are lower when resource is kept consistent but demand decreases
+
 """
 
 import pandas as pd
@@ -112,7 +130,7 @@ def test_reducing_helo_resource():
 
       print(hems_unavailable)
       hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_reducing_helo_resource.csv")
-      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Removing a helicopter does not reliably reduce the number of calls responded to"
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Removing a helicopter does not reliably reduce the number of calls responded to"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -193,7 +211,7 @@ def test_no_solo_car():
 
       print(hems_unavailable)
       hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_no_solo_car.csv")
-      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Removing the solo car does not reliably reduce the number of calls responded to"
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Removing the solo car does not reliably reduce the number of calls responded to"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -275,7 +293,7 @@ def test_shorter_operating_hours():
 
       print(hems_unavailable)
       hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_shorter_operating_hours.csv")
-      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Reducing the operating hours of the helicopters does not reliably reduce the number of calls responded to"
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Reducing the operating hours of the helicopters does not reliably reduce the number of calls responded to"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -358,7 +376,7 @@ def test_longer_operating_hours():
 
       print(hems_unavailable)
       hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_longer_operating_hours.csv")
-      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Increasing the operating hours of the helicopters does not reliably increase the number of calls responded to"
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Increasing the operating hours of the helicopters does not reliably increase the number of calls responded to"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -450,7 +468,7 @@ def test_extra_solo_car():
 
       print(hems_unavailable)
       hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_extra_solo_car.csv")
-      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Adding an extra solo car does not reliably increase the number of calls responded to"
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Adding an extra solo car does not reliably increase the number of calls responded to"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -552,7 +570,7 @@ def test_extra_helo():
 
       print(hems_unavailable)
       hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_extra_helo.csv")
-      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "Adding an extra helicopter does not reliably increase the number of calls responded to"
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Adding an extra helicopter does not reliably increase the number of calls responded to"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -563,6 +581,118 @@ def test_extra_helo():
 
     #   default_service_schedules = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
     #   default_service_schedules.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+      default_callsign_registration_lookup = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
+      default_callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+      del results_df_1, results_df_2, hems_unavailable_df_1, hems_unavailable_df_2, hems_unavailable
+      gc.collect()
+
+
+@pytest.mark.performance
+def test_changed_helo_model():
+   TOTAL_RUNS = 5
+   SIM_DURATION = 60 * 24 * 7 * 52 * 4 # 4 years
+   WARM_UP_TIME = 0
+   SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+   AMB_DATA = False
+
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_two_helicopters_simple_no_backup_cars.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      service_schedule_lookup = pd.read_csv("tests/service_schedules_by_model_test_more_distinct.csv")
+
+      service_schedule_lookup.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+      callsign_registration_lookup = pd.read_csv("tests/callsign_registration_lookup_default_helo_model.csv")
+
+      callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+      # Run the simulation with only a warm-up period and no actual simulation time
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_1 = pd.read_csv("data/run_results.csv")
+      hems_unavailable_df_1 = (results_df_1[
+         (results_df_1['event_type'] == 'resource_preferred_outcome') &
+         (results_df_1['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_two_helos'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      # We need to change more of the files here to reflect the change in model
+
+      rota = pd.read_csv("tests/HEMS_ROTA_test_two_helicopters_simple_no_backup_cars.csv")
+
+      rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      service_schedule_lookup = pd.read_csv("tests/service_schedules_by_model_test_more_distinct.csv")
+
+      service_schedule_lookup.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+      callsign_registration_lookup = pd.read_csv("tests/callsign_registration_lookup_change_helo_model.csv")
+
+      callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+      parallelProcessJoblib(
+         total_runs=TOTAL_RUNS,
+         sim_duration=SIM_DURATION,
+         warm_up_time=WARM_UP_TIME,
+         sim_start_date=SIM_START_DATE,
+         amb_data=AMB_DATA,
+         master_seed=42
+         )
+
+      collateRunResults()
+
+      results_df_2 = pd.read_csv("data/run_results.csv")
+
+      hems_unavailable_df_2 = (results_df_2[
+         (results_df_2['event_type'] == 'resource_preferred_outcome') &
+         (results_df_2['time_type'].str.contains('No HEMS'))]
+         .drop_duplicates(subset=['P_ID','run_number'])
+         .groupby('run_number')[['P_ID']].count()
+         .reset_index()
+         .rename(columns={'P_ID': 'hems_unavailable_changed_helo_model'})
+      )
+
+      removeExistingResults(remove_run_results_csv=True)
+
+      hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)
+
+      # In this test we've only got two helicopters and they
+      # Here, as an EC145 goes for service less frequently and for a shorter period of time, we would anticipate
+      hems_unavailable['expected_result'] = hems_unavailable['hems_unavailable_two_helos'] > hems_unavailable['hems_unavailable_changed_helo_model']
+
+      print(hems_unavailable)
+      hems_unavailable.to_csv("tests/TEST_OUTPUT_hems_unavailable_changed_helo_model.csv")
+      assert sum(hems_unavailable['expected_result']) == TOTAL_RUNS, "[FAIL - RESOURCE CHANGES] Changing the helicopter models does not have the expected effect"
+
+   finally:
+      default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+      default_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+      # default_service_history = pd.read_csv("actual_data/service_history_DEFAULT.csv")
+      # default_service_history.to_csv("actual_data/service_history.csv", index=False)
+
+      default_service_schedules = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
+      default_service_schedules.to_csv("actual_data/service_schedules_by_model.csv", index=False)
 
       default_callsign_registration_lookup = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
       default_callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)

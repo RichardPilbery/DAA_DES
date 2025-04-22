@@ -116,18 +116,18 @@ def test_average_calls_in_period():
         # Decision logic
         # Will only fail if significance threshold is met and cohen's D is sufficiently large
         if p_value < p_thresh and abs(cohen_d) > fail_effect:
-            fail_with_message(f"""[SIM-QC][FAIL] **Mean monthly calls** significantly different between
+            fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] **Mean monthly calls** significantly different between
                         simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                         Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                         Mean diff: {mean_diff:.2f}.""")
         # Else will provide appropriate warning
         elif p_value < p_thresh and abs(cohen_d) > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in **mean monthly calls**
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **mean monthly calls**
                           between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                           Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                           Mean diff: {mean_diff:.2f}.""")
         elif abs(cohen_d) > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                           difference in **mean monthly calls** between simulation and reality
                           (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
                           threshold for significance.
@@ -183,16 +183,16 @@ def test_distribution_daily_calls():
         fail_effect = 0.2 # A 20% difference netweem CDFs is substantial — reasonable for failure.
 
         if p_value < p_thresh and statistic > fail_effect:
-            fail_with_message(f"""[SIM-QC][FAIL] Significant and large difference in distribution of
+            fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
                         **daily calls** between simulation and reality
                         (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
         # Else will provide appropriate warning
         elif p_value < p_thresh and statistic > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in distribution of
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in distribution of
                           **daily calls** between simulation and reality
                           (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
         elif statistic > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                           difference in distribution of **daily calls** between simulation
                           and reality (p={p_value:.4f}, KS statistic={statistic:.2f}) but did not
                           meet the p-value threshold for significance.""")
@@ -264,18 +264,18 @@ def test_average_total_job_durations():
             # Decision logic
             # Will only fail if significance threshold is met and cohen's D is sufficiently large
             if p_value < p_thresh and abs(cohen_d) > fail_effect:
-                fail_with_message(f"""[SIM-QC][FAIL] **Average total job durations** for {vehicle}s significantly different between
+                fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s significantly different between
                             simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                             Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
                             Mean diff: {mean_diff:.2f}.""")
             # Else will provide appropriate warning
             elif p_value < p_thresh and abs(cohen_d) > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in **Average total job durations** for {vehicle}s
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **Average total job durations** for {vehicle}s
                             between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                             Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
                             Mean diff: {mean_diff:.2f}.""")
             elif abs(cohen_d) > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                             difference in **Average total job durations** for {vehicle}s between simulation and reality
                             (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
                             threshold for significance.
@@ -338,16 +338,16 @@ def test_distribution_total_job_durations():
 
         def check_output(what, p_value, statistic, p_thresh=p_thresh, fail_effect=fail_effect, warn_effect=warn_effect):
             if p_value < p_thresh and statistic > fail_effect:
-                fail_with_message(f"""[SIM-QC][FAIL] Significant and large difference in distribution of
+                fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
                         {what} between simulation and reality
                         (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
             # Else will provide appropriate warning
             elif p_value < p_thresh and statistic > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in distribution of
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in distribution of
                              {what} between simulation and reality
                             (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
             elif statistic > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                             difference in distribution of {what} between simulation
                             and reality (p={p_value:.4f}, KS statistic={statistic:.2f}) but did not
                             meet the p-value threshold for significance.""")
