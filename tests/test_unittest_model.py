@@ -196,7 +196,7 @@ def test_results_differ_across_runs_runSim():
                            amb_data=AMB_DATA,
                            random_seed=13).reset_index()
 
-      assert not results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY] Results were the same across runs provided with different seeds"
+      assert not results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY - RESULTS] Results were the same across runs provided with different seeds"
 
    finally:
       del results_df_1, results_df_2
@@ -233,7 +233,7 @@ def test_results_differ_across_runs_parallelProcessJobLib():
       assert len(results_df_run_1) > 0, "Results df for run 1 is empty"
       assert len(results_df_run_2) > 0, "Results df for run 2 is empty"
 
-      assert not results_df_run_1.equals(results_df_run_2), "[FAIL - REPRODUCIBILITY] Results for run 1 and run 2 in parallel execution are identical"
+      assert not results_df_run_1.equals(results_df_run_2), "[FAIL - REPRODUCIBILITY - RESULTS] Results for run 1 and run 2 in parallel execution are identical"
 
    finally:
       del results_df, results_df_run_1, results_df_run_2
@@ -279,7 +279,7 @@ def test_arrivals_differ_across_runs_runSim():
    assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
    assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-   assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are the same when different random seed provided (runSim function)"
+   assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are the same when different random seed provided (runSim function)"
 
    # finally:
    #    del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -333,7 +333,7 @@ def test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are the same when different random seed provided (parallelProcessJoblib function)"
+      assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are the same when different random seed provided (parallelProcessJoblib function)"
 
    finally:
       del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -377,7 +377,7 @@ def test_same_seed_gives_consistent_arrival_pattern_runSim():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
 
    finally:
       del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -429,7 +429,7 @@ def test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
 
    finally:
       del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
@@ -476,7 +476,7 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and other aspects varied (runSim function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are not the same when same random seed provided and other aspects varied (runSim function)"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -530,7 +530,7 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelP
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY] Arrivals are not the same when same random seed provided and other aspects varied (parallelProcessJoblib function)"
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are not the same when same random seed provided and other aspects varied (parallelProcessJoblib function)"
 
    finally:
       default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
@@ -574,7 +574,7 @@ def test_same_seed_gives_consistent_results_pattern_runSim():
       assert len(results_df_1) > 0, "Results df 1 is empty"
       assert len(results_df_2) > 0, "Results df 2 is empty"
 
-      assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY] Results are not the same when same random seed provided (runSim function)"
+      assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY - RESULTS] Results are not the same when same random seed provided (runSim function)"
 
    finally:
       del results_df_1, results_df_2
@@ -624,7 +624,7 @@ def test_same_seed_gives_consistent_results_parallelProcessJoblib():
       assert len(results_df_1) > 0, "Results df 1 is empty"
       assert len(results_df_2) > 0, "Results df 2 is empty"
 
-      assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY] Results are not the same when same random seed provided (parallelProcessJoblib function)"
+      assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY - RESULTS] Results are not the same when same random seed provided (parallelProcessJoblib function)"
 
    finally:
       del results_df_1, results_df_2
