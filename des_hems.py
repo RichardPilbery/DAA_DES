@@ -20,6 +20,7 @@ import ast
 from numpy.random import SeedSequence
 from typing import List, Dict, Tuple
 from numpy.random import SeedSequence, default_rng
+import random
 
 import logging
 logging.basicConfig(filename='log.txt', filemode="w", level=logging.DEBUG, format='')
@@ -257,17 +258,46 @@ class DES_HEMS:
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, qtr))
 
+            # if self.calls_today > 0:
+            #     # Work out how long until next incident
+            #     #self.debug(ia_dict.keys())
+            #     if hod in ia_dict.keys():
+            #         #self.debug(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
+            #         for i in range(0, ia_dict[hod]):
+            #             #self.debug(f"Creating new patient at {current_dt}")
+            #             self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+            #             # Might need to determine spread of jobs during any given hour.
+            #             yield self.env.timeout(5) # Wait 5 minutes until the next allocation
+            #             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
             if self.calls_today > 0:
-                # Work out how long until next incident
-                #self.debug(ia_dict.keys())
                 if hod in ia_dict.keys():
-                    #self.debug(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
+                    minutes_elapsed = 0
                     for i in range(0, ia_dict[hod]):
-                        #self.debug(f"Creating new patient at {current_dt}")
-                        self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-                        # Might need to determine spread of jobs during any given hour.
-                        yield self.env.timeout(5) # Wait 5 minutes until the next allocation
-                        [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                        if minutes_elapsed < 59:
+                            # Determine remaining time and sample a wait time
+                            remaining_minutes = 59 - minutes_elapsed
+                            # wait_time = random.randint(0, remaining_minutes)
+                            wait_time = int(self.utils.rngs["call_iat"].integers(0, remaining_minutes+1))
+
+                            yield self.env.timeout(wait_time)
+                            minutes_elapsed += wait_time
+
+                            self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+
+                            [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
+                        else:
+                            # Fast forward to 59-minute mark if not already there
+                            if minutes_elapsed < 59:
+                                yield self.env.timeout(59 - minutes_elapsed)
+                                minutes_elapsed = 59
+                                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
+                            # All remaining calls come in at once at 59 minutes past the hour
+                            self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+
+
 
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
