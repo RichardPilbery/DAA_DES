@@ -101,6 +101,7 @@ class Utils:
             "pt_outcome_selection",
             "sex_selection",
             "age_sampling",
+            "calls_per_hour",
         ]
         # Efficiently spawn substreams
         spawned = self.master_seed_sequence.spawn(len(module_keys))

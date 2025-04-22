@@ -160,7 +160,8 @@ class DES_HEMS:
         calls_in_hours = []
 
         for i in range(0, self.calls_today):
-            hour = pd.Series.sample(hourly_activity_for_qtr['hour'], weights = hourly_activity_for_qtr['proportion']).iloc[0]
+            hour = pd.Series.sample(hourly_activity_for_qtr['hour'], weights = hourly_activity_for_qtr['proportion'],
+                                random_state=self.utils.rngs["calls_per_hour"]).iloc[0]
             #self.debug(f"Chosen hour is {hour}")
             calls_in_hours.append(hour)
 
