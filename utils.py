@@ -33,30 +33,8 @@ class Utils:
 
     def __init__(self, master_seed=SeedSequence(42), print_debug_messages=False):
 
-        #########################################################
-        # Control generation of required random number streams  #
-        #########################################################
         # Record the primary master seed sequence passed in to the sequence
         self.master_seed_sequence = master_seed
-        # Spawn substreams for major simulation modules
-        module_keys = [
-            "activity_times",
-            "ampds_code_selection",
-            "care_category_selection",
-            "callsign_group_selection",
-            "vehicle_type_selection",
-            "hems_result_by_callsign_group_and_vehicle_type_selection",
-            "hems_result_by_care_category_and_helicopter_benefit_selection",
-            "pt_outcome_selection",
-            "sex_selection",
-            "age_sampling",
-        ]
-        # Efficiently spawn substreams
-        spawned = self.master_seed_sequence.spawn(len(module_keys))
-
-        # Map substreams and RNGs to keys
-        self.seed_substreams = dict(zip(module_keys, spawned))
-        self.rngs = {key: default_rng(ss) for key, ss in self.seed_substreams.items()}
 
         ###############################
         # Set up remaining attributes #
@@ -104,7 +82,35 @@ class Utils:
             for _, row in self.min_max_values_df.iterrows()
         }
 
+
+
+    def setup_seeds(self):
+        #########################################################
+        # Control generation of required random number streams  #
+        #########################################################
+
+        # Spawn substreams for major simulation modules
+        module_keys = [
+            "activity_times",
+            "ampds_code_selection",
+            "care_category_selection",
+            "callsign_group_selection",
+            "vehicle_type_selection",
+            "hems_result_by_callsign_group_and_vehicle_type_selection",
+            "hems_result_by_care_category_and_helicopter_benefit_selection",
+            "pt_outcome_selection",
+            "sex_selection",
+            "age_sampling",
+        ]
+        # Efficiently spawn substreams
+        spawned = self.master_seed_sequence.spawn(len(module_keys))
+
+        # Map substreams and RNGs to keys
+        self.seed_substreams = dict(zip(module_keys, spawned))
+        self.rngs = {key: default_rng(ss) for key, ss in self.seed_substreams.items()}
+
         self.build_seeded_distributions(self.master_seed_sequence)
+
 
     def debug(self, message: str):
         if self.print_debug_messages:

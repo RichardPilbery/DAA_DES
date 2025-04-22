@@ -61,6 +61,8 @@ class DES_HEMS:
             print_debug_messages=self.print_debug_messages
             )
 
+        self.utils.setup_seeds()
+
         self.demand_increase_percent = demand_increase_percent
 
         # Option to include/exclude ambulance service cases in addition to HEMS
@@ -98,8 +100,6 @@ class DES_HEMS:
         self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
 
         self.activity_duration_multiplier = activity_duration_multiplier
-
-
 
         # self.seeded_dists = self.utils.build_seeded_distributions(
         #     self.utils.activity_time_distr,
