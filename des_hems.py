@@ -194,12 +194,23 @@ class DES_HEMS:
 
         ia_time = []
 
+        # for index, row in hourly_activity_for_qtr.iterrows():
+        #     if row['hour'] >= current_hour:
+        #         if row['hour'] in d.keys():
+        #             calc_ia_time = expovariate(int(d[row['hour']]) / 60)
+        #             tmp_ia_time = ((row['hour']-current_hour) * 60) + calc_ia_time
+        #             # Update current hour
+        #             current_hour += floor(tmp_ia_time / 60)
+        #             ia_time.append(tmp_ia_time)
+
         for index, row in hourly_activity_for_qtr.iterrows():
-            if row['hour'] >= current_hour:
-                if row['hour'] in d.keys():
-                    calc_ia_time = expovariate(int(d[row['hour']]) / 60)
-                    tmp_ia_time = ((row['hour']-current_hour) * 60) + calc_ia_time
-                    # Update current hour
+            hour = row['hour']
+            if hour >= current_hour and hour in d:
+                count = d[hour]
+                if count > 0:
+                    scale = 60 / count  # mean of exponential = 1 / rate
+                    calc_ia_time = self.utils.rngs["predetermine_call_arrival"].exponential(scale=scale)
+                    tmp_ia_time = ((hour - current_hour) * 60) + calc_ia_time
                     current_hour += floor(tmp_ia_time / 60)
                     ia_time.append(tmp_ia_time)
 

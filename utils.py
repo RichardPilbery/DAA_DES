@@ -102,6 +102,7 @@ class Utils:
             "sex_selection",
             "age_sampling",
             "calls_per_hour",
+            "predetermine_call_arrival"
         ]
         # Efficiently spawn substreams
         spawned = self.master_seed_sequence.spawn(len(module_keys))
@@ -638,7 +639,7 @@ class Utils:
         seeded_distributions = {}
 
         # print(activity_time_distr)
-        print(len(self.activity_time_distr))
+        # print(len(self.activity_time_distr))
         i = 0
         for entry, rng in zip(self.activity_time_distr, rngs):
             i += 1
