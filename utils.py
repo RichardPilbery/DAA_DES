@@ -101,6 +101,7 @@ class Utils:
             "pt_outcome_selection",
             "sex_selection",
             "age_sampling",
+            "calls_per_day",
             "calls_per_hour",
             "predetermine_call_arrival",
             "call_iat"
@@ -334,7 +335,7 @@ class Utils:
 
         age = 100000
         while age > max_age:
-            age = self.sample_from_distribution(distribution)
+            age = self.sample_from_distribution(distribution, rng=self.rngs["age_sampling"])
 
         return age
 
@@ -393,32 +394,59 @@ class Utils:
         sampled_inc_per_day = -1
 
         while not (sampled_inc_per_day >= min_n and sampled_inc_per_day <= max_n):
-            sampled_inc_per_day = self.sample_from_distribution(distribution)
+            sampled_inc_per_day = self.sample_from_distribution(distribution, rng=self.rngs["calls_per_day"])
 
         return sampled_inc_per_day
 
-    def sample_from_distribution(self, distr: dict) -> float:
+    # def sample_from_distribution(self, distr: dict) -> float:
+    #     """
+    #         This function will return a single sampled float value from
+    #         the specified distribution and parameters in the dictionay, distr.
+    #     """
+
+    #     distribution = {}
+    #     return_list = []
+
+    #     #print(distribution)
+
+    #     for k,v in distr.items():
+    #         #print(f"Key is {k}")
+    #         sci_distr = getattr(scipy.stats, k)
+    #         values = v
+
+    #     while True:
+    #         sampled_value = np.floor(sci_distr.rvs(**values))
+    #         if sampled_value > 0:
+    #             break
+
+    #     return sampled_value
+
+    def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
-            This function will return a single sampled float value from
-            the specified distribution and parameters in the dictionay, distr.
+        Sample a single float value from a seeded scipy distribution.
+
+        Parameters
+        ----------
+        distr : dict
+            A dictionary with one key (the distribution name) and value as the parameters.
+        rng : np.random.Generator
+            A seeded RNG from the simulation's RNG stream pool.
+
+        Returns
+        -------
+        float
+            A positive sampled value from the specified distribution.
         """
+        if len(distr) != 1:
+            raise ValueError("Expected one distribution name in distr dictionary")
 
-        distribution = {}
-        return_list = []
-
-        #print(distribution)
-
-        for k,v in distr.items():
-            #print(f"Key is {k}")
-            sci_distr = getattr(scipy.stats, k)
-            values = v
+        dist_name, params = list(distr.items())[0]
+        sci_distr = getattr(scipy.stats, dist_name)
 
         while True:
-            sampled_value = np.floor(sci_distr.rvs(**values))
+            sampled_value = np.floor(sci_distr.rvs(random_state=rng, **params))
             if sampled_value > 0:
-                break
-
-        return sampled_value
+                return sampled_value
 
     def get_nth_weekday(self, year: int, month: int, weekday: int, n: int):
 
