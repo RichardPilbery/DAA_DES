@@ -36,6 +36,12 @@ Implemented tests are listed below with a [x].
 [] Average total job stage durations by vehicle type
 [] Distribution of job stage durations by vehicle type
 
+
+## HEMS result (things like stand down en route, treated by not conveyed) proportions
+
+[] HEMS result proportions reflect reality overall
+[] HEMS result proportions by resource reflect reality overall
+
 """
 
 import numpy as np
@@ -43,7 +49,7 @@ from scipy import stats
 import pandas as pd
 from datetime import datetime
 import gc
-
+import os
 import textwrap
 
 import pytest
@@ -59,26 +65,17 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
 
+##############################################################################
+# Begin tests                                                                #
+##############################################################################
+
 ##################################
 # Calls in period                #
 ##################################
 @pytest.mark.calls
-def test_average_calls_in_period():
+def test_average_calls_in_period(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=20,
-         sim_duration=60 * 24 * 7 * 52 * 1,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
-
-        # Read simulation results
-        event_df = pd.read_csv("data/run_results.csv")
+        event_df = simulation_results # defined in conftest.py
 
         arrivals = event_df[event_df["time_type"] == "arrival"].copy()
         # Check we have one row per patient before proceeding
@@ -116,18 +113,18 @@ def test_average_calls_in_period():
         # Decision logic
         # Will only fail if significance threshold is met and cohen's D is sufficiently large
         if p_value < p_thresh and abs(cohen_d) > fail_effect:
-            fail_with_message(f"""[SIM-QC][FAIL] **Mean monthly calls** significantly different between
+            fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] **Mean monthly calls** significantly different between
                         simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                         Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                         Mean diff: {mean_diff:.2f}.""")
         # Else will provide appropriate warning
         elif p_value < p_thresh and abs(cohen_d) > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in **mean monthly calls**
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **mean monthly calls**
                           between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                           Sim mean: {np.mean(sim_calls):.2f}, Real mean: {np.mean(real_calls):.2f}.
                           Mean diff: {mean_diff:.2f}.""")
         elif abs(cohen_d) > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                           difference in **mean monthly calls** between simulation and reality
                           (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
                           threshold for significance.
@@ -145,19 +142,9 @@ def test_average_calls_in_period():
 #############################################
 
 @pytest.mark.calls
-def test_distribution_daily_calls():
+def test_distribution_daily_calls(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=2,
-         sim_duration=60 * 24 * 7 * 52 * 2,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
+        event_df = simulation_results # defined in conftest.py
 
         # Read simulation results
         event_df = pd.read_csv("data/run_results.csv")
@@ -183,16 +170,16 @@ def test_distribution_daily_calls():
         fail_effect = 0.2 # A 20% difference netweem CDFs is substantial — reasonable for failure.
 
         if p_value < p_thresh and statistic > fail_effect:
-            fail_with_message(f"""[SIM-QC][FAIL] Significant and large difference in distribution of
+            fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
                         **daily calls** between simulation and reality
                         (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
         # Else will provide appropriate warning
         elif p_value < p_thresh and statistic > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in distribution of
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in distribution of
                           **daily calls** between simulation and reality
                           (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
         elif statistic > warn_effect:
-            warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+            warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                           difference in distribution of **daily calls** between simulation
                           and reality (p={p_value:.4f}, KS statistic={statistic:.2f}) but did not
                           meet the p-value threshold for significance.""")
@@ -206,19 +193,9 @@ def test_distribution_daily_calls():
 # Average Total Job Durations (by vehicle type)              #
 ##############################################################
 @pytest.mark.jobdurations
-def test_average_total_job_durations():
+def test_average_total_job_durations(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=2,
-         sim_duration=60 * 24 * 7 * 52 * 2,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
+        event_df = simulation_results # defined in conftest.py
 
         # Read simulation results
         event_df = pd.read_csv("data/run_results.csv")
@@ -264,18 +241,18 @@ def test_average_total_job_durations():
             # Decision logic
             # Will only fail if significance threshold is met and cohen's D is sufficiently large
             if p_value < p_thresh and abs(cohen_d) > fail_effect:
-                fail_with_message(f"""[SIM-QC][FAIL] **Average total job durations** for {vehicle}s significantly different between
+                fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s significantly different between
                             simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                             Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
                             Mean diff: {mean_diff:.2f}.""")
             # Else will provide appropriate warning
             elif p_value < p_thresh and abs(cohen_d) > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in **Average total job durations** for {vehicle}s
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **Average total job durations** for {vehicle}s
                             between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
                             Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
                             Mean diff: {mean_diff:.2f}.""")
             elif abs(cohen_d) > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                             difference in **Average total job durations** for {vehicle}s between simulation and reality
                             (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
                             threshold for significance.
@@ -291,19 +268,9 @@ def test_average_total_job_durations():
 # Distribution of Total Job Durations (by vehicle type)      #
 ##############################################################
 @pytest.mark.jobdurations
-def test_distribution_total_job_durations():
+def test_distribution_total_job_durations(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=2,
-         sim_duration=60 * 24 * 7 * 52 * 2,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
+        event_df = simulation_results # defined in conftest.py
 
         # Read simulation results
         event_df = pd.read_csv("data/run_results.csv")
@@ -338,16 +305,16 @@ def test_distribution_total_job_durations():
 
         def check_output(what, p_value, statistic, p_thresh=p_thresh, fail_effect=fail_effect, warn_effect=warn_effect):
             if p_value < p_thresh and statistic > fail_effect:
-                fail_with_message(f"""[SIM-QC][FAIL] Significant and large difference in distribution of
+                fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
                         {what} between simulation and reality
                         (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
             # Else will provide appropriate warning
             elif p_value < p_thresh and statistic > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN] Possible practical difference in distribution of
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in distribution of
                              {what} between simulation and reality
                             (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
             elif statistic > warn_effect:
-                warn_with_message(f"""[SIM-QC][WARN - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
                             difference in distribution of {what} between simulation
                             and reality (p={p_value:.4f}, KS statistic={statistic:.2f}) but did not
                             meet the p-value threshold for significance.""")

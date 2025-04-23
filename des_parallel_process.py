@@ -8,6 +8,7 @@ from utils import Utils
 from des_hems import DES_HEMS
 import multiprocessing as mp
 from joblib import Parallel, delayed
+from numpy.random import SeedSequence
 
 def write_run_params(model) -> None:
     """
@@ -95,6 +96,7 @@ def runSim(run: int,
            warm_up_time: int,
            sim_start_date: datetime,
            amb_data: bool,
+           random_seed: int = 101,
            save_params_csv: bool = True,
            demand_increase_percent: float = 1.0,
            activity_duration_multiplier: float = 1.0,
@@ -154,6 +156,7 @@ def runSim(run: int,
                         warm_up_duration=warm_up_time,
                         sim_start_date=sim_start_date,
                         amb_data=amb_data,
+                        random_seed=random_seed,
                         demand_increase_percent=demand_increase_percent,
                         activity_duration_multiplier=activity_duration_multiplier,
                         print_debug_messages=print_debug_messages
@@ -170,30 +173,35 @@ def runSim(run: int,
     return daa_model.results_df
 
 def collateRunResults() -> None:
-        """
-        Collates results from a series of runs into a single csv
-        """
-        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
+    """
+    Collates results from a series of runs into a single csv
+    """
+    matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
-        combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
+    combined_df = pd.concat([pd.read_csv(f) for f in matching_files], ignore_index=True)
 
-        combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
+    combined_df.to_csv(Utils.RUN_RESULTS_CSV, index=False)
 
-        for file in matching_files:
-             os.remove(file)
+    for file in matching_files:
+            os.remove(file)
 
-def removeExistingResults() -> None:
-        """
-        Removes results from previous simulation runs
-        """
-        matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
+def removeExistingResults(remove_run_results_csv=False) -> None:
+    """
+    Removes results from previous simulation runs
+    """
+    matching_files = glob.glob(os.path.join(Utils.RESULTS_FOLDER, "output_run_*.csv"))
 
-        for file in matching_files:
-             os.remove(file)
+    for file in matching_files:
+            os.remove(file)
 
-        all_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "all_results.csv")
-        if os.path.isfile(all_results_file_path):
-            os.unlink(all_results_file_path)
+    all_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "all_results.csv")
+    if os.path.isfile(all_results_file_path):
+        os.unlink(all_results_file_path)
+
+    if remove_run_results_csv:
+            run_results_file_path = os.path.join(Utils.RESULTS_FOLDER, "run_results.csv")
+            if os.path.isfile(run_results_file_path):
+                os.unlink(run_results_file_path)
 
 def parallelProcessJoblib(total_runs: int,
                           sim_duration: int,
@@ -203,7 +211,9 @@ def parallelProcessJoblib(total_runs: int,
                           save_params_csv: bool = True,
                           demand_increase_percent: float = 1.0,
                           activity_duration_multiplier: float = 1.0,
-                          print_debug_messages: bool = False):
+                          print_debug_messages: bool = False,
+                          master_seed=42,
+                          n_cores=-1):
     """
     Execute multiple simulation runs in parallel using joblib.
 
@@ -227,6 +237,11 @@ def parallelProcessJoblib(total_runs: int,
         Multiplier to adjust generated durations of activities (e.g., 1.10 for a 10% increase). Default is 1.0.
     print_debug_messages : bool, optional
         If True, enables additional debug message output during each run. Default is False.
+    master_seed : int, optional
+        Master seed used to generate the uncorrelated random number streams for replication consistency
+    n_cores : int, optional
+        Determines how many parallel simulations will be run at a time (which is equivalent to the
+        number of cores). Default is -1, which means all available cores will be utilised.
 
     Returns
     -------
@@ -244,10 +259,36 @@ def parallelProcessJoblib(total_runs: int,
       collateRunResults()
     """
 
-    return Parallel(n_jobs=-1)(delayed(runSim)(run, total_runs, sim_duration, warm_up_time,
-                                               sim_start_date, amb_data, save_params_csv,
-                                               demand_increase_percent, activity_duration_multiplier,
-                                               print_debug_messages) for run in range(total_runs))
+    # seeds = Utils.get_distribution_seeds(master_seed=master_seed, n_replications=total_runs,
+    #                                      n_dists_per_rep=30)
+
+    # Generate a number of uncorrelated seeds that will always be the same given the same
+    # master seed (which is determined as a parameter)
+    # We start with a SeedSequence from the master seed, and then generate a number of
+    # child SeedSequences equal to the total number of runs
+    seed_sequence = SeedSequence(master_seed).spawn(total_runs)
+    # We then turn these seeds into integer random numbers, and we will pass a different seed
+    # into each run of the simulation.
+    seeds = [i.generate_state(1)[0] for i in seed_sequence]
+
+    # Run the simulation in parallel, using all available cores
+    return Parallel(n_jobs=n_cores)(
+    delayed(runSim)(
+        run=run,
+        total_runs=total_runs,
+        sim_duration=sim_duration,
+        warm_up_time=warm_up_time,
+        sim_start_date=sim_start_date,
+        amb_data=amb_data,
+        random_seed=seeds[run],
+        save_params_csv=save_params_csv,
+        demand_increase_percent=demand_increase_percent,
+        activity_duration_multiplier=activity_duration_multiplier,
+        print_debug_messages=print_debug_messages
+        )
+        for run in range(total_runs)
+    )
+
 
 if __name__ == "__main__":
     removeExistingResults()

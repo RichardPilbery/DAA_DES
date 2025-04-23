@@ -5,6 +5,13 @@ import pandas as pd
 import ast
 import scipy
 import calendar
+from numpy.random import SeedSequence, default_rng
+from scipy.stats import (
+    poisson, bernoulli, triang, erlang, weibull_min, exponweib,
+    betabinom, pearson3, cauchy, chi2, expon, exponpow,
+    gamma, lognorm, norm, powerlaw, rayleigh, uniform
+)
+import logging
 
 class Utils:
 
@@ -24,8 +31,15 @@ class Utils:
     TIME_TYPES = ["call start", "mobile", "at scene", "leaving scene", "at hospital", "handover", "clear", "stand down"]
 
 
-    def __init__(self):
+    def __init__(self, master_seed=SeedSequence(42), print_debug_messages=False):
 
+        # Record the primary master seed sequence passed in to the sequence
+        self.master_seed_sequence = master_seed
+
+        ###############################
+        # Set up remaining attributes #
+        ###############################
+        self.print_debug_messages = print_debug_messages
         # Load in mean inter_arrival_times
         self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
@@ -55,12 +69,58 @@ class Utils:
         self.activity_time_distr = activity_time_data
 
         # Read in incident per day distribution data into a dictionary
-        activity_time_data = []
+        inc_per_day_data = []
         with open("distribution_data/inc_per_day_distributions.txt", "r") as inFile:
             inc_per_day_data = ast.literal_eval(inFile.read())
         inFile.close()
         self.inc_per_day_distr = inc_per_day_data
 
+        # Turn the min-max activity times data into a format that supports easier/faster
+        # lookups
+        self.min_max_cache = {
+            row['time']: (row['min_value_mins'], row['max_value_mins'])
+            for _, row in self.min_max_values_df.iterrows()
+        }
+
+
+
+    def setup_seeds(self):
+        #########################################################
+        # Control generation of required random number streams  #
+        #########################################################
+
+        # Spawn substreams for major simulation modules
+        module_keys = [
+            "activity_times",
+            "ampds_code_selection",
+            "care_category_selection",
+            "callsign_group_selection",
+            "vehicle_type_selection",
+            "hems_result_by_callsign_group_and_vehicle_type_selection",
+            "hems_result_by_care_category_and_helicopter_benefit_selection",
+            "pt_outcome_selection",
+            "sex_selection",
+            "age_sampling",
+            "calls_per_day",
+            "calls_per_hour",
+            "predetermine_call_arrival",
+            "call_iat",
+            "helicopter_benefit_from_reg",
+            "hems_case"
+        ]
+        # Efficiently spawn substreams
+        spawned = self.master_seed_sequence.spawn(len(module_keys))
+
+        # Map substreams and RNGs to keys
+        self.seed_substreams = dict(zip(module_keys, spawned))
+        self.rngs = {key: default_rng(ss) for key, ss in self.seed_substreams.items()}
+
+        self.build_seeded_distributions(self.master_seed_sequence)
+
+
+    def debug(self, message: str):
+        if self.print_debug_messages:
+            logging.debug(message)
 
     def current_time() -> str:
         """
@@ -102,24 +162,25 @@ class Utils:
 
         return [dow, current_hour, weekday, current_month, current_quarter, current_dt]
 
+    # SR 2025-04-17: Commenting out as I believe this is no longer used due to changes
+    # in the way inter-arrival times for calls are managed
+    # def inter_arrival_rate(self, hour: int, quarter: int) -> float:
+    #     """
+    #         This function will return the current mean inter_arrival rate in minutes
+    #         for the provided hour of day and yearly quarter
 
-    def inter_arrival_rate(self, hour: int, quarter: int) -> float:
-        """
-            This function will return the current mean inter_arrival rate in minutes
-            for the provided hour of day and yearly quarter
+    #         NOTE: not used with NSPPThinning
+    #     """
 
-            NOTE: not used with NSPPThinning
-        """
+    #     #print(f"IA with values hour {hour} and quarter {quarter}")
+    #     df = self.inter_arrival_rate_df
+    #     mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_iat']
 
-        #print(f"IA with values hour {hour} and quarter {quarter}")
-        df = self.inter_arrival_rate_df
-        mean_ia = df[(df['hour'] == hour) & (df['quarter'] == quarter)]['mean_iat']
+    #     # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
+    #     # then iloc value broken. Set default to 120 in that case.
 
-        # Currently have issue in that if hour and quarter not in data e.g. 0200 in quarter 3
-        # then iloc value broken. Set default to 120 in that case.
-
-        return 120 if len(mean_ia) == 0 else mean_ia.iloc[0]
-        #return mean_ia.iloc[0]
+    #     return 120 if len(mean_ia) == 0 else mean_ia.iloc[0]
+    #     #return mean_ia.iloc[0]
 
 
     def ampds_code_selection(self, hour: int) -> int:
@@ -130,7 +191,8 @@ class Utils:
 
         df = self.hour_by_ampds_df[self.hour_by_ampds_df['hour'] == hour]
 
-        return pd.Series.sample(df['ampds_card'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['ampds_card'], weights = df['proportion'],
+                                random_state=self.rngs["ampds_code_selection"]).iloc[0]
 
 
     def is_time_in_range(self, current: int, start: int, end: int) -> bool:
@@ -167,7 +229,8 @@ class Utils:
             (self.care_cat_by_ampds_df['ampds_card'] == ampds_card)
         ]
 
-        return  pd.Series.sample(df['care_category'], weights = df['proportion']).iloc[0]
+        return  pd.Series.sample(df['care_category'], weights = df['proportion'],
+                                random_state=self.rngs["care_category_selection"]).iloc[0]
 
     def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
         """
@@ -182,7 +245,8 @@ class Utils:
             (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
         ]
 
-        return  pd.Series.sample(df['callsign_group'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['callsign_group'], weights = df['proportion'],
+                                random_state=self.rngs["callsign_group_selection"]).iloc[0]
 
     def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
         """
@@ -195,7 +259,8 @@ class Utils:
             (self.vehicle_type_by_month_df['callsign_group'] == int(callsign_group))
         ]
 
-        return pd.Series.sample(df['vehicle_type'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
+                                random_state=self.rngs["vehicle_type_selection"]).iloc[0]
 
     def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
         """
@@ -207,8 +272,9 @@ class Utils:
             (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
         ]
 
-        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
-    
+        return pd.Series.sample(df['hems_result'], weights = df['proportion'],
+                                random_state=self.rngs["hems_result_by_callsign_group_and_vehicle_type_selection"]).iloc[0]
+
     def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
         """
             This function will allocate a HEMS result based on care category and helicopter benefit
@@ -219,7 +285,8 @@ class Utils:
             (self.hems_result_by_care_category_and_helicopter_benefit_df['helicopter_benefit'] == helicopter_benefit)
         ]
 
-        return pd.Series.sample(df['hems_result'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['hems_result'], weights = df['proportion'],
+                                random_state=self.rngs["hems_result_by_care_category_and_helicopter_benefit_selection"]).iloc[0]
 
     def pt_outcome_selection(self, hems_result: str, care_category: str) -> int:
         """
@@ -234,8 +301,10 @@ class Utils:
         ]
 
         #print(df)
-        return pd.Series.sample(df['pt_outcome'], weights = df['proportion']).iloc[0]
+        return pd.Series.sample(df['pt_outcome'], weights = df['proportion'],
+                                random_state=self.rngs["pt_outcome_selection"]).iloc[0]
 
+    # TODO: RANDOM SEED SETTING
     def sex_selection(self, ampds_card: int) -> str:
         """
             This function will allocate and return the patient sex
@@ -244,8 +313,9 @@ class Utils:
 
         prob_female = self.sex_by_ampds_df[self.sex_by_ampds_df['ampds_card'] == ampds_card]['proportion']
 
-        return 'Female' if (random.uniform(0, 1) < prob_female.iloc[0]) else 'Male'
+        return 'Female' if (self.rngs["sex_selection"].uniform(0, 1) < prob_female.iloc[0]) else 'Male'
 
+    # TODO: RANDOM SEED SETTING
     def age_sampling(self, ampds_card: int, max_age: int) -> float:
         """
             This function will return the patient's age based
@@ -267,7 +337,7 @@ class Utils:
 
         age = 100000
         while age > max_age:
-            age = self.sample_from_distribution(distribution)
+            age = self.sample_from_distribution(distribution, rng=self.rngs["age_sampling"])
 
         return age
 
@@ -279,25 +349,28 @@ class Utils:
 
         """
 
-        distribution = {}
+        dist = self.activity_time_distr.get((vehicle_type, time_type))
+        # print(dist)
 
-        # Calculate the maximum time allowed for given type of job cycle time
-        max_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].max_value_mins.iloc[0]
-        min_time = self.min_max_values_df[self.min_max_values_df['time'] == time_type].min_value_mins.iloc[0]
+        if dist is None:
+            raise ValueError(f"No distribution found for ({vehicle_type}, {time_type})")
 
-        for i in self.activity_time_distr:
-            #print(i)
-            if (i['vehicle_type'] == vehicle_type) & (i['time_type'] == time_type):
-                #print('Match')
-                distribution = i['best_fit']
+        try:
+            min_time, max_time = self.min_max_cache[time_type]
+            # print(f"Min time {time_type}: {min_time}")
+            # print(f"Max time {time_type}: {max_time}")
+        except KeyError:
+            raise ValueError(f"Min/max bounds not found for time_type='{time_type}'")
 
-        sampled_time = -1000
+        sampled_time = -1
+        while not (min_time <= sampled_time <= max_time):
+            sampled_time = dist.sample()
 
-        while (min_time > sampled_time) or (sampled_time > max_time):
-            sampled_time = self.sample_from_distribution(distribution)
+        # print(sampled_time)
 
         return sampled_time
 
+    # TODO: RANDOM SEED SETTING
     def inc_per_day(self, quarter: int) -> float:
         """
             This function will return a dictionary containing
@@ -321,34 +394,61 @@ class Utils:
                 min_n = i['min_n_per_day']
 
         sampled_inc_per_day = -1
-        
+
         while not (sampled_inc_per_day >= min_n and sampled_inc_per_day <= max_n):
-            sampled_inc_per_day = self.sample_from_distribution(distribution)
+            sampled_inc_per_day = self.sample_from_distribution(distribution, rng=self.rngs["calls_per_day"])
 
         return sampled_inc_per_day
 
-    def sample_from_distribution(self, distr: dict) -> float:
+    # def sample_from_distribution(self, distr: dict) -> float:
+    #     """
+    #         This function will return a single sampled float value from
+    #         the specified distribution and parameters in the dictionay, distr.
+    #     """
+
+    #     distribution = {}
+    #     return_list = []
+
+    #     #print(distribution)
+
+    #     for k,v in distr.items():
+    #         #print(f"Key is {k}")
+    #         sci_distr = getattr(scipy.stats, k)
+    #         values = v
+
+    #     while True:
+    #         sampled_value = np.floor(sci_distr.rvs(**values))
+    #         if sampled_value > 0:
+    #             break
+
+    #     return sampled_value
+
+    def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
-            This function will return a single sampled float value from
-            the specified distribution and parameters in the dictionay, distr.
+        Sample a single float value from a seeded scipy distribution.
+
+        Parameters
+        ----------
+        distr : dict
+            A dictionary with one key (the distribution name) and value as the parameters.
+        rng : np.random.Generator
+            A seeded RNG from the simulation's RNG stream pool.
+
+        Returns
+        -------
+        float
+            A positive sampled value from the specified distribution.
         """
+        if len(distr) != 1:
+            raise ValueError("Expected one distribution name in distr dictionary")
 
-        distribution = {}
-        return_list = []
-
-        #print(distribution)
-
-        for k,v in distr.items():
-            #print(f"Key is {k}")
-            sci_distr = getattr(scipy.stats, k)
-            values = v
+        dist_name, params = list(distr.items())[0]
+        sci_distr = getattr(scipy.stats, dist_name)
 
         while True:
-            sampled_value = np.floor(sci_distr.rvs(**values))
+            sampled_value = np.floor(sci_distr.rvs(random_state=rng, **params))
             if sampled_value > 0:
-                break
-
-        return sampled_value
+                return sampled_value
 
     def get_nth_weekday(self, year: int, month: int, weekday: int, n: int):
 
@@ -504,7 +604,7 @@ class Utils:
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
-    
+
     def biased_mean(series: pd.Series, bias: float = .6) -> float:
         """
 
@@ -515,7 +615,89 @@ class Utils:
 
         if len(series) == 1:
             return series.iloc[0]  # Return the only value if there's just one
-        
+
         sorted_vals = np.sort(series)  # Ensure values are sorted
         weights = np.linspace(1, bias * 2, len(series))  # Increasing weights with larger values
         return np.average(sorted_vals, weights=weights)
+
+    # def get_distribution_seeds(master_seed, n_replications, n_dists_per_rep):
+    #     rep_seqs = SeedSequence(master_seed).spawn(n_replications)
+    #     all_dist_seeds = []
+    #     for seq in rep_seqs:
+    #         dist_seqs = seq.spawn(n_dists_per_rep)
+    #         dist_ints = [s.generate_state(1)[0] for s in dist_seqs]
+    #         all_dist_seeds.append(dist_ints)
+    #     return all_dist_seeds
+
+    def build_seeded_distributions(self, seed_seq):
+        """
+        Build a dictionary of seeded distributions keyed by (vehicle_type, time_type)
+
+        Returns
+        -------
+        dict of (vehicle_type, time_type) -> SeededDistribution
+
+        e.g. {('helicopter', 'time_allocation'): <utils.SeededDistribution object at 0x000001521627C750>,
+        ('car', 'time_allocation'): <utils.SeededDistribution object at 0x000001521627D410>,
+        ('helicopter', 'time_mobile'): <utils.SeededDistribution object at 0x0000015216267E90>}
+        """
+        n = len(self.activity_time_distr)
+        rngs = [default_rng(s) for s in seed_seq.spawn(n)]
+
+        dist_map = {
+            'poisson': poisson,
+            'bernoulli': bernoulli,
+            'triang': triang,
+            'erlang': erlang,
+            'weibull_min': weibull_min,
+            'expon_weib': exponweib,
+            'betabinom': betabinom,
+            'pearson3': pearson3,
+            'cauchy': cauchy,
+            'chi2': chi2,
+            'expon': expon,
+            'exponential': expon,       # alias for consistency
+            'exponpow': exponpow,
+            'gamma': gamma,
+            'lognorm': lognorm,
+            'norm': norm,
+            'normal': norm,             # alias for consistency
+            'powerlaw': powerlaw,
+            'rayleigh': rayleigh,
+            'uniform': uniform
+        }
+
+        seeded_distributions = {}
+
+        # print(activity_time_distr)
+        # print(len(self.activity_time_distr))
+        i = 0
+        for entry, rng in zip(self.activity_time_distr, rngs):
+            i += 1
+            vt = entry['vehicle_type']
+            tt = entry['time_type']
+            best_fit = entry['best_fit']
+
+            # dist_name = best_fit['dist'].lower()
+            dist_name = list(best_fit.keys())[0]
+            dist_cls = dist_map.get(dist_name)
+            self.debug(f"{i}/{len(self.activity_time_distr)} for {vt} {tt} set up {dist_name} {dist_cls} with params: {best_fit[dist_name]}")
+
+            if dist_cls is None:
+                raise ValueError(f"Unsupported distribution type: {dist_name}")
+
+            params = best_fit[dist_name]
+
+            seeded_distributions[(vt, tt)] = SeededDistribution(dist_cls, rng, **params)
+
+        self.activity_time_distr =  seeded_distributions
+
+        return seeded_distributions
+
+class SeededDistribution:
+    def __init__(self, dist, rng, **kwargs):
+        self.dist = dist(**kwargs)
+        self.rng = rng
+
+    def sample(self, size=None):
+        return self.dist.rvs(size=size, random_state=self.rng)

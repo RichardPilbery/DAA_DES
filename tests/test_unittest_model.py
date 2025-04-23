@@ -18,12 +18,13 @@ Implemented tests are listed below with a [x].
 
 [x] Results dataframe is longer when model conducts more runs
 [x] Results differ across multiple runs
-[] Arrivals differ across multiple runs
-[] Running the model sequentially and in parallel produce identical results when seeds set
+[x] Arrivals differ across multiple runs
+[x] Running the model sequentially and in parallel produce identical results when seeds set
 
 ## Seeds
 
-[] Model behaves consistently across repeated runs when provided with a seed
+[x] Model behaves consistently across repeated runs when provided with a seed and no parameters change
+[x] Arrivals are identical across simulations when provided with a seed even when other parameters are varied
 
 ## Warm-up period impact
 
@@ -41,36 +42,20 @@ Implemented tests are listed below with a [x].
 
 [] All provided resources get at least some utilisation in a model that
    runs for a sufficient length of time with sufficient demand
+[x] The same callsign is never sent on two jobs at once
+[x] Resources belonging to the same callsign group don't get sent on jobs at the same time
+[] Resources don't leave on service and never return
+[] Resource use duration is never negative (i.e. resource use for an individual never ends before it starts)
 [] Utilisation never exceeds 100%
 [] Utilisation never drops below 0%
 [] No one waits in the model for a resource to become availabile - they leave and are recorded as missed
 [] Resources are used in the expected order determined within the model
-[x] The same callsign is never sent on two jobs at once
-[x] Resources belonging to the same callsign group don't get sent on jobs at the same time
-[] Changing helicopter type results in different unavailability results being generated
-[] Resources don't leave on service and never return
-[] Resource use duration is never negative (i.e. resource use for an individual never ends before it starts)
 
 ## Activity during inactive periods
 
 [x] Resources do not respond during times they are meant to be off shift
-[] Resources aren't used during their service interval (determined by reg, not callsign)
-[] Calls do not generate activity if they arrive during times the resource is meant to be off shift
+[x] Resources aren't used during their service interval (determined by reg, not callsign)
 [] Inactive periods correctly change across seasons if set to do so
-
-## Expected responses of metrics under different conditions
-
-[] Utilisation is higher when resource is reduced but demand kept consistent
-[] 'Missed' calls are higher when resource is reduced but demand kept consistent
-
-[] Utilisation is lower when resource is reduced but demand decreases
-[] 'Missed' calls are lower when resource is reduced but demand decreases
-
-[] Utilisation is higher when resource is kept consistent but demand increases
-[] 'Missed' calls are higher when resource is kept consistent but demand increases
-
-[] Utilisation is lower when resource is kept consistent but demand decreases
-[] 'Missed' calls are lower when resource is kept consistent but demand decreases
 
 ## Failure to run under nonsensical conditions
 
@@ -93,33 +78,60 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
 
+##############################################################################
+# Begin tests                                                                #
+##############################################################################
+
+@pytest.mark.quick
+def test_model_runs():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=60 * 24 * 7 * 5, # Run for five weeks
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False,
+         )
+
+      collateRunResults()
+
+      # Read simulation results
+      results_df = pd.read_csv("data/run_results.csv")
+
+      assert len(results_df) > 5, "[FAIL - BASIC FUNCTIONS] Model failed to run"
+
+   finally:
+      del results_df
+      gc.collect()
 
 def test_more_results_for_longer_run():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       for i in range(10):
          results_df_1 = runSim(run=1, total_runs=1,
                               sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
+                              amb_data=False).reset_index()
 
          results_df_2 = runSim(run=1, total_runs=1,
                               sim_duration=60 * 24 * 7 * 4, # run for twice as long - 4 weeks
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
+                              amb_data=False).reset_index()
 
 
-         assert len(results_df_1) < len(results_df_2)
+         assert len(results_df_1) < len(results_df_2), "[FAIL - BASIC FUNCTIONS] Fewer results seen in longer model run"
    finally:
       del results_df_1, results_df_2
       gc.collect()
 
 def longer_df_when_more_runs_conducted():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       parallelProcessJoblib(
          total_runs=1,
@@ -136,6 +148,8 @@ def longer_df_when_more_runs_conducted():
 
       results_1_run = len(results)
 
+      removeExistingResults(remove_run_results_csv=True)
+
       parallelProcessJoblib(
          total_runs=2,
          sim_duration=60 * 24 * 7 * 5,
@@ -151,38 +165,16 @@ def longer_df_when_more_runs_conducted():
 
       results_2_runs = len(results)
 
-      assert results_1_run < results_2_runs
+      assert results_1_run < results_2_runs, "[FAIL - BASIC FUNCTIONS] Fewer results seen with a higher number of runs"
 
    finally:
       del results
       gc.collect()
 
 
-def test_results_differ_across_runs():
-   try:
-      removeExistingResults()
-
-      for i in range(5):
-         results_df_1 = runSim(run=1, total_runs=1,
-                              sim_duration=60 * 24 * 7 * 2, # run for 2 weeks
-                              warm_up_time=0,
-                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
-
-         results_df_2 = runSim(run=1, total_runs=1,
-                              sim_duration=60 * 24 * 7 * 4, # run for twice as long - 4 weeks
-                              warm_up_time=0,
-                              sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-                              amb_data=False)
-
-         assert not results_df_1.equals(results_df_2)
-   finally:
-      del results_df_1, results_df_2
-      gc.collect()
-
 def test_arrivals_increase_if_demand_param_increased():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       for i in range(5):
          results_df_1 = runSim(run=1, total_runs=1,
@@ -190,7 +182,7 @@ def test_arrivals_increase_if_demand_param_increased():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=1.0)
+                              demand_increase_percent=1.0).reset_index()
 
          results_df_1 = results_df_1[results_df_1["time_type"] == "arrival"]
 
@@ -199,18 +191,18 @@ def test_arrivals_increase_if_demand_param_increased():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=1.2)
+                              demand_increase_percent=1.2).reset_index()
 
          results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
 
-         assert len(results_df_1) < len(results_df_2), "Fewer jobs observed when demand increase parameter above one"
+         assert len(results_df_1) < len(results_df_2), "[FAIL - DEMAND PARAMETER] Fewer jobs observed when demand increase parameter above one"
    finally:
       del results_df_1, results_df_2
       gc.collect()
 
 def test_arrivals_decrease_if_demand_param_decrease():
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       for i in range(5):
          results_df_1 = runSim(run=1, total_runs=1,
@@ -218,7 +210,7 @@ def test_arrivals_decrease_if_demand_param_decrease():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=1.0)
+                              demand_increase_percent=1.0).reset_index()
 
          results_df_1 = results_df_1[results_df_1["time_type"] == "arrival"]
 
@@ -227,18 +219,18 @@ def test_arrivals_decrease_if_demand_param_decrease():
                               warm_up_time=0,
                               sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                               amb_data=False,
-                              demand_increase_percent=0.8)
+                              demand_increase_percent=0.8).reset_index()
 
          results_df_2 = results_df_2[results_df_2["time_type"] == "arrival"]
 
-         assert len(results_df_1) > len(results_df_2), "More jobs observed when demand increase parameter below one"
+         assert len(results_df_1) > len(results_df_2), "[FAIL - DEMAND PARAMETER] More jobs observed when demand increase parameter below one"
    finally:
       del results_df_1, results_df_2
       gc.collect()
 
 
 def test_output_when_no_demand():
-   removeExistingResults()
+   removeExistingResults(remove_run_results_csv=True)
 
    try:
       results_df_1 = runSim(run=1, total_runs=1,
@@ -246,7 +238,7 @@ def test_output_when_no_demand():
                         warm_up_time=0,
                         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
                         amb_data=False,
-                        demand_increase_percent=0)
+                        demand_increase_percent=0).reset_index()
 
       assert len(results_df_1) == 0
 
@@ -264,7 +256,7 @@ def test_warmup_only():
    past the warm-up, no outputs should be produced.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       # Run the simulation with only a warm-up period and no actual simulation time
       parallelProcessJoblib(
@@ -282,7 +274,7 @@ def test_warmup_only():
 
       # Assert that the results are empty, i.e., no output was generated during warm-up
       assert len(results) == 0, (
-         f"{len(results)} results seem to have been generated during the warm-up period"
+         f"[FAIL - WARM-UP] {len(results)} results seem to have been generated during the warm-up period"
          )
    finally:
       del results
@@ -297,7 +289,7 @@ def test_no_results_recorded_from_warmup():
    It verifies that no records are generated that fall within the warm-up time.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       warm_up_length=60*24*3 # 3 days
 
@@ -320,7 +312,7 @@ def test_no_results_recorded_from_warmup():
 
       # Assert no records were made during the warm-up period
       assert len(results_in_warmup) == 0, (
-         f"{len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
+         f"[FAIL - WARM-UP] {len(results_in_warmup)} results appear in the results df that shouldn't due to falling in warm-up period"
          )
 
    finally:
@@ -328,7 +320,7 @@ def test_no_results_recorded_from_warmup():
       gc.collect()
 
 @pytest.mark.resources
-def test_simultaneous_allocation_same_resource_group():
+def test_simultaneous_allocation_same_resource_group(simulation_results):
    """
    Ensures no two jobs are allocated to resources from the same resource group at overlapping times.
 
@@ -344,7 +336,7 @@ def test_simultaneous_allocation_same_resource_group():
    H70 are not running simultaneously).
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       # Remove existing failure log if it exists
       if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
@@ -353,18 +345,7 @@ def test_simultaneous_allocation_same_resource_group():
       if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FULL.csv"):
             os.remove("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
-      # Run simulation for 10 weeks
-      parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10, # 10 weeks
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-
-      collateRunResults()
-
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
 
       # Extract start and end times of resource usage
       resource_use_start_and_end = (
@@ -429,43 +410,31 @@ def test_simultaneous_allocation_same_resource_group():
 
       if len(all_overlaps_df)>0:
          all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
-         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
+         resource_use_wide.to_csv("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
 
       assert len(all_overlaps_df) == 0, (
-            f"{len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once across {len(resource_use_wide)} calls")
+            f"[FAIL - RESOURCE ALLOCATION LOGIC] {len(all_overlaps_df)} instances found of resources from the same callsign group being sent on two or more jobs at once across {len(resource_use_wide)} calls")
 
    finally:
       del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
       gc.collect()
 
 @pytest.mark.resources
-def test_simultaneous_allocation_same_resource():
+def test_simultaneous_allocation_same_resource(simulation_results):
    """
    Ensures no single resource is allocated to multiple jobs at the same time.
 
    Checks that a specific callsign (i.e., physical unit) is not double-booked.
    """
    try:
-      removeExistingResults()
-
       if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
          os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
 
       if os.path.exists("tests/simultaneous_allocation_same_resource_FULL.csv"):
          os.remove("tests/simultaneous_allocation_same_resource_FULL.csv")
 
-      parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10, # 10 weeks
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-
-      collateRunResults()
-
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
 
       resource_use_start_and_end = (
          results[results["event_type"].isin(["resource_use","resource_use_end"])]
@@ -529,17 +498,17 @@ def test_simultaneous_allocation_same_resource():
 
       if len(all_overlaps_df)>0:
          all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FAILURES.csv")
-         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
+         resource_use_wide.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
 
       assert len(all_overlaps_df) == 0, (
-            f"{len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
+            f"[FAIL - RESOURCE ALLOCATION LOGIC] {len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
             )
    finally:
       del resource_use_start_and_end, resource_use_start, resource_use_end, resource_use_wide, single_callsign, df_sorted, overlaps, all_overlaps, all_overlaps_df
       gc.collect()
 
 @pytest.mark.resources
-def test_no_response_during_off_shift_times():
+def test_no_response_during_off_shift_times(simulation_results):
    """
    Ensures no response is initiated outside of a resource's rota'd hours.
 
@@ -547,22 +516,12 @@ def test_no_response_during_off_shift_times():
    Includes a manual test case for validation.
    """
    try:
-      removeExistingResults()
+      removeExistingResults(remove_run_results_csv=True)
 
       if os.path.exists("tests/offline_calls_FAILURES.csv"):
          os.remove("tests/offline_calls_FAILURES.csv")
 
-      parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-
-      collateRunResults()
-
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
 
       resource_use_start = (
             results[results["event_type"] == "resource_use"]
@@ -637,7 +596,7 @@ def test_no_response_during_off_shift_times():
 
       # Check there are no offline calls
       assert len(offline_calls)==0, (
-            f"{len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
+            f"[FAIL - RESOURCE ALLOCATION LOGIC - ROTA] {len(offline_calls)} calls appear to have had a response initiated outside of rota'd hours"
             )
 
       # Add several test cases that should fail to the dataframe and rerun to ensure that
@@ -709,7 +668,7 @@ def test_no_response_during_off_shift_times():
       # 4 rows we added should fail, 1 row we added should pass
       # (update this if adding additional test cases)
       assert len(offline_calls) == (len(additional_rows) - 1), (
-            "The function for testing resources being allocated out of rota'd hours is not behaving correctly"
+            "[FAIL - RESOURCE ALLOCATION LOGIC - ROTA] The function for testing resources being allocated out of rota'd hours is not behaving correctly"
             )
 
    finally:
@@ -717,27 +676,10 @@ def test_no_response_during_off_shift_times():
       gc.collect()
 
 @pytest.mark.resources
-def test_no_response_during_service():
+def test_no_response_during_service(simulation_results):
    try:
-      removeExistingResults()
-
-      # Remove any previous test output to start fresh
-      if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
-         os.remove("tests/responses_during_servicing_FAILURES.csv")
-
-      # Run the simulation in parallel for 10 runs
-      parallelProcessJoblib(
-         total_runs=10,
-         sim_duration= 60 * 24 * 7 * 52 * 4, # Run for 4 years to maximise chance of observing
-         warm_up_time=0, # no warm-up necessary
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-      # Combine results from the simulation runs
-      collateRunResults()
-
       # Load key data files produced by the simulation - results and generated service intervals
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
       services = pd.read_csv("data/service_dates.csv")
 
       # Ensure service start and end dates are datetimes
@@ -778,7 +720,7 @@ def test_no_response_during_service():
 
       # Assert that no responses occurred during servicing periods
       assert len(violations) == 0, (
-         f"{len(violations)} resource_use_start values fall within a servicing interval"
+         f"[FAIL - RESOURCE ALLOCATION LOGIC - SERVICING] {len(violations)} resource_use_start values fall within a servicing interval"
       )
 
    except:

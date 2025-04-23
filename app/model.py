@@ -821,6 +821,9 @@ Most users will not need to look at the visualisations in this tab.
                             resource_use_events_only["run_number"].unique()
                         )
 
+                    show_outline = st.toggle("Show an outline to help debug overlapping calls",
+                                             value=False)
+
                     with st.expander("Click here to see the timings of resource use"):
                         st.dataframe(
                             resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
@@ -920,6 +923,12 @@ Most users will not need to look at the visualisations in this tab.
                                 hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
                             ))
 
+                        if show_outline:
+                            marker_val=dict(color=list(DAA_COLORSCHEME.values())[idx],
+                                        line=dict(color="#FFA400", width=0.2))
+                        else:
+                            marker_val = dict(color=list(DAA_COLORSCHEME.values())[idx])
+
                         # Add in boxes showing the duration of individual calls
                         resource_use_fig.add_trace(go.Bar(
                             x=callsign_df["duration_seconds"],  # Duration (Timedelta)
@@ -927,10 +936,7 @@ Most users will not need to look at the visualisations in this tab.
                             base=callsign_df["resource_use"],  # Start time as actual datetime
                             orientation="h",
                             width=0.4,
-                            marker=dict(color=list(DAA_COLORSCHEME.values())[idx],
-                                        line=dict(color="#FFA400", width=0.2)
-                                        #line=dict(color=list(DAA_COLORSCHEME.values())[idx], width=1)
-                                        ),
+                            marker=marker_val,
                             name=callsign,
                             customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
                             hovertemplate="Response from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"

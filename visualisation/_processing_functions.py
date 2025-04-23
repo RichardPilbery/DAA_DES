@@ -19,8 +19,8 @@ def calculate_time_difference(df, col1, col2, unit='minutes'):
         pd.Series: A Pandas Series with the time differences in the specified unit.
     """
     # Convert columns to datetime format
-    df[col1] = pd.to_datetime(df[col1])
-    df[col2] = pd.to_datetime(df[col2])
+    df[col1] = pd.to_datetime(df[col1], format='ISO8601')
+    df[col2] = pd.to_datetime(df[col2], format='ISO8601')
 
     # Compute time difference
     time_diff = df[col2] - df[col1]

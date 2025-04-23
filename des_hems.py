@@ -4,7 +4,7 @@ from random import expovariate, uniform
 from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 # from random import expovariate
-from utils import Utils
+from utils import Utils, SeededDistribution
 from class_patient import Patient
 # Revised class for HEMS availability
 from class_hems_availability import HEMSAvailability
@@ -15,6 +15,12 @@ import warnings
 import numpy as np
 from math import floor
 warnings.filterwarnings("ignore", category=RuntimeWarning)
+# import all distributions
+import ast
+from numpy.random import SeedSequence
+from typing import List, Dict, Tuple
+from numpy.random import SeedSequence, default_rng
+import random
 
 import logging
 logging.basicConfig(filename='log.txt', filemode="w", level=logging.DEBUG, format='')
@@ -31,8 +37,14 @@ class DES_HEMS:
     """
 
     def __init__(self,
-                run_number: int, sim_duration: int, warm_up_duration: int, sim_start_date: str,
-                amb_data: bool, demand_increase_percent: float, activity_duration_multiplier: float,
+                run_number: int,
+                sim_duration: int,
+                warm_up_duration: int,
+                sim_start_date: str,
+                amb_data: bool,
+                random_seed: int,
+                demand_increase_percent: float,
+                activity_duration_multiplier: float,
                 print_debug_messages: bool):
 
         self.run_number = run_number + 1 # Add 1 so we don't have a run_number 0
@@ -40,14 +52,23 @@ class DES_HEMS:
         self.warm_up_duration = warm_up_duration
         self.sim_start_date = sim_start_date
 
+        self.random_seed = random_seed
+        self.random_seed_sequence = SeedSequence(self.random_seed)
+
+        self.print_debug_messages = print_debug_messages
+
+        self.utils = Utils(
+            master_seed=self.random_seed_sequence.spawn(1)[0],
+            print_debug_messages=self.print_debug_messages
+            )
+
+        self.utils.setup_seeds()
+
         self.demand_increase_percent = demand_increase_percent
 
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
         #self.debug(f"Ambulance data values is {self.amb_data}")
-
-        self.utils = Utils()
-        self.print_debug_messages = print_debug_messages
 
         self.all_results_location = self.utils.ALL_RESULTS_CSV
         self.run_results_location = self.utils.RUN_RESULTS_CSV
@@ -61,7 +82,8 @@ class DES_HEMS:
         self.hems_resources = HEMSAvailability(env=self.env,
                                                sim_start_date=sim_start_date,
                                                sim_duration=sim_duration,
-                                               print_debug_messages=self.print_debug_messages
+                                               print_debug_messages=self.print_debug_messages,
+                                               master_seed=self.random_seed_sequence
                                                )
 
         # Set up empty list to store results prior to conversion to dataframe
@@ -80,38 +102,49 @@ class DES_HEMS:
 
         self.activity_duration_multiplier = activity_duration_multiplier
 
+        # self.seeded_dists = self.utils.build_seeded_distributions(
+        #     self.utils.activity_time_distr,
+        #     master_seed=self.random_seed
+        #     )
+
     def debug(self, message: str):
         if self.print_debug_messages:
             logging.debug(message)
             #print(message)
 
-    def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
-        """
-            Convenience function to return the time between incidents
-            using either NSPPThinning or sampling the exponential
-            distribution
+    # SR NOTE 2025-04-16: Commented out as believe this is no longer in use
+    # To my knowledge this approach was dropped as it was incorrectly estimating
+    # the number of calls and has been replaced with the use of calls_per_hour
+    # and predetermine_call_arrivals
+    # def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
+    #     """
+    #         Convenience function to return the time between incidents
+    #         using either NSPPThinning or sampling the exponential
+    #         distribution
 
-            Arrivals distribution using NSPPThinning
-            HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
+    #         Arrivals distribution using NSPPThinning
+    #         HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
 
-        """
+    #     """
 
-        if NSPPThin:
-           # Determine the inter-arrival time usiong NSPPThinning
-            arrivals_dist = NSPPThinning(
-                data = self.inter_arrival_times_df[
-                    (self.inter_arrival_times_df['quarter'] == qtr)
-                ],
-                random_seed1 = self.run_number * 112,
-                random_seed2 = self.run_number * 999
-            )
+    #     if NSPPThin:
+    #        # Determine the inter-arrival time usiong NSPPThinning
+    #         arrivals_dist = NSPPThinning(
+    #             data = self.inter_arrival_times_df[
+    #                 (self.inter_arrival_times_df['quarter'] == qtr)
+    #             ],
+    #             random_seed1 = self.run_number * 112,
+    #             random_seed2 = self.run_number * 999
+    #         )
 
-            return arrivals_dist.sample(hour)
+    #         return arrivals_dist.sample(hour)
 
-        else:
-            # Or just regular exponential distrib.
-            inter_time = self.utils.inter_arrival_rate(hour, qtr)
-            return expovariate(1.0 / inter_time)
+    #     else:
+    #         # Or just regular exponential distrib.
+    #         # inter_time = self.utils.inter_arrival_rate(hour, qtr)
+    #         # return expovariate(1.0 / inter_time)
+    #         # return Exponential(inter_time, random_seed=self.random_seeds[0])
+    #         return self.arrival_dist.sample()
 
 
     def calls_per_hour(self, quarter: int) -> dict:
@@ -128,7 +161,8 @@ class DES_HEMS:
         calls_in_hours = []
 
         for i in range(0, self.calls_today):
-            hour = pd.Series.sample(hourly_activity_for_qtr['hour'], weights = hourly_activity_for_qtr['proportion']).iloc[0]
+            hour = pd.Series.sample(hourly_activity_for_qtr['hour'], weights = hourly_activity_for_qtr['proportion'],
+                                random_state=self.utils.rngs["calls_per_hour"]).iloc[0]
             #self.debug(f"Chosen hour is {hour}")
             calls_in_hours.append(hour)
 
@@ -161,12 +195,23 @@ class DES_HEMS:
 
         ia_time = []
 
+        # for index, row in hourly_activity_for_qtr.iterrows():
+        #     if row['hour'] >= current_hour:
+        #         if row['hour'] in d.keys():
+        #             calc_ia_time = expovariate(int(d[row['hour']]) / 60)
+        #             tmp_ia_time = ((row['hour']-current_hour) * 60) + calc_ia_time
+        #             # Update current hour
+        #             current_hour += floor(tmp_ia_time / 60)
+        #             ia_time.append(tmp_ia_time)
+
         for index, row in hourly_activity_for_qtr.iterrows():
-            if row['hour'] >= current_hour:
-                if row['hour'] in d.keys():
-                    calc_ia_time = expovariate(int(d[row['hour']]) / 60)
-                    tmp_ia_time = ((row['hour']-current_hour) * 60) + calc_ia_time
-                    # Update current hour
+            hour = row['hour']
+            if hour >= current_hour and hour in d:
+                count = d[hour]
+                if count > 0:
+                    scale = 60 / count  # mean of exponential = 1 / rate
+                    calc_ia_time = self.utils.rngs["predetermine_call_arrival"].exponential(scale=scale)
+                    tmp_ia_time = ((hour - current_hour) * 60) + calc_ia_time
                     current_hour += floor(tmp_ia_time / 60)
                     ia_time.append(tmp_ia_time)
 
@@ -213,17 +258,46 @@ class DES_HEMS:
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, qtr))
 
+            # if self.calls_today > 0:
+            #     # Work out how long until next incident
+            #     #self.debug(ia_dict.keys())
+            #     if hod in ia_dict.keys():
+            #         #self.debug(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
+            #         for i in range(0, ia_dict[hod]):
+            #             #self.debug(f"Creating new patient at {current_dt}")
+            #             self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+            #             # Might need to determine spread of jobs during any given hour.
+            #             yield self.env.timeout(5) # Wait 5 minutes until the next allocation
+            #             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
             if self.calls_today > 0:
-                # Work out how long until next incident
-                #self.debug(ia_dict.keys())
                 if hod in ia_dict.keys():
-                    #self.debug(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
+                    minutes_elapsed = 0
                     for i in range(0, ia_dict[hod]):
-                        #self.debug(f"Creating new patient at {current_dt}")
-                        self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-                        # Might need to determine spread of jobs during any given hour.
-                        yield self.env.timeout(5) # Wait 5 minutes until the next allocation
-                        [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+                        if minutes_elapsed < 59:
+                            # Determine remaining time and sample a wait time
+                            remaining_minutes = 59 - minutes_elapsed
+                            # wait_time = random.randint(0, remaining_minutes)
+                            wait_time = int(self.utils.rngs["call_iat"].integers(0, remaining_minutes+1))
+
+                            yield self.env.timeout(wait_time)
+                            minutes_elapsed += wait_time
+
+                            self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+
+                            [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
+                        else:
+                            # Fast forward to 59-minute mark if not already there
+                            if minutes_elapsed < 59:
+                                yield self.env.timeout(59 - minutes_elapsed)
+                                minutes_elapsed = 59
+                                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
+
+                            # All remaining calls come in at once at 59 minutes past the hour
+                            self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
+
+
 
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
@@ -272,7 +346,7 @@ class DES_HEMS:
             # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
             # if ambulance data is being collected too.
             self.debug("Ambulance case")
-            pt.hems_case = 1 if uniform(0, 1) <= 0.5 else pt.hems_case == 0
+            pt.hems_case = 1 if self.utils.rngs["hems_case"].uniform(0, 1) <= 0.5 else pt.hems_case == 0
         else:
             pt.hems_case = 1
 
@@ -285,7 +359,7 @@ class DES_HEMS:
             # About 5% of 'REG' calls might have a helicopter benefit
             helicopter_benefit = 'y'
             if pt.hems_cc_or_ec == 'REG':
-                helicopter_benefit = 'y' if uniform(0, 1) <= 0.05 else 'n'
+                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= 0.05 else 'n'
 
             pt.hems_helicopter_benefit = helicopter_benefit
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")

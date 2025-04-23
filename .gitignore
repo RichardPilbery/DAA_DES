@@ -189,5 +189,6 @@ visualisation/anim_process_files/*
 tests/BUILDING_TESTS.ipynb
 tests/*FAILURES.csv
 tests/*FULL.csv
+tests/*TEST_OUTPUT*.csv
 
 log.txt
