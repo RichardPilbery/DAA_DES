@@ -240,7 +240,7 @@ def test_results_differ_across_runs_parallelProcessJobLib():
       gc.collect()
 
 @pytest.mark.reproducibility
-def test_arrivals_differ_across_runs_runSim():
+def test_different_seed_gives_different_arrival_pattern_runSim():
    """
    When passing different seeds to the runSim method, check arrivals differ
    """
@@ -340,6 +340,58 @@ def test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib():
       gc.collect()
 
 
+@pytest.mark.reproducibility
+def test_same_seed_gives_consistent_calls_per_day_runSim():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      RUN = 1
+      TOTAL_RUNS = 1
+      SIM_DURATION = 60 * 24 * 7 * 2
+      WARM_UP_TIME = 0
+      SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
+      AMB_DATA = False
+      RANDOM_SEED=42
+
+      # Should only differ in random seed
+      results_df_1 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+
+      results_df_2 = runSim(run=RUN,
+                              total_runs=TOTAL_RUNS,
+                           sim_duration=SIM_DURATION,
+                           warm_up_time=WARM_UP_TIME,
+                           sim_start_date=SIM_START_DATE,
+                           amb_data=AMB_DATA,
+                           random_seed=RANDOM_SEED).reset_index()
+
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+
+      assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
+      assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      arrivals_df_1['day'] = pd.to_datetime(arrivals_df_1["timestamp_dt"]).dt.date
+      arrivals_df_2['day'] = pd.to_datetime(arrivals_df_2["timestamp_dt"]).dt.date
+
+      arrivals_df_1 = arrivals_df_1['day'].value_counts(sort=False)
+      arrivals_df_2 = arrivals_df_2['day'].value_counts(sort=False)
+
+      arrivals_df_1.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_day_runSim - arrivals_df_1.csv")
+      arrivals_df_2.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_day_runSim - arrivals_df_2.csv")
+
+
+      assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Number of daily arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
+
+   finally:
+      del results_df_1, results_df_2, arrivals_df_1, arrivals_df_2
+      gc.collect()
 
 @pytest.mark.reproducibility
 def test_same_seed_gives_consistent_arrival_pattern_runSim():
@@ -428,6 +480,9 @@ def test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib():
       arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
+
+      arrivals_df_1.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib - arrivals_df_1.csv")
+      arrivals_df_2.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib - arrivals_df_2.csv")
 
       assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
 
