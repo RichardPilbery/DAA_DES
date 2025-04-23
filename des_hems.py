@@ -346,7 +346,7 @@ class DES_HEMS:
             # TODO: We'll need the logic to decide whether it is an ambulance or HEMS case
             # if ambulance data is being collected too.
             self.debug("Ambulance case")
-            pt.hems_case = 1 if uniform(0, 1) <= 0.5 else pt.hems_case == 0
+            pt.hems_case = 1 if self.utils.rngs["hems_case"].uniform(0, 1) <= 0.5 else pt.hems_case == 0
         else:
             pt.hems_case = 1
 
@@ -359,7 +359,7 @@ class DES_HEMS:
             # About 5% of 'REG' calls might have a helicopter benefit
             helicopter_benefit = 'y'
             if pt.hems_cc_or_ec == 'REG':
-                helicopter_benefit = 'y' if uniform(0, 1) <= 0.05 else 'n'
+                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= 0.05 else 'n'
 
             pt.hems_helicopter_benefit = helicopter_benefit
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")

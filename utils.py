@@ -104,7 +104,9 @@ class Utils:
             "calls_per_day",
             "calls_per_hour",
             "predetermine_call_arrival",
-            "call_iat"
+            "call_iat",
+            "helicopter_benefit_from_reg",
+            "hems_case"
         ]
         # Efficiently spawn substreams
         spawned = self.master_seed_sequence.spawn(len(module_keys))
@@ -311,7 +313,7 @@ class Utils:
 
         prob_female = self.sex_by_ampds_df[self.sex_by_ampds_df['ampds_card'] == ampds_card]['proportion']
 
-        return 'Female' if (random.uniform(0, 1) < prob_female.iloc[0]) else 'Male'
+        return 'Female' if (self.rngs["sex_selection"].uniform(0, 1) < prob_female.iloc[0]) else 'Male'
 
     # TODO: RANDOM SEED SETTING
     def age_sampling(self, ampds_card: int, max_age: int) -> float:
