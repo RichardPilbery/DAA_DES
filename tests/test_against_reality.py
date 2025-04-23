@@ -36,6 +36,12 @@ Implemented tests are listed below with a [x].
 [] Average total job stage durations by vehicle type
 [] Distribution of job stage durations by vehicle type
 
+
+## HEMS result (things like stand down en route, treated by not conveyed) proportions
+
+[] HEMS result proportions reflect reality overall
+[] HEMS result proportions by resource reflect reality overall
+
 """
 
 import numpy as np
@@ -43,7 +49,7 @@ from scipy import stats
 import pandas as pd
 from datetime import datetime
 import gc
-
+import os
 import textwrap
 
 import pytest
@@ -59,26 +65,17 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
 
+##############################################################################
+# Begin tests                                                                #
+##############################################################################
+
 ##################################
 # Calls in period                #
 ##################################
 @pytest.mark.calls
-def test_average_calls_in_period():
+def test_average_calls_in_period(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=20,
-         sim_duration=60 * 24 * 7 * 52 * 1,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
-
-        # Read simulation results
-        event_df = pd.read_csv("data/run_results.csv")
+        event_df = simulation_results # defined in conftest.py
 
         arrivals = event_df[event_df["time_type"] == "arrival"].copy()
         # Check we have one row per patient before proceeding
@@ -145,19 +142,9 @@ def test_average_calls_in_period():
 #############################################
 
 @pytest.mark.calls
-def test_distribution_daily_calls():
+def test_distribution_daily_calls(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=2,
-         sim_duration=60 * 24 * 7 * 52 * 2,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
+        event_df = simulation_results # defined in conftest.py
 
         # Read simulation results
         event_df = pd.read_csv("data/run_results.csv")
@@ -206,19 +193,9 @@ def test_distribution_daily_calls():
 # Average Total Job Durations (by vehicle type)              #
 ##############################################################
 @pytest.mark.jobdurations
-def test_average_total_job_durations():
+def test_average_total_job_durations(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=2,
-         sim_duration=60 * 24 * 7 * 52 * 2,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
+        event_df = simulation_results # defined in conftest.py
 
         # Read simulation results
         event_df = pd.read_csv("data/run_results.csv")
@@ -291,19 +268,9 @@ def test_average_total_job_durations():
 # Distribution of Total Job Durations (by vehicle type)      #
 ##############################################################
 @pytest.mark.jobdurations
-def test_distribution_total_job_durations():
+def test_distribution_total_job_durations(simulation_results):
     try:
-        removeExistingResults()
-
-        parallelProcessJoblib(
-         total_runs=2,
-         sim_duration=60 * 24 * 7 * 52 * 2,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-         )
-
-        collateRunResults()
+        event_df = simulation_results # defined in conftest.py
 
         # Read simulation results
         event_df = pd.read_csv("data/run_results.csv")

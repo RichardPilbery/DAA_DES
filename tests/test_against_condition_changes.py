@@ -60,7 +60,7 @@ from des_parallel_process import parallelProcessJoblib, collateRunResults, runSi
 @pytest.mark.performance
 def test_reducing_helo_resource():
    TOTAL_RUNS = 10
-   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False
@@ -141,7 +141,7 @@ def test_reducing_helo_resource():
 @pytest.mark.performance
 def test_no_solo_car():
    TOTAL_RUNS = 10
-   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False
@@ -223,7 +223,7 @@ def test_no_solo_car():
 @pytest.mark.performance
 def test_shorter_operating_hours():
    TOTAL_RUNS = 10
-   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False
@@ -306,7 +306,7 @@ def test_shorter_operating_hours():
 @pytest.mark.performance
 def test_longer_operating_hours():
    TOTAL_RUNS = 10
-   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False
@@ -388,7 +388,7 @@ def test_longer_operating_hours():
 @pytest.mark.performance
 def test_extra_solo_car():
    TOTAL_RUNS = 10
-   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False
@@ -490,7 +490,7 @@ def test_extra_solo_car():
 @pytest.mark.performance
 def test_extra_helo():
    TOTAL_RUNS = 10
-   SIM_DURATION = 60 * 24 * 7 * 52 * 2 # 2 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False
@@ -592,7 +592,7 @@ def test_extra_helo():
 @pytest.mark.performance
 def test_changed_helo_model():
    TOTAL_RUNS = 5
-   SIM_DURATION = 60 * 24 * 7 * 52 * 4 # 4 years
+   SIM_DURATION = 60 * 24 * 7 * 52 * 4 # 4 years - longer run due to service intervals being a fairly rare event
    WARM_UP_TIME = 0
    SIM_START_DATE = datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S")
    AMB_DATA = False

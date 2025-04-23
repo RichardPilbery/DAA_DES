@@ -78,6 +78,10 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
 
+##############################################################################
+# Begin tests                                                                #
+##############################################################################
+
 @pytest.mark.quick
 def test_model_runs():
    try:
@@ -316,7 +320,7 @@ def test_no_results_recorded_from_warmup():
       gc.collect()
 
 @pytest.mark.resources
-def test_simultaneous_allocation_same_resource_group():
+def test_simultaneous_allocation_same_resource_group(simulation_results):
    """
    Ensures no two jobs are allocated to resources from the same resource group at overlapping times.
 
@@ -341,18 +345,7 @@ def test_simultaneous_allocation_same_resource_group():
       if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FULL.csv"):
             os.remove("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
-      # Run simulation for 10 weeks
-      parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10, # 10 weeks
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-
-      collateRunResults()
-
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
 
       # Extract start and end times of resource usage
       resource_use_start_and_end = (
@@ -417,7 +410,7 @@ def test_simultaneous_allocation_same_resource_group():
 
       if len(all_overlaps_df)>0:
          all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
-         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
+         resource_use_wide.to_csv("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
 
       assert len(all_overlaps_df) == 0, (
@@ -428,32 +421,20 @@ def test_simultaneous_allocation_same_resource_group():
       gc.collect()
 
 @pytest.mark.resources
-def test_simultaneous_allocation_same_resource():
+def test_simultaneous_allocation_same_resource(simulation_results):
    """
    Ensures no single resource is allocated to multiple jobs at the same time.
 
    Checks that a specific callsign (i.e., physical unit) is not double-booked.
    """
    try:
-      removeExistingResults(remove_run_results_csv=True)
-
       if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
          os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
 
       if os.path.exists("tests/simultaneous_allocation_same_resource_FULL.csv"):
          os.remove("tests/simultaneous_allocation_same_resource_FULL.csv")
 
-      parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10, # 10 weeks
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-
-      collateRunResults()
-
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
 
       resource_use_start_and_end = (
          results[results["event_type"].isin(["resource_use","resource_use_end"])]
@@ -517,7 +498,7 @@ def test_simultaneous_allocation_same_resource():
 
       if len(all_overlaps_df)>0:
          all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FAILURES.csv")
-         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
+         resource_use_wide.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
 
       assert len(all_overlaps_df) == 0, (
             f"[FAIL - RESOURCE ALLOCATION LOGIC] {len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
@@ -527,7 +508,7 @@ def test_simultaneous_allocation_same_resource():
       gc.collect()
 
 @pytest.mark.resources
-def test_no_response_during_off_shift_times():
+def test_no_response_during_off_shift_times(simulation_results):
    """
    Ensures no response is initiated outside of a resource's rota'd hours.
 
@@ -540,17 +521,7 @@ def test_no_response_during_off_shift_times():
       if os.path.exists("tests/offline_calls_FAILURES.csv"):
          os.remove("tests/offline_calls_FAILURES.csv")
 
-      parallelProcessJoblib(
-         total_runs=2,
-         sim_duration= 60 * 24 * 7 * 10,
-         warm_up_time=0,
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-
-      collateRunResults()
-
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
 
       resource_use_start = (
             results[results["event_type"] == "resource_use"]
@@ -705,27 +676,10 @@ def test_no_response_during_off_shift_times():
       gc.collect()
 
 @pytest.mark.resources
-def test_no_response_during_service():
+def test_no_response_during_service(simulation_results):
    try:
-      removeExistingResults(remove_run_results_csv=True)
-
-      # Remove any previous test output to start fresh
-      if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
-         os.remove("tests/responses_during_servicing_FAILURES.csv")
-
-      # Run the simulation in parallel for 10 runs
-      parallelProcessJoblib(
-         total_runs=10,
-         sim_duration= 60 * 24 * 7 * 52 * 4, # Run for 4 years to maximise chance of observing
-         warm_up_time=0, # no warm-up necessary
-         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-         amb_data=False
-      )
-      # Combine results from the simulation runs
-      collateRunResults()
-
       # Load key data files produced by the simulation - results and generated service intervals
-      results = pd.read_csv("data/run_results.csv")
+      results = simulation_results # defined in conftest.py
       services = pd.read_csv("data/service_dates.csv")
 
       # Ensure service start and end dates are datetimes
