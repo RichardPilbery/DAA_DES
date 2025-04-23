@@ -425,8 +425,8 @@ def test_same_seed_gives_consistent_calls_per_hour_runSim():
                            amb_data=AMB_DATA,
                            random_seed=RANDOM_SEED).reset_index()
 
-      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
-      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
 
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
@@ -480,8 +480,8 @@ def test_same_seed_gives_consistent_arrival_pattern_runSim():
                            amb_data=AMB_DATA,
                            random_seed=RANDOM_SEED).reset_index()
 
-      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
-      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
@@ -532,8 +532,8 @@ def test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib():
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 
-      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
-      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
@@ -582,8 +582,8 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim():
                            amb_data=AMB_DATA,
                            random_seed=RANDOM_SEED).reset_index()
 
-      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
-      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
@@ -636,8 +636,8 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelP
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 
-      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
-      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]]
+      arrivals_df_1 = results_df_1[results_df_1["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
+      arrivals_df_2 = results_df_2[results_df_2["time_type"]=="arrival"][["P_ID","timestamp_dt"]].reset_index(drop=True)
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
