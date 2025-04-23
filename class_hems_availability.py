@@ -426,7 +426,7 @@ class HEMSAvailability():
                     resource = yield primary_resource_member | self.env.timeout(0.1)
 
                     if primary_resource_member in resource:
-                        self.debug(f"Allocating HEMS resource {resource[primary_resource_member].callsign} at time {self.env.now:.3f}")
+                        self.debug(f"Allocating HEMS resource {resource[primary_resource_member].callsign} for {pt.hems_cc_or_ec} at time {self.env.now:.3f}")
                         resource.in_use = True
                         pt.hems_callsign_group = resource[primary_resource_member].callsign_group
                         pt.hems_vehicle_type = resource[primary_resource_member].vehicle_type
@@ -715,7 +715,7 @@ class HEMSAvailability():
                 resource = yield primary_callsign_group_member | self.env.timeout(0.1)
 
                 if primary_callsign_group_member in resource:
-                    self.debug(f"{pt.id} Allocating HEMS resource {resource[primary_callsign_group_member].callsign} cat: {resource[primary_callsign_group_member].category} at time {pt.current_dt}")
+                    self.debug(f"{pt.id} Allocating HEMS resource {resource[primary_callsign_group_member].callsign} cat: {resource[primary_callsign_group_member].category} for {pt.hems_cc_or_ec} at time {pt.current_dt}")
                     resource.in_use = True
                     pt.hems_callsign_group = resource[primary_callsign_group_member].callsign_group
                     pt.hems_vehicle_type = resource[primary_callsign_group_member].vehicle_type

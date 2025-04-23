@@ -338,7 +338,7 @@ class DES_HEMS:
         pt.sex = self.utils.sex_selection(pt.ampds_card)
         hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
         pt.hems_cc_or_ec = hems_cc_or_ec
-        #self.debug(f"Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
+        self.debug(f"{pt.id} Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         self.add_patient_result_row(pt, "arrival", "arrival_departure")
 
@@ -597,7 +597,6 @@ class DES_HEMS:
 
         #self.debug(f"Depart for patient {patient.id} on run {self.run_number}")
         self.add_patient_result_row(patient, "depart", "arrival_departure")
-
 
 
     def add_patient_result_row(self,
