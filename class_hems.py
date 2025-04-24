@@ -67,7 +67,7 @@ class HEMS(Ambulance):
                 self.callsign = 'H71'
                 self.in_use = False # We might need to re-think this in 24/7 scenarios although 
                 # presumably the callsign will not change during an incident, only after.
-                
+
             # GDASS being serviced
 
             #print(f"reg {self.registration} now has callsign {self.callsign}")
