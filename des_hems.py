@@ -112,40 +112,6 @@ class DES_HEMS:
             logging.debug(message)
             #print(message)
 
-    # SR NOTE 2025-04-16: Commented out as believe this is no longer in use
-    # To my knowledge this approach was dropped as it was incorrectly estimating
-    # the number of calls and has been replaced with the use of calls_per_hour
-    # and predetermine_call_arrivals
-    # def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
-    #     """
-    #         Convenience function to return the time between incidents
-    #         using either NSPPThinning or sampling the exponential
-    #         distribution
-
-    #         Arrivals distribution using NSPPThinning
-    #         HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
-
-    #     """
-
-    #     if NSPPThin:
-    #        # Determine the inter-arrival time usiong NSPPThinning
-    #         arrivals_dist = NSPPThinning(
-    #             data = self.inter_arrival_times_df[
-    #                 (self.inter_arrival_times_df['quarter'] == qtr)
-    #             ],
-    #             random_seed1 = self.run_number * 112,
-    #             random_seed2 = self.run_number * 999
-    #         )
-
-    #         return arrivals_dist.sample(hour)
-
-    #     else:
-    #         # Or just regular exponential distrib.
-    #         # inter_time = self.utils.inter_arrival_rate(hour, qtr)
-    #         # return expovariate(1.0 / inter_time)
-    #         # return Exponential(inter_time, random_seed=self.random_seeds[0])
-    #         return self.arrival_dist.sample()
-
 
     def calls_per_hour(self, quarter: int) -> dict:
         """
@@ -194,15 +160,6 @@ class DES_HEMS:
         d = self.calls_per_hour(quarter)
 
         ia_time = []
-
-        # for index, row in hourly_activity_for_qtr.iterrows():
-        #     if row['hour'] >= current_hour:
-        #         if row['hour'] in d.keys():
-        #             calc_ia_time = expovariate(int(d[row['hour']]) / 60)
-        #             tmp_ia_time = ((row['hour']-current_hour) * 60) + calc_ia_time
-        #             # Update current hour
-        #             current_hour += floor(tmp_ia_time / 60)
-        #             ia_time.append(tmp_ia_time)
 
         for index, row in hourly_activity_for_qtr.iterrows():
             hour = row['hour']
@@ -258,17 +215,6 @@ class DES_HEMS:
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, qtr))
 
-            # if self.calls_today > 0:
-            #     # Work out how long until next incident
-            #     #self.debug(ia_dict.keys())
-            #     if hod in ia_dict.keys():
-            #         #self.debug(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
-            #         for i in range(0, ia_dict[hod]):
-            #             #self.debug(f"Creating new patient at {current_dt}")
-            #             self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-            #             # Might need to determine spread of jobs during any given hour.
-            #             yield self.env.timeout(5) # Wait 5 minutes until the next allocation
-            #             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
             if self.calls_today > 0:
                 if hod in ia_dict.keys():

@@ -82,8 +82,6 @@ class Utils:
             for _, row in self.min_max_values_df.iterrows()
         }
 
-
-
     def setup_seeds(self):
         #########################################################
         # Control generation of required random number streams  #
@@ -399,29 +397,6 @@ class Utils:
             sampled_inc_per_day = self.sample_from_distribution(distribution, rng=self.rngs["calls_per_day"])
 
         return sampled_inc_per_day
-
-    # def sample_from_distribution(self, distr: dict) -> float:
-    #     """
-    #         This function will return a single sampled float value from
-    #         the specified distribution and parameters in the dictionay, distr.
-    #     """
-
-    #     distribution = {}
-    #     return_list = []
-
-    #     #print(distribution)
-
-    #     for k,v in distr.items():
-    #         #print(f"Key is {k}")
-    #         sci_distr = getattr(scipy.stats, k)
-    #         values = v
-
-    #     while True:
-    #         sampled_value = np.floor(sci_distr.rvs(**values))
-    #         if sampled_value > 0:
-    #             break
-
-    #     return sampled_value
 
     def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """

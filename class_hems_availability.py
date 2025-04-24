@@ -78,18 +78,14 @@ class HEMSAvailability():
         self.debug('------ DAILY SERVICING CHECK -------')
 
         GDAAS_service = False
-        if len(self.serviceStore.items) > 0:
-            for h in self.serviceStore.items:
-                if h.registration == 'g-daas':
-                    GDAAS_service = h.unavailable_due_to_service(current_dt)
-
-        self.debug(f"Checked service items and GDAAS_service is {GDAAS_service}")
-
-        for h in self.store.items:
+        
+        all_resources = self.serviceStore.items + self.store.items
+        for h in all_resources:
             if h.registration == 'g-daas':
                 GDAAS_service = h.unavailable_due_to_service(current_dt)
+                break
 
-        self.debug(f"Checked store items and GDAAS_service is {GDAAS_service}")
+        self.debug(f"GDAAS_service is {GDAAS_service}")
 
         # --- Return from serviceStore to store ---
         to_return = [
@@ -97,6 +93,12 @@ class HEMSAvailability():
             for s in self.serviceStore.items
             if not s.service_check(current_dt, GDAAS_service) # Note the NOT here!
         ]
+
+        # Attempted fix for gap after return from H70 duties
+        for h in self.store.items:
+            if h.registration == 'g-daan' and not GDAAS_service:
+                h.callsign_group = 71
+                h.callsign = 'H71'
 
         if to_return:
             self.debug("Service store has items to return")
@@ -130,6 +132,11 @@ class HEMSAvailability():
 
         self.debug(self.current_store_status(hour, qtr))
         self.debug(self.current_store_status(hour, qtr, 'service'))
+
+        [dow, hod, weekday, month, qtr, current_dt] = self.utilityClass.date_time_of_call(self.sim_start_date, self.env.now)
+        for h in self.store.items:
+            if h.registration == 'g-daan':
+                self.debug(f"[{self.env.now}] g-daan status: in_use={h.in_use}, callsign={h.callsign}, group={h.callsign_group}, on_shift={h.hems_resource_on_shift(hod, qtr)}")
 
         self.debug('------ END OF DAILY SERVICING CHECK -------')
 
