@@ -49,6 +49,7 @@ class HEMSAvailability():
 
         self.active_callsign_groups = set()     # Prevents same crew being used twice...hopefully...
         self.active_registrations = set()       # Prevents same vehicle being used twice
+        self.active_callsigns = set()
 
         # Create a store for HEMS resources
         self.store = FilterStore(env)
@@ -319,6 +320,7 @@ class HEMSAvailability():
 
 
     def preferred_resource_available(self, pt: Patient) -> list[HEMS | None, str]:
+
         """
             Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None, and
             an indication as to whether the resource was available, or another resource in an established hierachy of
@@ -345,6 +347,15 @@ class HEMSAvailability():
             # If no resources then return None
 
             if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
+
+
+                if ( # Skip this resource if any of the following are true:
+                    h.in_use or
+                    h.callsign_group in self.active_callsign_groups or
+                    h.registration in self.active_registrations or
+                    not h.hems_resource_on_shift(pt.hour, pt.qtr)
+                ):
+                    continue
 
                 if h.category == preferred_care_category and h.vehicle_type == "helicopter" and not h.being_serviced:
                     hems = h
@@ -406,15 +417,22 @@ class HEMSAvailability():
 
             primary = pref_res[0]
 
-            # Check for crew or vehicle conflicts
+            # Block if in-use by callsign group, registration, or callsign
             if primary.callsign_group in self.active_callsign_groups:
-                self.debug(f"[BLOCKED] {primary.callsign} (group {primary.callsign_group}) already in use by another job")
-
+                self.debug(f"[BLOCKED] Callsign group {primary.callsign_group} in use")
                 return resource_event.succeed([None, pref_res[1], None])
 
             if primary.registration in self.active_registrations:
-                self.debug(f"[BLOCKED] {primary.callsign} (registration {primary.registration}) is already allocated")
+                self.debug(f"[BLOCKED] Registration {primary.registration} in use")
                 return resource_event.succeed([None, pref_res[1], None])
+
+            if primary.callsign in self.active_callsigns:
+                self.debug(f"[BLOCKED] Callsign {primary.callsign} already in use")
+                return resource_event.succeed([None, pref_res[1], None])
+            
+            self.active_callsign_groups.add(primary.callsign_group)
+            self.active_registrations.add(primary.registration)
+            self.active_callsigns.add(primary.callsign)
 
             with self.store.get(lambda r: r == primary) as primary_request:
                 result = yield primary_request | self.env.timeout(0.1)
@@ -425,15 +443,19 @@ class HEMSAvailability():
                     pt.hems_vehicle_type = primary.vehicle_type
                     pt.hems_category = primary.category
 
-                    # Lock this callsign group and vehicle
-                    self.active_callsign_groups.add(primary.callsign_group)
-                    self.active_registrations.add(primary.registration)
+                    # self.active_callsign_groups.add(primary.callsign_group)
+                    # self.active_registrations.add(primary.registration)
+                    # self.active_callsigns.add(primary.callsign)
 
-                    # Try to grab the other group resource (same callsign_group & category)
+                    # Try to get a secondary resource
                     with self.store.get(lambda r:
+                        r != primary and
                         r.callsign_group == pt.hems_callsign_group and
                         r.category == pt.hems_category and
-                        r.hems_resource_on_shift(pt.hour, pt.qtr)
+                        r.hems_resource_on_shift(pt.hour, pt.qtr) and
+                        r.callsign_group not in self.active_callsign_groups and
+                        r.registration not in self.active_registrations and
+                        r.callsign not in self.active_callsigns
                     ) as secondary_request:
 
                         result2 = yield secondary_request | self.env.timeout(0.1)
@@ -444,8 +466,16 @@ class HEMSAvailability():
                             secondary.in_use = True
                             self.active_callsign_groups.add(secondary.callsign_group)
                             self.active_registrations.add(secondary.registration)
+                            self.active_callsigns.add(secondary.callsign)
 
                     return resource_event.succeed([primary, pref_res[1], secondary])
+                else:
+                        # Roll back if unsuccessful
+                    self.active_callsign_groups.discard(primary.callsign_group)
+                    self.active_registrations.discard(primary.registration)
+                    self.active_callsigns.discard(primary.callsign)
+
+                    return resource_event.succeed([None, pref_res[1], None])
 
         self.env.process(process())
         return resource_event
@@ -453,21 +483,21 @@ class HEMSAvailability():
 
     def return_resource(self, resource: HEMS, secondary_resource: HEMS|None) -> None:
         """
-            Class to return HEMS class object back to the filestore
+        Class to return HEMS class object back to the filestore.
         """
-
 
         resource.in_use = False
         self.active_callsign_groups.discard(resource.callsign_group)
         self.active_registrations.discard(resource.registration)
+        self.active_callsigns.discard(resource.callsign)
         self.store.put(resource)
 
         if secondary_resource is not None:
             secondary_resource.in_use = False
             self.active_callsign_groups.discard(secondary_resource.callsign_group)
             self.active_registrations.discard(secondary_resource.registration)
+            self.active_callsigns.discard(secondary_resource.callsign)
             self.store.put(secondary_resource)
-
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         """
@@ -542,105 +572,57 @@ class HEMSAvailability():
 
         return [next_due_date, end_date]
 
-    def preferred_regular_group_available(self, pt: Patient) -> list[HEMS | None, int, bool]:
+
+    def preferred_regular_group_available(self, pt: Patient) -> list[HEMS | None, str]:
         """
-            Check whether the preferred resource group is available. Returns a list with either the HEMS resource or None,
-            an indication as to whether the resource was available, or another resource in the same callsign_group, and
-            the service status of the preferred resource.
+        Check availability for REG jobs while avoiding assigning two units from the same crew/callsign group.
         """
-
-        # if preferred_group == 70:
-        #     self.debug(f"Preferred group is {preferred_group} and vehicle_type {preferred_vehicle_type}")
-
-        current_store_items = []
-
-        # Initialise object HEMS as a placeholder object
-        hems: HEMS
-
-        preferred = 999 # This will be used to ensure that the most desireable resource
-                    # is allocated given that multiple matches may be found
-        preferred_lookup = 0 # This will be used to code the resource allocation choice
+        hems: HEMS | None = None
+        preferred = 999
+        preferred_lookup = 0
 
         preferred_group = pt.hems_pref_callsign_group
         preferred_vehicle_type = pt.hems_pref_vehicle_type
-
         helicopter_benefit = pt.hems_helicopter_benefit
 
-        # Iterates through items **available** in store at the time the function is called
-        h: HEMS
         for h in self.store.items:
+            if h.in_use or h.being_serviced or not h.hems_resource_on_shift(pt.hour, pt.qtr):
+                continue
 
-            current_store_items.append(h.callsign)
+            # 🚫 Skip if crew is already in use
+            if h.callsign_group in self.active_callsign_groups or h.registration in self.active_registrations:
+                continue
 
-            # If callsign group is preferred group AND is preferred vehicle type, returns that item at that point
-            # Rest of code will not be reached as the return statement will terminate this for loop as soon as
-            # this condition is met
-            # (i.e. IF the preferred callsign group and vehicle type is available, we only care about that -
-            # so return)
-
-            # if preferred_group == 70:
-            #     self.debug(f"{pt.current_dt} Preferred Resource status check: {h.callsign} in_use: {h.in_use} on_shift: {h.hems_resource_on_shift(pt.hour, pt.qtr)} and service {h.unavailable_due_to_service(pt.current_dt)}")
-
-            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
-
-                if helicopter_benefit == 'y':
-                    if h.vehicle_type == 'helicopter' and h.category == 'EC' and not h.being_serviced:
-                        hems = h
-                        preferred = 1
-                        preferred_lookup = 7
-                        return [hems, self.resource_allocation_lookup(preferred_lookup)]
-
-                    elif h.vehicle_type == 'helicopter' and not h.being_serviced:
+            # 🚁 Helicopter benefit cases
+            if helicopter_benefit == 'y':
+                if h.vehicle_type == 'helicopter' and h.category == 'EC':
+                    hems = h
+                    preferred_lookup = 7
+                    break
+                elif h.vehicle_type == 'helicopter':
+                    if preferred > 2:
                         hems = h
                         preferred = 2
                         preferred_lookup = 8
-                else:
-                    # No helicopter benefit
 
-                    if h.callsign_group == preferred_group and h.vehicle_type == preferred_vehicle_type and not h.being_serviced:
+            # 🚐 Regular (non-helicopter) cases
+            else:
+                if h.callsign_group == preferred_group and h.vehicle_type == preferred_vehicle_type:
+                    hems = h
+                    preferred_lookup = 9
+                    break
+                elif h.callsign_group == preferred_group:
+                    if preferred > 4:
                         hems = h
-                        preferred = 3
-                        preferred_lookup = 9
-                        self.debug("REG job with no helicopter benefit and found preferred group and vehicle type")
-                        return [hems, self.resource_allocation_lookup(preferred_lookup)]
+                        preferred = 4
+                        preferred_lookup = 10
+                else:
+                    if preferred > 5:
+                        hems = h
+                        preferred = 5
+                        preferred_lookup = 12
 
-                    # If it's the preferred group but not the preferred vehicle type, the variable
-                    # hems becomes the HEMS resource object that we are currently looking at in the store
-                    # so we will basically - in the event of not finding the exact resource we want - find
-                    # the next best thing from the callsign group
-                    # SR note 13/1/25 - double check this logic - as we would send a critical care car over
-                    # a different available helicopter if I'm interpreting this correctly. Just need to confirm
-                    # this was the order of priority agreed on.
-                    # RP note 13/02/2025 - Based on discussions with despatcher, sounds like closest free resource
-                    # tends to get sent. Option to add subsequent request/requirement for enhanced care, for example
-                    # Perhaps a TODO?
-
-                    elif h.callsign_group == preferred_group and not h.being_serviced:
-                        if preferred > 4:
-                            hems = h
-                            preferred = 4
-                            preferred_lookup = 10
-
-                    elif not h.being_serviced:
-                        if preferred > 5:
-                            hems = h
-                            preferred = 5
-                            preferred_lookup = 12
-
-        # If we have not found an exact match for preferred callsign and vehicle type out of the
-        # resources currently available in our store, we will then reach this code
-        # If the preferred variable was set to True at any point, we will return HEMS
-        # Note that this will be the last resource that met the condition h.callsign_group == preferred_group
-        # which may be relevant if there is more than one other resource within that callsign group
-        # (though this is not currently a situation that occurs within the naming conventions at DAAT)
-
-        #self.debug(f"EC/CC Current store {current_store_items}")
-
-        if preferred != 999:
-            return [hems,  self.resource_allocation_lookup(preferred_lookup)]
-        else:
-            return [None, self.resource_allocation_lookup(0)]
-
+        return [hems, self.resource_allocation_lookup(preferred_lookup if hems else 0)]
 
     def allocate_regular_resource(self, pt: Patient) -> Any | Event:
         """
@@ -659,20 +641,24 @@ class HEMSAvailability():
 
             primary = pref_res[0]
 
-            # Check for crew or vehicle conflicts
+            # Block if in-use by callsign group, registration, or callsign
             if primary.callsign_group in self.active_callsign_groups:
-                self.debug(f"[BLOCKED] {primary.callsign} (group {primary.callsign_group}) already in use by another job")
+                self.debug(f"[BLOCKED] Regular Callsign group {primary.callsign_group} in use")
                 return resource_event.succeed([None, pref_res[1], None])
 
             if primary.registration in self.active_registrations:
-                self.debug(f"[BLOCKED] {primary.callsign} (registration {primary.registration}) is already allocated")
+                self.debug(f"[BLOCKED] Regular Registration {primary.registration} in use")
                 return resource_event.succeed([None, pref_res[1], None])
 
-            # Resource filter wrapper
-            def resource_filter(resource: HEMS) -> bool:
-                return resource == primary
+            if primary.callsign in self.active_callsigns:
+                self.debug(f"[BLOCKED] Regular Callsign {primary.callsign} already in use")
+                return resource_event.succeed([None, pref_res[1], None])
+            
+            self.active_callsign_groups.add(primary.callsign_group)
+            self.active_registrations.add(primary.registration)
+            self.active_callsigns.add(primary.callsign)
 
-            with self.store.get(resource_filter) as primary_request:
+            with self.store.get(lambda r: r == primary) as primary_request:
                 result = yield primary_request | self.env.timeout(0.1)
 
                 if primary_request in result:
@@ -681,14 +667,19 @@ class HEMSAvailability():
                     pt.hems_vehicle_type = primary.vehicle_type
                     pt.hems_category = primary.category
 
-                    self.active_callsign_groups.add(primary.callsign_group)
-                    self.active_registrations.add(primary.registration)
+                    # self.active_callsign_groups.add(primary.callsign_group)
+                    # self.active_registrations.add(primary.registration)
+                    # self.active_callsigns.add(primary.callsign)
 
-                    # Check for other group resource
+                    # Try to get a secondary resource
                     with self.store.get(lambda r:
+                        r != primary and
                         r.callsign_group == pt.hems_callsign_group and
                         r.category == pt.hems_category and
-                        r.hems_resource_on_shift(pt.hour, pt.qtr)
+                        r.hems_resource_on_shift(pt.hour, pt.qtr) and
+                        r.callsign_group not in self.active_callsign_groups and
+                        r.registration not in self.active_registrations and
+                        r.callsign not in self.active_callsigns
                     ) as secondary_request:
 
                         result2 = yield secondary_request | self.env.timeout(0.1)
@@ -699,8 +690,17 @@ class HEMSAvailability():
                             secondary.in_use = True
                             self.active_callsign_groups.add(secondary.callsign_group)
                             self.active_registrations.add(secondary.registration)
+                            self.active_callsigns.add(secondary.callsign)
 
                     return resource_event.succeed([primary, pref_res[1], secondary])
+                
+                else:
+                    # Roll back if unsuccessful
+                    self.active_callsign_groups.discard(primary.callsign_group)
+                    self.active_registrations.discard(primary.registration)
+                    self.active_callsigns.discard(primary.callsign)
+
+                    return resource_event.succeed([None, pref_res[1], None])
 
         self.env.process(process())
         return resource_event
