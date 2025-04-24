@@ -678,9 +678,15 @@ def test_no_response_during_off_shift_times(simulation_results):
 @pytest.mark.resources
 def test_no_response_during_service(simulation_results):
    try:
+      if os.path.exists("tests/responses_during_servicing_FULL.csv"):
+         os.remove("tests/responses_during_servicing_FULL.csv")
+
+      if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
+         os.remove("tests/responses_during_servicing_FAILURES.csv")
+
       # Load key data files produced by the simulation - results and generated service intervals
       results = simulation_results # defined in conftest.py
-      services = pd.read_csv("data/service_dates.csv")
+      services = pd.read_csv("tests/service_dates_fixture.csv")
 
       # Ensure service start and end dates are datetimes
       services['service_start_date'] = pd.to_datetime(services['service_start_date'], format="%Y-%m-%d", errors='coerce')
@@ -707,6 +713,8 @@ def test_no_response_during_service(simulation_results):
       # At present we don't have any servicing of cars (standalone or helicopter backup cars)
       # so those rows will not be of interest to us.
       valid_servicing = merged_df.dropna(subset=['service_start_date', 'service_end_date'])
+
+      valid_servicing.to_csv("tests/responses_during_servicing_FULL.csv")
 
       # Identify any rows where the resource_use_start falls within the servicing interval
       violations = valid_servicing[

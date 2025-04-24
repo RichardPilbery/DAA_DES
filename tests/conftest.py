@@ -17,6 +17,9 @@ from des_parallel_process import parallelProcessJoblib, collateRunResults, runSi
 RESULTS_CSV_PATH = "data/run_results.csv"
 RESULTS_CSV_PATH_OUT = "tests/run_results_fixture.csv"
 
+SERVICE_DATES_CSV_PATH = "data/service_dates.csv"
+SERVICE_DATES_CSV_PATH_OUT = "tests/service_dates_fixture.csv"
+
 @pytest.fixture(scope="session")
 def simulation_results():
     """Run the simulation only if needed and return the event dataframe."""
@@ -36,6 +39,9 @@ def simulation_results():
 
         df = pd.read_csv(RESULTS_CSV_PATH)
         df.to_csv(RESULTS_CSV_PATH_OUT)
+
+        df = pd.read_csv(SERVICE_DATES_CSV_PATH)
+        df.to_csv(SERVICE_DATES_CSV_PATH_OUT)
     else:
         print("Using cached simulation results...")
 
@@ -50,16 +56,11 @@ def cleanup_simulation_results():
     """Automatically remove results CSV after all tests are done."""
     yield  # Wait until all tests using this session scope are finished
 
-    if os.path.exists(RESULTS_CSV_PATH):
-        try:
-            os.remove(RESULTS_CSV_PATH)
-            print(f"Removed cached simulation results: {RESULTS_CSV_PATH}")
-        except Exception as e:
-            print(f"Warning: Failed to remove {RESULTS_CSV_PATH} — {e}")
+    for filepath in [RESULTS_CSV_PATH, RESULTS_CSV_PATH_OUT, SERVICE_DATES_CSV_PATH, SERVICE_DATES_CSV_PATH_OUT]:
 
-    if os.path.exists(RESULTS_CSV_PATH_OUT):
-        try:
-            os.remove(RESULTS_CSV_PATH_OUT)
-            print(f"Removed cached simulation results: {RESULTS_CSV_PATH_OUT}")
-        except Exception as e:
-            print(f"Warning: Failed to remove {RESULTS_CSV_PATH_OUT} — {e}")
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+                print(f"Removed cached simulation results: {filepath}")
+            except Exception as e:
+                print(f"Warning: Failed to remove {filepath} — {e}")
