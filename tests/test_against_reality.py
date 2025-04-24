@@ -55,7 +55,7 @@ import textwrap
 import pytest
 import warnings
 
-from helpers import warn_with_message, fail_with_message
+from helpers import warn_with_message, fail_with_message, calculate_chi_squared_and_cramers
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -72,8 +72,11 @@ from des_parallel_process import parallelProcessJoblib, collateRunResults, runSi
 ##################################
 # Calls in period                #
 ##################################
+#-------------------------------------------#
+# Average daily calls                       #
+#-------------------------------------------#
 @pytest.mark.calls
-def test_average_calls_in_period(simulation_results):
+def test_average_daily_calls_in_period(simulation_results):
     try:
         event_df = simulation_results # defined in conftest.py
 
@@ -137,9 +140,9 @@ def test_average_calls_in_period(simulation_results):
 
 
 
-#############################################
+#-------------------------------------------#
 # Distribution of Calls Received per Day    #
-#############################################
+#-------------------------------------------#
 
 @pytest.mark.calls
 def test_distribution_daily_calls(simulation_results):
@@ -188,10 +191,13 @@ def test_distribution_daily_calls(simulation_results):
         del event_df, arrivals
         gc.collect()
 
+##################################
+# Total Job Durations            #
+##################################
 
-##############################################################
+#------------------------------------------------------------#
 # Average Total Job Durations (by vehicle type)              #
-##############################################################
+#------------------------------------------------------------#
 @pytest.mark.jobdurations
 def test_average_total_job_durations(simulation_results):
     try:
@@ -264,9 +270,9 @@ def test_average_total_job_durations(simulation_results):
         gc.collect()
 
 
-##############################################################
+#------------------------------------------------------------#
 # Distribution of Total Job Durations (by vehicle type)      #
-##############################################################
+#------------------------------------------------------------#
 @pytest.mark.jobdurations
 def test_distribution_total_job_durations(simulation_results):
     try:
@@ -345,3 +351,52 @@ def test_distribution_total_job_durations(simulation_results):
     finally:
         del event_df, simulated_job_time_df, historical_time_df
         gc.collect()
+
+
+
+##############################################################
+# Split between callsign groups                              #
+##############################################################
+
+@pytest.mark.callsigngroup
+def test_proportions_callsigngroup_allocations(simulation_results):
+    # Calculate proportion of jobs allocated to each callsign group in the simulation
+    callsign_group_counts_simulated = simulation_results[simulation_results["event_type"]=="resource_use"]["callsign_group"].value_counts().reset_index(name="count_simulated")
+    # callsign_group_counts["proportion_simulated"] = callsign_group_counts["count_simulated"].apply(lambda x: x/callsign_group_counts["count_simulated"].sum())
+    callsign_group_counts_simulated["callsign_group"] = callsign_group_counts_simulated["callsign_group"].astype('int')
+
+    # Read in the proportion of jobs allocated to each callsign group in historical data
+    callsign_group_counts_historic = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv").drop(columns="month").sum().reset_index(name="count_historic")
+    callsign_group_counts_historic["callsign_group"] = callsign_group_counts_historic["index"].str.extract("(\d+)")
+    callsign_group_counts_historic = callsign_group_counts_historic.drop(columns='index').groupby('callsign_group').sum().reset_index()
+    callsign_group_counts_historic["callsign_group"] = callsign_group_counts_historic["callsign_group"].astype('int')
+
+    callsign_group_counts = callsign_group_counts_simulated.merge(callsign_group_counts_historic, on="callsign_group")
+
+    # Calculate
+    calculate_chi_squared_and_cramers(callsign_group_counts, what="callsign group")
+
+
+##############################################################
+# Split between callsigns                                    #
+##############################################################
+
+@pytest.mark.callsign
+def test_proportions_callsign_allocations(simulation_results):
+    # Calculate proportion of jobs allocated to each callsign in the simulation
+    callsign_counts_simulated = simulation_results[simulation_results["event_type"]=="resource_use"]["callsign"].value_counts().reset_index(name="count_simulated")
+    # callsign_counts["proportion_simulated"] = callsign_counts["count_simulated"].apply(lambda x: x/callsign_counts["count_simulated"].sum())
+
+    # Read in the proportion of jobs allocated to each callsign group in historical data
+    callsign_counts_historic = (
+        pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
+        .drop(columns="month")
+        .sum()
+        .reset_index(name="count_historic")
+        )
+    callsign_counts_historic.rename(columns={'index':'callsign'}, inplace=True)
+
+    callsign_counts = callsign_counts_simulated.merge(callsign_counts_historic, on="callsign")
+
+    # Calculate
+    calculate_chi_squared_and_cramers(callsign_counts, what="callsign")
