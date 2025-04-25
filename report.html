@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title id="head-title">report.html</title>
+      <link href="assets\style.css" rel="stylesheet" type="text/css"/>
+  </head>
+  <body>
+    <h1 id="title">report.html</h1>
+    <p>Report generated on 25-Apr-2025 at 16:07:16 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a>
+        v4.1.1</p>
+    <div id="environment-header">
+      <h2>Environment</h2>
+    </div>
+    <table id="environment"></table>
+    <!-- TEMPLATES -->
+      <template id="template_environment_row">
+      <tr>
+        <td></td>
+        <td></td>
+      </tr>
+    </template>
+    <template id="template_results-table__body--empty">
+      <tbody class="results-table-row">
+        <tr id="not-found-message">
+          <td colspan="4">No results found. Check the filters.</th>
+        </tr>
+    </template>
+    <template id="template_results-table__tbody">
+      <tbody class="results-table-row">
+        <tr class="collapsible">
+        </tr>
+        <tr class="extras-row">
+          <td class="extra" colspan="4">
+            <div class="extraHTML"></div>
+            <div class="media">
+              <div class="media-container">
+                  <div class="media-container__nav--left"><</div>
+                  <div class="media-container__viewport">
+                    <img src="" />
+                    <video controls>
+                      <source src="" type="video/mp4">
+                    </video>
+                  </div>
+                  <div class="media-container__nav--right">></div>
+                </div>
+                <div class="media__name"></div>
+                <div class="media__counter"></div>
+            </div>
+            <div class="logwrapper">
+              <div class="logexpander"></div>
+              <div class="log"></div>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </template>
+    <!-- END TEMPLATES -->
+    <div class="summary">
+      <div class="summary__data">
+        <h2>Summary</h2>
+        <div class="additional-summary prefix">
+        </div>
+        <p class="run-count">40 tests took 00:12:41.</p>
+        <p class="filter">(Un)check the boxes to filter the results.</p>
+        <div class="summary__reload">
+          <div class="summary__reload__button hidden" onclick="location.reload()">
+            <div>There are still tests running. <br />Reload this page to get the latest results!</div>
+          </div>
+        </div>
+        <div class="summary__spacer"></div>
+        <div class="controls">
+          <div class="filters">
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="failed" />
+            <span class="failed">3 Failed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="passed" />
+            <span class="passed">37 Passed,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="skipped" disabled/>
+            <span class="skipped">0 Skipped,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xfailed" disabled/>
+            <span class="xfailed">0 Expected failures,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="xpassed" disabled/>
+            <span class="xpassed">0 Unexpected passes,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="error" disabled/>
+            <span class="error">0 Errors,</span>
+            <input checked="true" class="filter" name="filter_checkbox" type="checkbox" data-test-result="rerun" disabled/>
+            <span class="rerun">0 Reruns</span>
+          </div>
+          <div class="collapse">
+            <button id="show_all_details">Show all details</button>&nbsp;/&nbsp;<button id="hide_all_details">Hide all details</button>
+          </div>
+        </div>
+      </div>
+      <div class="additional-summary summary">
+      </div>
+      <div class="additional-summary postfix">
+      </div>
+    </div>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable" data-column-type="result">Result</th>
+          <th class="sortable" data-column-type="testId">Test</th>
+          <th class="sortable" data-column-type="duration">Duration</th>
+          <th>Links</th>
+        </tr>
+      </thead>
+    </table>
+  </body>
+  <footer>
+    <div id="data-container" data-jsonblob="{&#34;environment&#34;: {&#34;Python&#34;: &#34;3.11.9&#34;, &#34;Platform&#34;: &#34;Windows-10-10.0.26100-SP0&#34;, &#34;Packages&#34;: {&#34;pytest&#34;: &#34;8.3.4&#34;, &#34;pluggy&#34;: &#34;1.5.0&#34;}, &#34;Plugins&#34;: {&#34;Faker&#34;: &#34;37.1.0&#34;, &#34;cov&#34;: &#34;6.0.0&#34;, &#34;html&#34;: &#34;4.1.1&#34;, &#34;metadata&#34;: &#34;3.1.1&#34;}}, &#34;tests&#34;: {&#34;tests/test_against_condition_changes.py::test_reducing_helo_resource&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_reducing_helo_resource&#34;, &#34;duration&#34;: &#34;00:01:00&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_reducing_helo_resource&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:01:00&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;------------------------------ Captured log setup ------------------------------\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.address`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.address` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.automotive`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.automotive` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.bank`.\nDEBUG    faker.factory:factory.py:88 Specified locale `en_US` is not available for provider `faker.providers.bank`. Locale reset to `en_GB` for this provider.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.barcode`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.barcode` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.color`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.color` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.company`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.company` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.credit_card`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.credit_card` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.currency`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.currency` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.date_time`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.date_time` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.doi` does not feature localization. Specified locale `en_US` is not utilized for this provider.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.emoji` does not feature localization. Specified locale `en_US` is not utilized for this provider.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.file` does not feature localization. Specified locale `en_US` is not utilized for this provider.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.geo`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.geo` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.internet`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.internet` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.isbn`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.isbn` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.job`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.job` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.lorem`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.lorem` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.misc`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.misc` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.passport`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.passport` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.person`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.person` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.phone_number`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.phone_number` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.profile` does not feature localization. Specified locale `en_US` is not utilized for this provider.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.python` does not feature localization. Specified locale `en_US` is not utilized for this provider.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.sbn` does not feature localization. Specified locale `en_US` is not utilized for this provider.\nDEBUG    faker.factory:factory.py:78 Looking for locale `en_US` in provider `faker.providers.ssn`.\nDEBUG    faker.factory:factory.py:97 Provider `faker.providers.ssn` has been localized to `en_US`.\nDEBUG    faker.factory:factory.py:108 Provider `faker.providers.user_agent` does not feature localization. Specified locale `en_US` is not utilized for this provider.\n\n----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...             True\n1           2  ...             True\n2           3  ...             True\n3           4  ...             True\n4           5  ...             True\n5           6  ...             True\n6           7  ...             True\n7           8  ...             True\n8           9  ...             True\n9          10  ...             True\n\n[10 rows x 4 columns]\n&#34;}], &#34;tests/test_against_condition_changes.py::test_no_solo_car&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_no_solo_car&#34;, &#34;duration&#34;: &#34;00:00:58&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_no_solo_car&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:58&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...             True\n1           2  ...             True\n2           3  ...             True\n3           4  ...             True\n4           5  ...             True\n5           6  ...             True\n6           7  ...             True\n7           8  ...             True\n8           9  ...             True\n9          10  ...             True\n\n[10 rows x 4 columns]\n&#34;}], &#34;tests/test_against_condition_changes.py::test_shorter_operating_hours&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_shorter_operating_hours&#34;, &#34;duration&#34;: &#34;00:00:57&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_shorter_operating_hours&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:57&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...             True\n1           2  ...             True\n2           3  ...             True\n3           4  ...             True\n4           5  ...             True\n5           6  ...             True\n6           7  ...             True\n7           8  ...             True\n8           9  ...             True\n9          10  ...             True\n\n[10 rows x 4 columns]\n&#34;}], &#34;tests/test_against_condition_changes.py::test_longer_operating_hours&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_longer_operating_hours&#34;, &#34;duration&#34;: &#34;00:01:05&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_longer_operating_hours&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:01:05&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...             True\n1           2  ...             True\n2           3  ...             True\n3           4  ...             True\n4           5  ...             True\n5           6  ...             True\n6           7  ...             True\n7           8  ...             True\n8           9  ...             True\n9          10  ...             True\n\n[10 rows x 4 columns]\n&#34;}], &#34;tests/test_against_condition_changes.py::test_extra_solo_car&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_extra_solo_car&#34;, &#34;duration&#34;: &#34;00:00:58&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_extra_solo_car&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:58&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...             True\n1           2  ...             True\n2           3  ...             True\n3           4  ...             True\n4           5  ...             True\n5           6  ...             True\n6           7  ...             True\n7           8  ...             True\n8           9  ...             True\n9          10  ...             True\n\n[10 rows x 4 columns]\n&#34;}], &#34;tests/test_against_condition_changes.py::test_extra_helo&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_extra_helo&#34;, &#34;duration&#34;: &#34;00:01:12&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_extra_helo&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:01:12&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;@pytest.mark.performance\n    def test_extra_helo():\n       TOTAL_RUNS = 10\n       SIM_DURATION = 60 * 24 * 7 * 52 * 1 # 1 year(s)\n       WARM_UP_TIME = 0\n       SIM_START_DATE = datetime.strptime(&amp;quot;2023-01-01 05:00:00&amp;quot;, &amp;quot;%Y-%m-%d %H:%M:%S&amp;quot;)\n       AMB_DATA = False\n    \n       try:\n          removeExistingResults(remove_run_results_csv=True)\n    \n          rota = pd.read_csv(&amp;quot;tests/HEMS_ROTA_test_two_helicopters_no_solo_car.csv&amp;quot;)\n    \n          rota.to_csv(&amp;quot;actual_data/HEMS_ROTA.csv&amp;quot;, index=False)\n    \n          # Run the simulation with only a warm-up period and no actual simulation time\n          parallelProcessJoblib(\n             total_runs=TOTAL_RUNS,\n             sim_duration=SIM_DURATION,\n             warm_up_time=WARM_UP_TIME,\n             sim_start_date=SIM_START_DATE,\n             amb_data=AMB_DATA,\n             master_seed=42,\n             print_debug_messages=True\n             )\n    \n          collateRunResults()\n    \n          save_logs(&amp;quot;test_extra_helo_base_case.txt&amp;quot;)\n    \n          results_df_1 = pd.read_csv(&amp;quot;data/run_results.csv&amp;quot;)\n          hems_unavailable_df_1 = (results_df_1[\n             (results_df_1[&amp;#x27;event_type&amp;#x27;] == &amp;#x27;resource_preferred_outcome&amp;#x27;) &amp;amp;\n             (results_df_1[&amp;#x27;time_type&amp;#x27;].str.contains(&amp;#x27;No HEMS&amp;#x27;))]\n             .drop_duplicates(subset=[&amp;#x27;P_ID&amp;#x27;,&amp;#x27;run_number&amp;#x27;])\n             .groupby(&amp;#x27;run_number&amp;#x27;)[[&amp;#x27;P_ID&amp;#x27;]].count()\n             .reset_index()\n             .rename(columns={&amp;#x27;P_ID&amp;#x27;: &amp;#x27;hems_unavailable_two_helos_no_solo_car&amp;#x27;})\n          )\n    \n          removeExistingResults(remove_run_results_csv=True)\n    \n          # We need to change more of the files here to reflect the extra car\n    \n          rota = pd.read_csv(&amp;quot;tests/HEMS_ROTA_test_three_helicopters_no_solo_car.csv&amp;quot;)\n    \n          rota.to_csv(&amp;quot;actual_data/HEMS_ROTA.csv&amp;quot;, index=False)\n    \n          service_history = pd.read_csv(&amp;quot;tests/service_history_test_extra_helo.csv&amp;quot;)\n    \n          service_history.to_csv(&amp;quot;actual_data/service_history.csv&amp;quot;, index=False)\n    \n          callsign_registration_lookup = pd.read_csv(&amp;quot;tests/callsign_registration_lookup_test_three_helicopters.csv&amp;quot;)\n    \n          callsign_registration_lookup.to_csv(&amp;quot;actual_data/callsign_registration_lookup.csv&amp;quot;, index=False)\n    \n          parallelProcessJoblib(\n             total_runs=TOTAL_RUNS,\n             sim_duration=SIM_DURATION,\n             warm_up_time=WARM_UP_TIME,\n             sim_start_date=SIM_START_DATE,\n             amb_data=AMB_DATA,\n             master_seed=42,\n             print_debug_messages=True\n             )\n    \n          collateRunResults()\n    \n          save_logs(&amp;quot;test_extra_helo_extra_helo.txt&amp;quot;)\n    \n          results_df_2 = pd.read_csv(&amp;quot;data/run_results.csv&amp;quot;)\n    \n          hems_unavailable_df_2 = (results_df_2[\n             (results_df_2[&amp;#x27;event_type&amp;#x27;] == &amp;#x27;resource_preferred_outcome&amp;#x27;) &amp;amp;\n             (results_df_2[&amp;#x27;time_type&amp;#x27;].str.contains(&amp;#x27;No HEMS&amp;#x27;))]\n             .drop_duplicates(subset=[&amp;#x27;P_ID&amp;#x27;,&amp;#x27;run_number&amp;#x27;])\n             .groupby(&amp;#x27;run_number&amp;#x27;)[[&amp;#x27;P_ID&amp;#x27;]].count()\n             .reset_index()\n             .rename(columns={&amp;#x27;P_ID&amp;#x27;: &amp;#x27;hems_unavailable_three_helos_no_solo_car&amp;#x27;})\n          )\n    \n          removeExistingResults(remove_run_results_csv=True)\n    \n          hems_unavailable = pd.merge(left=hems_unavailable_df_1, right=hems_unavailable_df_2)\n    \n          hems_unavailable[&amp;#x27;expected_result&amp;#x27;] = hems_unavailable[&amp;#x27;hems_unavailable_two_helos_no_solo_car&amp;#x27;] &amp;gt; hems_unavailable[&amp;#x27;hems_unavailable_three_helos_no_solo_car&amp;#x27;]\n    \n          print(hems_unavailable)\n          hems_unavailable.to_csv(&amp;quot;tests/TEST_OUTPUT_hems_unavailable_extra_helo.csv&amp;quot;)\n&amp;gt;         assert sum(hems_unavailable[&amp;#x27;expected_result&amp;#x27;]) == TOTAL_RUNS, &amp;quot;[FAIL - RESOURCE CHANGES] Adding an extra helicopter does not reliably increase the number of calls responded to&amp;quot;\nE         AssertionError: [FAIL - RESOURCE CHANGES] Adding an extra helicopter does not reliably increase the number of calls responded to\nE         assert 5 == 10\nE          +  where 5 = sum(0    False\\n1     True\\n2    False\\n3     True\\n4    False\\n5    False\\n6    False\\n7     True\\n8     True\\n9     True\\nName: expected_result, dtype: bool)\n\ntests\\test_against_condition_changes.py:609: AssertionError\n\n----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...            False\n1           2  ...             True\n2           3  ...            False\n3           4  ...             True\n4           5  ...            False\n5           6  ...            False\n6           7  ...            False\n7           8  ...             True\n8           9  ...             True\n9          10  ...             True\n\n[10 rows x 4 columns]\n&#34;}], &#34;tests/test_against_condition_changes.py::test_changed_helo_model&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_condition_changes.py::test_changed_helo_model&#34;, &#34;duration&#34;: &#34;00:02:40&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_condition_changes.py::test_changed_helo_model&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:02:40&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n   run_number  ...  expected_result\n0           1  ...             True\n1           2  ...             True\n2           3  ...             True\n3           4  ...             True\n4           5  ...             True\n\n[5 rows x 4 columns]\n&#34;}], &#34;tests/test_against_reality.py::test_average_daily_calls_in_period&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_reality.py::test_average_daily_calls_in_period&#34;, &#34;duration&#34;: &#34;00:02:27&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_reality.py::test_average_daily_calls_in_period&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:02:27&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;---------------------------- Captured stdout setup -----------------------------\nGenerating simulation results...\nRemoved previous log: tests/LOG_fixture_simulation_results_default_settings_default_rotas.txt\n&#34;}], &#34;tests/test_against_reality.py::test_distribution_daily_calls&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_reality.py::test_distribution_daily_calls&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_reality.py::test_distribution_daily_calls&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_against_reality.py::test_average_total_job_durations&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_reality.py::test_average_total_job_durations&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_reality.py::test_average_total_job_durations&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_against_reality.py::test_distribution_total_job_durations&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_against_reality.py::test_distribution_total_job_durations&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_reality.py::test_distribution_total_job_durations&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_against_reality.py::test_proportions_callsigngroup_allocations&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_against_reality.py::test_proportions_callsigngroup_allocations&#34;, &#34;duration&#34;: &#34;287 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_reality.py::test_proportions_callsigngroup_allocations&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;287 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;simulation_results =          Unnamed: 0   P_ID  run_number                   time_type  ... heli_benefit  hems_result outcome hems_reg\n0  ...91           9                      depart  ...            y          NaN     NaN      NaN\n\n[1530983 rows x 25 columns]\n\n    @pytest.mark.callsigngroup\n    def test_proportions_callsigngroup_allocations(simulation_results):\n        # Calculate proportion of jobs allocated to each callsign group in the simulation\n        callsign_group_counts_simulated = simulation_results[simulation_results[&amp;quot;event_type&amp;quot;]==&amp;quot;resource_use&amp;quot;][&amp;quot;callsign_group&amp;quot;].value_counts().reset_index(name=&amp;quot;count_simulated&amp;quot;)\n        # callsign_group_counts[&amp;quot;proportion_simulated&amp;quot;] = callsign_group_counts[&amp;quot;count_simulated&amp;quot;].apply(lambda x: x/callsign_group_counts[&amp;quot;count_simulated&amp;quot;].sum())\n        callsign_group_counts_simulated[&amp;quot;callsign_group&amp;quot;] = callsign_group_counts_simulated[&amp;quot;callsign_group&amp;quot;].astype(&amp;#x27;int&amp;#x27;)\n    \n        # Read in the proportion of jobs allocated to each callsign group in historical data\n        callsign_group_counts_historic = pd.read_csv(&amp;quot;historical_data/historical_monthly_totals_by_callsign.csv&amp;quot;).drop(columns=&amp;quot;month&amp;quot;).sum().reset_index(name=&amp;quot;count_historic&amp;quot;)\n        callsign_group_counts_historic[&amp;quot;callsign_group&amp;quot;] = callsign_group_counts_historic[&amp;quot;index&amp;quot;].str.extract(&amp;quot;(\\d+)&amp;quot;)\n        callsign_group_counts_historic = callsign_group_counts_historic.drop(columns=&amp;#x27;index&amp;#x27;).groupby(&amp;#x27;callsign_group&amp;#x27;).sum().reset_index()\n        callsign_group_counts_historic[&amp;quot;callsign_group&amp;quot;] = callsign_group_counts_historic[&amp;quot;callsign_group&amp;quot;].astype(&amp;#x27;int&amp;#x27;)\n    \n        callsign_group_counts = callsign_group_counts_simulated.merge(callsign_group_counts_historic, on=&amp;quot;callsign_group&amp;quot;)\n    \n        # Calculate\n&amp;gt;       calculate_chi_squared_and_cramers(callsign_group_counts, what=&amp;quot;callsign group&amp;quot;)\n\ntests\\test_against_reality.py:377: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\ntests\\helpers.py:96: in calculate_chi_squared_and_cramers\n    fail_with_message(f&amp;quot;One category differs in proportion by more than 10% (found {max_diff:.4f}).\\n\\n{df}&amp;quot;)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nmessage = &amp;#x27;One category differs in proportion by more than 10% (found 0.1477).\\n\\n   callsign_group  count_simulated  ...  prop_......       0.183996  0.131629\\n2              72            15279  ...       0.163427  0.016073\\n\\n[3 rows x 6 columns]&amp;#x27;\n\n    def fail_with_message(message: str):\n        &amp;quot;&amp;quot;&amp;quot;Cleanly formatted pytest failure message.&amp;quot;&amp;quot;&amp;quot;\n&amp;gt;       pytest.fail(textwrap.dedent(message))\nE       Failed: One category differs in proportion by more than 10% (found 0.1477).\nE       \nE          callsign_group  count_simulated  ...  prop_historic  abs_diff\nE       0              70            42975  ...       0.652577  0.147701\nE       1              71            26866  ...       0.183996  0.131629\nE       2              72            15279  ...       0.163427  0.016073\nE       \nE       [3 rows x 6 columns]\n\ntests\\helpers.py:12: Failed\n\n----------------------------- Captured stdout call -----------------------------\nResult: Reject the null hypothesis (H\u2080) for callsign group.\nConclusion: There is a statistically significant difference in the distribution of callsigns between the simulated and historic data.\nTotal Observations (n): 89544.0\nCram\u00e9r&amp;#x27;s V (Effect Size): 0.0686\n&#34;}], &#34;tests/test_against_reality.py::test_proportions_callsign_allocations&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Failed&#34;, &#34;testId&#34;: &#34;tests/test_against_reality.py::test_proportions_callsign_allocations&#34;, &#34;duration&#34;: &#34;98 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Failed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_against_reality.py::test_proportions_callsign_allocations&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;98 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;simulation_results =          Unnamed: 0   P_ID  run_number                   time_type  ... heli_benefit  hems_result outcome hems_reg\n0  ...91           9                      depart  ...            y          NaN     NaN      NaN\n\n[1530983 rows x 25 columns]\n\n    @pytest.mark.callsign\n    def test_proportions_callsign_allocations(simulation_results):\n        # Calculate proportion of jobs allocated to each callsign in the simulation\n        callsign_counts_simulated = simulation_results[simulation_results[&amp;quot;event_type&amp;quot;]==&amp;quot;resource_use&amp;quot;][&amp;quot;callsign&amp;quot;].value_counts().reset_index(name=&amp;quot;count_simulated&amp;quot;)\n        # callsign_counts[&amp;quot;proportion_simulated&amp;quot;] = callsign_counts[&amp;quot;count_simulated&amp;quot;].apply(lambda x: x/callsign_counts[&amp;quot;count_simulated&amp;quot;].sum())\n    \n        # Read in the proportion of jobs allocated to each callsign group in historical data\n        callsign_counts_historic = (\n            pd.read_csv(&amp;quot;historical_data/historical_monthly_totals_by_callsign.csv&amp;quot;)\n            .drop(columns=&amp;quot;month&amp;quot;)\n            .sum()\n            .reset_index(name=&amp;quot;count_historic&amp;quot;)\n            )\n        callsign_counts_historic.rename(columns={&amp;#x27;index&amp;#x27;:&amp;#x27;callsign&amp;#x27;}, inplace=True)\n    \n        callsign_counts = callsign_counts_simulated.merge(callsign_counts_historic, on=&amp;quot;callsign&amp;quot;)\n    \n        # Calculate\n&amp;gt;       calculate_chi_squared_and_cramers(callsign_counts, what=&amp;quot;callsign&amp;quot;)\n\ntests\\test_against_reality.py:402: \n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\ntests\\helpers.py:96: in calculate_chi_squared_and_cramers\n    fail_with_message(f&amp;quot;One category differs in proportion by more than 10% (found {max_diff:.4f}).\\n\\n{df}&amp;quot;)\n_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _\n\nmessage = &amp;#x27;One category differs in proportion by more than 10% (found 0.1841).\\n\\n  callsign  count_simulated  ...  prop_histori...13644  ...       0.127034  0.033257\\n4     CC71            13222  ...       0.056962  0.098372\\n\\n[5 rows x 6 columns]&amp;#x27;\n\n    def fail_with_message(message: str):\n        &amp;quot;&amp;quot;&amp;quot;Cleanly formatted pytest failure message.&amp;quot;&amp;quot;&amp;quot;\n&amp;gt;       pytest.fail(textwrap.dedent(message))\nE       Failed: One category differs in proportion by more than 10% (found 0.1841).\nE       \nE         callsign  count_simulated  ...  prop_historic  abs_diff\nE       0      H70            22580  ...       0.449367  0.184095\nE       1     CC70            20395  ...       0.203210  0.036393\nE       2     CC72            15279  ...       0.163427  0.016073\nE       3      H71            13644  ...       0.127034  0.033257\nE       4     CC71            13222  ...       0.056962  0.098372\nE       \nE       [5 rows x 6 columns]\n\ntests\\helpers.py:12: Failed\n\n----------------------------- Captured stdout call -----------------------------\nResult: Reject the null hypothesis (H\u2080) for callsign.\nConclusion: There is a statistically significant difference in the distribution of callsigns between the simulated and historic data.\nTotal Observations (n): 89544.0\nCram\u00e9r&amp;#x27;s V (Effect Size): 0.0974\n&#34;}], &#34;tests/test_reproducibility.py::test_results_differ_across_runs_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_results_differ_across_runs_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_results_differ_across_runs_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:04: Demand increase set to 100.0%\n16:06:04: Run 2 of 1\n16:06:05: Run 2 took 0.0 minutes to run\n16:06:05: Demand increase set to 100.0%\n16:06:05: Run 2 of 1\n16:06:06: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:04: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:04: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:05: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:05: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:05: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:06: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_results_differ_across_runs_parallelProcessJobLib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_results_differ_across_runs_parallelProcessJobLib&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_results_differ_across_runs_parallelProcessJobLib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_different_seed_gives_different_arrival_pattern_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_different_seed_gives_different_arrival_pattern_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_different_seed_gives_different_arrival_pattern_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:07: Demand increase set to 100.0%\n16:06:07: Run 2 of 1\n16:06:08: Run 2 took 0.0 minutes to run\n16:06:08: Demand increase set to 100.0%\n16:06:08: Run 2 of 1\n16:06:09: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:07: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:07: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:08: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:08: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:08: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:09: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_different_seed_gives_different_arrival_pattern_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_calls_per_day_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_calls_per_day_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_calls_per_day_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:11: Demand increase set to 100.0%\n16:06:11: Run 2 of 1\n16:06:12: Run 2 took 0.0 minutes to run\n16:06:12: Demand increase set to 100.0%\n16:06:12: Run 2 of 1\n16:06:13: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:11: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:11: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:12: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:12: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:12: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:13: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_calls_per_hour_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_calls_per_hour_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_calls_per_hour_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:13: Demand increase set to 100.0%\n16:06:13: Run 2 of 1\n16:06:14: Run 2 took 0.0 minutes to run\n16:06:14: Demand increase set to 100.0%\n16:06:14: Run 2 of 1\n16:06:15: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:13: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:13: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:14: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:14: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:14: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:15: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:15: Demand increase set to 100.0%\n16:06:15: Run 2 of 1\n16:06:16: Run 2 took 0.0 minutes to run\n16:06:16: Demand increase set to 100.0%\n16:06:16: Run 2 of 1\n16:06:17: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:15: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:15: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:16: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:16: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:16: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:17: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;00:00:04&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:04&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_different_arrival_pattern_across_runs_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_different_arrival_pattern_across_runs_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_different_arrival_pattern_across_runs_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:23: Demand increase set to 100.0%\n16:06:23: Run 2 of 1\n16:06:24: Run 2 took 0.0 minutes to run\n16:06:24: Demand increase set to 100.0%\n16:06:24: Run 2 of 1\n16:06:25: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:23: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:23: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:24: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:24: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:24: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:25: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;00:00:03&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:03&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_results_pattern_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_results_pattern_runSim&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_results_pattern_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:28: Demand increase set to 100.0%\n16:06:28: Run 2 of 1\n16:06:29: Run 2 took 0.0 minutes to run\n16:06:29: Demand increase set to 100.0%\n16:06:29: Run 2 of 1\n16:06:30: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:28: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:28: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:29: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:29: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:29: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:30: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_results_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_same_seed_gives_consistent_results_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_same_seed_gives_consistent_results_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_different_seed_gives_different_results_pattern_runSim&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_different_seed_gives_different_results_pattern_runSim&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_different_seed_gives_different_results_pattern_runSim&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:33: Demand increase set to 100.0%\n16:06:33: Run 2 of 1\n16:06:33: Run 2 took 0.0 minutes to run\n16:06:33: Demand increase set to 100.0%\n16:06:33: Run 2 of 1\n16:06:34: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:33: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:33: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:33: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:33: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:33: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:34: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_reproducibility.py::test_different_seed_gives_different_results_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_different_seed_gives_different_results_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_different_seed_gives_different_results_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_reproducibility.py::test_different_result_pattern_across_runs_parallelProcessJoblib&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_reproducibility.py::test_different_result_pattern_across_runs_parallelProcessJoblib&#34;, &#34;duration&#34;: &#34;835 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_reproducibility.py::test_different_result_pattern_across_runs_parallelProcessJoblib&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;835 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_unittest_model.py::test_model_runs&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_model_runs&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_model_runs&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\nRemoved previous log: tests/LOG_test_model_runs.txt\n&#34;}], &#34;tests/test_unittest_model.py::test_more_results_for_longer_run&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_more_results_for_longer_run&#34;, &#34;duration&#34;: &#34;00:00:17&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_more_results_for_longer_run&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:17&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:38: Demand increase set to 100.0%\n16:06:38: Run 2 of 1\n16:06:38: Run 2 took 0.0 minutes to run\n16:06:38: Demand increase set to 100.0%\n16:06:38: Run 2 of 1\n16:06:40: Run 2 took 0.0 minutes to run\n16:06:40: Demand increase set to 100.0%\n16:06:40: Run 2 of 1\n16:06:40: Run 2 took 0.0 minutes to run\n16:06:40: Demand increase set to 100.0%\n16:06:40: Run 2 of 1\n16:06:41: Run 2 took 0.0 minutes to run\n16:06:41: Demand increase set to 100.0%\n16:06:41: Run 2 of 1\n16:06:42: Run 2 took 0.0 minutes to run\n16:06:42: Demand increase set to 100.0%\n16:06:42: Run 2 of 1\n16:06:43: Run 2 took 0.0 minutes to run\n16:06:43: Demand increase set to 100.0%\n16:06:43: Run 2 of 1\n16:06:44: Run 2 took 0.0 minutes to run\n16:06:44: Demand increase set to 100.0%\n16:06:44: Run 2 of 1\n16:06:44: Run 2 took 0.0 minutes to run\n16:06:44: Demand increase set to 100.0%\n16:06:44: Run 2 of 1\n16:06:45: Run 2 took 0.0 minutes to run\n16:06:45: Demand increase set to 100.0%\n16:06:45: Run 2 of 1\n16:06:46: Run 2 took 0.0 minutes to run\n16:06:46: Demand increase set to 100.0%\n16:06:46: Run 2 of 1\n16:06:47: Run 2 took 0.0 minutes to run\n16:06:47: Demand increase set to 100.0%\n16:06:47: Run 2 of 1\n16:06:48: Run 2 took 0.0 minutes to run\n16:06:48: Demand increase set to 100.0%\n16:06:48: Run 2 of 1\n16:06:48: Run 2 took 0.0 minutes to run\n16:06:48: Demand increase set to 100.0%\n16:06:48: Run 2 of 1\n16:06:49: Run 2 took 0.0 minutes to run\n16:06:49: Demand increase set to 100.0%\n16:06:49: Run 2 of 1\n16:06:50: Run 2 took 0.0 minutes to run\n16:06:50: Demand increase set to 100.0%\n16:06:50: Run 2 of 1\n16:06:51: Run 2 took 0.0 minutes to run\n16:06:51: Demand increase set to 100.0%\n16:06:51: Run 2 of 1\n16:06:51: Run 2 took 0.0 minutes to run\n16:06:51: Demand increase set to 100.0%\n16:06:51: Run 2 of 1\n16:06:52: Run 2 took 0.0 minutes to run\n16:06:52: Demand increase set to 100.0%\n16:06:52: Run 2 of 1\n16:06:53: Run 2 took 0.0 minutes to run\n16:06:53: Demand increase set to 100.0%\n16:06:53: Run 2 of 1\n16:06:55: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:38: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:38: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:38: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:38: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:38: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:40: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:40: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:40: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:40: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:40: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:40: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:41: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:41: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:41: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:42: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:42: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:42: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:43: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:43: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:43: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:44: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:44: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:44: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:44: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:44: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:44: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:45: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:45: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:45: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:46: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:46: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:46: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:47: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:47: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:47: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:48: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:48: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:48: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:48: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:48: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:48: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:49: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:49: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:49: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:50: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:50: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:50: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:51: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:51: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:51: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:51: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:51: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:51: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:52: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:52: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:52: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:53: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:53: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:53: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:55: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_unittest_model.py::test_arrivals_increase_if_demand_param_increased&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_arrivals_increase_if_demand_param_increased&#34;, &#34;duration&#34;: &#34;00:00:09&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_arrivals_increase_if_demand_param_increased&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:09&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:06:55: Demand increase set to 100.0%\n16:06:55: Run 2 of 1\n16:06:56: Run 2 took 0.0 minutes to run\n16:06:56: Demand increase set to 120.0%\n16:06:56: Run 2 of 1\n16:06:56: Run 2 took 0.0 minutes to run\n16:06:56: Demand increase set to 100.0%\n16:06:56: Run 2 of 1\n16:06:57: Run 2 took 0.0 minutes to run\n16:06:57: Demand increase set to 120.0%\n16:06:57: Run 2 of 1\n16:06:58: Run 2 took 0.0 minutes to run\n16:06:58: Demand increase set to 100.0%\n16:06:58: Run 2 of 1\n16:06:59: Run 2 took 0.0 minutes to run\n16:06:59: Demand increase set to 120.0%\n16:06:59: Run 2 of 1\n16:07:00: Run 2 took 0.0 minutes to run\n16:07:00: Demand increase set to 100.0%\n16:07:00: Run 2 of 1\n16:07:01: Run 2 took 0.0 minutes to run\n16:07:01: Demand increase set to 120.0%\n16:07:01: Run 2 of 1\n16:07:02: Run 2 took 0.0 minutes to run\n16:07:02: Demand increase set to 100.0%\n16:07:02: Run 2 of 1\n16:07:03: Run 2 took 0.0 minutes to run\n16:07:03: Demand increase set to 120.0%\n16:07:03: Run 2 of 1\n16:07:04: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:06:55: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:55: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:56: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:56: Demand increase set to 120.0%\nDEBUG    root:des_parallel_process.py:151 16:06:56: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:56: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:56: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:56: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:57: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:57: Demand increase set to 120.0%\nDEBUG    root:des_parallel_process.py:151 16:06:57: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:58: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:58: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:06:58: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:06:59: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:06:59: Demand increase set to 120.0%\nDEBUG    root:des_parallel_process.py:151 16:06:59: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:00: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:00: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:00: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:01: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:01: Demand increase set to 120.0%\nDEBUG    root:des_parallel_process.py:151 16:07:01: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:02: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:02: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:02: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:03: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:03: Demand increase set to 120.0%\nDEBUG    root:des_parallel_process.py:151 16:07:03: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:04: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_unittest_model.py::test_arrivals_decrease_if_demand_param_decrease&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_arrivals_decrease_if_demand_param_decrease&#34;, &#34;duration&#34;: &#34;00:00:07&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_arrivals_decrease_if_demand_param_decrease&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:07&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:07:04: Demand increase set to 100.0%\n16:07:04: Run 2 of 1\n16:07:05: Run 2 took 0.0 minutes to run\n16:07:05: Demand increase set to 80.0%\n16:07:05: Run 2 of 1\n16:07:05: Run 2 took 0.0 minutes to run\n16:07:05: Demand increase set to 100.0%\n16:07:05: Run 2 of 1\n16:07:06: Run 2 took 0.0 minutes to run\n16:07:06: Demand increase set to 80.0%\n16:07:06: Run 2 of 1\n16:07:07: Run 2 took 0.0 minutes to run\n16:07:07: Demand increase set to 100.0%\n16:07:07: Run 2 of 1\n16:07:08: Run 2 took 0.0 minutes to run\n16:07:08: Demand increase set to 80.0%\n16:07:08: Run 2 of 1\n16:07:08: Run 2 took 0.0 minutes to run\n16:07:08: Demand increase set to 100.0%\n16:07:08: Run 2 of 1\n16:07:09: Run 2 took 0.0 minutes to run\n16:07:09: Demand increase set to 80.0%\n16:07:09: Run 2 of 1\n16:07:09: Run 2 took 0.0 minutes to run\n16:07:09: Demand increase set to 100.0%\n16:07:09: Run 2 of 1\n16:07:10: Run 2 took 0.0 minutes to run\n16:07:10: Demand increase set to 80.0%\n16:07:10: Run 2 of 1\n16:07:10: Run 2 took 0.0 minutes to run\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:07:04: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:04: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:05: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:05: Demand increase set to 80.0%\nDEBUG    root:des_parallel_process.py:151 16:07:05: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:05: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:05: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:05: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:06: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:06: Demand increase set to 80.0%\nDEBUG    root:des_parallel_process.py:151 16:07:06: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:07: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:07: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:07: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:08: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:08: Demand increase set to 80.0%\nDEBUG    root:des_parallel_process.py:151 16:07:08: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:08: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:08: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:08: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:09: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:09: Demand increase set to 80.0%\nDEBUG    root:des_parallel_process.py:151 16:07:09: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:09: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:09: Demand increase set to 100.0%\nDEBUG    root:des_parallel_process.py:151 16:07:09: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:10: Run 2 took 0.0 minutes to run\nDEBUG    root:des_parallel_process.py:146 16:07:10: Demand increase set to 80.0%\nDEBUG    root:des_parallel_process.py:151 16:07:10: Run 2 of 1\nDEBUG    root:des_parallel_process.py:167 16:07:10: Run 2 took 0.0 minutes to run\n\n&#34;}], &#34;tests/test_unittest_model.py::test_output_when_no_demand&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_output_when_no_demand&#34;, &#34;duration&#34;: &#34;199 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_output_when_no_demand&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;199 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n16:07:10: Demand increase set to 0%\n16:07:10: Run 2 of 1\n\n------------------------------ Captured log call -------------------------------\nDEBUG    root:des_parallel_process.py:146 16:07:10: Demand increase set to 0%\nDEBUG    root:des_parallel_process.py:151 16:07:10: Run 2 of 1\n\n&#34;}], &#34;tests/test_unittest_model.py::test_warmup_only&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_warmup_only&#34;, &#34;duration&#34;: &#34;653 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_warmup_only&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;653 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_unittest_model.py::test_no_results_recorded_from_warmup&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_no_results_recorded_from_warmup&#34;, &#34;duration&#34;: &#34;749 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_no_results_recorded_from_warmup&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;749 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_unittest_model.py::test_simultaneous_allocation_same_resource_group&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_simultaneous_allocation_same_resource_group&#34;, &#34;duration&#34;: &#34;382 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_simultaneous_allocation_same_resource_group&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;382 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\nCallsign Group 70.0 - jobs: 42975\nCallsign Group 70.0 - overlaps: 0\nCallsign Group 71.0 - jobs: 26866\nCallsign Group 71.0 - overlaps: 0\nCallsign Group 72.0 - jobs: 15279\nCallsign Group 72.0 - overlaps: 0\n&#34;}], &#34;tests/test_unittest_model.py::test_simultaneous_allocation_same_resource&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_simultaneous_allocation_same_resource&#34;, &#34;duration&#34;: &#34;414 ms&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_simultaneous_allocation_same_resource&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;414 ms&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;----------------------------- Captured stdout call -----------------------------\n        P_ID  run_number  ...  resource_use_start           resource_use_end\n0          1           1  ... 2023-01-01 11:32:06 2023-01-01 13:32:55.952046\n17         3           1  ... 2023-01-01 19:57:06 2023-01-01 21:53:22.301833\n66         9           1  ... 2023-01-02 14:13:06 2023-01-02 16:46:49.129535\n140       19           1  ... 2023-01-03 21:19:06 2023-01-03 23:31:25.687312\n182       24           1  ... 2023-01-04 16:19:06 2023-01-04 17:46:35.546749\n...      ...         ...  ...                 ...                        ...\n85055  10694          10  ... 2026-12-24 09:23:06 2026-12-24 09:58:45.298210\n85068  10700          10  ... 2026-12-25 00:43:06 2026-12-25 02:33:30.851967\n85076  10703          10  ... 2026-12-25 09:15:06 2026-12-25 10:06:35.128164\n85083  10707          10  ... 2026-12-25 21:22:06 2026-12-25 22:20:57.356090\n85089  10712          10  ... 2026-12-26 11:55:06 2026-12-26 12:45:40.519833\n\n[22580 rows x 7 columns]\nCallsign H70 - instances: 22580\nCallsign H70 - overlaps: 0\n        P_ID  run_number  ...  resource_use_start           resource_use_end\n9          2           1  ... 2023-01-01 12:29:06 2023-01-01 14:34:36.910023\n102       14           1  ... 2023-01-03 09:44:06 2023-01-03 10:19:53.350811\n108       15           1  ... 2023-01-03 10:59:06 2023-01-03 13:21:07.221825\n1392     177           1  ... 2023-01-26 08:30:06 2023-01-26 10:03:48.161806\n1439     183           1  ... 2023-01-26 15:23:06 2023-01-26 17:07:02.321048\n...      ...         ...  ...                 ...                        ...\n84978  10676          10  ... 2026-12-22 11:24:06 2026-12-22 12:56:28.592847\n85034  10687          10  ... 2026-12-23 13:23:06 2026-12-23 13:53:19.705634\n85064  10698          10  ... 2026-12-24 16:19:06 2026-12-24 18:54:12.986284\n85088  10711          10  ... 2026-12-26 08:46:06 2026-12-26 09:01:49.329809\n85095  10715          10  ... 2026-12-26 13:50:06 2026-12-26 15:59:54.694838\n\n[13644 rows x 7 columns]\nCallsign H71 - instances: 13644\nCallsign H71 - overlaps: 0\n        P_ID  run_number  ...  resource_use_start           resource_use_end\n33         5           1  ... 2023-01-01 22:33:06 2023-01-02 00:50:23.435811\n48         7           1  ... 2023-01-02 10:17:06 2023-01-02 10:32:14.994488\n81        11           1  ... 2023-01-02 18:26:06 2023-01-02 20:30:01.163937\n149       20           1  ... 2023-01-04 01:59:06 2023-01-04 03:48:39.701546\n164       22           1  ... 2023-01-04 12:15:06 2023-01-04 13:28:54.211280\n...      ...         ...  ...                 ...                        ...\n85065  10699          10  ... 2026-12-24 19:40:06 2026-12-24 21:58:17.643707\n85071  10701          10  ... 2026-12-25 08:27:06 2026-12-25 09:11:54.670707\n85081  10706          10  ... 2026-12-25 19:39:06 2026-12-25 20:39:32.012889\n85085  10709          10  ... 2026-12-25 22:22:06 2026-12-25 22:53:27.075604\n85093  10714          10  ... 2026-12-26 12:54:06 2026-12-26 13:28:14.873943\n\n[20395 rows x 7 columns]\nCallsign CC70 - instances: 20395\nCallsign CC70 - overlaps: 0\n        P_ID  run_number  ...  resource_use_start           resource_use_end\n58         8           1  ... 2023-01-02 11:47:06 2023-01-02 12:41:17.588718\n125       17           1  ... 2023-01-03 13:31:06 2023-01-03 14:12:50.053845\n198       26           1  ... 2023-01-05 10:47:06 2023-01-05 12:04:31.581768\n223       29           1  ... 2023-01-05 12:05:06 2023-01-05 13:58:46.841394\n272       35           1  ... 2023-01-06 16:14:06 2023-01-06 17:38:55.023543\n...      ...         ...  ...                 ...                        ...\n84971  10675          10  ... 2026-12-22 09:59:06 2026-12-22 11:23:17.113164\n85029  10686          10  ... 2026-12-23 09:25:06 2026-12-23 10:08:15.519850\n85062  10696          10  ... 2026-12-24 11:49:06 2026-12-24 12:50:06.035807\n85078  10704          10  ... 2026-12-25 12:52:06 2026-12-25 14:52:59.903949\n85091  10713          10  ... 2026-12-26 12:11:06 2026-12-26 12:32:31.259055\n\n[13222 rows x 7 columns]\nCallsign CC71 - instances: 13222\nCallsign CC71 - overlaps: 0\n        P_ID  run_number  ...  resource_use_start           resource_use_end\n73        10           1  ... 2023-01-02 15:41:06 2023-01-02 16:28:19.043063\n118       16           1  ... 2023-01-03 11:25:06 2023-01-03 12:57:18.163990\n174       23           1  ... 2023-01-04 14:59:06 2023-01-04 16:03:06.101393\n216       28           1  ... 2023-01-05 11:48:06 2023-01-05 12:06:13.283960\n240       31           1  ... 2023-01-05 16:32:06 2023-01-05 17:59:03.452499\n...      ...         ...  ...                 ...                        ...\n85000  10680          10  ... 2026-12-22 17:55:06 2026-12-22 18:42:55.860097\n85038  10688          10  ... 2026-12-23 13:34:06 2026-12-23 15:40:17.678636\n85063  10697          10  ... 2026-12-24 12:26:06 2026-12-24 13:09:16.392127\n85079  10705          10  ... 2026-12-25 16:26:06 2026-12-25 16:59:06.930606\n85097  10716          10  ... 2026-12-26 17:58:06 2026-12-26 20:15:05.356673\n\n[15279 rows x 7 columns]\nCallsign CC72 - instances: 15279\nCallsign CC72 - overlaps: 0\n&#34;}], &#34;tests/test_unittest_model.py::test_no_response_during_off_shift_times&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_no_response_during_off_shift_times&#34;, &#34;duration&#34;: &#34;00:00:02&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_no_response_during_off_shift_times&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:02&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.&#34;}], &#34;tests/test_unittest_model.py::test_no_response_during_service&#34;: [{&#34;extras&#34;: [], &#34;result&#34;: &#34;Passed&#34;, &#34;testId&#34;: &#34;tests/test_unittest_model.py::test_no_response_during_service&#34;, &#34;duration&#34;: &#34;00:00:01&#34;, &#34;resultsTableRow&#34;: [&#34;&lt;td class=\&#34;col-result\&#34;&gt;Passed&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-testId\&#34;&gt;tests/test_unittest_model.py::test_no_response_during_service&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-duration\&#34;&gt;00:00:01&lt;/td&gt;&#34;, &#34;&lt;td class=\&#34;col-links\&#34;&gt;&lt;/td&gt;&#34;], &#34;log&#34;: &#34;No log output captured.--------------------------- Captured stdout teardown ---------------------------\nRemoved cached simulation results: tests/run_results_fixture.csv\nRemoved cached simulation results: data/service_dates.csv\nRemoved cached simulation results: tests/service_dates_fixture.csv\n&#34;}]}, &#34;renderCollapsed&#34;: [&#34;passed&#34;], &#34;initialSort&#34;: &#34;result&#34;, &#34;title&#34;: &#34;report.html&#34;}"></div>
+    <script>
+      (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+const { getCollapsedCategory, setCollapsedIds } = require('./storage.js')
+
+class DataManager {
+    setManager(data) {
+        const collapsedCategories = [...getCollapsedCategory(data.renderCollapsed)]
+        const collapsedIds = []
+        const tests = Object.values(data.tests).flat().map((test, index) => {
+            const collapsed = collapsedCategories.includes(test.result.toLowerCase())
+            const id = `test_${index}`
+            if (collapsed) {
+                collapsedIds.push(id)
+            }
+            return {
+                ...test,
+                id,
+                collapsed,
+            }
+        })
+        const dataBlob = { ...data, tests }
+        this.data = { ...dataBlob }
+        this.renderData = { ...dataBlob }
+        setCollapsedIds(collapsedIds)
+    }
+
+    get allData() {
+        return { ...this.data }
+    }
+
+    resetRender() {
+        this.renderData = { ...this.data }
+    }
+
+    setRender(data) {
+        this.renderData.tests = [...data]
+    }
+
+    toggleCollapsedItem(id) {
+        this.renderData.tests = this.renderData.tests.map((test) =>
+            test.id === id ? { ...test, collapsed: !test.collapsed } : test,
+        )
+    }
+
+    set allCollapsed(collapsed) {
+        this.renderData = { ...this.renderData, tests: [...this.renderData.tests.map((test) => (
+            { ...test, collapsed }
+        ))] }
+    }
+
+    get testSubset() {
+        return [...this.renderData.tests]
+    }
+
+    get environment() {
+        return this.renderData.environment
+    }
+
+    get initialSort() {
+        return this.data.initialSort
+    }
+}
+
+module.exports = {
+    manager: new DataManager(),
+}
+
+},{"./storage.js":8}],2:[function(require,module,exports){
+const mediaViewer = require('./mediaviewer.js')
+const templateEnvRow = document.getElementById('template_environment_row')
+const templateResult = document.getElementById('template_results-table__tbody')
+
+function htmlToElements(html) {
+    const temp = document.createElement('template')
+    temp.innerHTML = html
+    return temp.content.childNodes
+}
+
+const find = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return elem.querySelector(selector)
+}
+
+const findAll = (selector, elem) => {
+    if (!elem) {
+        elem = document
+    }
+    return [...elem.querySelectorAll(selector)]
+}
+
+const dom = {
+    getStaticRow: (key, value) => {
+        const envRow = templateEnvRow.content.cloneNode(true)
+        const isObj = typeof value === 'object' && value !== null
+        const values = isObj ? Object.keys(value).map((k) => `${k}: ${value[k]}`) : null
+
+        const valuesElement = htmlToElements(
+            values ? `<ul>${values.map((val) => `<li>${val}</li>`).join('')}<ul>` : `<div>${value}</div>`)[0]
+        const td = findAll('td', envRow)
+        td[0].textContent = key
+        td[1].appendChild(valuesElement)
+
+        return envRow
+    },
+    getResultTBody: ({ testId, id, log, extras, resultsTableRow, tableHtml, result, collapsed }) => {
+        const resultBody = templateResult.content.cloneNode(true)
+        resultBody.querySelector('tbody').classList.add(result.toLowerCase())
+        resultBody.querySelector('tbody').id = testId
+        resultBody.querySelector('.collapsible').dataset.id = id
+
+        resultsTableRow.forEach((html) => {
+            const t = document.createElement('template')
+            t.innerHTML = html
+            resultBody.querySelector('.collapsible').appendChild(t.content)
+        })
+
+        if (log) {
+            // Wrap lines starting with "E" with span.error to color those lines red
+            const wrappedLog = log.replace(/^E.*$/gm, (match) => `<span class="error">${match}</span>`)
+            resultBody.querySelector('.log').innerHTML = wrappedLog
+        } else {
+            resultBody.querySelector('.log').remove()
+        }
+
+        if (collapsed) {
+            resultBody.querySelector('.collapsible > td')?.classList.add('collapsed')
+            resultBody.querySelector('.extras-row').classList.add('hidden')
+        } else {
+            resultBody.querySelector('.collapsible > td')?.classList.remove('collapsed')
+        }
+
+        const media = []
+        extras?.forEach(({ name, format_type, content }) => {
+            if (['image', 'video'].includes(format_type)) {
+                media.push({ path: content, name, format_type })
+            }
+
+            if (format_type === 'html') {
+                resultBody.querySelector('.extraHTML').insertAdjacentHTML('beforeend', `<div>${content}</div>`)
+            }
+        })
+        mediaViewer.setup(resultBody, media)
+
+        // Add custom html from the pytest_html_results_table_html hook
+        tableHtml?.forEach((item) => {
+            resultBody.querySelector('td[class="extra"]').insertAdjacentHTML('beforeend', item)
+        })
+
+        return resultBody
+    },
+}
+
+module.exports = {
+    dom,
+    htmlToElements,
+    find,
+    findAll,
+}
+
+},{"./mediaviewer.js":6}],3:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const storageModule = require('./storage.js')
+
+const getFilteredSubSet = (filter) =>
+    manager.allData.tests.filter(({ result }) => filter.includes(result.toLowerCase()))
+
+const doInitFilter = () => {
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+}
+
+const doFilter = (type, show) => {
+    if (show) {
+        storageModule.showCategory(type)
+    } else {
+        storageModule.hideCategory(type)
+    }
+
+    const currentFilter = storageModule.getVisible()
+    const filteredSubset = getFilteredSubSet(currentFilter)
+    manager.setRender(filteredSubset)
+
+    const sortColumn = storageModule.getSort()
+    doSort(sortColumn, true)
+}
+
+module.exports = {
+    doFilter,
+    doInitFilter,
+}
+
+},{"./datamanager.js":1,"./sort.js":7,"./storage.js":8}],4:[function(require,module,exports){
+const { redraw, bindEvents, renderStatic } = require('./main.js')
+const { doInitFilter } = require('./filter.js')
+const { doInitSort } = require('./sort.js')
+const { manager } = require('./datamanager.js')
+const data = JSON.parse(document.getElementById('data-container').dataset.jsonblob)
+
+function init() {
+    manager.setManager(data)
+    doInitFilter()
+    doInitSort()
+    renderStatic()
+    redraw()
+    bindEvents()
+}
+
+init()
+
+},{"./datamanager.js":1,"./filter.js":3,"./main.js":5,"./sort.js":7}],5:[function(require,module,exports){
+const { dom, find, findAll } = require('./dom.js')
+const { manager } = require('./datamanager.js')
+const { doSort } = require('./sort.js')
+const { doFilter } = require('./filter.js')
+const {
+    getVisible,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    getSortDirection,
+    possibleFilters,
+} = require('./storage.js')
+
+const removeChildren = (node) => {
+    while (node.firstChild) {
+        node.removeChild(node.firstChild)
+    }
+}
+
+const renderStatic = () => {
+    const renderEnvironmentTable = () => {
+        const environment = manager.environment
+        const rows = Object.keys(environment).map((key) => dom.getStaticRow(key, environment[key]))
+        const table = document.getElementById('environment')
+        removeChildren(table)
+        rows.forEach((row) => table.appendChild(row))
+    }
+    renderEnvironmentTable()
+}
+
+const addItemToggleListener = (elem) => {
+    elem.addEventListener('click', ({ target }) => {
+        const id = target.parentElement.dataset.id
+        manager.toggleCollapsedItem(id)
+
+        const collapsedIds = getCollapsedIds()
+        if (collapsedIds.includes(id)) {
+            const updated = collapsedIds.filter((item) => item !== id)
+            setCollapsedIds(updated)
+        } else {
+            collapsedIds.push(id)
+            setCollapsedIds(collapsedIds)
+        }
+        redraw()
+    })
+}
+
+const renderContent = (tests) => {
+    const sortAttr = getSort(manager.initialSort)
+    const sortAsc = JSON.parse(getSortDirection())
+    const rows = tests.map(dom.getResultTBody)
+    const table = document.getElementById('results-table')
+    const tableHeader = document.getElementById('results-table-head')
+
+    const newTable = document.createElement('table')
+    newTable.id = 'results-table'
+
+    // remove all sorting classes and set the relevant
+    findAll('.sortable', tableHeader).forEach((elem) => elem.classList.remove('asc', 'desc'))
+    tableHeader.querySelector(`.sortable[data-column-type="${sortAttr}"]`)?.classList.add(sortAsc ? 'desc' : 'asc')
+    newTable.appendChild(tableHeader)
+
+    if (!rows.length) {
+        const emptyTable = document.getElementById('template_results-table__body--empty').content.cloneNode(true)
+        newTable.appendChild(emptyTable)
+    } else {
+        rows.forEach((row) => {
+            if (!!row) {
+                findAll('.collapsible td:not(.col-links', row).forEach(addItemToggleListener)
+                find('.logexpander', row).addEventListener('click',
+                    (evt) => evt.target.parentNode.classList.toggle('expanded'),
+                )
+                newTable.appendChild(row)
+            }
+        })
+    }
+
+    table.replaceWith(newTable)
+}
+
+const renderDerived = () => {
+    const currentFilter = getVisible()
+    possibleFilters.forEach((result) => {
+        const input = document.querySelector(`input[data-test-result="${result}"]`)
+        input.checked = currentFilter.includes(result)
+    })
+}
+
+const bindEvents = () => {
+    const filterColumn = (evt) => {
+        const { target: element } = evt
+        const { testResult } = element.dataset
+
+        doFilter(testResult, element.checked)
+        const collapsedIds = getCollapsedIds()
+        const updated = manager.renderData.tests.map((test) => {
+            return {
+                ...test,
+                collapsed: collapsedIds.includes(test.id),
+            }
+        })
+        manager.setRender(updated)
+        redraw()
+    }
+
+    const header = document.getElementById('environment-header')
+    header.addEventListener('click', () => {
+        const table = document.getElementById('environment')
+        table.classList.toggle('hidden')
+        header.classList.toggle('collapsed')
+    })
+
+    findAll('input[name="filter_checkbox"]').forEach((elem) => {
+        elem.addEventListener('click', filterColumn)
+    })
+
+    findAll('.sortable').forEach((elem) => {
+        elem.addEventListener('click', (evt) => {
+            const { target: element } = evt
+            const { columnType } = element.dataset
+            doSort(columnType)
+            redraw()
+        })
+    })
+
+    document.getElementById('show_all_details').addEventListener('click', () => {
+        manager.allCollapsed = false
+        setCollapsedIds([])
+        redraw()
+    })
+    document.getElementById('hide_all_details').addEventListener('click', () => {
+        manager.allCollapsed = true
+        const allIds = manager.renderData.tests.map((test) => test.id)
+        setCollapsedIds(allIds)
+        redraw()
+    })
+}
+
+const redraw = () => {
+    const { testSubset } = manager
+
+    renderContent(testSubset)
+    renderDerived()
+}
+
+module.exports = {
+    redraw,
+    bindEvents,
+    renderStatic,
+}
+
+},{"./datamanager.js":1,"./dom.js":2,"./filter.js":3,"./sort.js":7,"./storage.js":8}],6:[function(require,module,exports){
+class MediaViewer {
+    constructor(assets) {
+        this.assets = assets
+        this.index = 0
+    }
+
+    nextActive() {
+        this.index = this.index === this.assets.length - 1 ? 0 : this.index + 1
+        return [this.activeFile, this.index]
+    }
+
+    prevActive() {
+        this.index = this.index === 0 ? this.assets.length - 1 : this.index -1
+        return [this.activeFile, this.index]
+    }
+
+    get currentIndex() {
+        return this.index
+    }
+
+    get activeFile() {
+        return this.assets[this.index]
+    }
+}
+
+
+const setup = (resultBody, assets) => {
+    if (!assets.length) {
+        resultBody.querySelector('.media').classList.add('hidden')
+        return
+    }
+
+    const mediaViewer = new MediaViewer(assets)
+    const container = resultBody.querySelector('.media-container')
+    const leftArrow = resultBody.querySelector('.media-container__nav--left')
+    const rightArrow = resultBody.querySelector('.media-container__nav--right')
+    const mediaName = resultBody.querySelector('.media__name')
+    const counter = resultBody.querySelector('.media__counter')
+    const imageEl = resultBody.querySelector('img')
+    const sourceEl = resultBody.querySelector('source')
+    const videoEl = resultBody.querySelector('video')
+
+    const setImg = (media, index) => {
+        if (media?.format_type === 'image') {
+            imageEl.src = media.path
+
+            imageEl.classList.remove('hidden')
+            videoEl.classList.add('hidden')
+        } else if (media?.format_type === 'video') {
+            sourceEl.src = media.path
+
+            videoEl.classList.remove('hidden')
+            imageEl.classList.add('hidden')
+        }
+
+        mediaName.innerText = media?.name
+        counter.innerText = `${index + 1} / ${assets.length}`
+    }
+    setImg(mediaViewer.activeFile, mediaViewer.currentIndex)
+
+    const moveLeft = () => {
+        const [media, index] = mediaViewer.prevActive()
+        setImg(media, index)
+    }
+    const doRight = () => {
+        const [media, index] = mediaViewer.nextActive()
+        setImg(media, index)
+    }
+    const openImg = () => {
+        window.open(mediaViewer.activeFile.path, '_blank')
+    }
+    if (assets.length === 1) {
+        container.classList.add('media-container--fullscreen')
+    } else {
+        leftArrow.addEventListener('click', moveLeft)
+        rightArrow.addEventListener('click', doRight)
+    }
+    imageEl.addEventListener('click', openImg)
+}
+
+module.exports = {
+    setup,
+}
+
+},{}],7:[function(require,module,exports){
+const { manager } = require('./datamanager.js')
+const storageModule = require('./storage.js')
+
+const genericSort = (list, key, ascending, customOrder) => {
+    let sorted
+    if (customOrder) {
+        sorted = list.sort((a, b) => {
+            const aValue = a.result.toLowerCase()
+            const bValue = b.result.toLowerCase()
+
+            const aIndex = customOrder.findIndex((item) => item.toLowerCase() === aValue)
+            const bIndex = customOrder.findIndex((item) => item.toLowerCase() === bValue)
+
+            // Compare the indices to determine the sort order
+            return aIndex - bIndex
+        })
+    } else {
+        sorted = list.sort((a, b) => a[key] === b[key] ? 0 : a[key] > b[key] ? 1 : -1)
+    }
+
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const durationSort = (list, ascending) => {
+    const parseDuration = (duration) => {
+        if (duration.includes(':')) {
+            // If it's in the format "HH:mm:ss"
+            const [hours, minutes, seconds] = duration.split(':').map(Number)
+            return (hours * 3600 + minutes * 60 + seconds) * 1000
+        } else {
+            // If it's in the format "nnn ms"
+            return parseInt(duration)
+        }
+    }
+    const sorted = list.sort((a, b) => parseDuration(a['duration']) - parseDuration(b['duration']))
+    if (ascending) {
+        sorted.reverse()
+    }
+    return sorted
+}
+
+const doInitSort = () => {
+    const type = storageModule.getSort(manager.initialSort)
+    const ascending = storageModule.getSortDirection()
+    const list = manager.testSubset
+    const initialOrder = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed', 'Skipped', 'Passed']
+
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    if (type?.toLowerCase() === 'original') {
+        manager.setRender(list)
+    } else {
+        let sortedList
+        switch (type) {
+        case 'duration':
+            sortedList = durationSort(list, ascending)
+            break
+        case 'result':
+            sortedList = genericSort(list, type, ascending, initialOrder)
+            break
+        default:
+            sortedList = genericSort(list, type, ascending)
+            break
+        }
+        manager.setRender(sortedList)
+    }
+}
+
+const doSort = (type, skipDirection) => {
+    const newSortType = storageModule.getSort(manager.initialSort) !== type
+    const currentAsc = storageModule.getSortDirection()
+    let ascending
+    if (skipDirection) {
+        ascending = currentAsc
+    } else {
+        ascending = newSortType ? false : !currentAsc
+    }
+    storageModule.setSort(type)
+    storageModule.setSortDirection(ascending)
+
+    const list = manager.testSubset
+    const sortedList = type === 'duration' ? durationSort(list, ascending) : genericSort(list, type, ascending)
+    manager.setRender(sortedList)
+}
+
+module.exports = {
+    doInitSort,
+    doSort,
+}
+
+},{"./datamanager.js":1,"./storage.js":8}],8:[function(require,module,exports){
+const possibleFilters = [
+    'passed',
+    'skipped',
+    'failed',
+    'error',
+    'xfailed',
+    'xpassed',
+    'rerun',
+]
+
+const getVisible = () => {
+    const url = new URL(window.location.href)
+    const settings = new URLSearchParams(url.search).get('visible')
+    const lower = (item) => {
+        const lowerItem = item.toLowerCase()
+        if (possibleFilters.includes(lowerItem)) {
+            return lowerItem
+        }
+        return null
+    }
+    return settings === null ?
+        possibleFilters :
+        [...new Set(settings?.split(',').map(lower).filter((item) => item))]
+}
+
+const hideCategory = (categoryToHide) => {
+    const url = new URL(window.location.href)
+    const visibleParams = new URLSearchParams(url.search).get('visible')
+    const currentVisible = visibleParams ? visibleParams.split(',') : [...possibleFilters]
+    const settings = [...new Set(currentVisible)].filter((f) => f !== categoryToHide).join(',')
+
+    url.searchParams.set('visible', settings)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const showCategory = (categoryToShow) => {
+    if (typeof window === 'undefined') {
+        return
+    }
+    const url = new URL(window.location.href)
+    const currentVisible = new URLSearchParams(url.search).get('visible')?.split(',').filter(Boolean) ||
+        [...possibleFilters]
+    const settings = [...new Set([categoryToShow, ...currentVisible])]
+    const noFilter = possibleFilters.length === settings.length || !settings.length
+
+    noFilter ? url.searchParams.delete('visible') : url.searchParams.set('visible', settings.join(','))
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getSort = (initialSort) => {
+    const url = new URL(window.location.href)
+    let sort = new URLSearchParams(url.search).get('sort')
+    if (!sort) {
+        sort = initialSort || 'result'
+    }
+    return sort
+}
+
+const setSort = (type) => {
+    const url = new URL(window.location.href)
+    url.searchParams.set('sort', type)
+    window.history.pushState({}, null, unescape(url.href))
+}
+
+const getCollapsedCategory = (renderCollapsed) => {
+    let categories
+    if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href)
+        const collapsedItems = new URLSearchParams(url.search).get('collapsed')
+        switch (true) {
+        case !renderCollapsed && collapsedItems === null:
+            categories = ['passed']
+            break
+        case collapsedItems?.length === 0 || /^["']{2}$/.test(collapsedItems):
+            categories = []
+            break
+        case /^all$/.test(collapsedItems) || collapsedItems === null && /^all$/.test(renderCollapsed):
+            categories = [...possibleFilters]
+            break
+        default:
+            categories = collapsedItems?.split(',').map((item) => item.toLowerCase()) || renderCollapsed
+            break
+        }
+    } else {
+        categories = []
+    }
+    return categories
+}
+
+const getSortDirection = () => JSON.parse(sessionStorage.getItem('sortAsc')) || false
+const setSortDirection = (ascending) => sessionStorage.setItem('sortAsc', ascending)
+
+const getCollapsedIds = () => JSON.parse(sessionStorage.getItem('collapsedIds')) || []
+const setCollapsedIds = (list) => sessionStorage.setItem('collapsedIds', JSON.stringify(list))
+
+module.exports = {
+    getVisible,
+    hideCategory,
+    showCategory,
+    getCollapsedIds,
+    setCollapsedIds,
+    getSort,
+    setSort,
+    getSortDirection,
+    setSortDirection,
+    getCollapsedCategory,
+    possibleFilters,
+}
+
+},{}]},{},[4]);
+    </script>
+  </footer>
+</html>
