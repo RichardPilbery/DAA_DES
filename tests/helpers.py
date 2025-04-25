@@ -3,6 +3,9 @@ import warnings
 import pytest
 import numpy as np
 from scipy.stats import chi2_contingency, chi2
+import shutil
+import os
+
 
 def fail_with_message(message: str):
     """Cleanly formatted pytest failure message."""
@@ -95,3 +98,17 @@ def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
         warn_with_message(f"One category differs in proportion by more than 5% (found {max_diff:.4f}).\n\n{df}")
     else:
         pass
+
+
+
+def save_logs(output_path, log_location="log.txt", output_folder="tests"):
+    full_output_path = f"{output_folder}/LOG_{output_path}"
+
+    if os.path.exists(full_output_path):
+            try:
+                os.remove(full_output_path)
+                print(f"Removed previous log: {full_output_path}")
+            except Exception as e:
+                print(f"Warning: Failed to remove {full_output_path} — {e}")
+
+    shutil.copyfile(log_location, full_output_path)

@@ -104,9 +104,27 @@ This folder contains files that will be picked up by the pytest framework. They 
 
 To run all tests, use the command `pytest` in a terminal, running from the root folder of the project.
 
-To run a subset of tests, you can choose subsets of tests. For example, to run all resource-related tests, run `pytest -m resources`. More options can be seen [here](https://docs.pytest.org/en/stable/example/markers.html).
+To run a subset of tests, you can choose subsets of tests. For example, to run all resource-related tests based on their tag (known as a marker), run `pytest -m resources`. More options can be seen [here](https://docs.pytest.org/en/stable/example/markers.html).
+
+Markers available include:
+
+```
+    warmup: Tests relating to the warm-up period
+    resources: Tests relating to the correct logic around resource allocation and unavailability
+    calls: Tests relating to the number of calls/jobs generated
+    jobdurations: Tests relating to the duration of jobs
+    quick: Tests to quickly check the sim is functioning at a basic level
+    reproducibility: Tests to check that random seeds behave as expected
+    performance: Tests to check that basic metrics behave as expected when core parameters change
+```
+
+See `pytest.ini` for the most up-to-date list of markers.
+
+You can also use `pytest -k some_string` to match tests with a name containing a particular string (replacing `some_string` in the command with your own search term).
 
 Alternatively, see the [pytest documentation](https://docs.pytest.org/en/stable/how-to/usage.html) for additional ways to manage groups of tests.
+
+To generate an interactive html report, run `pytest --html=report.html`
 
 To generate a code coverage report, run `pytest --cov=. --cov-report=html`.
 

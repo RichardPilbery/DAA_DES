@@ -10,6 +10,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+from helpers import save_logs
 
 ##############################################################################
 # Fixture - single run for tests where input parameters aren't being changed #
@@ -45,10 +46,13 @@ def simulation_results():
             sim_duration=60 * 24 * 7 * 52 * 4, # 4 years
             warm_up_time=0,
             sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-            amb_data=False
+            amb_data=False,
+            print_debug_messages=True
         )
 
         collateRunResults()
+
+        save_logs("fixture_simulation_results_default_settings_default_rotas.txt")
 
         df = pd.read_csv(RESULTS_CSV_PATH)
         df.to_csv(RESULTS_CSV_PATH_OUT)

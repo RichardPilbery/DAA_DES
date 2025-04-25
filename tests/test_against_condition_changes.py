@@ -55,7 +55,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
-
+from helpers import save_logs
 
 @pytest.mark.performance
 def test_reducing_helo_resource():
@@ -79,10 +79,13 @@ def test_reducing_helo_resource():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_reducing_helo_resource_results_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -106,12 +109,15 @@ def test_reducing_helo_resource():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
 
       results_df_2 = pd.read_csv("data/run_results.csv")
+
+      save_logs("test_reducing_helo_resource_results_one_helicopter.txt")
 
       hems_unavailable_df_2 = (results_df_2[
          (results_df_2['event_type'] == 'resource_preferred_outcome') &
@@ -160,10 +166,13 @@ def test_no_solo_car():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_no_solo_car_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -187,12 +196,15 @@ def test_no_solo_car():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
 
       results_df_2 = pd.read_csv("data/run_results.csv")
+
+      save_logs("test_no_solo_car_no_solo_car.txt")
 
       hems_unavailable_df_2 = (results_df_2[
          (results_df_2['event_type'] == 'resource_preferred_outcome') &
@@ -242,10 +254,13 @@ def test_shorter_operating_hours():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_shorter_operating_hours_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -269,10 +284,13 @@ def test_shorter_operating_hours():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_shorter_operating_hours_shorter_operating_hours.txt")
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 
@@ -325,10 +343,13 @@ def test_longer_operating_hours():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_longer_operating_hours_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -352,10 +373,13 @@ def test_longer_operating_hours():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_longer_operating_hours_longer_operating_hours.txt")
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 
@@ -407,10 +431,13 @@ def test_extra_solo_car():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_extra_solo_car_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -444,10 +471,13 @@ def test_extra_solo_car():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_extra_solo_car_extra_solo_car.txt")
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 
@@ -509,10 +539,13 @@ def test_extra_helo():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_extra_helo_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -546,10 +579,13 @@ def test_extra_helo():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_extra_helo_extra_helo.txt")
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 
@@ -619,10 +655,13 @@ def test_changed_helo_model():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_changed_helo_model_base_case.txt")
 
       results_df_1 = pd.read_csv("data/run_results.csv")
       hems_unavailable_df_1 = (results_df_1[
@@ -656,10 +695,13 @@ def test_changed_helo_model():
          warm_up_time=WARM_UP_TIME,
          sim_start_date=SIM_START_DATE,
          amb_data=AMB_DATA,
-         master_seed=42
+         master_seed=42,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_changed_helo_model_changed_helo_model.txt")
 
       results_df_2 = pd.read_csv("data/run_results.csv")
 

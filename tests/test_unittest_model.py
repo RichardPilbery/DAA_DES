@@ -77,6 +77,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+from helpers import save_logs
 
 ##############################################################################
 # Begin tests                                                                #
@@ -93,9 +94,12 @@ def test_model_runs():
          warm_up_time=0,
          sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
          amb_data=False,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_model_runs.txt")
 
       # Read simulation results
       results_df = pd.read_csv("data/run_results.csv")
