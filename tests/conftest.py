@@ -10,6 +10,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+from helpers import save_logs
 
 ##############################################################################
 # Fixture - single run for tests where input parameters aren't being changed #
@@ -17,10 +18,26 @@ from des_parallel_process import parallelProcessJoblib, collateRunResults, runSi
 RESULTS_CSV_PATH = "data/run_results.csv"
 RESULTS_CSV_PATH_OUT = "tests/run_results_fixture.csv"
 
+SERVICE_DATES_CSV_PATH = "data/service_dates.csv"
+SERVICE_DATES_CSV_PATH_OUT = "tests/service_dates_fixture.csv"
+
 @pytest.fixture(scope="session")
 def simulation_results():
     """Run the simulation only if needed and return the event dataframe."""
     if not os.path.exists(RESULTS_CSV_PATH) or not os.path.exists(RESULTS_CSV_PATH_OUT):
+        # Ensure all rotas are using default values
+        rota = pd.read_csv("tests/HISTORIC_HEMS_ROTA.csv")
+        rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+        callsign_reg_lookup = pd.read_csv("tests/HISTORIC_callsign_registration_lookup.csv")
+        callsign_reg_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+        service_history = pd.read_csv("tests/HISTORIC_service_history.csv")
+        service_history.to_csv("actual_data/service_history.csv", index=False)
+
+        service_sched = pd.read_csv("tests/HISTORIC_service_schedules_by_model.csv")
+        service_sched.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
         print("Generating simulation results...")
         removeExistingResults()
 
@@ -29,13 +46,19 @@ def simulation_results():
             sim_duration=60 * 24 * 7 * 52 * 4, # 4 years
             warm_up_time=0,
             sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
-            amb_data=False
+            amb_data=False,
+            print_debug_messages=True
         )
 
         collateRunResults()
 
+        save_logs("fixture_simulation_results_default_settings_default_rotas.txt")
+
         df = pd.read_csv(RESULTS_CSV_PATH)
         df.to_csv(RESULTS_CSV_PATH_OUT)
+
+        df = pd.read_csv(SERVICE_DATES_CSV_PATH)
+        df.to_csv(SERVICE_DATES_CSV_PATH_OUT)
     else:
         print("Using cached simulation results...")
 
@@ -50,16 +73,25 @@ def cleanup_simulation_results():
     """Automatically remove results CSV after all tests are done."""
     yield  # Wait until all tests using this session scope are finished
 
-    if os.path.exists(RESULTS_CSV_PATH):
-        try:
-            os.remove(RESULTS_CSV_PATH)
-            print(f"Removed cached simulation results: {RESULTS_CSV_PATH}")
-        except Exception as e:
-            print(f"Warning: Failed to remove {RESULTS_CSV_PATH} — {e}")
+    # Remove generated csvs to avoid accidental usage
+    for filepath in [RESULTS_CSV_PATH, RESULTS_CSV_PATH_OUT, SERVICE_DATES_CSV_PATH, SERVICE_DATES_CSV_PATH_OUT]:
 
-    if os.path.exists(RESULTS_CSV_PATH_OUT):
-        try:
-            os.remove(RESULTS_CSV_PATH_OUT)
-            print(f"Removed cached simulation results: {RESULTS_CSV_PATH_OUT}")
-        except Exception as e:
-            print(f"Warning: Failed to remove {RESULTS_CSV_PATH_OUT} — {e}")
+        if os.path.exists(filepath):
+            try:
+                os.remove(filepath)
+                print(f"Removed cached simulation results: {filepath}")
+            except Exception as e:
+                print(f"Warning: Failed to remove {filepath} — {e}")
+
+    # Revert all rotas to defaults
+    rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+    rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+    callsign_reg_lookup = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
+    callsign_reg_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+    service_history = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
+    service_history.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+    service_sched = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
+    service_sched.to_csv("actual_data/service_schedules_by_model.csv", index=False)

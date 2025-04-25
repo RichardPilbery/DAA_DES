@@ -77,6 +77,7 @@ import sys
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+from helpers import save_logs
 
 ##############################################################################
 # Begin tests                                                                #
@@ -93,9 +94,12 @@ def test_model_runs():
          warm_up_time=0,
          sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
          amb_data=False,
+         print_debug_messages=True
          )
 
       collateRunResults()
+
+      save_logs("test_model_runs.txt")
 
       # Read simulation results
       results_df = pd.read_csv("data/run_results.csv")
@@ -678,9 +682,15 @@ def test_no_response_during_off_shift_times(simulation_results):
 @pytest.mark.resources
 def test_no_response_during_service(simulation_results):
    try:
+      if os.path.exists("tests/responses_during_servicing_FULL.csv"):
+         os.remove("tests/responses_during_servicing_FULL.csv")
+
+      if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
+         os.remove("tests/responses_during_servicing_FAILURES.csv")
+
       # Load key data files produced by the simulation - results and generated service intervals
       results = simulation_results # defined in conftest.py
-      services = pd.read_csv("data/service_dates.csv")
+      services = pd.read_csv("tests/service_dates_fixture.csv")
 
       # Ensure service start and end dates are datetimes
       services['service_start_date'] = pd.to_datetime(services['service_start_date'], format="%Y-%m-%d", errors='coerce')
@@ -707,6 +717,8 @@ def test_no_response_during_service(simulation_results):
       # At present we don't have any servicing of cars (standalone or helicopter backup cars)
       # so those rows will not be of interest to us.
       valid_servicing = merged_df.dropna(subset=['service_start_date', 'service_end_date'])
+
+      valid_servicing.to_csv("tests/responses_during_servicing_FULL.csv")
 
       # Identify any rows where the resource_use_start falls within the servicing interval
       violations = valid_servicing[
