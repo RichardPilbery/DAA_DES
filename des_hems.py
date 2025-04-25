@@ -112,40 +112,6 @@ class DES_HEMS:
             logging.debug(message)
             #print(message)
 
-    # SR NOTE 2025-04-16: Commented out as believe this is no longer in use
-    # To my knowledge this approach was dropped as it was incorrectly estimating
-    # the number of calls and has been replaced with the use of calls_per_hour
-    # and predetermine_call_arrivals
-    # def calc_interarrival_time(self, hour: int, qtr: int, NSPPThin = False):
-    #     """
-    #         Convenience function to return the time between incidents
-    #         using either NSPPThinning or sampling the exponential
-    #         distribution
-
-    #         Arrivals distribution using NSPPThinning
-    #         HSMA example: https://hsma-programme.github.io/hsma6_des_book/modelling_variable_arrival_rates.html
-
-    #     """
-
-    #     if NSPPThin:
-    #        # Determine the inter-arrival time usiong NSPPThinning
-    #         arrivals_dist = NSPPThinning(
-    #             data = self.inter_arrival_times_df[
-    #                 (self.inter_arrival_times_df['quarter'] == qtr)
-    #             ],
-    #             random_seed1 = self.run_number * 112,
-    #             random_seed2 = self.run_number * 999
-    #         )
-
-    #         return arrivals_dist.sample(hour)
-
-    #     else:
-    #         # Or just regular exponential distrib.
-    #         # inter_time = self.utils.inter_arrival_rate(hour, qtr)
-    #         # return expovariate(1.0 / inter_time)
-    #         # return Exponential(inter_time, random_seed=self.random_seeds[0])
-    #         return self.arrival_dist.sample()
-
 
     def calls_per_hour(self, quarter: int) -> dict:
         """
@@ -194,15 +160,6 @@ class DES_HEMS:
         d = self.calls_per_hour(quarter)
 
         ia_time = []
-
-        # for index, row in hourly_activity_for_qtr.iterrows():
-        #     if row['hour'] >= current_hour:
-        #         if row['hour'] in d.keys():
-        #             calc_ia_time = expovariate(int(d[row['hour']]) / 60)
-        #             tmp_ia_time = ((row['hour']-current_hour) * 60) + calc_ia_time
-        #             # Update current hour
-        #             current_hour += floor(tmp_ia_time / 60)
-        #             ia_time.append(tmp_ia_time)
 
         for index, row in hourly_activity_for_qtr.iterrows():
             hour = row['hour']
@@ -258,17 +215,6 @@ class DES_HEMS:
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
                 yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, qtr))
 
-            # if self.calls_today > 0:
-            #     # Work out how long until next incident
-            #     #self.debug(ia_dict.keys())
-            #     if hod in ia_dict.keys():
-            #         #self.debug(f"Hour of day is {hod} and there are {ia_dict[hod]} patients to create")
-            #         for i in range(0, ia_dict[hod]):
-            #             #self.debug(f"Creating new patient at {current_dt}")
-            #             self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-            #             # Might need to determine spread of jobs during any given hour.
-            #             yield self.env.timeout(5) # Wait 5 minutes until the next allocation
-            #             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
             if self.calls_today > 0:
                 if hod in ia_dict.keys():
@@ -389,10 +335,10 @@ class DES_HEMS:
 
             self.add_patient_result_row(pt, hems_res_list[1], "resource_preferred_outcome")
 
-            if hems_allocation != None:
+            if hems_allocation is not None:
                 #self.debug(f"allocated {hems_allocation.callsign}")
 
-                # if hems_group_resource_allocation != None:
+                # if hems_group_resource_allocation is not None:
                 #     self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
                 #     self.add_patient_result_row(pt, hems_group_resource_allocation.callsign_group, "callsign_group_resource_use")
 
@@ -411,192 +357,195 @@ class DES_HEMS:
         #self.debug(f"patient journey Time: {self.env.now}")
         # self.debug(hems_res.callsign)
 
-        patient_enters_sim = self.env.now
+        try:
 
-        not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
+            patient_enters_sim = self.env.now
 
-        hems_avail = True if hems_res != None else False
+            not_in_warm_up_period = False if self.env.now < self.warm_up_duration else True
 
-        if hems_avail:
+            hems_avail = True if hems_res is not None else False
 
-            #self.debug(f"Patient csg is {patient.hems_callsign_group}")
-            patient.hems_vehicle_type = hems_res.vehicle_type
-            patient.hems_registration = hems_res.registration
+            if hems_avail:
 
-            #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
-            #self.debug(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
-            patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
-            patient.callsign = hems_res.callsign
+                #self.debug(f"Patient csg is {patient.hems_callsign_group}")
+                patient.hems_vehicle_type = hems_res.vehicle_type
+                patient.hems_registration = hems_res.registration
 
-            if not_in_warm_up_period:
-                if hems_res != None:
-                    self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
-                    self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
+                #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
+                #self.debug(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
+                patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
+                patient.callsign = hems_res.callsign
 
-            # Check if HEMS result indicates that resource stodd down before going mobile or en route
-            no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False
+                if not_in_warm_up_period:
+                    if hems_res is not None:
+                        self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
+                        self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
-            # Check if HEMS result indicates no leaving scene/at hospital times
-            no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
+                # Check if HEMS result indicates that resource stodd down before going mobile or en route
+                no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False
 
-            patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result, patient.hems_cc_or_ec)
+                # Check if HEMS result indicates no leaving scene/at hospital times
+                no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
 
-            #self.debug(f"Patient outcome is {patient.pt_outcome}")
+                patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result, patient.hems_cc_or_ec)
 
-        else:
-            #self.debug("No HEMS available")
-            self.add_patient_result_row(patient, "No HEMS available", "queue")
-            #self.add_patient_result_row(patient, "depart", "arrival_departure")
+                #self.debug(f"Patient outcome is {patient.pt_outcome}")
 
-        #self.debug('Inside hems_avail')
-        if self.amb_data:
-            ambulance = Ambulance()
-
-        patient.time_in_sim = self.env.now - patient_enters_sim
-
-        if patient.hems_case == 1 and hems_avail:
-            #self.debug(f"Adding result row with csg {patient.hems_callsign_group}")
-            self.add_patient_result_row(patient, "HEMS call start", "queue")
-
-        if self.amb_data:
-            self.add_patient_result_row(patient,  "AMB call start", "queue")
-
-        # Allocation time --------------
-
-        if patient.hems_case == 1 and hems_avail:
-            # Calculate min and max permitted times.
-            allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation') * self.activity_duration_multiplier
-            #self.debug(f"Vehicle type {patient.hems_vehicle_type} and allocation time is {allocation_time}")
-            yield self.env.timeout(allocation_time)
-
-        if self.amb_data:
-                #self.debug('Ambulance allocation time')
-                yield self.env.timeout(180)
-
-        patient.time_in_sim = self.env.now - patient_enters_sim
-
-        if patient.hems_case == 1 and hems_avail:
-            if patient.hems_result != "Stand Down Before Mobile":
-                self.add_patient_result_row(patient, "HEMS allocated to call", "queue")
             else:
-                self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
+                #self.debug("No HEMS available")
+                self.add_patient_result_row(patient, "No HEMS available", "queue")
+                #self.add_patient_result_row(patient, "depart", "arrival_departure")
+
+            #self.debug('Inside hems_avail')
+            if self.amb_data:
+                ambulance = Ambulance()
+
+            patient.time_in_sim = self.env.now - patient_enters_sim
+
+            if patient.hems_case == 1 and hems_avail:
+                #self.debug(f"Adding result row with csg {patient.hems_callsign_group}")
+                self.add_patient_result_row(patient, "HEMS call start", "queue")
+
+            if self.amb_data:
+                self.add_patient_result_row(patient,  "AMB call start", "queue")
+
+            # Allocation time --------------
+
+            if patient.hems_case == 1 and hems_avail:
+                # Calculate min and max permitted times.
+                allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation') * self.activity_duration_multiplier
+                #self.debug(f"Vehicle type {patient.hems_vehicle_type} and allocation time is {allocation_time}")
+                yield self.env.timeout(allocation_time)
+
+            if self.amb_data:
+                    #self.debug('Ambulance allocation time')
+                    yield self.env.timeout(180)
+
+            patient.time_in_sim = self.env.now - patient_enters_sim
+
+            if patient.hems_case == 1 and hems_avail:
+                if patient.hems_result != "Stand Down Before Mobile":
+                    self.add_patient_result_row(patient, "HEMS allocated to call", "queue")
+                else:
+                    self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
 
 
-        # Mobilisation time ---------------
+            # Mobilisation time ---------------
 
-        # Calculate mobile to time at scene (or stood down before)
-        if patient.hems_case == 1 and hems_avail:
-            mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile') * self.activity_duration_multiplier
-            yield self.env.timeout(mobile_time)
+            # Calculate mobile to time at scene (or stood down before)
+            if patient.hems_case == 1 and hems_avail:
+                mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile') * self.activity_duration_multiplier
+                yield self.env.timeout(mobile_time)
 
-        if self.amb_data:
-                # Determine allocation time for ambulance
-                # Yield until done
-                #self.debug('Ambulance time to going mobile')
-                yield self.env.timeout(1)
+            if self.amb_data:
+                    # Determine allocation time for ambulance
+                    # Yield until done
+                    #self.debug('Ambulance time to going mobile')
+                    yield self.env.timeout(1)
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+            patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if patient.hems_case == 1 and hems_avail:
-            self.add_patient_result_row(patient,  "HEMS mobile", "queue")
+            if patient.hems_case == 1 and hems_avail:
+                self.add_patient_result_row(patient,  "HEMS mobile", "queue")
 
-        if self.amb_data:
-            self.debug('Ambulance mobile')
+            if self.amb_data:
+                self.debug('Ambulance mobile')
 
-        # On scene ---------------
+            # On scene ---------------
 
-        if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
-            tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene') * self.activity_duration_multiplier
-            yield self.env.timeout(tts_time)
+            if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
+                tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene') * self.activity_duration_multiplier
+                yield self.env.timeout(tts_time)
 
-        if self.amb_data:
-                # Determine allocation time for ambulance
-                # Yield until done
-                #self.debug('Ambulance time to scene')
-                yield self.env.timeout(20)
+            if self.amb_data:
+                    # Determine allocation time for ambulance
+                    # Yield until done
+                    #self.debug('Ambulance time to scene')
+                    yield self.env.timeout(20)
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+            patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if (patient.hems_case == 1 and hems_avail):
-            if patient.hems_result != "Stand Down En Route":
-                self.add_patient_result_row(patient,  "HEMS on scene", "queue")
-            else:
-                self.add_patient_result_row(patient,  "HEMS stand down en route","queue")
+            if (patient.hems_case == 1 and hems_avail):
+                if patient.hems_result != "Stand Down En Route":
+                    self.add_patient_result_row(patient,  "HEMS on scene", "queue")
+                else:
+                    self.add_patient_result_row(patient,  "HEMS stand down en route","queue")
 
-        if self.amb_data:
-            self.debug('Ambulance stand down en route')
-
-
-        # Leaving scene ------------
-
-        if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
-            tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene') * self.activity_duration_multiplier
-            yield self.env.timeout(tos_time)
-
-        if self.amb_data:
-            #self.debug('Ambulance on scene duration')
-            yield self.env.timeout(120)
-
-        patient.time_in_sim = self.env.now - patient_enters_sim
-
-        if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
-            if no_HEMS_hospital == False:
-                self.add_patient_result_row(patient, "HEMS leaving scene", "queue")
-            else:
-                self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "queue")
-
-        if self.amb_data:
-            self.debug('Ambulance leaving scene time')
+            if self.amb_data:
+                self.debug('Ambulance stand down en route')
 
 
-        # Arrived destination time ------------
+            # Leaving scene ------------
 
-        if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
-            travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital') * self.activity_duration_multiplier
-            yield self.env.timeout(travel_time)
+            if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
+                tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene') * self.activity_duration_multiplier
+                yield self.env.timeout(tos_time)
 
-        if self.amb_data:
-            #self.debug('Ambulance travel time')
-            yield self.env.timeout(30)
+            if self.amb_data:
+                #self.debug('Ambulance on scene duration')
+                yield self.env.timeout(120)
 
-        patient.time_in_sim = self.env.now - patient_enters_sim
+            patient.time_in_sim = self.env.now - patient_enters_sim
 
-        if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
+            if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
+                if no_HEMS_hospital == False:
+                    self.add_patient_result_row(patient, "HEMS leaving scene", "queue")
+                else:
+                    self.add_patient_result_row(patient, f"HEMS {patient.hems_result.lower()}", "queue")
 
-            self.add_patient_result_row(patient, "HEMS arrived destination", "queue")
-
-        if self.amb_data:
-            self.debug('Ambulance at destination time')
+            if self.amb_data:
+                self.debug('Ambulance leaving scene time')
 
 
-        # Handover time ---------------
+            # Arrived destination time ------------
 
-        # Not currently available
+            if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
+                travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital') * self.activity_duration_multiplier
+                yield self.env.timeout(travel_time)
 
-        # Clear time ------------
+            if self.amb_data:
+                #self.debug('Ambulance travel time')
+                yield self.env.timeout(30)
 
-        if (patient.hems_case == 1 and hems_avail):
-            clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear') * self.activity_duration_multiplier
-            yield self.env.timeout(clear_time)
+            patient.time_in_sim = self.env.now - patient_enters_sim
 
-            if hems_res != None:
+            if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
+
+                self.add_patient_result_row(patient, "HEMS arrived destination", "queue")
+
+            if self.amb_data:
+                self.debug('Ambulance at destination time')
+
+
+            # Handover time ---------------
+
+            # Not currently available
+
+            # Clear time ------------
+
+            if (patient.hems_case == 1 and hems_avail):
+                clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear') * self.activity_duration_multiplier
+                yield self.env.timeout(clear_time)
+
+            if self.amb_data:
+                #self.debug('Ambulance clear time')
+                yield self.env.timeout(60)
+
+            patient.time_in_sim = self.env.now - patient_enters_sim
+
+            if patient.hems_case == 1 and hems_avail:
+                self.add_patient_result_row(patient,"HEMS clear", "queue")
+
+            if self.amb_data:
+                self.debug('Ambulance clear time')
+
+            #self.debug(f"Depart for patient {patient.id} on run {self.run_number}")
+            self.add_patient_result_row(patient, "depart", "arrival_departure")
+        finally:
+            # Always return the resource at the end of the patient journey.
+            if hems_res is not None:
                 self.hems_resources.return_resource(hems_res, secondary_hems_res)
                 self.add_patient_result_row(patient, hems_res.callsign, "resource_use_end")
-
-        if self.amb_data:
-            #self.debug('Ambulance clear time')
-            yield self.env.timeout(60)
-
-        patient.time_in_sim = self.env.now - patient_enters_sim
-
-        if patient.hems_case == 1 and hems_avail:
-            self.add_patient_result_row(patient,"HEMS clear", "queue")
-
-        if self.amb_data:
-            self.debug('Ambulance clear time')
-
-        #self.debug(f"Depart for patient {patient.id} on run {self.run_number}")
-        self.add_patient_result_row(patient, "depart", "arrival_departure")
 
 
     def add_patient_result_row(self,
