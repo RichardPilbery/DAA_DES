@@ -203,6 +203,8 @@ class DistributionFitUtils():
         self.historical_monthly_totals_by_hour_of_day()
         self.historical_monthly_resource_utilisation()
         self.historical_monthly_totals_all_calls()
+        self.historical_daily_calls_breakdown()
+        self.historical_job_durations_breakdown()
 
         # Calculate proportions of ad hoc unavailability
         self.ad_hoc_unavailability()
@@ -758,6 +760,61 @@ class DistributionFitUtils():
         monthly_totals_pivot_df = monthly_totals_pivot_df.reset_index()
 
         monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_resource_utilisation.csv', mode="w+", index=False)
+
+    def historical_daily_calls_breakdown(self):
+
+        df = self.df
+        # Convert inc_date to date only (remove time)
+        df['date'] = pd.to_datetime(df['inc_date']).dt.date
+
+        # Count number of calls per day
+        calls_in_day_breakdown = df.groupby('date').size().reset_index(name='calls_in_day')
+
+        # Save the daily call counts with a 'day' index column
+        calls_in_day_breakdown_with_day = calls_in_day_breakdown.copy()
+        calls_in_day_breakdown_with_day.insert(0, 'day', range(1, len(calls_in_day_breakdown) + 1))
+        calls_in_day_breakdown_with_day.drop(columns='date').to_csv('historical_data/historical_daily_calls_breakdown.csv', index=False)
+
+        # Count how many days had the same number of calls
+        calls_per_day_summary = calls_in_day_breakdown['calls_in_day'].value_counts().reset_index()
+        calls_per_day_summary.columns = ['calls_in_day', 'days']
+        calls_per_day_summary.to_csv('historical_data/historical_daily_calls.csv', index=False)
+
+    def historical_job_durations_breakdown(self):
+
+        df = self.df
+
+        # Select relevant columns
+        time_cols = [
+            'time_allocation', 'time_mobile',
+            'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear'
+        ]
+
+        selected_cols = ['callsign', 'vehicle_type'] + time_cols
+        df_selected = df[selected_cols].copy()
+
+        # Add row ID as job_identifier (1-based index like in R)
+        df_selected.insert(0, 'job_identifier', range(1, len(df_selected) + 1))
+
+        # Calculate row-wise total duration (ignoring NaNs)
+        df_selected['total_duration'] = df_selected[time_cols].sum(axis=1, skipna=True)
+
+        # Pivot to long format
+        df_long = pd.melt(
+            df_selected,
+            id_vars=['job_identifier', 'callsign', 'vehicle_type'],
+            value_vars=time_cols + ['total_duration'],
+            var_name='name',
+            value_name='value'
+        )
+
+        # Drop rows with missing callsign or vehicle_type
+        df_cleaned = df_long.dropna(subset=['callsign', 'vehicle_type'])
+
+        # Save to CSV
+        df_cleaned.to_csv('historical_data/historical_job_durations_breakdown.csv', index=False)
+
 
     def upper_allowable_time_bounds(self):
         """
