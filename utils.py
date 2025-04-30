@@ -54,6 +54,13 @@ class Utils:
         # Import maximum call duration times
         self.min_max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
 
+        # Load ad hoc unavailability probability table
+        try:
+            # THis file may not exist depending on when utility is called e.g. fitting
+            self.ad_hoc_probs = pd.read_csv("distribution_data/ad_hoc_unavailability.csv")
+        except:
+            self.debug('ad_hoc spreadsheet does not exist yet')
+
         # Read in age distribution data into a dictionary
         age_data = []
         with open("distribution_data/age_distributions.txt", "r") as inFile:
@@ -668,6 +675,46 @@ class Utils:
         self.activity_time_distr =  seeded_distributions
 
         return seeded_distributions
+
+    def sample_ad_hoc_reason(self, hour: int, quarter: int) -> bool:
+        """
+            Sample from ad hoc unavailability probability table based on time bin and quarter.
+            Returns True if available, False if unavailable.
+        """
+        
+        if 0 <= hour <= 5:
+            bin_label = '00-05'
+        elif 6 <= hour <= 11:
+            bin_label = '06-11'
+        elif 12 <= hour <= 17:
+            bin_label = '12-17'
+        else:
+            bin_label = '18-23'
+
+        # Filter to matching bin + quarter
+        subset = self.ad_hoc_probs[
+            (self.ad_hoc_probs['six_hour_bin'] == bin_label) &
+            (self.ad_hoc_probs['quarter'] == quarter)
+        ]
+
+        if subset.empty:
+            # Default to available if no data (fail-safe)
+            return True
+
+        # Get list of reasons and probabilities
+        reasons = subset['reason'].tolist()
+        probs = subset['probability'].tolist()
+
+        # Randomly sample reason
+        rng = np.random.default_rng() # This can use seeds apparently...might be useful?
+        sampled_reason = rng.choice(reasons, p=probs)
+
+        if(sampled_reason != "available"):
+            self.debug(f"Sampled reason is: {sampled_reason}")
+
+        return sampled_reason
+
+
 
 class SeededDistribution:
     def __init__(self, dist, rng, **kwargs):

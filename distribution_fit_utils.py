@@ -903,7 +903,7 @@ class DistributionFitUtils():
 
         # Calculate availability
         availability_df = pd.merge(scheduled_totals, downtime_totals, on=['six_hour_bin', 'quarter'], how='left').fillna(0)
-        availability_df['reason'] = 'Available'
+        availability_df['reason'] = 'available'
         availability_df['probability'] = (availability_df['total_scheduled'] - availability_df['total_downtime']) / availability_df['total_scheduled']
         available_probs = availability_df[['six_hour_bin', 'quarter', 'reason', 'probability']]
 

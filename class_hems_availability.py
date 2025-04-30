@@ -346,8 +346,10 @@ class HEMSAvailability():
             # EC = H71 helicopter then car, then CC72, then H70 helicopter then car
             # If no resources then return None
 
-            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
+            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
 
+
+            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr) and ad_hoc_reason == "available":
 
                 if ( # Skip this resource if any of the following are true:
                     h.in_use or
@@ -483,7 +485,7 @@ class HEMSAvailability():
 
     def return_resource(self, resource: HEMS, secondary_resource: HEMS|None) -> None:
         """
-        Class to return HEMS class object back to the filestore.
+            Class to return HEMS class object back to the filestore.
         """
 
         resource.in_use = False
@@ -586,14 +588,17 @@ class HEMSAvailability():
         helicopter_benefit = pt.hems_helicopter_benefit
 
         for h in self.store.items:
-            if h.in_use or h.being_serviced or not h.hems_resource_on_shift(pt.hour, pt.qtr):
+
+            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
+            
+            if h.in_use or h.being_serviced or not h.hems_resource_on_shift(pt.hour, pt.qtr) or ad_hoc_reason != "available":
                 continue
 
-            # 🚫 Skip if crew is already in use
+            # Skip if crew is already in use
             if h.callsign_group in self.active_callsign_groups or h.registration in self.active_registrations:
                 continue
 
-            # 🚁 Helicopter benefit cases
+            # Helicopter benefit cases
             if helicopter_benefit == 'y':
                 if h.vehicle_type == 'helicopter' and h.category == 'EC':
                     hems = h
@@ -605,7 +610,7 @@ class HEMSAvailability():
                         preferred = 2
                         preferred_lookup = 8
 
-            # 🚐 Regular (non-helicopter) cases
+            # Regular (non-helicopter) cases
             else:
                 if h.callsign_group == preferred_group and h.vehicle_type == preferred_vehicle_type:
                     hems = h
@@ -704,3 +709,5 @@ class HEMSAvailability():
 
         self.env.process(process())
         return resource_event
+
+
