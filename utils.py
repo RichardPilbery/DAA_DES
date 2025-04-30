@@ -111,7 +111,8 @@ class Utils:
             "predetermine_call_arrival",
             "call_iat",
             "helicopter_benefit_from_reg",
-            "hems_case"
+            "hems_case",
+            "ad_hoc_reason_selection"
         ]
         # Efficiently spawn substreams
         spawned = self.master_seed_sequence.spawn(len(module_keys))
@@ -706,8 +707,7 @@ class Utils:
         probs = subset['probability'].tolist()
 
         # Randomly sample reason
-        rng = np.random.default_rng() # This can use seeds apparently...might be useful?
-        sampled_reason = rng.choice(reasons, p=probs)
+        sampled_reason = self.rngs["ad_hoc_reason_selection"].choice(reasons, p=probs)
 
         if(sampled_reason != "available"):
             self.debug(f"Sampled reason is: {sampled_reason}")

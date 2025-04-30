@@ -20,15 +20,14 @@ class HEMSAvailability():
 
     """
 
-    def __init__(self, env, sim_start_date, sim_duration, servicing_overlap_allowed = False,
+    def __init__(self, env, sim_start_date, sim_duration, utility: Utils, servicing_overlap_allowed = False,
                  servicing_buffer_weeks = 4, servicing_preferred_month = 1,
                  print_debug_messages = False, master_seed=SeedSequence(42)):
 
         self.env = env
         self.print_debug_messages = print_debug_messages
         self.master_seed = master_seed
-        self.utilityClass = Utils(master_seed=self.master_seed,
-                                  print_debug_messages=self.print_debug_messages)
+        self.utilityClass = utility
 
         # Adding options to set servicing parameters.
         self.servicing_overlap_allowed = servicing_overlap_allowed

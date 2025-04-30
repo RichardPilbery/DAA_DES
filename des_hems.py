@@ -83,7 +83,8 @@ class DES_HEMS:
                                                sim_start_date=sim_start_date,
                                                sim_duration=sim_duration,
                                                print_debug_messages=self.print_debug_messages,
-                                               master_seed=self.random_seed_sequence
+                                               master_seed=self.random_seed_sequence,
+                                               utility=self.utils
                                                )
 
         # Set up empty list to store results prior to conversion to dataframe
