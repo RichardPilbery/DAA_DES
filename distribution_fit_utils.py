@@ -148,61 +148,61 @@ class DistributionFitUtils():
         #This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
 
-        self.removeExistingResults(Utils.HISTORICAL_FOLDER)
-        self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
+        # self.removeExistingResults(Utils.HISTORICAL_FOLDER)
+        # self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
 
 
-        #get proportions of AMPDS card by hour of day
-        self.hour_by_ampds_card_probs()
+        # #get proportions of AMPDS card by hour of day
+        # self.hour_by_ampds_card_probs()
 
-        # Determine 'best' distributions for time-based data
-        self.activity_time_distributions()
+        # # Determine 'best' distributions for time-based data
+        # self.activity_time_distributions()
 
-        # Calculate probability patient will be female based on AMPDS card
-        self.sex_by_ampds_card_probs()
+        # # Calculate probability patient will be female based on AMPDS card
+        # self.sex_by_ampds_card_probs()
 
-        # Determine 'best' distributions for age ranges straitifed by AMPDS card
-        self.age_distributions()
+        # # Determine 'best' distributions for age ranges straitifed by AMPDS card
+        # self.age_distributions()
 
-        # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
-        self.inter_arrival_times()
+        # # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
+        # self.inter_arrival_times()
 
-        # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
-        self.hourly_arrival_by_qtr_probs()
+        # # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
+        # self.hourly_arrival_by_qtr_probs()
 
-        # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
-        self.incidents_per_day()
+        # # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
+        # self.incidents_per_day()
 
-        # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
-        self.enhanced_or_critical_care_by_ampds_card_probs()
+        # # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
+        # self.enhanced_or_critical_care_by_ampds_card_probs()
 
-        # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
-        self.callsign_group_by_ampds_card_and_hour_probs()
+        # # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
+        # self.callsign_group_by_ampds_card_and_hour_probs()
 
-        # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
-        self.hems_result_by_callsign_group_and_vehicle_type_probs()
+        # # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
+        # self.hems_result_by_callsign_group_and_vehicle_type_probs()
 
-        # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
-        self.hems_result_by_care_cat_and_helicopter_benefit_probs()
+        # # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
+        # self.hems_result_by_care_cat_and_helicopter_benefit_probs()
 
-        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        self.pt_outcome_by_hems_result_and_care_category_probs()
+        # # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
+        # self.pt_outcome_by_hems_result_and_care_category_probs()
 
-        # Calculate probability of a particular vehicle type based on callsign group and month of year
-        self.vehicle_type_by_month_probs()
+        # # Calculate probability of a particular vehicle type based on callsign group and month of year
+        # self.vehicle_type_by_month_probs()
 
-        # Calculate school holidays since servicing schedules typically avoid these dates
-        if self.calculate_school_holidays:
-            self.school_holidays()
+        # # Calculate school holidays since servicing schedules typically avoid these dates
+        # if self.calculate_school_holidays:
+        #     self.school_holidays()
 
-        # Calculate historical data
-        self.historical_monthly_totals()
-        self.historical_monthly_totals_by_callsign()
-        self.historical_monthly_totals_by_day_of_week()
-        self.historical_median_time_of_activities_by_month_and_resource_type()
-        self.historical_monthly_totals_by_hour_of_day()
-        self.historical_monthly_resource_utilisation()
-        self.historical_monthly_totals_all_calls()
+        # # Calculate historical data
+        # self.historical_monthly_totals()
+        # self.historical_monthly_totals_by_callsign()
+        # self.historical_monthly_totals_by_day_of_week()
+        # self.historical_median_time_of_activities_by_month_and_resource_type()
+        # self.historical_monthly_totals_by_hour_of_day()
+        # self.historical_monthly_resource_utilisation()
+        # self.historical_monthly_totals_all_calls()
         self.historical_daily_calls_breakdown()
         self.historical_job_durations_breakdown()
 
@@ -780,40 +780,6 @@ class DistributionFitUtils():
         calls_per_day_summary.columns = ['calls_in_day', 'days']
         calls_per_day_summary.to_csv('historical_data/historical_daily_calls.csv', index=False)
 
-    def historical_job_durations_breakdown(self):
-
-        df = self.df
-
-        # Select relevant columns
-        time_cols = [
-            'time_allocation', 'time_mobile',
-            'time_to_scene', 'time_on_scene',
-            'time_to_hospital', 'time_to_clear'
-        ]
-
-        selected_cols = ['callsign', 'vehicle_type'] + time_cols
-        df_selected = df[selected_cols].copy()
-
-        # Add row ID as job_identifier (1-based index like in R)
-        df_selected.insert(0, 'job_identifier', range(1, len(df_selected) + 1))
-
-        # Calculate row-wise total duration (ignoring NaNs)
-        df_selected['total_duration'] = df_selected[time_cols].sum(axis=1, skipna=True)
-
-        # Pivot to long format
-        df_long = pd.melt(
-            df_selected,
-            id_vars=['job_identifier', 'callsign', 'vehicle_type'],
-            value_vars=time_cols + ['total_duration'],
-            var_name='name',
-            value_name='value'
-        )
-
-        # Drop rows with missing callsign or vehicle_type
-        df_cleaned = df_long.dropna(subset=['callsign', 'vehicle_type'])
-
-        # Save to CSV
-        df_cleaned.to_csv('historical_data/historical_job_durations_breakdown.csv', index=False)
 
 
     def upper_allowable_time_bounds(self):
@@ -830,6 +796,48 @@ class DistributionFitUtils():
 
         print(median_df.quantile(.75))
         # pivot_data.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_median_time_of_activities_by_month_and_resource_type.csv', mode="w+", index=False)
+
+    def historical_job_durations_breakdown(self):
+
+        df = self.df
+
+        cols = [
+            'callsign', 'vehicle_type',
+            'time_allocation', 'time_mobile',
+            'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear'
+        ]
+        df2 = df[cols].copy()
+
+        # 2. Add a 1-based row identifier
+        df2['job_identifier'] = range(1, len(df2) + 1)
+
+        # 3. Compute total_duration as the row-wise sum of the time columns
+        time_cols = [
+            'time_allocation', 'time_mobile',
+            'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear'
+        ]
+        df2['total_duration'] = df2[time_cols].sum(axis=1, skipna=True)
+
+        #print(df2.head())
+
+        # 4. Pivot (melt) to long format
+        df_long = df2.melt(
+            id_vars=['job_identifier', 'callsign', 'vehicle_type'],
+            value_vars=time_cols + ['total_duration'],
+            var_name='name',
+            value_name='value'
+        )
+
+        #print(df_long[df_long.job_identifier == 1])
+
+        # 5. Drop any rows where callsign or vehicle_type is missing
+        df_long = df_long.dropna(subset=['callsign', 'vehicle_type'])
+        df_long_sorted = df_long.sort_values("job_identifier").reset_index(drop=True)
+
+        # 6. Write out to CSV
+        df_long_sorted.to_csv("historical_data/historical_job_durations_breakdown.csv", index=False)
 
 
 
