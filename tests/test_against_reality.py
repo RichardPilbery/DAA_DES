@@ -19,19 +19,17 @@ Implemented tests are listed below with a [x].
 [] Pattern of calls across seasons
 [] Split of calls across AMPDS cards
 
-## Response Times
-
-[] Distribution of response times
-
 ## Utilisation
 
 [] Total utilisation
-[] Utilisation split across different resources
 [] Average jobs per day per vehicle
+[x] Allocation across callsigns
+[x] Allocation across callsign groups
+[x] Allocation within callsign group
 
 ## Job durations
 
-[] Average total job durations by vehicle type
+[x] Average total job durations by vehicle type
 [x] Distribution of total job durations by vehicle type
 [] Average total job stage durations by vehicle type
 [] Distribution of job stage durations by vehicle type
@@ -53,6 +51,7 @@ import os
 import textwrap
 
 import pytest
+from _pytest.outcomes import Failed  # Needed to catch pytest.fail
 import warnings
 
 from helpers import warn_with_message, fail_with_message, calculate_chi_squared_and_cramers
@@ -384,7 +383,10 @@ def test_proportions_callsigngroup_allocations(simulation_results):
 @pytest.mark.callsign
 def test_proportions_callsign_allocations(simulation_results):
     # Calculate proportion of jobs allocated to each callsign in the simulation
-    callsign_counts_simulated = simulation_results[simulation_results["event_type"]=="resource_use"]["callsign"].value_counts().reset_index(name="count_simulated")
+    callsign_counts_simulated = (
+        simulation_results[simulation_results["event_type"]=="resource_use"]
+        ["callsign"].value_counts()
+        .reset_index(name="count_simulated"))
     # callsign_counts["proportion_simulated"] = callsign_counts["count_simulated"].apply(lambda x: x/callsign_counts["count_simulated"].sum())
 
     # Read in the proportion of jobs allocated to each callsign group in historical data
@@ -400,3 +402,48 @@ def test_proportions_callsign_allocations(simulation_results):
 
     # Calculate
     calculate_chi_squared_and_cramers(callsign_counts, what="callsign")
+
+
+#######################################################
+## Split between callsigns within callsign group      #
+#######################################################
+
+
+@pytest.mark.callsign
+def test_proportions_within_callsign_group(simulation_results):
+    # Calculate proportion of jobs allocated to each callsign in the simulation
+    callsign_counts_simulated = (
+        simulation_results[simulation_results["event_type"]=="resource_use"]
+        ["callsign"].value_counts()
+        .reset_index(name="count_simulated")
+        )
+    # callsign_counts["proportion_simulated"] = callsign_counts["count_simulated"].apply(lambda x: x/callsign_counts["count_simulated"].sum())
+
+    # Read in the proportion of jobs allocated to each callsign group in historical data
+    callsign_counts_historic = (
+        pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
+        .drop(columns="month")
+        .sum()
+        .reset_index(name="count_historic")
+        )
+    callsign_counts_historic.rename(columns={'index':'callsign'}, inplace=True)
+
+    callsign_counts = callsign_counts_simulated.merge(callsign_counts_historic, on="callsign")
+
+    callsign_counts["callsign_group"] = callsign_counts["callsign"].str.extract(r'(\d+)')
+
+    errors = []
+
+    for callsign_group in callsign_counts["callsign_group"].unique():
+        try:
+            calculate_chi_squared_and_cramers(
+                callsign_counts[callsign_counts["callsign_group"]==callsign_group],
+                what=f"split_within_callsign_group_{callsign_group}"
+                )
+        except Failed as e:  # Specifically catch pytest.fail
+            errors.append(f"Group {callsign_group} failed with pytest.fail: {str(e)}")
+        except Exception as e:
+            errors.append(f"Group {callsign_group} failed with error: {str(e)}")
+
+    if errors:
+        pytest.fail("Some callsign group comparisons failed:\n" + "\n".join(errors))
