@@ -33,7 +33,7 @@ def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
     df['prop_historic'] = df['count_historic'] / df['count_historic'].sum()
     df['abs_diff'] = (df['prop_simulated'] - df['prop_historic']).abs()
 
-    df.round(5).to_csv(f"tests/TEST_OUTPUT_{what}_proportions.csv")
+    df.round(5).to_csv(f"tests/test_outputs/TEST_OUTPUT_{what}_proportions.csv")
 
     # Create the contingency table (observed frequencies)
     # Rows: Callsigns, Columns: Data Source (Simulated, Historic)
