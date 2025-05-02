@@ -415,6 +415,7 @@ class DES_HEMS:
             if patient.hems_case == 1 and hems_avail:
                 # Calculate min and max permitted times.
                 allocation_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_allocation') * self.activity_duration_multiplier
+                self.add_patient_result_row(patient, allocation_time, 'time_allocation')
                 #self.debug(f"Vehicle type {patient.hems_vehicle_type} and allocation time is {allocation_time}")
                 yield self.env.timeout(allocation_time)
 
@@ -436,6 +437,7 @@ class DES_HEMS:
             # Calculate mobile to time at scene (or stood down before)
             if patient.hems_case == 1 and hems_avail:
                 mobile_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_mobile') * self.activity_duration_multiplier
+                self.add_patient_result_row(patient, mobile_time, 'time_mobile')
                 yield self.env.timeout(mobile_time)
 
             if self.amb_data:
@@ -456,6 +458,7 @@ class DES_HEMS:
 
             if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
                 tts_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_scene') * self.activity_duration_multiplier
+                self.add_patient_result_row(patient, tts_time, "time_to_scene")
                 yield self.env.timeout(tts_time)
 
             if self.amb_data:
@@ -480,6 +483,7 @@ class DES_HEMS:
 
             if (patient.hems_case == 1 and hems_avail) and not no_HEMS_at_scene:
                 tos_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_on_scene') * self.activity_duration_multiplier
+                self.add_patient_result_row(patient, tos_time, "time_on_scene")
                 yield self.env.timeout(tos_time)
 
             if self.amb_data:
@@ -502,6 +506,7 @@ class DES_HEMS:
 
             if (patient.hems_case == 1 and hems_avail) and no_HEMS_hospital == False:
                 travel_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_hospital') * self.activity_duration_multiplier
+                self.add_patient_result_row(patient, travel_time, 'time_to_hospital')
                 yield self.env.timeout(travel_time)
 
             if self.amb_data:
@@ -526,6 +531,7 @@ class DES_HEMS:
 
             if (patient.hems_case == 1 and hems_avail):
                 clear_time = self.utils.activity_time(patient.hems_vehicle_type, 'time_to_clear') * self.activity_duration_multiplier
+                self.add_patient_result_row(patient, clear_time, 'time_to_clear')
                 yield self.env.timeout(clear_time)
 
             if self.amb_data:

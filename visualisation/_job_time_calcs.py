@@ -20,6 +20,7 @@ from _utilisation_result_calculation import make_utilisation_model_dataframe
 import plotly.graph_objects as go
 from scipy.stats import ks_2samp
 import streamlit as st
+import gc
 
 from _app_utils import DAA_COLORSCHEME, q10, q90, q25, q75, format_sigfigs
 
@@ -323,3 +324,78 @@ reflect the patterns of job durations observed historically.
                 The simulation may not accurately reflect historical
                 patterns and may need adjustment.
                 """)
+
+
+
+def plot_time_breakdown(run_results_path="data/run_results.csv",
+                        historical_data_path="historical_data/historical_job_durations_breakdown.csv"):
+
+    run_results = pd.read_csv(run_results_path)
+
+    job_times = ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+       'time_to_hospital', 'time_to_clear']
+
+    run_results = run_results[run_results["event_type"].isin(job_times)][['P_ID', 'run_number', 'time_type', 'event_type', 'vehicle_type']]
+    run_results['time_type'] = run_results['time_type'].astype('float')
+
+
+    historical_job_duration_breakdown = pd.read_csv(historical_data_path)
+
+    historical_job_duration_breakdown['what'] = 'Historical'
+    run_results['what'] = 'Simulated'
+
+    full_job_duration_breakdown_df = pd.concat(
+        [run_results.rename(columns={"time_type":"value", "event_type": "name"}).drop(columns=["P_ID", "run_number"]),
+        historical_job_duration_breakdown[historical_job_duration_breakdown["name"]!="total_duration"].drop(columns=["callsign", "job_identifier"])
+        ])
+
+    full_job_duration_breakdown_df["name"] = full_job_duration_breakdown_df["name"].str.replace("_", " ").str.title()
+
+    fig = px.box(
+        full_job_duration_breakdown_df,
+        y="value", x="name", color="what",
+        facet_row="vehicle_type",
+        labels={"value": "Duration (minutes)",
+                # "vehicle_type": "Vehicle Type",
+                "what": "Time Type (Historical Data vs Simulated Data)",
+                "name": "Job Stage"
+                },
+        title="Comparison of Job Stage Durations by Vehicle Type",
+        facet_row_spacing=0.2,
+    )
+
+    # Remove default facet titles
+    fig.layout.annotations = [
+        anno for anno in fig.layout.annotations
+        if not anno.text.startswith("vehicle_type=")
+    ]
+
+    # Get the sorted unique vehicle types as used by Plotly (from top to bottom)
+    # Plotly displays the first facet row (in terms of sorting) at the bottom
+    vehicle_types = sorted(full_job_duration_breakdown_df["vehicle_type"].unique())
+
+    n_rows = len(vehicle_types)
+    row_heights = [1.0 - (i / n_rows) for i in range(n_rows)]
+
+    for i, vehicle in enumerate(vehicle_types):
+        fig.add_annotation(
+            text=f"Vehicle Type: {vehicle.capitalize()}",
+            xref="paper", yref="paper",
+            x=0.5,
+            y=row_heights[i] + 0.02,  # slightly above the subplot
+            showarrow=False,
+            font=dict(size=14, color="black"),
+            xanchor="center"
+        )
+
+    # Increase spacing and top margin
+    fig.update_layout(
+        margin=dict(t=120),
+        title_y=0.95,
+        height=200 + 300 * n_rows,  # Adjust height based on number of rows
+    )
+
+    del run_results
+    gc.collect()
+
+    return fig

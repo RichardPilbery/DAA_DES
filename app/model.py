@@ -780,18 +780,36 @@ reflect the patterns of demand observed historically.
             ############################
 
             with tab_3_6:
-                st.info("Coming Soon!")
-                # _job_time_calcs.plot_activity_time_breakdowns(historical_activity_times=historical_time_df,
-                #                   event_log_df=simulated_job_time_df,
-                #                   title="Helicopter",
-                #                   vehicle_type="helicopter",
-                #                   use_poppins=True)
+                st.plotly_chart(
+                    _job_time_calcs.plot_time_breakdown()
+                )
 
-                # _job_time_calcs.plot_activity_time_breakdowns(historical_activity_times=historical_time_df,
-                #                   event_log_df=simulated_job_time_df,
-                #                   title="Car",
-                #                   vehicle_type="car",
-                #                   use_poppins=True)
+                st.caption("""
+This chart is comparing how long different stages of emergency jobs take in real life (called Historical) versus how long they take in a computer simulation (called Simulated).
+
+The idea is to check if the simulation is realistic by seeing if it behaves similarly to what actually happened in the past.
+
+Each job has several stages:
+
+- Time allocation: Time from when the call was made to when a vehicle was assigned.
+- Time mobile: Time from assignment to when the vehicle started moving.
+- Time to scene: Travel time to the scene.
+- Time on scene: Time spent at the scene.
+- Time to hospital: Travel time to the hospital (if applicable).
+- Time to clear: Time from hospital drop-off (or leaving the scene, if no patient transport undertaken) to when the vehicle is ready for the next job.
+
+These stages are shown for two types of vehicles:
+
+- Cars (top row) - including both helicopter backup cars and standalone vehicles
+- Helicopters (bottom row)
+
+## How to Read the Boxes
+
+- Each blue box shows the range of times for that job stage—how long it usually takes.
+- The dark blue boxes are the simulated times, and the light blue ones are the historical (real) times.
+- Taller boxes or longer “whiskers” (lines) mean more **variation** in how long that stage takes.
+- If the boxes and whiskers for simulated and historical data overlap a lot, that means the simulation is doing a good job of copying reality.
+                           """)
 
         with tab4:
 
