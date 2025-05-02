@@ -343,11 +343,11 @@ def test_simultaneous_allocation_same_resource_group(simulation_results):
       removeExistingResults(remove_run_results_csv=True)
 
       # Remove existing failure log if it exists
-      if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
-         os.remove("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+      if os.path.exists("tests/test_outputs/simultaneous_allocation_same_callsigngroup_FAILURES.csv"):
+         os.remove("tests/test_outputs/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
 
-      if os.path.exists("tests/simultaneous_allocation_same_callsigngroup_FULL.csv"):
-            os.remove("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
+      if os.path.exists("tests/test_outputs/simultaneous_allocation_same_callsigngroup_FULL.csv"):
+            os.remove("tests/test_outputs/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
       results = simulation_results # defined in conftest.py
 
@@ -413,8 +413,8 @@ def test_simultaneous_allocation_same_resource_group(simulation_results):
       all_overlaps_df = pd.concat(all_overlaps)
 
       if len(all_overlaps_df)>0:
-         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
-         resource_use_wide.to_csv("tests/simultaneous_allocation_same_callsigngroup_FULL.csv")
+         all_overlaps_df.to_csv("tests/test_outputs/simultaneous_allocation_same_callsigngroup_FAILURES.csv")
+         resource_use_wide.to_csv("tests/test_outputs/simultaneous_allocation_same_callsigngroup_FULL.csv")
 
 
       assert len(all_overlaps_df) == 0, (
@@ -432,11 +432,11 @@ def test_simultaneous_allocation_same_resource(simulation_results):
    Checks that a specific callsign (i.e., physical unit) is not double-booked.
    """
    try:
-      if os.path.exists("tests/simultaneous_allocation_same_resource_FAILURES.csv"):
-         os.remove("tests/simultaneous_allocation_same_resource_FAILURES.csv")
+      if os.path.exists("tests/test_outputs/simultaneous_allocation_same_resource_FAILURES.csv"):
+         os.remove("tests/test_outputs/simultaneous_allocation_same_resource_FAILURES.csv")
 
-      if os.path.exists("tests/simultaneous_allocation_same_resource_FULL.csv"):
-         os.remove("tests/simultaneous_allocation_same_resource_FULL.csv")
+      if os.path.exists("tests/test_outputs/simultaneous_allocation_same_resource_FULL.csv"):
+         os.remove("tests/test_outputs/simultaneous_allocation_same_resource_FULL.csv")
 
       results = simulation_results # defined in conftest.py
 
@@ -501,8 +501,8 @@ def test_simultaneous_allocation_same_resource(simulation_results):
       all_overlaps_df = pd.concat(all_overlaps)
 
       if len(all_overlaps_df)>0:
-         all_overlaps_df.to_csv("tests/simultaneous_allocation_same_resource_FAILURES.csv")
-         resource_use_wide.to_csv("tests/simultaneous_allocation_same_resource_FULL.csv")
+         all_overlaps_df.to_csv("tests/test_outputs/simultaneous_allocation_same_resource_FAILURES.csv")
+         resource_use_wide.to_csv("tests/test_outputs/simultaneous_allocation_same_resource_FULL.csv")
 
       assert len(all_overlaps_df) == 0, (
             f"[FAIL - RESOURCE ALLOCATION LOGIC] {len(all_overlaps_df)} instances found of resources being sent on two or more jobs at once across {len(resource_use_wide)} calls"
@@ -522,8 +522,8 @@ def test_no_response_during_off_shift_times(simulation_results):
    try:
       removeExistingResults(remove_run_results_csv=True)
 
-      if os.path.exists("tests/offline_calls_FAILURES.csv"):
-         os.remove("tests/offline_calls_FAILURES.csv")
+      if os.path.exists("tests/test_outputs/offline_calls_FAILURES.csv"):
+         os.remove("tests/test_outputs/offline_calls_FAILURES.csv")
 
       results = simulation_results # defined in conftest.py
 
@@ -535,7 +535,7 @@ def test_no_response_during_off_shift_times(simulation_results):
 
       resource_use_start['resource_use_start'] = pd.to_datetime(resource_use_start['resource_use_start'])
 
-      hems_rota_df = pd.read_csv("tests/HEMS_ROTA_test.csv")
+      hems_rota_df = pd.read_csv("tests/rotas_test/HEMS_ROTA_test.csv")
 
       def normalize_hour_range(start, end):
          """Handles overnight hours by mapping to a 0–47 scale (so 2am next day = 26)"""
@@ -596,7 +596,7 @@ def test_no_response_during_off_shift_times(simulation_results):
       offline_calls = merged_df[merged_df['is_offline']]
 
       if len(offline_calls)>0:
-         offline_calls.to_csv("tests/offline_calls_FAILURES.csv")
+         offline_calls.to_csv("tests/test_outputs/offline_calls_FAILURES.csv")
 
       # Check there are no offline calls
       assert len(offline_calls)==0, (
@@ -682,15 +682,15 @@ def test_no_response_during_off_shift_times(simulation_results):
 @pytest.mark.resources
 def test_no_response_during_service(simulation_results):
    try:
-      if os.path.exists("tests/responses_during_servicing_FULL.csv"):
-         os.remove("tests/responses_during_servicing_FULL.csv")
+      if os.path.exists("tests/test_outputs/responses_during_servicing_FULL.csv"):
+         os.remove("tests/test_outputs/responses_during_servicing_FULL.csv")
 
-      if os.path.exists("tests/responses_during_servicing_FAILURES.csv"):
-         os.remove("tests/responses_during_servicing_FAILURES.csv")
+      if os.path.exists("tests/test_outputs/responses_during_servicing_FAILURES.csv"):
+         os.remove("tests/test_outputs/responses_during_servicing_FAILURES.csv")
 
       # Load key data files produced by the simulation - results and generated service intervals
       results = simulation_results # defined in conftest.py
-      services = pd.read_csv("tests/service_dates_fixture.csv")
+      services = pd.read_csv("tests/service_dates_fixture.csv") # THIS DOES NOT GET GENERATED IN A SUBFOLDER
 
       # Ensure service start and end dates are datetimes
       services['service_start_date'] = pd.to_datetime(services['service_start_date'], format="%Y-%m-%d", errors='coerce')
@@ -718,7 +718,7 @@ def test_no_response_during_service(simulation_results):
       # so those rows will not be of interest to us.
       valid_servicing = merged_df.dropna(subset=['service_start_date', 'service_end_date'])
 
-      valid_servicing.to_csv("tests/responses_during_servicing_FULL.csv")
+      valid_servicing.to_csv("tests/test_outputs/responses_during_servicing_FULL.csv")
 
       # Identify any rows where the resource_use_start falls within the servicing interval
       violations = valid_servicing[
@@ -728,7 +728,7 @@ def test_no_response_during_service(simulation_results):
 
       # Save violations to file if any are found
       if len(violations)>0:
-         violations.to_csv("tests/responses_during_servicing_FAILURES.csv")
+         violations.to_csv("tests/test_outputs/responses_during_servicing_FAILURES.csv")
 
       # Assert that no responses occurred during servicing periods
       assert len(violations) == 0, (
