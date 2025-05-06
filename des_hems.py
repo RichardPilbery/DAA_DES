@@ -379,6 +379,7 @@ class DES_HEMS:
 
                 if not_in_warm_up_period:
                     if hems_res is not None:
+                        self.add_patient_result_row(patient, "HEMS Resource Available", "resource_request_outcome")
                         self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
                         self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
@@ -395,6 +396,7 @@ class DES_HEMS:
             else:
                 #self.debug("No HEMS available")
                 self.add_patient_result_row(patient, "No HEMS available", "queue")
+                self.add_patient_result_row(patient, "No Resource Available", "resource_request_outcome")
                 #self.add_patient_result_row(patient, "depart", "arrival_departure")
 
             #self.debug('Inside hems_avail')

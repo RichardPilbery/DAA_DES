@@ -259,24 +259,59 @@ def resource_allocation_outcomes_run_variation(event_log_df):
         .reset_index().rename(columns={'time_type': 'Resource Allocation Attempt Outcome', 'run_number': "Run"})
     )
 
+# def get_perc_unattended_string(event_log_df):
+#     """
+#     Alternative to display_UNTATTENDED_calls_per_run
+
+#     This approach looks at instances where the resource allocation attempt outcome was
+#     'no resource in group available'
+#     """
+#     df = resource_allocation_outcomes(event_log_df)
+#     print("==get_perc_unattended_string - resource_allocation_outcomes==")
+#     print(df)
+#     try:
+#         num_unattendable = df[df["Resource Allocation Attempt Outcome"].str.contains("No HEMS resource available")]['Count'].sum()
+#         print(f"==get_perc_unattended_string - num_unattended: {num_unattendable}==")
+#     except:
+#         "Error"
+
+#     total_calls = df['Count'].sum()
+#     print(f"==get_perc_unattended_string - total calls: {total_calls}==")
+#     try:
+#         perc_unattendable = num_unattendable/total_calls
+
+#         if perc_unattendable < 0.01:
+#             return f"{num_unattendable} of {total_calls} (< 0.1%)"
+#         else:
+#             return f"{num_unattendable} of {total_calls} ({perc_unattendable:.1%})"
+#     except:
+#         return "Error"
+
+
 def get_perc_unattended_string(event_log_df):
     """
     Alternative to display_UNTATTENDED_calls_per_run
 
-    This approach looks at instances where the resource allocation attempt outcome was
-    'no resource in group available'
+    This approach looks at instances where the resource_request_outcome
+    was 'no resource available'
     """
-    df = resource_allocation_outcomes(event_log_df)
-    print("==get_perc_unattended_string - resource_allocation_outcomes==")
-    print(df)
+    # event_log_df = pd.read_csv("data/run_results.csv")
     try:
-        num_unattendable = df[df["Resource Allocation Attempt Outcome"].str.contains("No HEMS resource available")]['Count'].sum()
-        print(f"==get_perc_unattended_string - num_unattended: {num_unattendable}==")
+        num_unattendable = len(event_log_df[
+            (event_log_df["event_type"] == "resource_request_outcome") &
+            (event_log_df["time_type"] == "No Resource Available")
+            ])
+
+        # print(f"==get_perc_unattended_string - num_unattended: {num_unattendable}==")
     except:
         "Error"
 
-    total_calls = df['Count'].sum()
-    print(f"==get_perc_unattended_string - total calls: {total_calls}==")
+    total_calls = len(event_log_df[
+            (event_log_df["event_type"] == "resource_request_outcome")
+            ])
+
+    # print(f"==get_perc_unattended_string - total calls: {total_calls}==")
+
     try:
         perc_unattendable = num_unattendable/total_calls
 
