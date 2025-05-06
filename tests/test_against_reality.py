@@ -54,7 +54,7 @@ import pytest
 from _pytest.outcomes import Failed  # Needed to catch pytest.fail
 import warnings
 
-from helpers import warn_with_message, fail_with_message, calculate_chi_squared_and_cramers
+from helpers import warn_with_message, fail_with_message, calculate_chi_squared_and_cramers, format_sigfigs
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -370,80 +370,93 @@ def test_average_per_stage_job_durations(simulation_results):
         historical_time_df = pd.read_csv("historical_data/historical_job_durations_breakdown.csv")
 
         all_results = []
+        errors = []
+        warnings = []
 
         for time_type in job_times:
             for vehicle in ["helicopter", "car"]:
-                # Pull out daily number of calls across simulation and reality
-                sim_durations = np.array(
-                    run_results[
-                        (run_results["vehicle_type"]==vehicle) &
-                        (run_results["event_type"]==time_type)
-                        ]
-                    ['time_type'].astype('float')
-                    )  # simulated data
+                try:
+                    # Pull out daily number of calls across simulation and reality
+                    sim_durations = np.array(
+                        run_results[
+                            (run_results["vehicle_type"]==vehicle) &
+                            (run_results["event_type"]==time_type)
+                            ]
+                        ['time_type'].astype('float')
+                        )  # simulated data
 
-                real_durations = np.array(
-                    historical_time_df[
-                        (historical_time_df["vehicle_type"]==vehicle) &
-                        (historical_time_df["name"] == time_type)]
-                    ['value']
-                    )  # real data
+                    real_durations = np.array(
+                        historical_time_df[
+                            (historical_time_df["vehicle_type"]==vehicle) &
+                            (historical_time_df["name"] == time_type)]
+                        ['value']
+                        )  # real data
 
-                assert len(sim_durations) > 10, f"Too few simulated jobs for {vehicle} to perform a meaningful test."
-                assert len(real_durations) > 10, f"Too few real jobs for {vehicle} to perform a meaningful test."
+                    assert len(sim_durations) > 10, f"Too few simulated jobs for {vehicle} to perform a meaningful test."
+                    assert len(real_durations) > 10, f"Too few real jobs for {vehicle} to perform a meaningful test."
 
-                # Welch’s t-test (does not assume equal variances)
-                t_stat, p_value = stats.ttest_ind(sim_durations, real_durations, equal_var=False, nan_policy="omit")
+                    # Welch’s t-test (does not assume equal variances)
+                    t_stat, p_value = stats.ttest_ind(sim_durations, real_durations, equal_var=False, nan_policy="omit")
 
-                # Mean difference and effect size
-                sim_mean = np.nanmean(sim_durations)
-                real_mean = np.nanmean(real_durations)
-                mean_diff = sim_mean - real_mean
-                pooled_std = np.sqrt((np.std(sim_durations, ddof=1) ** 2 + np.std(real_durations, ddof=1) ** 2) / 2)
-                cohen_d = mean_diff / pooled_std
+                    # Mean difference and effect size
+                    sim_mean = np.nanmean(sim_durations)
+                    real_mean = np.nanmean(real_durations)
+                    mean_diff = sim_mean - real_mean
+                    pooled_std = np.sqrt((np.nanstd(sim_durations, ddof=1) ** 2 + np.nanstd(real_durations, ddof=1) ** 2) / 2)
+                    cohen_d = mean_diff / pooled_std
 
 
-                all_results.append({
-                    'time_type': time_type,
-                    'vehicle_type': vehicle,
-                    'mean_sim' : sim_mean,
-                    'mean_real': real_mean,
-                    'mean_diff': mean_diff,
-                    't_stat': t_stat,
-                    'p_value': p_value,
-                    'cohen_d': cohen_d
-                    }
-                )
+                    all_results.append({
+                        'time_type': time_type,
+                        'vehicle_type': vehicle,
+                        'mean_sim' : sim_mean,
+                        'mean_real': real_mean,
+                        'mean_diff': mean_diff,
+                        't_stat': t_stat,
+                        'p_value': p_value,
+                        'cohen_d': cohen_d
+                        }
+                    )
 
-                # Thresholds
-                p_thresh = 0.05
-                warn_effect = 0.2
-                fail_effect = 0.5
+                    # Thresholds
+                    p_thresh = 0.05
+                    warn_effect = 0.2
+                    fail_effect = 0.5
 
-                # Output for debugging
+                    # Output for debugging
 
-                # Decision logic
-                # Will only fail if significance threshold is met and cohen's D is sufficiently large
-                if p_value < p_thresh and abs(cohen_d) > fail_effect:
-                    fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s {time_type} significantly different between
-                                simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
-                                Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
-                                Mean diff: {mean_diff:.2f}.""")
-                # Else will provide appropriate warning
-                elif p_value < p_thresh and abs(cohen_d) > warn_effect:
-                    warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **Average total job durations** for {vehicle}s {time_type}
-                                between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
-                                Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
-                                Mean diff: {mean_diff:.2f}.""")
-                elif abs(cohen_d) > warn_effect:
-                    warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
-                                difference in **Average total job durations** for {vehicle}s {time_type} between simulation and reality
-                                (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
-                                threshold for significance.
-                                Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
-                                Mean diff: {mean_diff:.2f}.""")
+                    # Decision logic
+                    # Will only fail if significance threshold is met and cohen's D is sufficiently large
+                    if p_value < p_thresh and abs(cohen_d) > fail_effect:
+                        errors.append(f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s {time_type} significantly different between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}). Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}. Mean diff: {mean_diff:.2f}.""")
+                    # Else will provide appropriate warning
+                    elif p_value < p_thresh and abs(cohen_d) > warn_effect:
+                        warnings.append(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **Average total job durations** for {vehicle}s {time_type}
+                                    between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+                                    Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
+                                    Mean diff: {mean_diff:.2f}.""")
+                    elif abs(cohen_d) > warn_effect:
+                        warnings.append(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                                    difference in **Average total job durations** for {vehicle}s {time_type} between simulation and reality
+                                    (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
+                                    threshold for significance.
+                                    Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
+                                    Mean diff: {mean_diff:.2f}.""")
+                except Failed as e:  # Specifically catch pytest.fail
+                    errors.append(f"Group {time_type}:{vehicle} failed with pytest.fail: {str(e)}")
+                except Exception as e:
+                    errors.append(f"Group {time_type}:{vehicle} failed with error: {str(e)}")
 
-        pd.DataFrame(all_results).to_csv("tests/test_outputs/TEST_OUTPUT_average_per_stage_job_durations.csv")
+        all_results_df = pd.DataFrame(all_results)
+        numeric_cols = ['mean_sim','mean_real','mean_diff','t_stat','p_value','cohen_d']
+        all_results_df[numeric_cols] = all_results_df[numeric_cols].map(format_sigfigs, na_action='ignore')
+        all_results_df.to_csv("tests/test_outputs/TEST_OUTPUT_average_per_stage_job_durations.csv")
+
+        if warnings:
+            warn_with_message("Some callsign group comparisons had warnings:\n" + "\n".join(warnings))
+
+        if errors:
+            pytest.fail("Some callsign group comparisons failed:\n" + "\n".join(errors))
 
     finally:
         del run_results, historical_time_df
