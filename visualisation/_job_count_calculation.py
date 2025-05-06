@@ -889,7 +889,14 @@ def plot_missed_jobs(historical_df_path="historical_data/historical_missed_calls
         # Increase spacing below title
         fig.update_layout(margin=dict(t=150))
 
-        # Rotate labels
-        fig.for_each_xaxis(lambda axis: axis.update(tickangle=90))
+        fig.for_each_xaxis(lambda axis: axis.update(
+            # Rotate labels
+            tickangle=90,
+            # Force display of both labels even on narrow screens
+            showticklabels=True,
+            tickmode = 'linear',
+            tick0 = 0,
+            dtick = 1)
+            )
 
         return fig
