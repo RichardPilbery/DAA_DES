@@ -1062,6 +1062,10 @@ button at the top right - which will only appear when hovering over the plot - t
 the overall time period.*
             """)
 
+            st.subheader("Jobs per Day - By Callsign")
+
+            st.plotly_chart(_job_count_calculation.plot_jobs_per_callsign())
+
             with tab_4_2:
                 st.subheader("Event Overview")
 

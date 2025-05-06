@@ -6,6 +6,7 @@ import sys
 import numpy as np
 import pandas as pd
 import json
+import itertools
 from fitter import Fitter, get_common_distributions
 from datetime import timedelta
 from utils import Utils
@@ -206,6 +207,7 @@ class DistributionFitUtils():
         self.historical_daily_calls_breakdown()
         self.historical_job_durations_breakdown()
         self.historical_missed_jobs()
+        self.historical_jobs_per_day_per_callsign()
 
         # Calculate proportions of ad hoc unavailability
         self.ad_hoc_unavailability()
@@ -242,7 +244,6 @@ class DistributionFitUtils():
         category_counts['proportion'] = round(category_counts['count'] / total_counts, 3)
 
         category_counts[category_counts['sex'] =='Female'].to_csv('distribution_data/sex_by_ampds_card_probs.csv', mode="w+")
-
 
     def activity_time_distributions(self):
         """
@@ -625,6 +626,24 @@ class DistributionFitUtils():
 
 
 # These functions are to wrangle historical data to provide comparison against the simulation outputs
+
+    def historical_jobs_per_day_per_callsign(self):
+        df = self.df
+
+        df["date"] = pd.to_datetime(df["inc_date"]).dt.date
+        all_counts_hist = df.groupby(["date", "callsign"])["job_id"].count().reset_index()
+        all_counts_hist.rename(columns={'job_id':'jobs_in_day'}, inplace=True)
+
+        all_combinations = pd.DataFrame(
+            list(itertools.product(df['date'].unique(), df['callsign'].unique())),
+            columns=['date', 'callsign']
+        ).dropna()
+
+        merged = all_combinations.merge(all_counts_hist, on=['date', 'callsign'], how='left')
+        merged['jobs_in_day'] = merged['jobs_in_day'].fillna(0).astype(int)
+
+        all_counts = merged.groupby(['callsign', 'jobs_in_day']).count().reset_index().rename(columns={"date":"count"})
+        all_counts.to_csv("historical_jobs_per_day_per_callsign.csv", index=False)
 
     def historical_monthly_totals(self):
         """
