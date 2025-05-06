@@ -57,11 +57,6 @@ Implemented tests are listed below with a [x].
 [x] Resources aren't used during their service interval (determined by reg, not callsign)
 [] Inactive periods correctly change across seasons if set to do so
 
-## Failure to run under nonsensical conditions
-
-[] Model does not run with a negative number of resources
-[] Model does not run with negative average demand parameter
-
 """
 
 import pandas as pd

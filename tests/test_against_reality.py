@@ -148,9 +148,6 @@ def test_distribution_daily_calls(simulation_results):
     try:
         event_df = simulation_results # defined in conftest.py
 
-        # Read simulation results
-        event_df = pd.read_csv("data/run_results.csv")
-
         arrivals = event_df[event_df["time_type"] == "arrival"].copy()
         # Check we have one row per patient before proceeding
         assert len(arrivals) == len(arrivals.drop_duplicates(['P_ID', 'run_number']))
@@ -201,9 +198,6 @@ def test_distribution_daily_calls(simulation_results):
 def test_average_total_job_durations(simulation_results):
     try:
         event_df = simulation_results # defined in conftest.py
-
-        # Read simulation results
-        event_df = pd.read_csv("data/run_results.csv")
 
         simulated_job_time_df = event_df[event_df['event_type'].isin(['resource_use', 'resource_use_end'])].copy()
         simulated_job_time_df['timestamp_dt'] = pd.to_datetime(simulated_job_time_df['timestamp_dt'])
@@ -276,9 +270,6 @@ def test_average_total_job_durations(simulation_results):
 def test_distribution_total_job_durations(simulation_results):
     try:
         event_df = simulation_results # defined in conftest.py
-
-        # Read simulation results
-        event_df = pd.read_csv("data/run_results.csv")
 
         simulated_job_time_df = event_df[event_df['event_type'].isin(['resource_use', 'resource_use_end'])].copy()
         simulated_job_time_df['timestamp_dt'] = pd.to_datetime(simulated_job_time_df['timestamp_dt'])
