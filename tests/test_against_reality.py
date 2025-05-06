@@ -344,6 +344,196 @@ def test_distribution_total_job_durations(simulation_results):
 
 
 
+
+
+##################################
+# Job Durations by Job Stage     #
+##################################
+
+#------------------------------------------------------------#
+# Average Job Durations by Stage (by vehicle type)           #
+#------------------------------------------------------------#
+@pytest.mark.jobdurations
+def test_average_per_stage_job_durations(simulation_results):
+    try:
+        run_results = simulation_results # defined in conftest.py
+
+        job_times = ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+                    'time_to_hospital', 'time_to_clear']
+
+        run_results = (
+            run_results[run_results["event_type"].isin(job_times)]
+            [['P_ID', 'run_number', 'time_type', 'event_type', 'vehicle_type']]
+            )
+        run_results['time_type'] = run_results['time_type'].astype('float')
+
+        historical_time_df = pd.read_csv("historical_data/historical_job_durations_breakdown.csv")
+
+        all_results = []
+
+        for time_type in job_times:
+            for vehicle in ["helicopter", "car"]:
+                # Pull out daily number of calls across simulation and reality
+                sim_durations = np.array(
+                    run_results[
+                        (run_results["vehicle_type"]==vehicle) &
+                        (run_results["event_type"]==time_type)
+                        ]
+                    ['time_type'].astype('float')
+                    )  # simulated data
+
+                real_durations = np.array(
+                    historical_time_df[
+                        (historical_time_df["vehicle_type"]==vehicle) &
+                        (historical_time_df["name"] == time_type)]
+                    ['value']
+                    )  # real data
+
+                assert len(sim_durations) > 10, f"Too few simulated jobs for {vehicle} to perform a meaningful test."
+                assert len(real_durations) > 10, f"Too few real jobs for {vehicle} to perform a meaningful test."
+
+                # Welch’s t-test (does not assume equal variances)
+                t_stat, p_value = stats.ttest_ind(sim_durations, real_durations, equal_var=False, nan_policy="omit")
+
+                # Mean difference and effect size
+                sim_mean = np.nanmean(sim_durations)
+                real_mean = np.nanmean(real_durations)
+                mean_diff = sim_mean - real_mean
+                pooled_std = np.sqrt((np.std(sim_durations, ddof=1) ** 2 + np.std(real_durations, ddof=1) ** 2) / 2)
+                cohen_d = mean_diff / pooled_std
+
+
+                all_results.append({
+                    'time_type': time_type,
+                    'vehicle_type': vehicle,
+                    'mean_sim' : sim_mean,
+                    'mean_real': real_mean,
+                    'mean_diff': mean_diff,
+                    't_stat': t_stat,
+                    'p_value': p_value,
+                    'cohen_d': cohen_d
+                    }
+                )
+
+                # Thresholds
+                p_thresh = 0.05
+                warn_effect = 0.2
+                fail_effect = 0.5
+
+                # Output for debugging
+
+                # Decision logic
+                # Will only fail if significance threshold is met and cohen's D is sufficiently large
+                if p_value < p_thresh and abs(cohen_d) > fail_effect:
+                    fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s {time_type} significantly different between
+                                simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+                                Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
+                                Mean diff: {mean_diff:.2f}.""")
+                # Else will provide appropriate warning
+                elif p_value < p_thresh and abs(cohen_d) > warn_effect:
+                    warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **Average total job durations** for {vehicle}s {time_type}
+                                between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}).
+                                Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
+                                Mean diff: {mean_diff:.2f}.""")
+                elif abs(cohen_d) > warn_effect:
+                    warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
+                                difference in **Average total job durations** for {vehicle}s {time_type} between simulation and reality
+                                (p={p_value:.4f}, Cohen's d={cohen_d:.2f}) but did not meet the p-value
+                                threshold for significance.
+                                Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
+                                Mean diff: {mean_diff:.2f}.""")
+
+        pd.DataFrame(all_results).to_csv("tests/test_outputs/TEST_OUTPUT_average_per_stage_job_durations.csv")
+
+    finally:
+        del run_results, historical_time_df
+        gc.collect()
+
+
+# #------------------------------------------------------------#
+# # Distribution of Job Durations by stage (by vehicle type)   #
+# #------------------------------------------------------------#
+# @pytest.mark.jobdurations
+# def test_distribution_per_stage_job_durations(simulation_results):
+#     try:
+#         event_df = simulation_results # defined in conftest.py
+
+#         # Read simulation results
+#         event_df = pd.read_csv("data/run_results.csv")
+
+#         simulated_job_time_df = event_df[event_df['event_type'].isin(['resource_use', 'resource_use_end'])].copy()
+#         simulated_job_time_df['timestamp_dt'] = pd.to_datetime(simulated_job_time_df['timestamp_dt'])
+#         simulated_job_time_df = simulated_job_time_df[['P_ID', 'run_number', 'event_type', 'timestamp_dt', 'vehicle_type']].pivot(index=["P_ID", "run_number", "vehicle_type"], columns="event_type", values="timestamp_dt").reset_index()
+
+#         assert simulated_job_time_df['resource_use'].notna().all(), "Missing 'resource_use' times."
+#         assert simulated_job_time_df['resource_use_end'].notna().all(), "Missing 'resource_use_end' times."
+
+#         simulated_job_time_df['resource_use_duration'] = simulated_job_time_df['resource_use_end'] - simulated_job_time_df['resource_use']
+#         simulated_job_time_df['resource_use_duration_minutes'] = (simulated_job_time_df['resource_use_duration'].dt.total_seconds()) / 60
+
+#         historical_time_df = pd.read_csv("historical_data/historical_job_durations_breakdown.csv")
+
+#         # Thresholds
+#         p_thresh = 0.05
+#         warn_effect = 0.1 #  A KS statistic of 0.1 implies up to a 10% difference between CDFs — reasonable as a caution threshold.
+#         fail_effect = 0.2 # A 20% difference netweem CDFs is substantial — reasonable for failure.
+
+#         ##########################
+#         # CHECK HELO DISTRIBUTION
+#         ##########################
+#         historical_time_df_helos_only = historical_time_df[historical_time_df["vehicle_type"] == "helicopter"]
+#         simulated_job_time_df_helos_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "helicopter"]
+
+#         statistic_helo, p_value_helo = stats.ks_2samp(
+#             historical_time_df_helos_only['value'],
+#             simulated_job_time_df_helos_only['resource_use_duration_minutes']
+#         )
+
+#         def check_output(what, p_value, statistic, p_thresh=p_thresh, fail_effect=fail_effect, warn_effect=warn_effect):
+#             if p_value < p_thresh and statistic > fail_effect:
+#                 fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
+#                         {what} between simulation and reality
+#                         (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
+#             # Else will provide appropriate warning
+#             elif p_value < p_thresh and statistic > warn_effect:
+#                 warn_with_message(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in distribution of
+#                              {what} between simulation and reality
+#                             (p={p_value:.4f}, KS statistic={statistic:.2f}).""")
+#             elif statistic > warn_effect:
+#                 warn_with_message(f"""[WARN - COMPARISON WITH REALITY - NOT STATISTICALLY SIGNIFICANT] Possible practical
+#                             difference in distribution of {what} between simulation
+#                             and reality (p={p_value:.4f}, KS statistic={statistic:.2f}) but did not
+#                             meet the p-value threshold for significance.""")
+
+#         check_output(
+#             what="**HELO TOTAL JOB DURATION DISTRIBUTION**",
+#             p_value=p_value_helo,
+#             statistic=statistic_helo
+#         )
+
+#         ##########################
+#         # CHECK CAR DISTRIBUTION
+#         ##########################
+#         historical_time_df_cars_only = historical_time_df[historical_time_df["vehicle_type"] == "car"]
+#         simulated_job_time_df_cars_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "car"]
+
+#         statistic_car, p_value_car = stats.ks_2samp(
+#             historical_time_df_cars_only['value'],
+#             simulated_job_time_df_cars_only['resource_use_duration_minutes']
+#         )
+
+#         check_output(
+#             what="**CAR TOTAL JOB DURATION DISTRIBUTION**",
+#             p_value=p_value_car,
+#             statistic=statistic_car
+#         )
+
+#     finally:
+#         del event_df, simulated_job_time_df, historical_time_df
+#         gc.collect()
+
+
+
 ##############################################################
 # Split between callsign groups                              #
 ##############################################################
