@@ -33,7 +33,7 @@ def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
     df['prop_historic'] = df['count_historic'] / df['count_historic'].sum()
     df['abs_diff'] = (df['prop_simulated'] - df['prop_historic']).abs()
 
-    df.round(5).to_csv(f"tests/TEST_OUTPUT_{what}_proportions.csv")
+    df.round(5).to_csv(f"tests/test_outputs/TEST_OUTPUT_{what}_proportions.csv")
 
     # Create the contingency table (observed frequencies)
     # Rows: Callsigns, Columns: Data Source (Simulated, Historic)
@@ -93,15 +93,15 @@ def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
 
     # Additionally assert that no single category differs too much
     if max_diff > 0.1:
-        fail_with_message(f"One category differs in proportion by more than 10% (found {max_diff:.4f}).\n\n{df}")
+        fail_with_message(f"{what}: One category differs in proportion by more than 10% (found {max_diff:.4f}).\n\n{df}")
     elif max_diff >= 0.05:
-        warn_with_message(f"One category differs in proportion by more than 5% (found {max_diff:.4f}).\n\n{df}")
+        warn_with_message(f"{what}: One category differs in proportion by more than 5% (found {max_diff:.4f}).\n\n{df}")
     else:
         pass
 
 
 
-def save_logs(output_path, log_location="log.txt", output_folder="tests"):
+def save_logs(output_path, log_location="log.txt", output_folder="tests/test_logs/"):
     full_output_path = f"{output_folder}/LOG_{output_path}"
 
     if os.path.exists(full_output_path):

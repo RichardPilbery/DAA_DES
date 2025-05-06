@@ -253,8 +253,8 @@ def test_same_seed_gives_consistent_calls_per_day_runSim():
       arrivals_df_1 = arrivals_df_1['day'].value_counts(sort=False)
       arrivals_df_2 = arrivals_df_2['day'].value_counts(sort=False)
 
-      arrivals_df_1.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_day_runSim - arrivals_df_1.csv")
-      arrivals_df_2.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_day_runSim - arrivals_df_2.csv")
+      arrivals_df_1.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_day_runSim - arrivals_df_1.csv")
+      arrivals_df_2.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_day_runSim - arrivals_df_2.csv")
 
 
       assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Number of daily arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
@@ -307,8 +307,8 @@ def test_same_seed_gives_consistent_calls_per_hour_runSim():
       arrivals_df_1 = arrivals_df_1['day'].value_counts(sort=False)
       arrivals_df_2 = arrivals_df_2['day'].value_counts(sort=False)
 
-      arrivals_df_1.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_hour_runSim - arrivals_df_1.csv")
-      arrivals_df_2.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_hour_runSim - arrivals_df_2.csv")
+      arrivals_df_1.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_hour_runSim - arrivals_df_1.csv")
+      arrivals_df_2.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_calls_per_hour_runSim - arrivals_df_2.csv")
 
 
       assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Number of daily arrivals are not the same when same random seed provided and parameters held constant (runSim function)"
@@ -448,8 +448,8 @@ def test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      arrivals_df_1.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib - arrivals_df_1.csv")
-      arrivals_df_2.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib - arrivals_df_2.csv")
+      arrivals_df_1.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib - arrivals_df_1.csv")
+      arrivals_df_2.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_arrival_pattern_parallelProcessJoblib - arrivals_df_2.csv")
 
       assert arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are not the same when same random seed provided and parameters held constant (parallelProcessJoblib function)"
 
@@ -541,8 +541,8 @@ def test_different_arrival_pattern_across_runs_parallelProcessJoblib():
       assert len(arrivals_df_1) > 0, "Arrivals df 1 is empty"
       assert len(arrivals_df_2) > 0, "Arrivals df 2 is empty"
 
-      arrivals_df_1.to_csv("tests/TEST_OUTPUT_test_arrivals_behaviour_parallelProcessJobLib - arrivals_df_1.csv")
-      arrivals_df_2.to_csv("tests/TEST_OUTPUT_test_arrivals_behaviour_parallelProcessJobLib - arrivals_df_2.csv")
+      arrivals_df_1.to_csv("tests/test_outputs/TEST_OUTPUT_test_arrivals_behaviour_parallelProcessJobLib - arrivals_df_1.csv")
+      arrivals_df_2.to_csv("tests/test_outputs/TEST_OUTPUT_test_arrivals_behaviour_parallelProcessJobLib - arrivals_df_2.csv")
 
       assert not arrivals_df_1.equals(arrivals_df_2), "[FAIL - REPRODUCIBILITY - ARRIVALS] Arrivals are the same across different runs across different runs with the parallelProcessJoblib function"
 
@@ -573,7 +573,7 @@ def test_same_seed_gives_consistent_arrival_pattern_VARYING_PARAMETERS_runSim():
                            amb_data=AMB_DATA,
                            random_seed=RANDOM_SEED).reset_index()
 
-      rota = pd.read_csv("tests/HEMS_ROTA_test_one_helicopter_simple.csv")
+      rota = pd.read_csv("tests/rotas_test/HEMS_ROTA_test_one_helicopter_simple.csv")
 
       rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
 
@@ -689,8 +689,8 @@ def test_same_seed_gives_consistent_results_pattern_runSim():
       assert len(results_df_2) > 0, "Results df 2 is empty"
 
 
-      results_df_1.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_results_pattern_runSim - results_df_1.csv")
-      results_df_2.to_csv("tests/TEST_OUTPUT_test_same_seed_gives_consistent_results_pattern_runSim - results_df_2.csv")
+      results_df_1.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_results_pattern_runSim - results_df_1.csv")
+      results_df_2.to_csv("tests/test_outputs/TEST_OUTPUT_test_same_seed_gives_consistent_results_pattern_runSim - results_df_2.csv")
 
       assert results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY - RESULTS] Results are not the same when same random seed provided (runSim function)"
 
@@ -865,8 +865,8 @@ def test_different_result_pattern_across_runs_parallelProcessJoblib():
       assert len(results_df_1) > 0, "Results df 1 is empty"
       assert len(results_df_1) > 0, "Results df 2 is empty"
 
-      results_df_1.to_csv("tests/TEST_OUTPUT_test_result_behaviour_parallelProcessJobLib - results_df_1.csv")
-      results_df_2.to_csv("tests/TEST_OUTPUT_test_result_behaviour_parallelProcessJobLib - results_df_2.csv")
+      results_df_1.to_csv("tests/test_outputs/TEST_OUTPUT_test_result_behaviour_parallelProcessJobLib - results_df_1.csv")
+      results_df_2.to_csv("tests/test_outputs/TEST_OUTPUT_test_result_behaviour_parallelProcessJobLib - results_df_2.csv")
 
       assert not results_df_1.equals(results_df_2), "[FAIL - REPRODUCIBILITY - RESULTS] Results are the same across different runs across different runs with the parallelProcessJoblib function"
 

@@ -26,16 +26,16 @@ def simulation_results():
     """Run the simulation only if needed and return the event dataframe."""
     if not os.path.exists(RESULTS_CSV_PATH) or not os.path.exists(RESULTS_CSV_PATH_OUT):
         # Ensure all rotas are using default values
-        rota = pd.read_csv("tests/HISTORIC_HEMS_ROTA.csv")
+        rota = pd.read_csv("tests/rotas_historic/HISTORIC_HEMS_ROTA.csv")
         rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
 
-        callsign_reg_lookup = pd.read_csv("tests/HISTORIC_callsign_registration_lookup.csv")
+        callsign_reg_lookup = pd.read_csv("tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv")
         callsign_reg_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
 
-        service_history = pd.read_csv("tests/HISTORIC_service_history.csv")
+        service_history = pd.read_csv("tests/rotas_historic/HISTORIC_service_history.csv")
         service_history.to_csv("actual_data/service_history.csv", index=False)
 
-        service_sched = pd.read_csv("tests/HISTORIC_service_schedules_by_model.csv")
+        service_sched = pd.read_csv("tests/rotas_historic/HISTORIC_service_schedules_by_model.csv")
         service_sched.to_csv("actual_data/service_schedules_by_model.csv", index=False)
 
         print("Generating simulation results...")
