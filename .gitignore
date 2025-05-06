@@ -191,8 +191,8 @@ tests/*FAILURES.csv
 tests/*FULL.csv
 tests/*TEST_OUTPUT*.csv
 tests/LOG_*.txt
-tests/test_outputs/*
-tests/test_logs/*
+tests/test_outputs/*.csv
+tests/test_logs/*.txt
 
 log.txt
 tests/helpers.py
