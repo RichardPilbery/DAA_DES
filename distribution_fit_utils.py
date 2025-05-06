@@ -205,6 +205,7 @@ class DistributionFitUtils():
         # self.historical_monthly_totals_all_calls()
         self.historical_daily_calls_breakdown()
         self.historical_job_durations_breakdown()
+        self.historical_missed_jobs()
 
         # Calculate proportions of ad hoc unavailability
         self.ad_hoc_unavailability()
@@ -780,7 +781,13 @@ class DistributionFitUtils():
         calls_per_day_summary.columns = ['calls_in_day', 'days']
         calls_per_day_summary.to_csv('historical_data/historical_daily_calls.csv', index=False)
 
-
+    def historical_missed_jobs(self):
+        df = self.df
+        df["date"] = pd.to_datetime(df["inc_date"])
+        df["hour"] = df["date"].dt.hour
+        df["callsign_group_simplified"] = df["callsign_group"].apply(lambda x: "No HEMS available" if x=="Other" else "HEMS (helo or car) available and sent")
+        count_df = df[["callsign_group_simplified", "hour"]].value_counts().reset_index(name="count")
+        count_df.sort_values(['callsign_group_simplified','hour']).to_csv("historical_data/historical_missed_calls_by_hour.csv", index=False)
 
     def upper_allowable_time_bounds(self):
         """

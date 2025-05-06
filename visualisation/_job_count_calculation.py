@@ -9,7 +9,7 @@ in the simulation.
 [ ] Total number of jobs by callsign
 [ ] Total number of jobs by vehicle type
 [ ] Total number of jobs by callsign group
-[ ] Jobs attended of those received (missed jobs)
+[x] Jobs attended of those received (missed jobs)
 
 Covers variation within the simulation, and comparison with real world data.
 """
@@ -786,3 +786,117 @@ def plot_historical_missed_jobs_data(
 
         fig.update_layout(barmode='stack', yaxis_tickformat='.0%', yaxis_title='Proportion')
         fig.show()
+
+
+def plot_missed_jobs(historical_df_path="historical_data/historical_missed_calls_by_hour.csv",
+                     simulated_df_path="data/run_results.csv",
+                     show_proportions_per_hour=False):
+    historical_df = pd.read_csv(historical_df_path)
+    simulated_df = pd.read_csv(simulated_df_path)
+
+    simulated_df_resource_preferred_outcome = simulated_df[simulated_df["event_type"] == "resource_preferred_outcome"]
+
+    simulated_df_resource_preferred_outcome["outcome_simplified"] = (
+        simulated_df_resource_preferred_outcome["time_type"].apply(
+            lambda x: "No HEMS available" if "No HEMS resource available" in x
+            else "HEMS (helo or car) available and sent")
+            )
+
+    historical_df.rename(columns={"callsign_group_simplified": "outcome_simplified"}, inplace=True)
+    historical_df["what"] = "Historical"
+
+    simulated_df_counts = simulated_df_resource_preferred_outcome.groupby(['outcome_simplified','hour'])[['P_ID']].count().reset_index().rename(columns={"P_ID": "count"})
+    simulated_df_counts["what"] = "Simulated"
+
+    full_df = pd.concat([simulated_df_counts, historical_df])
+
+    if not show_proportions_per_hour:
+        fig = px.bar(
+            full_df,
+            x="hour",
+            y="count",
+            color="outcome_simplified",
+            barmode="stack",
+            facet_row="what",
+            facet_row_spacing=0.2,
+            labels={"outcome_simplified": "Job Outcome", "count": "Count of Jobs", "hour": "Hour"}
+        )
+
+        # Allow each y-axis to be independent
+        fig.update_yaxes(matches=None)
+
+        # Move facet row labels above each subplot, aligned left
+        fig.for_each_annotation(lambda a: a.update(
+            text=a.text.split("=")[-1],  # remove 'what='
+            x=0,                         # align left
+            xanchor="left",
+            y=a.y + 0.35,                # move label above the plot
+            yanchor="top",
+            textangle=0,                # horizontal
+            font=dict(size=24)
+        ))
+
+        # Ensure x axis tick labels appear on both facets
+        fig.for_each_xaxis(
+            lambda xaxis: xaxis.update(showticklabels=True, tickmode = 'linear',
+            tick0 = 0,
+            dtick = 1)
+            )
+
+        # Increase top margin to prevent overlap
+        fig.update_layout(margin=dict(t=100))
+
+        return fig
+    else:
+        # Compute proportions within each hour + source
+        df_prop = (
+            full_df
+            .groupby(["hour", "what"])
+            .apply(lambda d: d.assign(proportion=d["count"] / d["count"].sum()))
+            .reset_index(drop=True)
+        )
+
+        fig = px.bar(
+            df_prop,
+            x="what",
+            y="proportion",
+            color="outcome_simplified",
+            barmode="stack",
+            facet_col="hour",
+            category_orders={"hour": sorted(full_df["hour"].unique())},
+            title="Proportion of HEMS Outcomes by Hour and Data Source",
+            labels={"proportion": "Proportion", "what": ""}
+        )
+
+        fig.update_yaxes(range=[0, 1], matches="y")  # consistent y-axis
+        fig.for_each_annotation(lambda a: a.update(text=a.text.split("=")[-1]))  # clean facet labels
+
+        fig.update_layout(
+            hovermode="x unified",
+            legend_title_text="Outcome",
+        )
+
+        fig.update_layout(
+            legend=dict(
+                orientation="h",           # horizontal layout
+                yanchor="bottom",
+                y=1.12,                    # a bit above the plot
+                xanchor="center",
+                x=0.5                      # center aligned
+            )
+        )
+
+        # Increase spacing below title
+        fig.update_layout(margin=dict(t=150))
+
+        fig.for_each_xaxis(lambda axis: axis.update(
+            # Rotate labels
+            tickangle=90,
+            # Force display of both labels even on narrow screens
+            showticklabels=True,
+            tickmode = 'linear',
+            tick0 = 0,
+            dtick = 1)
+            )
+
+        return fig

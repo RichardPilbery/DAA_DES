@@ -14,7 +14,13 @@ def fail_with_message(message: str):
 def warn_with_message(message: str):
     """Cleanly formatted warning message."""
     warnings.warn(textwrap.dedent(message), UserWarning)
-
+def format_sigfigs(x, sigfigs=4):
+    if x == 0:
+        return "0"
+    else:
+        from math import log10, floor
+        digits = sigfigs - 1 - floor(log10(abs(x)))
+        return f"{x:.{digits}f}"
 
 def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
     """
