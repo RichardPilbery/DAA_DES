@@ -66,6 +66,9 @@ class DES_HEMS:
 
         self.demand_increase_percent = demand_increase_percent
 
+        # Option for sampling calls per day by season or quarter
+        self.daily_calls_by_quarter_or_season = 'quarter'
+
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
         #self.debug(f"Ambulance data values is {self.amb_data}")
@@ -201,7 +204,9 @@ class DES_HEMS:
                 # self.debug("It's a new day")
                 # self.debug(dow)
                 # self.debug(f"{self.new_day} and {current_dt.date}")
-                self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
+
+                # Now have additional option of determining calls per day by quarter instead of season
+                self.calls_today = int(self.utils.inc_per_day(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
 
                 # self.debug(f"{current_dt.date()} There will be {self.calls_today} calls today")
                 #self.debug(f"{current_dt.date()} There will be {self.calls_today} calls today")

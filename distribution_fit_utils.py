@@ -388,6 +388,20 @@ class DistributionFitUtils():
             .reset_index()
         )
 
+
+        mean_jobs_qtr_df = (
+            inc_df.groupby(['year', 'month_day', 'quarter'])['date_only'].size().reset_index(name='jobs_per_day')
+            .groupby(['month_day', 'quarter'])
+            .agg(
+                # Biased_mean as the name implies, puts a slight increase weighting on
+                # years with higher levels of activity (default = .6)
+                mean_jobs_per_day=('jobs_per_day', lambda x: math.ceil(Utils.biased_mean(x))),
+            )
+            .reset_index()
+        )
+
+        # Sort seasons out first
+
         seasons = mean_jobs_df['season'].dropna().unique()  # Avoid NaN seasons if they exist
         jpd_distr = []
 
@@ -409,9 +423,34 @@ class DistributionFitUtils():
 
             jpd_distr.append(return_dict)
 
-        # Step 7: Save results to file
         with open('distribution_data/inc_per_day_distributions.txt', 'w+') as convert_file:
             json.dump(jpd_distr, convert_file)
+
+
+        # No distributions by yearly quarter
+
+        quarters = mean_jobs_qtr_df['quarter'].dropna().unique()
+        jpd_qtr_distr = []
+
+        for quarter in quarters:
+
+            fit_quarter = mean_jobs_qtr_df[mean_jobs_qtr_df['quarter'] == quarter]['mean_jobs_per_day'].apply(math.ceil)
+
+            # Compute best fit distribution
+            best_fit = self.getBestFit(fit_quarter, distr=self.sim_tools_distr_plus)
+
+            return_dict = {
+                "quarter": int(quarter),
+                "best_fit": best_fit,
+                "min_n_per_day": min_n_per_day,
+                "max_n_per_day": max_n_per_day,
+                "mean_n_per_day": fit_season.mean()
+            }
+
+            jpd_qtr_distr.append(return_dict)
+
+        with open('distribution_data/inc_per_day_qtr_distributions.txt', 'w+') as convert_file:
+            json.dump(jpd_qtr_distr, convert_file)
 
 
     def enhanced_or_critical_care_by_ampds_card_probs(self):

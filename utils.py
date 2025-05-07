@@ -82,6 +82,12 @@ class Utils:
         inFile.close()
         self.inc_per_day_distr = inc_per_day_data
 
+        inc_per_day_per_qtr_data = []
+        with open("distribution_data/inc_per_day_qtr_distributions.txt", "r") as inFile:
+            inc_per_day_per_qtr_data = ast.literal_eval(inFile.read())
+        inFile.close()
+        self.inc_per_day_per_qtr_distr = inc_per_day_per_qtr_data
+
         # Turn the min-max activity times data into a format that supports easier/faster
         # lookups
         self.min_max_cache = {
@@ -377,7 +383,7 @@ class Utils:
         return sampled_time
 
     # TODO: RANDOM SEED SETTING
-    def inc_per_day(self, quarter: int) -> float:
+    def inc_per_day(self, quarter: int, quarter_or_season: str = 'season') -> float:
         """
             This function will return a dictionary containing
             the distribution and parameters for the distribution
@@ -391,13 +397,22 @@ class Utils:
         max_n = 0
         min_n = 0
 
-        for i in self.inc_per_day_distr:
+        distr_data = self.inc_per_day_distr if quarter_or_season == 'season' else self.inc_per_day_per_qtr_distr
+
+        for i in distr_data:
             #print(i)
-            if (i['season'] == season):
-                #print('Match')
-                distribution = i['best_fit']
-                max_n = i['max_n_per_day']
-                min_n = i['min_n_per_day']
+            if(quarter_or_season == 'season'):
+                if (i['season'] == season):
+                    #print('Match')
+                    distribution = i['best_fit']
+                    max_n = i['max_n_per_day']
+                    min_n = i['min_n_per_day']
+            else:
+                if (i['quarter'] == quarter):
+                    #print('Match')
+                    distribution = i['best_fit']
+                    max_n = i['max_n_per_day']
+                    min_n = i['min_n_per_day']
 
         sampled_inc_per_day = -1
 
@@ -405,6 +420,7 @@ class Utils:
             sampled_inc_per_day = self.sample_from_distribution(distribution, rng=self.rngs["calls_per_day"])
 
         return sampled_inc_per_day
+    
 
     def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
@@ -588,7 +604,7 @@ class Utils:
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
 
-    def biased_mean(series: pd.Series, bias: float = .6) -> float:
+    def biased_mean(series: pd.Series, bias: float = .5) -> float:
         """
 
         Compute a weighted mean, favoring the larger value since demand
@@ -603,14 +619,6 @@ class Utils:
         weights = np.linspace(1, bias * 2, len(series))  # Increasing weights with larger values
         return np.average(sorted_vals, weights=weights)
 
-    # def get_distribution_seeds(master_seed, n_replications, n_dists_per_rep):
-    #     rep_seqs = SeedSequence(master_seed).spawn(n_replications)
-    #     all_dist_seeds = []
-    #     for seq in rep_seqs:
-    #         dist_seqs = seq.spawn(n_dists_per_rep)
-    #         dist_ints = [s.generate_state(1)[0] for s in dist_seqs]
-    #         all_dist_seeds.append(dist_ints)
-    #     return all_dist_seeds
 
     def build_seeded_distributions(self, seed_seq):
         """
