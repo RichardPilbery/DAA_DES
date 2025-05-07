@@ -148,61 +148,61 @@ class DistributionFitUtils():
         #This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
 
-        # self.removeExistingResults(Utils.HISTORICAL_FOLDER)
-        # self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
+        self.removeExistingResults(Utils.HISTORICAL_FOLDER)
+        self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
 
 
-        # #get proportions of AMPDS card by hour of day
-        # self.hour_by_ampds_card_probs()
+        #get proportions of AMPDS card by hour of day
+        self.hour_by_ampds_card_probs()
 
-        # # Determine 'best' distributions for time-based data
-        # self.activity_time_distributions()
+        # Determine 'best' distributions for time-based data
+        self.activity_time_distributions()
 
-        # # Calculate probability patient will be female based on AMPDS card
-        # self.sex_by_ampds_card_probs()
+        # Calculate probability patient will be female based on AMPDS card
+        self.sex_by_ampds_card_probs()
 
-        # # Determine 'best' distributions for age ranges straitifed by AMPDS card
-        # self.age_distributions()
+        # Determine 'best' distributions for age ranges straitifed by AMPDS card
+        self.age_distributions()
 
-        # # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
-        # self.inter_arrival_times()
+        # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
+        self.inter_arrival_times()
 
-        # # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
-        # self.hourly_arrival_by_qtr_probs()
+        # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
+        self.hourly_arrival_by_qtr_probs()
 
-        # # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
-        # self.incidents_per_day()
+        # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
+        self.incidents_per_day()
 
-        # # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
-        # self.enhanced_or_critical_care_by_ampds_card_probs()
+        # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
+        self.enhanced_or_critical_care_by_ampds_card_probs()
 
-        # # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
-        # self.callsign_group_by_ampds_card_and_hour_probs()
+        # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
+        self.callsign_group_by_ampds_card_and_hour_probs()
 
-        # # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
-        # self.hems_result_by_callsign_group_and_vehicle_type_probs()
+        # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
+        self.hems_result_by_callsign_group_and_vehicle_type_probs()
 
-        # # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
-        # self.hems_result_by_care_cat_and_helicopter_benefit_probs()
+        # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
+        self.hems_result_by_care_cat_and_helicopter_benefit_probs()
 
-        # # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        # self.pt_outcome_by_hems_result_and_care_category_probs()
+        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
+        self.pt_outcome_by_hems_result_and_care_category_probs()
 
-        # # Calculate probability of a particular vehicle type based on callsign group and month of year
-        # self.vehicle_type_by_month_probs()
+        # Calculate probability of a particular vehicle type based on callsign group and month of year
+        self.vehicle_type_by_month_probs()
 
-        # # Calculate school holidays since servicing schedules typically avoid these dates
-        # if self.calculate_school_holidays:
-        #     self.school_holidays()
+        # Calculate school holidays since servicing schedules typically avoid these dates
+        if self.calculate_school_holidays:
+            self.school_holidays()
 
-        # # Calculate historical data
-        # self.historical_monthly_totals()
-        # self.historical_monthly_totals_by_callsign()
-        # self.historical_monthly_totals_by_day_of_week()
-        # self.historical_median_time_of_activities_by_month_and_resource_type()
-        # self.historical_monthly_totals_by_hour_of_day()
-        # self.historical_monthly_resource_utilisation()
-        # self.historical_monthly_totals_all_calls()
+        # Calculate historical data
+        self.historical_monthly_totals()
+        self.historical_monthly_totals_by_callsign()
+        self.historical_monthly_totals_by_day_of_week()
+        self.historical_median_time_of_activities_by_month_and_resource_type()
+        self.historical_monthly_totals_by_hour_of_day()
+        self.historical_monthly_resource_utilisation()
+        self.historical_monthly_totals_all_calls()
         self.historical_daily_calls_breakdown()
         self.historical_job_durations_breakdown()
         self.historical_missed_jobs()
