@@ -1062,62 +1062,62 @@ button at the top right - which will only appear when hovering over the plot - t
 the overall time period.*
             """)
 
-            st.subheader("Jobs per Day - By Callsign")
+                st.subheader("Jobs per Day - By Callsign")
 
-            st.plotly_chart(_job_count_calculation.plot_jobs_per_callsign())
+                st.plotly_chart(_job_count_calculation.plot_jobs_per_callsign())
 
-            st.subheader("Minutes per day on Shift")
+                st.subheader("Minutes per day on Shift")
 
-            daily_availability_df = (
-                pd.read_csv("data/daily_availability.csv")
-                .melt(id_vars="month")
-                .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
+                daily_availability_df = (
+                    pd.read_csv("data/daily_availability.csv")
+                    .melt(id_vars="month")
+                    .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
+                    )
+
+                st.plotly_chart(
+                    px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
                 )
-
-            st.plotly_chart(
-                px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
-            )
 
             with tab_4_2:
                 st.subheader("Event Overview")
 
-                @st.fragment
-                def event_overview_plot():
-                    runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
+                # @st.fragment
+                # def event_overview_plot():
+                #     runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
 
-                    events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
+                #     events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
 
-                    # Fix to deal with odd community cloud indexing bug
-                    if 'P_ID' not in events_over_time_df.columns:
-                        events_over_time_df = events_over_time_df.reset_index()
+                #     # Fix to deal with odd community cloud indexing bug
+                #     if 'P_ID' not in events_over_time_df.columns:
+                #         events_over_time_df = events_over_time_df.reset_index()
 
-                    events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
+                #     events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
 
-                    fig = px.scatter(
-                            events_over_time_df,
-                            x="timestamp_dt",
-                            y="time_type",
-                            # facet_row="run_number",
-                            # showlegend=False,
-                            color="time_type",
-                            height=800,
-                            title="Events Over Time - By Run"
-                            )
+                #     fig = px.scatter(
+                #             events_over_time_df,
+                #             x="timestamp_dt",
+                #             y="time_type",
+                #             # facet_row="run_number",
+                #             # showlegend=False,
+                #             color="time_type",
+                #             height=800,
+                #             title="Events Over Time - By Run"
+                #             )
 
-                    fig.update_traces(marker=dict(size=3, opacity=0.5))
+                #     fig.update_traces(marker=dict(size=3, opacity=0.5))
 
-                    fig.update_layout(yaxis_title="", # Remove y-axis label
-                                      yaxis_type='category',
-                                      showlegend=False)
-                    # Remove facet labels
-                    fig.for_each_annotation(lambda x: x.update(text=""))
+                #     fig.update_layout(yaxis_title="", # Remove y-axis label
+                #                       yaxis_type='category',
+                #                       showlegend=False)
+                #     # Remove facet labels
+                #     fig.for_each_annotation(lambda x: x.update(text=""))
 
-                    st.plotly_chart(
-                        fig,
-                            use_container_width=True
-                        )
+                #     st.plotly_chart(
+                #         fig,
+                #             use_container_width=True
+                #         )
 
-                event_overview_plot()
+                # event_overview_plot()
 
                 # Fix to deal with odd community cloud indexing bug
                 if 'P_ID' not in results_all_runs.columns:
