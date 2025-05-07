@@ -47,7 +47,10 @@ class Utils:
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
         self.care_cat_by_ampds_df = pd.read_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv')
         self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
+        self.callsign_by_ampds_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_probs.csv')
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
+        # New addition without stratification by month
+        self.vehicle_type_df = pd.read_csv('distribution_data/vehicle_type_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
         self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
@@ -81,6 +84,12 @@ class Utils:
             inc_per_day_data = ast.literal_eval(inFile.read())
         inFile.close()
         self.inc_per_day_distr = inc_per_day_data
+
+        inc_per_day_per_qtr_data = []
+        with open("distribution_data/inc_per_day_qtr_distributions.txt", "r") as inFile:
+            inc_per_day_per_qtr_data = ast.literal_eval(inFile.read())
+        inFile.close()
+        self.inc_per_day_per_qtr_distr = inc_per_day_per_qtr_data
 
         # Turn the min-max activity times data into a format that supports easier/faster
         # lookups
@@ -238,7 +247,7 @@ class Utils:
         return  pd.Series.sample(df['care_category'], weights = df['proportion'],
                                 random_state=self.rngs["care_category_selection"]).iloc[0]
 
-    def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
+    def callsign_group_selection(self, ampds_card: str) -> int:
         """
             This function will allocate and return an callsign group
             based on the hour of day and AMPDS card
@@ -246,27 +255,26 @@ class Utils:
 
         #print(f"Callsign group selection with {hour} and {ampds_card}")
 
-        df = self.callsign_by_ampds_and_hour_df[
-            (self.callsign_by_ampds_and_hour_df['hour'] == int(hour)) &
-            (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
+        df = self.callsign_by_ampds_df[
+            (self.callsign_by_ampds_df['ampds_card'] == ampds_card)
         ]
 
         return pd.Series.sample(df['callsign_group'], weights = df['proportion'],
                                 random_state=self.rngs["callsign_group_selection"]).iloc[0]
 
-    def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
+    def vehicle_type_selection(self, callsign_group: str) -> int:
         """
             This function will allocate and return a vehicle type
             based on the month and callsign group
         """
 
-        df = self.vehicle_type_by_month_df[
-            (self.vehicle_type_by_month_df['month'] == int(month)) &
-            (self.vehicle_type_by_month_df['callsign_group'] == int(callsign_group))
+        df = self.vehicle_type_df[
+            (self.vehicle_type_df['callsign_group'] == int(callsign_group)) # Cater for Other
         ]
 
         return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
                                 random_state=self.rngs["vehicle_type_selection"]).iloc[0]
+    
 
     def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
         """
@@ -377,7 +385,7 @@ class Utils:
         return sampled_time
 
     # TODO: RANDOM SEED SETTING
-    def inc_per_day(self, quarter: int) -> float:
+    def inc_per_day(self, quarter: int, quarter_or_season: str = 'season') -> float:
         """
             This function will return a dictionary containing
             the distribution and parameters for the distribution
@@ -391,13 +399,22 @@ class Utils:
         max_n = 0
         min_n = 0
 
-        for i in self.inc_per_day_distr:
+        distr_data = self.inc_per_day_distr if quarter_or_season == 'season' else self.inc_per_day_per_qtr_distr
+
+        for i in distr_data:
             #print(i)
-            if (i['season'] == season):
-                #print('Match')
-                distribution = i['best_fit']
-                max_n = i['max_n_per_day']
-                min_n = i['min_n_per_day']
+            if(quarter_or_season == 'season'):
+                if (i['season'] == season):
+                    #print('Match')
+                    distribution = i['best_fit']
+                    max_n = i['max_n_per_day']
+                    min_n = i['min_n_per_day']
+            else:
+                if (i['quarter'] == quarter):
+                    #print('Match')
+                    distribution = i['best_fit']
+                    max_n = i['max_n_per_day']
+                    min_n = i['min_n_per_day']
 
         sampled_inc_per_day = -1
 
@@ -405,6 +422,7 @@ class Utils:
             sampled_inc_per_day = self.sample_from_distribution(distribution, rng=self.rngs["calls_per_day"])
 
         return sampled_inc_per_day
+    
 
     def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
@@ -588,7 +606,7 @@ class Utils:
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         return list(range(start_date.year, end_date.year + 1))
 
-    def biased_mean(series: pd.Series, bias: float = .6) -> float:
+    def biased_mean(series: pd.Series, bias: float = .5) -> float:
         """
 
         Compute a weighted mean, favoring the larger value since demand
@@ -603,14 +621,6 @@ class Utils:
         weights = np.linspace(1, bias * 2, len(series))  # Increasing weights with larger values
         return np.average(sorted_vals, weights=weights)
 
-    # def get_distribution_seeds(master_seed, n_replications, n_dists_per_rep):
-    #     rep_seqs = SeedSequence(master_seed).spawn(n_replications)
-    #     all_dist_seeds = []
-    #     for seq in rep_seqs:
-    #         dist_seqs = seq.spawn(n_dists_per_rep)
-    #         dist_ints = [s.generate_state(1)[0] for s in dist_seqs]
-    #         all_dist_seeds.append(dist_ints)
-    #     return all_dist_seeds
 
     def build_seeded_distributions(self, seed_seq):
         """

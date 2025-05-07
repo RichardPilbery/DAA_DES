@@ -149,61 +149,63 @@ class DistributionFitUtils():
         #This will be needed for other datasets, but has already been computed for DAA
         #self.df['ampds_card'] = self.df['ampds_code'].str[:2]
 
-        # self.removeExistingResults(Utils.HISTORICAL_FOLDER)
-        # self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
+        self.removeExistingResults(Utils.HISTORICAL_FOLDER)
+        self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
 
 
-        # #get proportions of AMPDS card by hour of day
-        # self.hour_by_ampds_card_probs()
+        #get proportions of AMPDS card by hour of day
+        self.hour_by_ampds_card_probs()
 
-        # # Determine 'best' distributions for time-based data
-        # self.activity_time_distributions()
+        # Determine 'best' distributions for time-based data
+        self.activity_time_distributions()
 
-        # # Calculate probability patient will be female based on AMPDS card
-        # self.sex_by_ampds_card_probs()
+        # Calculate probability patient will be female based on AMPDS card
+        self.sex_by_ampds_card_probs()
 
-        # # Determine 'best' distributions for age ranges straitifed by AMPDS card
-        # self.age_distributions()
+        # Determine 'best' distributions for age ranges straitifed by AMPDS card
+        self.age_distributions()
 
-        # # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
-        # self.inter_arrival_times()
+        # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
+        self.inter_arrival_times()
 
-        # # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
-        # self.hourly_arrival_by_qtr_probs()
+        # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
+        self.hourly_arrival_by_qtr_probs()
 
-        # # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
-        # self.incidents_per_day()
+        # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
+        self.incidents_per_day()
 
-        # # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
-        # self.enhanced_or_critical_care_by_ampds_card_probs()
+        # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
+        self.enhanced_or_critical_care_by_ampds_card_probs()
 
-        # # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
-        # self.callsign_group_by_ampds_card_and_hour_probs()
+        # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
+        self.callsign_group_by_ampds_card_and_hour_probs()
+        self.callsign_group_by_ampds_card_probs()
 
-        # # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
-        # self.hems_result_by_callsign_group_and_vehicle_type_probs()
+        # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
+        self.hems_result_by_callsign_group_and_vehicle_type_probs()
 
-        # # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
-        # self.hems_result_by_care_cat_and_helicopter_benefit_probs()
+        # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
+        self.hems_result_by_care_cat_and_helicopter_benefit_probs()
 
-        # # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        # self.pt_outcome_by_hems_result_and_care_category_probs()
+        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
+        self.pt_outcome_by_hems_result_and_care_category_probs()
 
-        # # Calculate probability of a particular vehicle type based on callsign group and month of year
-        # self.vehicle_type_by_month_probs()
+        # Calculate probability of a particular vehicle type based on callsign group and month of year
+        self.vehicle_type_by_month_probs()
+        self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
 
-        # # Calculate school holidays since servicing schedules typically avoid these dates
-        # if self.calculate_school_holidays:
-        #     self.school_holidays()
+        # Calculate school holidays since servicing schedules typically avoid these dates
+        if self.calculate_school_holidays:
+            self.school_holidays()
 
-        # # Calculate historical data
-        # self.historical_monthly_totals()
-        # self.historical_monthly_totals_by_callsign()
-        # self.historical_monthly_totals_by_day_of_week()
-        # self.historical_median_time_of_activities_by_month_and_resource_type()
-        # self.historical_monthly_totals_by_hour_of_day()
-        # self.historical_monthly_resource_utilisation()
-        # self.historical_monthly_totals_all_calls()
+        # Calculate historical data
+        self.historical_monthly_totals()
+        self.historical_monthly_totals_by_callsign()
+        self.historical_monthly_totals_by_day_of_week()
+        self.historical_median_time_of_activities_by_month_and_resource_type()
+        self.historical_monthly_totals_by_hour_of_day()
+        self.historical_monthly_resource_utilisation()
+        self.historical_monthly_totals_all_calls()
         self.historical_daily_calls_breakdown()
         self.historical_job_durations_breakdown()
         self.historical_missed_jobs()
@@ -389,6 +391,20 @@ class DistributionFitUtils():
             .reset_index()
         )
 
+
+        mean_jobs_qtr_df = (
+            inc_df.groupby(['year', 'month_day', 'quarter'])['date_only'].size().reset_index(name='jobs_per_day')
+            .groupby(['month_day', 'quarter'])
+            .agg(
+                # Biased_mean as the name implies, puts a slight increase weighting on
+                # years with higher levels of activity (default = .6)
+                mean_jobs_per_day=('jobs_per_day', lambda x: math.ceil(Utils.biased_mean(x))),
+            )
+            .reset_index()
+        )
+
+        # Sort seasons out first
+
         seasons = mean_jobs_df['season'].dropna().unique()  # Avoid NaN seasons if they exist
         jpd_distr = []
 
@@ -410,9 +426,34 @@ class DistributionFitUtils():
 
             jpd_distr.append(return_dict)
 
-        # Step 7: Save results to file
         with open('distribution_data/inc_per_day_distributions.txt', 'w+') as convert_file:
             json.dump(jpd_distr, convert_file)
+
+
+        # No distributions by yearly quarter
+
+        quarters = mean_jobs_qtr_df['quarter'].dropna().unique()
+        jpd_qtr_distr = []
+
+        for quarter in quarters:
+
+            fit_quarter = mean_jobs_qtr_df[mean_jobs_qtr_df['quarter'] == quarter]['mean_jobs_per_day'].apply(math.ceil)
+
+            # Compute best fit distribution
+            best_fit = self.getBestFit(fit_quarter, distr=self.sim_tools_distr_plus)
+
+            return_dict = {
+                "quarter": int(quarter),
+                "best_fit": best_fit,
+                "min_n_per_day": min_n_per_day,
+                "max_n_per_day": max_n_per_day,
+                "mean_n_per_day": fit_season.mean()
+            }
+
+            jpd_qtr_distr.append(return_dict)
+
+        with open('distribution_data/inc_per_day_qtr_distributions.txt', 'w+') as convert_file:
+            json.dump(jpd_qtr_distr, convert_file)
 
 
     def enhanced_or_critical_care_by_ampds_card_probs(self):
@@ -477,6 +518,23 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv', mode = "w+", index=False)
 
+    def callsign_group_by_ampds_card_probs(self):
+        """
+
+            Calculates the probabilty of a specific callsign being allocated to
+            a call based on the AMPDS card category
+
+        """
+
+        callsign_df = self.df[self.df['callsign_group'] != 'Other']
+
+        callsign_counts = callsign_df.groupby(['ampds_card', 'callsign_group']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['ampds_card'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_probs.csv', mode = "w+", index=False)
+
 
     def vehicle_type_by_month_probs(self):
         """
@@ -491,6 +549,21 @@ class DistributionFitUtils():
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
         callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
+
+    def vehicle_type_probs(self):
+        """
+
+            Calculates the probabilty of a car/helicopter being allocated to
+            a call based on the callsign group
+
+        """
+
+        callsign_counts = self.df.groupby(['callsign_group', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_probs.csv', mode = "w+")
 
 
     def hems_result_by_callsign_group_and_vehicle_type_probs(self):

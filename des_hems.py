@@ -66,6 +66,9 @@ class DES_HEMS:
 
         self.demand_increase_percent = demand_increase_percent
 
+        # Option for sampling calls per day by season or quarter
+        self.daily_calls_by_quarter_or_season = 'quarter'
+
         # Option to include/exclude ambulance service cases in addition to HEMS
         self.amb_data = amb_data
         #self.debug(f"Ambulance data values is {self.amb_data}")
@@ -201,7 +204,9 @@ class DES_HEMS:
                 # self.debug("It's a new day")
                 # self.debug(dow)
                 # self.debug(f"{self.new_day} and {current_dt.date}")
-                self.calls_today = int(self.utils.inc_per_day(qtr) * (self.demand_increase_percent))
+
+                # Now have additional option of determining calls per day by quarter instead of season
+                self.calls_today = int(self.utils.inc_per_day(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
 
                 # self.debug(f"{current_dt.date()} There will be {self.calls_today} calls today")
                 #self.debug(f"{current_dt.date()} There will be {self.calls_today} calls today")
@@ -299,7 +304,7 @@ class DES_HEMS:
 
         if pt.hems_case == 1:
             #self.debug(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
-            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
+            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.ampds_card)
             #self.debug(f"Callsign is {pt.hems_pref_callsign_group}")
 
             # !!!!!! ASSUMPTION !!!!!!! #
@@ -313,10 +318,12 @@ class DES_HEMS:
             self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
 
             #self.debug(f"Callsign group {pt.hems_pref_callsign_group}")
-            if pt.hems_pref_callsign_group == "Other":
-                pt.hems_pref_vehicle_type = "Other"
-            else:
-                pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
+            # if pt.hems_pref_callsign_group == "Other":
+            #     pt.hems_pref_vehicle_type = "Other"
+            # else:
+            #     pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
+
+            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.hems_pref_callsign_group)
 
             self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
             self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
