@@ -300,14 +300,13 @@ hr {
             )
         )
 
-        for helicopter in rota[rota["vehicle_type"]=="helicopter"]["callsign"].unique():
-            per_callsign_rota = rota[rota["callsign"]==helicopter]
+        for idx, row in rota[rota["vehicle_type"]=="helicopter"].iterrows():
             helicopter_rota_string = f"""
-{helicopter} is an {per_callsign_rota["model"].values[0]} and runs
-from {to_military_time(per_callsign_rota["summer_start"].values[0])}
-to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
-and {to_military_time(per_callsign_rota["winter_start"].values[0])}
-to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
+{row["callsign"]} is an {row["model"]} and runs a {row["category"]} service
+from {to_military_time(row["summer_start"])}
+to {to_military_time(row["summer_end"])} in summer
+and {to_military_time(row["winter_start"])}
+to {to_military_time(row["winter_end"])} in winter.
 """
             # quarto_string += "🚁 "
             quarto_string += helicopter_rota_string
@@ -322,14 +321,13 @@ to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
         backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
 
 
-        for car in rota[rota["callsign_group"].isin(backup_cars_only)]["callsign"]:
-            per_callsign_rota = rota[rota["callsign"]==car]
+        for idx, row in rota[rota["callsign_group"].isin(backup_cars_only)].iterrows():
             car_rota_string = f"""
-{car} is a {per_callsign_rota["model"].values[0]} and runs
-from {to_military_time(per_callsign_rota["summer_start"].values[0])}
-to {to_military_time(per_callsign_rota["summer_end"].values[0])} in summer
-and {to_military_time(per_callsign_rota["winter_start"].values[0])}
-to {to_military_time(per_callsign_rota["winter_end"].values[0])} in winter.
+{row["callsign"]} is a {row["model"]} and runs
+from {to_military_time(row["summer_start"])}
+to {to_military_time(row["summer_end"])} in summer
+and {to_military_time(row["winter_start"])}
+to {to_military_time(row["winter_end"])} in winter.
 """
             # quarto_string += "🚗 "
             quarto_string += car_rota_string
