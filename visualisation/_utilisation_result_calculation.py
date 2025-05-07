@@ -16,7 +16,7 @@ from _app_utils import DAA_COLORSCHEME
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",
-                                     rota_path="../data/HEMS_ROTA.csv",
+                                     rota_path="../actual_data/HEMS_ROTA.csv",
                                      callsign_path="../actual_data/callsign_registration_lookup.csv",
                                      service_path="../data/service_dates.csv",
                                      ):
@@ -347,82 +347,87 @@ def make_RWC_utilisation_dataframe(
         service_df,
         callsign_df,
         long_format_df=True):
-        """
-        Note that this function has been partially provided by ChatGPT.
-        """
 
+        # Pull in relevant rota, registration and servicing data
         rota_df = rota_df.merge(callsign_df, on="callsign")
         service_df = service_df.merge(callsign_df, on="registration")
-        print("==calculate_theoretical_time - rota_df after merging with callsign_df==")
-        print(rota_df)
+        # print("==calculate_theoretical_time - rota_df after merging with callsign_df==")
+        # print(rota_df)
 
         # Convert date columns to datetime format
         historical_df['month'] = pd.to_datetime(historical_df['month'])
-        print("==historical_df==")
-        print(historical_df)
+
+        date_range = pd.date_range(start=historical_df['month'].min(),
+                        end=pd.offsets.MonthEnd().rollforward(historical_df['month'].max()),
+                        freq='D')
+        daily_df = pd.DataFrame({'date': date_range})
+
+        # print("==historical_df==")
+        # print(historical_df)
 
         service_df['service_start_date'] = pd.to_datetime(service_df['service_start_date'])
         service_df['service_end_date'] = pd.to_datetime(service_df['service_end_date'])
 
-        # Initialize dictionary to store results
-        theoretical_availability = {}
+        def is_summer(date_obj):
+            return current_date.month in [4,5,6,7,8,9]
 
-        # Iterate over each row in the historical dataset
-        for index, row in historical_df.iterrows():
-            month_start = row['month']
-            month_end = month_start + pd.offsets.MonthEnd(0)
-            days_in_month = (month_end - month_start).days + 1
+        # Initialize columns in df_availability for each unique callsign
+        for callsign in rota_df['callsign'].unique():
+            daily_df[callsign] = 0 # Initialize with 0 minutes
 
-            # Store theoretical available time for each resource
-            month_data = {}
+        daily_df = daily_df.set_index('date')
 
-            for _, rota in rota_df.iterrows():
-                callsign = rota['callsign']
-                print(callsign)
+        # Iterate through each date in our availability dataframe
+        for date_idx, current_date in enumerate(daily_df.index):
+            is_current_date_summer = is_summer(current_date)
 
-                # Determine summer or winter schedule
-                is_summer = month_start.month in range(3, 11)
-                start_hour = rota['summer_start'] if is_summer else rota['winter_start']
-                end_hour = rota['summer_end'] if is_summer else rota['winter_end']
+            # Iterate through each resource's rota entry
+            for _, rota_entry in rota_df.iterrows():
+                callsign = rota_entry['callsign']
+                start_hour_col = 'summer_start' if is_current_date_summer else 'winter_start'
+                end_hour_col = 'summer_end' if is_current_date_summer else 'winter_end'
 
-                # Handle cases where the shift ends after midnight
-                if end_hour < start_hour:
-                    daily_available_time = (24 - start_hour) + end_hour
-                else:
-                    daily_available_time = end_hour - start_hour
+                start_hour = rota_entry[start_hour_col]
+                end_hour = rota_entry[end_hour_col]
 
-                total_available_time = daily_available_time * days_in_month * 60  # Convert to minutes
+                # --- Calculate minutes for the current_date ---
+                minutes_for_callsign_on_date = 0
 
-                # Adjust for servicing periods
-                service_downtime = 0
-                for _, service in service_df[service_df['callsign'] == callsign].iterrows():
-                    service_start = max(service['service_start_date'], month_start)
-                    service_end = min(service['service_end_date'], month_end)
+                # Scenario 1: Shift is fully within one day (e.g., 7:00 to 19:00)
+                if start_hour < end_hour:
+                    # Check if this shift is active on current_date (it always is in this logic,
+                    # as we are calculating for the current_date based on its rota)
+                    minutes_for_callsign_on_date = (end_hour - start_hour) * 60
+                # Scenario 2: Shift spans midnight (e.g., 19:00 to 02:00)
+                elif start_hour > end_hour:
+                    # Part 1: Minutes from start_hour to midnight on current_date
+                    minutes_today = (24 - start_hour) * 60
+                    minutes_for_callsign_on_date += minutes_today
 
-                    if service_start <= service_end:  # Overlapping service period
-                        service_days = (service_end - service_start).days + 1
-                        service_downtime += service_days * daily_available_time * 60
+                    # Part 2: Minutes from midnight to end_hour on the *next* day
+                    # These minutes need to be added to the *next day's* total for this callsign
+                    if date_idx + 1 < len(daily_df): # Ensure there is a next day in our df
+                        next_date = daily_df.index[date_idx + 1]
+                        minutes_on_next_day = end_hour * 60
+                        daily_df.loc[next_date, callsign] = daily_df.loc[next_date, callsign] + minutes_on_next_day
 
-                # Final available time after accounting for servicing
-                # print("==_utilisation_result_calculation.py - make_RWC_utilisation_dataframe - calculate_theoretical_time: Monthly Available Time==")
-                # print(month_data)
-                month_data[callsign] = total_available_time - service_downtime
+                daily_df.loc[current_date, callsign] += minutes_for_callsign_on_date
 
-            theoretical_availability[month_start.strftime('%Y-%m-01')] = month_data
+        theoretical_availability = daily_df.copy().reset_index()
+        theoretical_availability["month"] = theoretical_availability["date"].dt.strftime('%Y-%m-01')
+        theoretical_availability = theoretical_availability.drop(columns=["date"])
+        theoretical_availability= theoretical_availability.set_index("month")
+        theoretical_availability = theoretical_availability.groupby('month').sum()
+        theoretical_availability = theoretical_availability.reset_index()
 
-        theoretical_availability_df = pd.DataFrame(theoretical_availability).T
-        theoretical_availability_df.index.name = "month"
-        theoretical_availability_df = theoretical_availability_df.reset_index()
-        # theoretical_availability_df = theoretical_availability_df.add_prefix("theoretical_availability_")
+        # print("==_utilisation_result_calculation.py - make_RWC_utilisation_dataframe - theoretical availability df==")
+        # print(theoretical_availability_df)
 
-        theoretical_availability_df.fillna(0.0)
-
-        print("==_utilisation_result_calculation.py - make_RWC_utilisation_dataframe - theoretical availability df==")
-        print(theoretical_availability_df)
+        theoretical_availability.to_csv("historical_data/calculated/theoretical_availability_historical.csv", index=False)
 
         if long_format_df:
             theoretical_availability_df = (
-                theoretical_availability_df
+                theoretical_availability
                 .melt(id_vars="month")
                 .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
                 )
@@ -430,6 +435,8 @@ def make_RWC_utilisation_dataframe(
             theoretical_availability_df['theoretical_availability'] = (
                 theoretical_availability_df['theoretical_availability'].astype('float')
                 )
+
+            theoretical_availability_df = theoretical_availability_df.fillna(0.0)
 
         return theoretical_availability_df
 
@@ -444,6 +451,8 @@ def make_RWC_utilisation_dataframe(
     print("==theoretical_availability_df==")
     print(theoretical_availability_df)
     theoretical_availability_df['month'] = pd.to_datetime(theoretical_availability_df['month'])
+
+    # theoretical_availability_df.to_csv("historical_data/calculated/theoretical_availability_historical.csv")
 
     historical_utilisation_df_times = (
         historical_utilisation_df.set_index('month')
