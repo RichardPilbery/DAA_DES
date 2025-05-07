@@ -1066,6 +1066,18 @@ the overall time period.*
 
             st.plotly_chart(_job_count_calculation.plot_jobs_per_callsign())
 
+            st.subheader("Minutes per day on Shift")
+
+            daily_availability_df = (
+                pd.read_csv("data/daily_availability.csv")
+                .melt(id_vars="month")
+                .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
+                )
+
+            st.plotly_chart(
+                px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
+            )
+
             with tab_4_2:
                 st.subheader("Event Overview")
 
