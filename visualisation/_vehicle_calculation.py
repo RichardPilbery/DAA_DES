@@ -330,3 +330,42 @@ def get_perc_unattended_string(event_log_df):
             return f"{num_unattendable} of {total_calls} ({perc_unattendable:.1%})"
     except:
         return "Error"
+
+
+def get_perc_unattended_string_normalised(event_log_df, params_df="data/run_params_used.csv"):
+    """
+    Alternative to display_UNTATTENDED_calls_per_run
+
+    This approach looks at instances where the resource_request_outcome
+    was 'no resource available'
+    """
+    # event_log_df = pd.read_csv("data/run_results.csv")
+    try:
+        num_unattendable = len(event_log_df[
+            (event_log_df["event_type"] == "resource_request_outcome") &
+            (event_log_df["time_type"] == "No Resource Available")
+            ])
+
+        # print(f"==get_perc_unattended_string - num_unattended: {num_unattendable}==")
+    except:
+        "Error"
+
+    total_calls = len(event_log_df[
+            (event_log_df["event_type"] == "resource_request_outcome")
+            ])
+
+    # print(f"==get_perc_unattended_string - total calls: {total_calls}==")
+
+    try:
+        num_runs = len(event_log_df["run_number"].unique()) # More reliable than taking max run number if zero indexed
+        sim_duration_mins = float(_processing_functions.get_param("sim_duration", pd.read_csv(params_df)))
+        sim_duration_days = sim_duration_mins / 24 / 60
+
+        perc_unattendable = num_unattendable/total_calls
+
+        if perc_unattendable < 0.01:
+            return f"{(num_unattendable/num_runs):.0f} of {(total_calls/num_runs):.0f} (< 0.1%)", f"This equates to around {((num_unattendable/num_runs/sim_duration_days)*365):.0f} of {((total_calls/num_runs/sim_duration_days)*365):.0f} calls per year"
+        else:
+            return f"{(num_unattendable/num_runs):.0f} of {(total_calls/num_runs):.0f} ({perc_unattendable:.1%})", f"This equates to around {((num_unattendable/num_runs/sim_duration_days)*365):.0f} of {((total_calls/num_runs/sim_duration_days)*365):.0f} calls per year"
+    except:
+        return "Error"

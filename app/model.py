@@ -237,7 +237,7 @@ if button_run_pressed:
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
-                perc_unattended = _vehicle_calculation.get_perc_unattended_string(results_all_runs)
+                perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
 
                 quarto_string += "## Calls Not Attended\n\n"
 
@@ -248,7 +248,8 @@ if button_run_pressed:
                             perc_unattended,
                             border=True)
                     missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
-                    st.caption(f"This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically")
+                    st.caption(f"**{perc_unattended_normalised}**")
+                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically*")
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
