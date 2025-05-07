@@ -30,7 +30,6 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
             rota_data=pd.read_csv(rota_path),
             service_data=pd.read_csv(service_path),
             callsign_data=pd.read_csv(callsign_path),
-            output_by_month=False,
             long_format_df=False
                     )
                 )
