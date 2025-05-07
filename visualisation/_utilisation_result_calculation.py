@@ -548,7 +548,7 @@ def make_SIMULATION_utilisation_headline_figure(vehicle_type, utilisation_df_ove
 
 def prep_util_df_from_call_df(call_df):
 
-    call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'])
+    call_df['timestamp_dt'] = pd.to_datetime(call_df['timestamp_dt'], format='ISO8601')
     call_df['month_start'] = call_df['timestamp_dt'].dt.to_period('M').dt.to_timestamp()
 
     print("==prep_util_df_from_call_df: call_df==")
