@@ -9,7 +9,7 @@ import os
 # Data processing imports
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 # Plotting
 import plotly.express as px
@@ -895,9 +895,30 @@ Most users will not need to look at the visualisations in this tab.
                             [["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
                             .pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index())
 
-                        # get the number of referrals and assign them a value
+                        # get the number of resources and assign them a value
                         resources = resource_use_wide.time_type.unique()
+                        resources = np.concatenate([resources, ["No Resource Available"]])
                         resource_dict = {resource: index for index, resource in enumerate(resources)}
+
+                        missed_job_events = results_all_runs[
+                            (results_all_runs["event_type"] == "resource_request_outcome") &
+                            (results_all_runs["time_type"] == "No Resource Available")
+                            ].reset_index(drop=True)
+
+                        missed_job_events = missed_job_events[missed_job_events["run_number"]==run_select_ruep][["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
+                        missed_job_events["event_type"] = "resource_use"
+
+                        missed_job_events_end = missed_job_events.copy()
+                        missed_job_events_end["event_type"] = "resource_use_end"
+                        missed_job_events_end["timestamp_dt"] = pd.to_datetime(missed_job_events_end["timestamp_dt"]) + timedelta(minutes=5)
+
+                        missed_job_events_full = pd.concat([missed_job_events, missed_job_events_end])
+                        missed_job_events_full["registration"] = "No Resource Available"
+
+                        missed_job_events_full_wide = missed_job_events_full.pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index()
+
+                        resource_use_wide = pd.concat([resource_use_wide, missed_job_events_full_wide]).reset_index(drop=True)
+
                         resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
 
                         # Convert time types to numerical values
@@ -952,8 +973,8 @@ Most users will not need to look at the visualisations in this tab.
                     # Add horizontal bars using actual datetime values
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
-                        print(f"==callsign_df - {callsign} - for resource use debugging plot==")
-                        print(callsign_df.head(5))
+                        # print(f"==callsign_df - {callsign} - for resource use debugging plot==")
+                        # print(callsign_df.head(5))
 
                         service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
