@@ -217,6 +217,10 @@ def calculate_available_hours_v2(params_df,
 
     theoretical_availability_df.to_csv("data/daily_availability.csv", index=False)
 
+    theoretical_availability_df["ms"] = theoretical_availability_df["month"].dt.strftime('%Y-%m-01')
+    theoretical_availability_df.groupby('ms').sum(numeric_only=True).to_csv("data/monthly_availability.csv")
+    theoretical_availability_df.drop(columns=["ms"], inplace=True)
+
     theoretical_availability_df_long = (
         theoretical_availability_df
         .melt(id_vars="month")
