@@ -304,7 +304,7 @@ class DES_HEMS:
 
         if pt.hems_case == 1:
             #self.debug(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
-            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(int(pt.hour), pt.ampds_card)
+            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.ampds_card)
             #self.debug(f"Callsign is {pt.hems_pref_callsign_group}")
 
             # !!!!!! ASSUMPTION !!!!!!! #
@@ -318,10 +318,12 @@ class DES_HEMS:
             self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
 
             #self.debug(f"Callsign group {pt.hems_pref_callsign_group}")
-            if pt.hems_pref_callsign_group == "Other":
-                pt.hems_pref_vehicle_type = "Other"
-            else:
-                pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
+            # if pt.hems_pref_callsign_group == "Other":
+            #     pt.hems_pref_vehicle_type = "Other"
+            # else:
+            #     pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.month, pt.hems_pref_callsign_group)
+
+            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.hems_pref_callsign_group)
 
             self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
             self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")

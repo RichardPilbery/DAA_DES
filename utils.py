@@ -47,7 +47,10 @@ class Utils:
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
         self.care_cat_by_ampds_df = pd.read_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv')
         self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
+        self.callsign_by_ampds_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_probs.csv')
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
+        # New addition without stratification by month
+        self.vehicle_type_df = pd.read_csv('distribution_data/vehicle_type_probs.csv')
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
         self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
@@ -244,7 +247,7 @@ class Utils:
         return  pd.Series.sample(df['care_category'], weights = df['proportion'],
                                 random_state=self.rngs["care_category_selection"]).iloc[0]
 
-    def callsign_group_selection(self, hour: int, ampds_card: str) -> int:
+    def callsign_group_selection(self, ampds_card: str) -> int:
         """
             This function will allocate and return an callsign group
             based on the hour of day and AMPDS card
@@ -252,27 +255,26 @@ class Utils:
 
         #print(f"Callsign group selection with {hour} and {ampds_card}")
 
-        df = self.callsign_by_ampds_and_hour_df[
-            (self.callsign_by_ampds_and_hour_df['hour'] == int(hour)) &
-            (self.callsign_by_ampds_and_hour_df['ampds_card'] == ampds_card)
+        df = self.callsign_by_ampds_df[
+            (self.callsign_by_ampds_df['ampds_card'] == ampds_card)
         ]
 
         return pd.Series.sample(df['callsign_group'], weights = df['proportion'],
                                 random_state=self.rngs["callsign_group_selection"]).iloc[0]
 
-    def vehicle_type_selection(self, month: int, callsign_group: str) -> int:
+    def vehicle_type_selection(self, callsign_group: str) -> int:
         """
             This function will allocate and return a vehicle type
             based on the month and callsign group
         """
 
-        df = self.vehicle_type_by_month_df[
-            (self.vehicle_type_by_month_df['month'] == int(month)) &
-            (self.vehicle_type_by_month_df['callsign_group'] == int(callsign_group))
+        df = self.vehicle_type_df[
+            (self.vehicle_type_df['callsign_group'] == int(callsign_group)) # Cater for Other
         ]
 
         return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
                                 random_state=self.rngs["vehicle_type_selection"]).iloc[0]
+    
 
     def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
         """

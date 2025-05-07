@@ -178,6 +178,7 @@ class DistributionFitUtils():
 
         # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
         self.callsign_group_by_ampds_card_and_hour_probs()
+        self.callsign_group_by_ampds_card_probs()
 
         # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
         self.hems_result_by_callsign_group_and_vehicle_type_probs()
@@ -190,6 +191,7 @@ class DistributionFitUtils():
 
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         self.vehicle_type_by_month_probs()
+        self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
 
         # Calculate school holidays since servicing schedules typically avoid these dates
         if self.calculate_school_holidays:
@@ -515,6 +517,23 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv', mode = "w+", index=False)
 
+    def callsign_group_by_ampds_card_probs(self):
+        """
+
+            Calculates the probabilty of a specific callsign being allocated to
+            a call based on the AMPDS card category
+
+        """
+
+        callsign_df = self.df[self.df['callsign_group'] != 'Other']
+
+        callsign_counts = callsign_df.groupby(['ampds_card', 'callsign_group']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['ampds_card'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_probs.csv', mode = "w+", index=False)
+
 
     def vehicle_type_by_month_probs(self):
         """
@@ -529,6 +548,21 @@ class DistributionFitUtils():
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
         callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
+
+    def vehicle_type_probs(self):
+        """
+
+            Calculates the probabilty of a car/helicopter being allocated to
+            a call based on the callsign group
+
+        """
+
+        callsign_counts = self.df.groupby(['callsign_group', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_probs.csv', mode = "w+")
 
 
     def hems_result_by_callsign_group_and_vehicle_type_probs(self):
