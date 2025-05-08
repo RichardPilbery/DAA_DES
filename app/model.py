@@ -48,6 +48,7 @@ import visualisation._vehicle_calculation as _vehicle_calculation
 import visualisation._utilisation_result_calculation as _utilisation_result_calculation
 import visualisation._job_time_calcs as _job_time_calcs
 import visualisation._process_analytics as _process_analytics
+import visualisation._job_outcome_calculation as _job_outcome_calculation
 
 setup_state()
 
@@ -362,7 +363,7 @@ if button_run_pressed:
             t1_col3, t1_col4 = st.columns(2)
 
         with tab2:
-            tab_2_1, tab_2_2, tab_2_3 = st.tabs(["'Missed' Calls", "Resource Utilisation", "Split of Jobs by Callsign Group"])
+            tab_2_1, tab_2_2, tab_2_3, tab_2_4 = st.tabs(["'Missed' Calls", "Resource Utilisation", "Split of Jobs by Callsign Group", "CC and EC Benefit"])
 
             with tab_2_1:
                 @st.fragment
@@ -456,6 +457,20 @@ If the simulation is not using the default parameters, we would not expect the o
                         )
 
                     plot_callsign_group_split()
+
+                with tab_2_4:
+
+                    @st.fragment
+                    def plot_cc_ec_split():
+                        show_proportions_care_cat_plot = st.toggle("Show Proportions", False)
+
+                        st.plotly_chart(
+                            _job_outcome_calculation.get_care_cat_counts(
+                                show_proportions=show_proportions_care_cat_plot
+                                )
+                        )
+
+                    plot_cc_ec_split()
 
 
 
@@ -1146,6 +1161,10 @@ the overall time period.*
                 st.plotly_chart(
                     px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
                 )
+
+            st.subheader("Jobs Outcome by Category/Preference")
+
+            st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour())
 
             with tab_4_2:
                 st.subheader("Event Overview")
