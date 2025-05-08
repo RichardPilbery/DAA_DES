@@ -399,9 +399,10 @@ If the simulation is not using the default parameters, we would not expect the o
                     @st.fragment
                     def missed_jobs():
                         show_proportions_per_hour = st.toggle("Show as proportion of jobs missed per hour", value=False )
-
+                        by_quarter = st.toggle("Stratify results by quarter", value=False)
                         st.plotly_chart(_job_count_calculation.plot_missed_jobs(
-                            show_proportions_per_hour=show_proportions_per_hour
+                            show_proportions_per_hour=show_proportions_per_hour,
+                            by_quarter=by_quarter
                             ))
 
                     missed_jobs()

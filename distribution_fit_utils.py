@@ -878,8 +878,12 @@ class DistributionFitUtils():
         df["date"] = pd.to_datetime(df["inc_date"])
         df["hour"] = df["date"].dt.hour
         df["callsign_group_simplified"] = df["callsign_group"].apply(lambda x: "No HEMS available" if x=="Other" else "HEMS (helo or car) available and sent")
-        count_df = df[["callsign_group_simplified", "hour"]].value_counts().reset_index(name="count")
-        count_df.sort_values(['callsign_group_simplified','hour']).to_csv("historical_data/historical_missed_calls_by_hour.csv", index=False)
+        count_df = df[["callsign_group_simplified", "hour"]].value_counts().reset_index(name="count").sort_values(['callsign_group_simplified','hour'])
+        count_df.to_csv("historical_data/historical_missed_calls_by_hour.csv", index=False)
+
+        df["quarter"] = df["inc_date"].dt.quarter
+        count_df_quarter = df[["callsign_group_simplified", "quarter", "hour"]].value_counts().reset_index(name="count").sort_values(['quarter','callsign_group_simplified','hour'])
+        count_df_quarter.to_csv("historical_missed_calls_by_quarter_and_hour.csv", index=False)
 
     def upper_allowable_time_bounds(self):
         """
