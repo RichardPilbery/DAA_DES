@@ -393,7 +393,7 @@ class Utils:
     def inc_per_day(self, quarter: int, quarter_or_season: str = 'season') -> float:
         """
             This function will return the number of incidents for a given
-            day 
+            day
 
         """
 
@@ -438,10 +438,10 @@ class Utils:
         season = 'summer' if quarter in [2, 3] else 'winter'
 
         if quarter_or_season == 'season':
-            return random.choice(self.incident_per_day_samples[season])
+            return self.rngs["calls_per_day"].choice(self.incident_per_day_samples[season])
         else:
-            return random.choice(self.incident_per_day_samples[f"Q{quarter}"])
-        
+            return self.rngs["calls_per_day"].choice(self.incident_per_day_samples[f"Q{quarter}"])
+
 
     def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
