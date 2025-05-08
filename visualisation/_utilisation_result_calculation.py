@@ -768,3 +768,76 @@ def create_UTIL_rwc_plot(call_df,
     )
 
     return fig
+
+
+
+
+def create_callsign_group_split_rwc_plot(
+        historical_data_path="historical_data/historical_monthly_totals_by_callsign.csv",
+        run_data_path="data/run_results.csv",
+        x_is_callsign_group=False
+        ):
+
+    jobs_by_callsign = pd.read_csv(historical_data_path)
+    jobs_by_callsign["month"] = pd.to_datetime(jobs_by_callsign["month"], format="ISO8601")
+    jobs_by_callsign["quarter"] = jobs_by_callsign["month"].dt.quarter
+    jobs_by_callsign = jobs_by_callsign.melt(id_vars=["month","quarter"]).rename(columns={'variable':'callsign', 'value': 'jobs'})
+    jobs_by_callsign["callsign_group"] = jobs_by_callsign["callsign"].str.extract(r"(\d+)")
+    jobs_by_callsign_group_hist = jobs_by_callsign.groupby(['callsign_group', 'quarter'])["jobs"].sum().reset_index()
+    # Group by quarter and compute total jobs per quarter
+    quarter_totals_hist = jobs_by_callsign_group_hist.groupby('quarter')['jobs'].transform('sum')
+    # Calculate proportion
+    jobs_by_callsign_group_hist['proportion'] = jobs_by_callsign_group_hist['jobs'] / quarter_totals_hist
+    jobs_by_callsign_group_hist['what'] = 'Historical'
+
+    jobs_by_callsign_sim = pd.read_csv(run_data_path)
+    jobs_by_callsign_sim = jobs_by_callsign_sim[jobs_by_callsign_sim["event_type"]=="resource_use"][["run_number", "P_ID", "time_type", "qtr"]]
+    jobs_by_callsign_sim["callsign_group"] = jobs_by_callsign_sim["time_type"].str.extract(r"(\d+)")
+    jobs_by_callsign_group_sim = jobs_by_callsign_sim.groupby(['qtr','callsign_group']).size().reset_index().rename(columns={'qtr': 'quarter', 0:'jobs'})
+    # Group by quarter and compute total jobs per quarter
+    quarter_totals_sim = jobs_by_callsign_group_sim.groupby('quarter')['jobs'].transform('sum')
+    # Calculate proportion
+    jobs_by_callsign_group_sim['proportion'] = jobs_by_callsign_group_sim['jobs'] / quarter_totals_sim
+    jobs_by_callsign_group_sim['what'] = 'Simulated'
+
+    full_df_callsign_group_counts = pd.concat([jobs_by_callsign_group_hist, jobs_by_callsign_group_sim])
+
+    if not x_is_callsign_group:
+        fig = px.bar(
+            full_df_callsign_group_counts,
+            title="Historical vs Simulated Split of Jobs Between Callsign Groups",
+            color="callsign_group",
+            y="proportion",
+            x="what",
+            barmode="stack",
+            labels={"what": "", "proportion": "Percent of Jobs in Quarter",
+                    "callsign_group": "Callsign Group"},
+            facet_col="quarter",
+            text=full_df_callsign_group_counts['proportion'].map(lambda p: f"{p:.0%}")  # format as percent
+        )
+
+        fig.update_layout(yaxis_tickformat=".0%")
+
+
+        fig.update_traces(textposition='inside')  # You can also try 'auto' or 'outside'
+        return fig
+
+    else:
+        fig = px.bar(
+            full_df_callsign_group_counts,
+            title="Historical vs Simulated Split of Jobs Between Callsign Groups",
+            color="what",
+            y="proportion",
+            x="callsign_group",
+            barmode="group",
+            labels={"what": "", "proportion": "Percent of Jobs in Quarter",
+                    "callsign_group": "Callsign Group"},
+            facet_col="quarter",
+            text=full_df_callsign_group_counts['proportion'].map(lambda p: f"{p:.0%}")  # format as percent
+        )
+
+        fig.update_layout(yaxis_tickformat=".0%")
+
+
+        fig.update_traces(textposition='inside')  # You can also try 'auto' or 'outside'
+        return fig

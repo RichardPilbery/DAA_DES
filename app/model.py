@@ -356,7 +356,7 @@ if button_run_pressed:
             t1_col3, t1_col4 = st.columns(2)
 
         with tab2:
-            tab_2_1, tab_2_2 = st.tabs(["Resource Utilisation", "'Missed' Calls"])
+            tab_2_1, tab_2_2, tab_2_3 = st.tabs(["Resource Utilisation", "Split of Jobs by Callsign Group", "'Missed' Calls"])
             with tab_2_1:
                 @st.fragment
                 def create_utilisation_rwc_plot():
@@ -396,6 +396,20 @@ If the simulation is not using the default parameters, we would not expect the o
                 """)
 
                 with tab_2_2:
+                    @st.fragment
+                    def plot_callsign_group_split():
+                        x_is_callsign_group = st.toggle("Plot callsign group on the horizontal axis",
+                                                        value=False)
+
+                        st.plotly_chart(
+                            _utilisation_result_calculation.create_callsign_group_split_rwc_plot(
+                            x_is_callsign_group=x_is_callsign_group
+                            )
+                        )
+
+                    plot_callsign_group_split()
+
+                with tab_2_3:
                     @st.fragment
                     def missed_jobs():
                         show_proportions_per_hour = st.toggle("Show as proportion of jobs missed per hour", value=False )
@@ -629,9 +643,14 @@ Partial months are excluded for ease of interpretation.
                 def plot_days_with_job_count_hist():
                     call_df = get_job_count_df()
                     call_df["day"] = pd.to_datetime(call_df["timestamp_dt"]).dt.date
-                    daily_call_counts = call_df.groupby(['run_number', 'day'])['P_ID'].agg("count").reset_index().rename(columns={"P_ID": "Calls per Day"})
+                    daily_call_counts = (
+                        call_df.groupby(['run_number', 'day'])['P_ID'].agg("count")
+                        .reset_index().rename(columns={"P_ID": "Calls per Day"})
+                        )
 
-                    historical_daily_calls = pd.read_csv("historical_data/historical_daily_calls_breakdown.csv")
+                    historical_daily_calls = pd.read_csv(
+                        "historical_data/historical_daily_calls_breakdown.csv"
+                        )
 
                     # Create histogram with two traces
                     call_count_hist = go.Figure()
