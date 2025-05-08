@@ -706,7 +706,7 @@ class Utils:
 
         return seeded_distributions
 
-    def sample_ad_hoc_reason(self, hour: int, quarter: int) -> bool:
+    def sample_ad_hoc_reason(self, hour: int, quarter: int, registration: str) -> bool:
         """
             Sample from ad hoc unavailability probability table based on time bin and quarter.
             Returns True if available, False if unavailable.
@@ -723,6 +723,7 @@ class Utils:
 
         # Filter to matching bin + quarter
         subset = self.ad_hoc_probs[
+            (self.ad_hoc_probs['registration'] == registration) &
             (self.ad_hoc_probs['six_hour_bin'] == bin_label) &
             (self.ad_hoc_probs['quarter'] == quarter)
         ]

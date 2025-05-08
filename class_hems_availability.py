@@ -355,7 +355,7 @@ class HEMSAvailability():
                 ):
                     continue
 
-                ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
+                ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)
 
                 self.debug(f"({h.callsign}) Sampled reason for patient {pt.id} ({pt.hems_cc_or_ec}) is: {ad_hoc_reason}")
 
@@ -599,7 +599,7 @@ class HEMSAvailability():
             if h.callsign_group in self.active_callsign_groups or h.registration in self.active_registrations:
                 continue
 
-            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
+            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)
 
             self.debug(f"({h.callsign}) Sampled reason for patient {pt.id} (REG) is: {ad_hoc_reason}")
 

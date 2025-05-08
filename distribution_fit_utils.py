@@ -997,8 +997,8 @@ class DistributionFitUtils():
 
     def calculate_availability_row(self, row, rota_df, callsign_lookup_df):
         """
-        Compute downtime overlap, rota-based scheduled time, and proportion for a given row.
-        Returns data tagged with bin, quarter, and downtime reason.
+            Compute downtime overlap, rota-based scheduled time, and proportion for a given row.
+            Returns data tagged with bin, quarter, and downtime reason.
         """
 
         registration = row['aircraft'].lower()
@@ -1022,6 +1022,7 @@ class DistributionFitUtils():
         match = callsign_lookup_df[callsign_lookup_df['registration'].str.lower() == registration]
         if match.empty:
             return {
+                'registration': registration,
                 'offline': downtime_start,
                 'online': downtime_end,
                 'six_hour_bin': six_hour_bin,
@@ -1036,6 +1037,7 @@ class DistributionFitUtils():
         rota_rows = rota_df[rota_df['callsign'] == callsign]
         if rota_rows.empty:
             return {
+                'registration': registration,
                 'offline': downtime_start,
                 'online': downtime_end,
                 'six_hour_bin': six_hour_bin,
@@ -1081,6 +1083,7 @@ class DistributionFitUtils():
             proportion = total_overlap_minutes / total_scheduled_minutes
 
         return {
+            'registration': registration,
             'offline': downtime_start,
             'online': downtime_end,
             'six_hour_bin': six_hour_bin,
@@ -1109,35 +1112,37 @@ class DistributionFitUtils():
         )
         final_df = pd.DataFrame(results.tolist())
 
+        print(final_df)
+
         # downtime by bin + quarter + reason
-        grouped = final_df.groupby(['six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
+        grouped = final_df.groupby(['registration', 'six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
 
         # Scheduled time by bin + quarter (for calculating availability)
-        scheduled_totals = final_df.groupby(['six_hour_bin', 'quarter'])['scheduled_minutes'].sum().reset_index()
+        scheduled_totals = final_df.groupby(['registration','six_hour_bin', 'quarter'])['scheduled_minutes'].sum().reset_index()
         scheduled_totals = scheduled_totals.rename(columns={'scheduled_minutes': 'total_scheduled'})
 
         # Merge downtime total
-        downtime_totals = grouped.groupby(['six_hour_bin', 'quarter'])['total_offline'].sum().reset_index()
+        downtime_totals = grouped.groupby(['registration','six_hour_bin', 'quarter'])['total_offline'].sum().reset_index()
         downtime_totals = downtime_totals.rename(columns={'total_offline': 'total_downtime'})
 
         # Calculate availability
-        availability_df = pd.merge(scheduled_totals, downtime_totals, on=['six_hour_bin', 'quarter'], how='left').fillna(0)
+        availability_df = pd.merge(scheduled_totals, downtime_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left').fillna(0)
         availability_df['reason'] = 'available'
         availability_df['probability'] = (availability_df['total_scheduled'] - availability_df['total_downtime']) / availability_df['total_scheduled']
-        available_probs = availability_df[['six_hour_bin', 'quarter', 'reason', 'probability']]
+        available_probs = availability_df[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']]
 
         # Add unavailability reason probabilities
         # Merge rota time into grouped
-        grouped = pd.merge(grouped, scheduled_totals, on=['six_hour_bin', 'quarter'], how='left')
+        grouped = pd.merge(grouped, scheduled_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left')
         grouped['probability'] = grouped['total_offline'] / grouped['total_scheduled']
 
         # Combine everything
         final_prob_df = pd.concat([
-            grouped[['six_hour_bin', 'quarter', 'reason', 'probability']],
+            grouped[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']],
             available_probs
         ], ignore_index=True)
 
-        final_prob_df = final_prob_df.sort_values(by=['quarter', 'six_hour_bin', 'reason']).reset_index(drop=True)
+        final_prob_df = final_prob_df.sort_values(by=['registration', 'quarter', 'six_hour_bin', 'reason']).reset_index(drop=True)
         final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
 
 
