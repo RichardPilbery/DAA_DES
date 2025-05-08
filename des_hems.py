@@ -206,7 +206,10 @@ class DES_HEMS:
                 # self.debug(f"{self.new_day} and {current_dt.date}")
 
                 # Now have additional option of determining calls per day by quarter instead of season
-                self.calls_today = int(self.utils.inc_per_day(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
+                #self.calls_today = int(self.utils.inc_per_day(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
+                
+                # Try with actual sampled values instead
+                self.calls_today = int(self.utils.inc_per_day_samples(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
 
                 # self.debug(f"{current_dt.date()} There will be {self.calls_today} calls today")
                 #self.debug(f"{current_dt.date()} There will be {self.calls_today} calls today")

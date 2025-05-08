@@ -65,7 +65,9 @@ class DistributionFitUtils():
             "norm",
             "powerlaw",
             "rayleigh",
-            "uniform"
+            "uniform",
+            "neg_binomial",
+            "zip"
         ]
         # SR 16-04-2025 Have hardcoded the common distributions
         # to make setup for random number generation more robust
@@ -173,6 +175,7 @@ class DistributionFitUtils():
 
         # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
         self.incidents_per_day()
+        self.incidents_per_day_samples()
 
         # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
         self.enhanced_or_critical_care_by_ampds_card_probs()
@@ -362,98 +365,146 @@ class DistributionFitUtils():
 
     def incidents_per_day(self):
         """
-
-            Determine the best fitting distribution for incidents per
-            day stratified by quarter
-
+        Fit distributions for number of incidents per day using actual daily counts,
+        applying year-based weighting to reflect trends (e.g., 2024 busier than 2023),
+        stratified by season and quarter.
         """
+        import math
+        import json
+        import numpy as np
 
-        inc_df = self.df[['inc_date', 'date_only', 'quarter']]
-
+        inc_df = self.df[['inc_date', 'date_only', 'quarter']].copy()
         inc_df['year'] = inc_df['date_only'].dt.year
-        inc_df['season'] = inc_df['quarter'].map(lambda q: "winter" if q in [1, 4] else "summer")
-        inc_df['month_day'] = inc_df['date_only'].dt.strftime('%m-%d')  # Ignore year for seasonality
 
-        inc_per_day = inc_df.groupby(['date_only']).size().reset_index(name='jobs_per_day')
-        max_n_per_day = int(inc_per_day['jobs_per_day'].max())
-        min_n_per_day = int(inc_per_day['jobs_per_day'].min())
+        # Daily incident counts
+        inc_per_day = inc_df.groupby('date_only').size().reset_index(name='jobs_per_day')
+        inc_per_day['year'] = inc_per_day['date_only'].dt.year
 
-        mean_jobs_df = inc_df.groupby(['year', 'month_day', 'season'])['date_only'].size().reset_index(name='jobs_per_day')
+        # Merge quarter and season from self.df 
+        date_info = self.df[['date_only', 'quarter']].drop_duplicates()
 
-        mean_jobs_df = (
-            inc_df.groupby(['year', 'month_day', 'season'])['date_only'].size().reset_index(name='jobs_per_day')
-            .groupby(['month_day', 'season'])
-            .agg(
-                # Biased_mean as the name implies, puts a slight increase weighting on
-                # years with higher levels of activity (default = .6)
-                mean_jobs_per_day=('jobs_per_day', lambda x: math.ceil(Utils.biased_mean(x))),
+        if 'season' not in self.df.columns:
+            date_info['season'] = date_info['quarter'].map(lambda q: "winter" if q in [1, 4] else "summer")
+        else:
+            date_info = date_info.merge(
+                self.df[['date_only', 'season']].drop_duplicates(),
+                on='date_only',
+                how='left'
             )
-            .reset_index()
-        )
 
+        inc_per_day = inc_per_day.merge(date_info, on='date_only', how='left')
 
-        mean_jobs_qtr_df = (
-            inc_df.groupby(['year', 'month_day', 'quarter'])['date_only'].size().reset_index(name='jobs_per_day')
-            .groupby(['month_day', 'quarter'])
-            .agg(
-                # Biased_mean as the name implies, puts a slight increase weighting on
-                # years with higher levels of activity (default = .6)
-                mean_jobs_per_day=('jobs_per_day', lambda x: math.ceil(Utils.biased_mean(x))),
-            )
-            .reset_index()
-        )
+        # Weight settings - simple implementation rather than biased mean thing
+        year_weights = {
+            2023: 1.0,
+            2024: 4.0  # 10% more weight to 2024
+        }
 
-        # Sort seasons out first
-
-        seasons = mean_jobs_df['season'].dropna().unique()  # Avoid NaN seasons if they exist
+        # ========== SEASONAL DISTRIBUTIONS ==========
         jpd_distr = []
 
-        for season in seasons:
+        for season in inc_per_day['season'].dropna().unique():
+            filtered = inc_per_day[inc_per_day['season'] == season].copy()
+            filtered['weight'] = filtered['year'].map(year_weights).fillna(1.0)
 
-            # Added ceiling to convert mean to integer values
-            fit_season = mean_jobs_df[mean_jobs_df['season'] == season]['mean_jobs_per_day'].apply(math.ceil)
+            # Repeat rows proportionally by weight
+            replicated = filtered.loc[
+                filtered.index.repeat((filtered['weight'] * 10).round().astype(int))
+            ]['jobs_per_day']
 
-            # Compute best fit distribution
-            best_fit = self.getBestFit(fit_season, distr=self.sim_tools_distr_plus)
+            best_fit = self.getBestFit(np.array(replicated), distr=self.sim_tools_distr_plus)
 
-            return_dict = {
+            jpd_distr.append({
                 "season": season,
                 "best_fit": best_fit,
-                "min_n_per_day": min_n_per_day,
-                "max_n_per_day": max_n_per_day,
-                "mean_n_per_day": fit_season.mean()
-            }
+                "min_n_per_day": int(replicated.min()),
+                "max_n_per_day": int(replicated.max()),
+                "mean_n_per_day": float(replicated.mean())
+            })
 
-            jpd_distr.append(return_dict)
+        with open('distribution_data/inc_per_day_distributions.txt', 'w+') as f:
+            json.dump(jpd_distr, f)
 
-        with open('distribution_data/inc_per_day_distributions.txt', 'w+') as convert_file:
-            json.dump(jpd_distr, convert_file)
-
-
-        # No distributions by yearly quarter
-
-        quarters = mean_jobs_qtr_df['quarter'].dropna().unique()
+        # ========== QUARTERLY DISTRIBUTIONS ==========
         jpd_qtr_distr = []
 
-        for quarter in quarters:
+        for quarter in inc_per_day['quarter'].dropna().unique():
+            filtered = inc_per_day[inc_per_day['quarter'] == quarter].copy()
+            filtered['weight'] = filtered['year'].map(year_weights).fillna(1.0)
 
-            fit_quarter = mean_jobs_qtr_df[mean_jobs_qtr_df['quarter'] == quarter]['mean_jobs_per_day'].apply(math.ceil)
+            replicated = filtered.loc[
+                filtered.index.repeat((filtered['weight'] * 10).round().astype(int))
+            ]['jobs_per_day']
 
-            # Compute best fit distribution
-            best_fit = self.getBestFit(fit_quarter, distr=self.sim_tools_distr_plus)
+            best_fit = self.getBestFit(np.array(replicated), distr=self.sim_tools_distr_plus)
 
-            return_dict = {
+            jpd_qtr_distr.append({
                 "quarter": int(quarter),
                 "best_fit": best_fit,
-                "min_n_per_day": min_n_per_day,
-                "max_n_per_day": max_n_per_day,
-                "mean_n_per_day": fit_season.mean()
-            }
+                "min_n_per_day": int(replicated.min()),
+                "max_n_per_day": int(replicated.max()),
+                "mean_n_per_day": float(replicated.mean())
+            })
 
-            jpd_qtr_distr.append(return_dict)
+        with open('distribution_data/inc_per_day_qtr_distributions.txt', 'w+') as f:
+            json.dump(jpd_qtr_distr, f)
 
-        with open('distribution_data/inc_per_day_qtr_distributions.txt', 'w+') as convert_file:
-            json.dump(jpd_qtr_distr, convert_file)
+    def incidents_per_day_samples(self, weight_map=None, scale_factor=10):
+        """
+            Create weighted empirical samples of incidents per day by season and quarter.
+        """
+
+        inc_df = self.df[['date_only', 'quarter']].copy()
+        inc_df['year'] = inc_df['date_only'].dt.year
+        inc_df['season'] = inc_df['quarter'].map(lambda q: "winter" if q in [1, 4] else "summer")
+
+        # Get raw counts per day
+        daily_counts = inc_df.groupby('date_only').size().reset_index(name='jobs_per_day')
+        daily_counts['year'] = daily_counts['date_only'].dt.year
+
+        # Merge back in season/quarter info
+        meta_info = self.df[['date_only', 'quarter']].drop_duplicates()
+        if 'season' in self.df.columns:
+            meta_info = meta_info.merge(
+                self.df[['date_only', 'season']].drop_duplicates(),
+                on='date_only', how='left'
+            )
+        else:
+            meta_info['season'] = meta_info['quarter'].map(lambda q: "winter" if q in [1, 4] else "summer")
+
+        daily_counts = daily_counts.merge(meta_info, on='date_only', how='left')
+
+        # Year weight map
+        if weight_map is None:
+            weight_map = {2023: 1.0, 2024: 1.1}
+
+        # Compute weights
+        daily_counts['weight'] = daily_counts['year'].map(weight_map).fillna(1.0)
+
+        # Storage
+        empirical_samples = {}
+
+        # Season-based
+        for season in daily_counts['season'].dropna().unique():
+            filtered = daily_counts[daily_counts['season'] == season].copy()
+            repeated = filtered.loc[
+                filtered.index.repeat((filtered['weight'] * scale_factor).round().astype(int))
+            ]['jobs_per_day'].tolist()
+
+            empirical_samples[season] = repeated
+
+        # Quarter-based
+        for quarter in daily_counts['quarter'].dropna().unique():
+            filtered = daily_counts[daily_counts['quarter'] == quarter].copy()
+            repeated = filtered.loc[
+                filtered.index.repeat((filtered['weight'] * scale_factor).round().astype(int))
+            ]['jobs_per_day'].tolist()
+
+            empirical_samples[f"Q{int(quarter)}"] = repeated
+
+        with open("distribution_data/inc_per_day_samples.json", 'w') as f:
+            json.dump(empirical_samples, f)
+
 
 
     def enhanced_or_critical_care_by_ampds_card_probs(self):
@@ -716,7 +767,7 @@ class DistributionFitUtils():
         merged['jobs_in_day'] = merged['jobs_in_day'].fillna(0).astype(int)
 
         all_counts = merged.groupby(['callsign', 'jobs_in_day']).count().reset_index().rename(columns={"date":"count"})
-        all_counts.to_csv("historical_jobs_per_day_per_callsign.csv", index=False)
+        all_counts.to_csv("historical_data/historical_jobs_per_day_per_callsign.csv", index=False)
 
     def historical_monthly_totals(self):
         """

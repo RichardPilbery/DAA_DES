@@ -1,4 +1,5 @@
 from datetime import datetime, time, timedelta
+import json
 import random
 import numpy as np
 import pandas as pd
@@ -90,6 +91,10 @@ class Utils:
             inc_per_day_per_qtr_data = ast.literal_eval(inFile.read())
         inFile.close()
         self.inc_per_day_per_qtr_distr = inc_per_day_per_qtr_data
+
+        # Incident per day samples
+        with open('distribution_data/inc_per_day_samples.json', 'r') as f:
+            self.incident_per_day_samples = json.load(f)
 
         # Turn the min-max activity times data into a format that supports easier/faster
         # lookups
@@ -387,9 +392,8 @@ class Utils:
     # TODO: RANDOM SEED SETTING
     def inc_per_day(self, quarter: int, quarter_or_season: str = 'season') -> float:
         """
-            This function will return a dictionary containing
-            the distribution and parameters for the distribution
-            that match the provided HEMS vehicle type and time type
+            This function will return the number of incidents for a given
+            day 
 
         """
 
@@ -423,6 +427,21 @@ class Utils:
 
         return sampled_inc_per_day
 
+    def inc_per_day_samples(self, quarter: int, quarter_or_season: str = 'season') -> float:
+        """
+            This function will return a dictionary containing
+            the distribution and parameters for the distribution
+            that match the provided HEMS vehicle type and time type
+
+        """
+
+        season = 'summer' if quarter in [2, 3] else 'winter'
+
+        if quarter_or_season == 'season':
+            return random.choice(self.incident_per_day_samples[season])
+        else:
+            return random.choice(self.incident_per_day_samples[f"Q{quarter}"])
+        
 
     def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
