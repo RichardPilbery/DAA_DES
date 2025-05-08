@@ -1164,7 +1164,14 @@ the overall time period.*
 
             st.subheader("Jobs Outcome by Category/Preference")
 
-            st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour())
+            @st.fragment
+            def plot_preferred_outcome_by_hour():
+                show_proportions_job_outcomes_by_hour = st.toggle("Show Proportions", False, key="show_proportions_job_outcomes_by_hour")
+                st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour(show_proportions=show_proportions_job_outcomes_by_hour))
+
+            plot_preferred_outcome_by_hour()
+
+            st.plotly_chart(_job_outcome_calculation.get_facet_plot_preferred_outcome_by_hour())
 
             with tab_4_2:
                 st.subheader("Event Overview")
