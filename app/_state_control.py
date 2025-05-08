@@ -28,7 +28,8 @@ DEFAULT_INPUTS = {
     "scenario_2_set": False,
     "rota_initialised": False,
     # "activity_duration_multiplier": 1.0
-    "activity_duration_multiplier": 1.0
+    "activity_duration_multiplier": 1.0,
+    "master_seed": 42
 }
 
 # Adjust some parameters depending on whether it is running

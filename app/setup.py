@@ -590,6 +590,12 @@ as well as the demand (average number of jobs received).
         key="key_sim_start_time_input"
         ).strftime("%H:%M")
 
+    st.markdown("### Reproducibility and Variation")
+
+    master_seed = st.number_input("Set the master random seed", 1, 100000, 42,
+                                  key="key_master_seed",
+                                  on_change=lambda: setattr(st.session_state, 'master_seed', st.session_state.key_master_seed))
+
     st.markdown("### Other Modifiers")
 
     activity_duration_multiplier = st.slider(
