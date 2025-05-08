@@ -859,7 +859,9 @@ Most users will not need to look at the visualisations in this tab.
             with tab_4_1:
                 st.subheader("Resource Use")
 
-                resource_use_events_only = results_all_runs[(results_all_runs["event_type"] == "resource_use") | (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True)
+                resource_use_events_only = results_all_runs[
+                    (results_all_runs["event_type"] == "resource_use") |
+                    (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True).copy()
 
                 # Accounting for odd bug being seen in streamlit community cloud
                 if 'P_ID' not in resource_use_events_only.columns:
@@ -904,7 +906,7 @@ Most users will not need to look at the visualisations in this tab.
                         missed_job_events = results_all_runs[
                             (results_all_runs["event_type"] == "resource_request_outcome") &
                             (results_all_runs["time_type"] == "No Resource Available")
-                            ].reset_index(drop=True)
+                            ].reset_index(drop=True).copy()
 
                         missed_job_events = missed_job_events[missed_job_events["run_number"]==run_select_ruep][["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
                         missed_job_events["event_type"] = "resource_use"
