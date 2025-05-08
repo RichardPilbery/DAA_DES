@@ -63,6 +63,7 @@ def get_facet_plot_preferred_outcome_by_hour(results_path="data/run_results.csv"
     lambda x: textwrap.fill(x, width=25).replace("\n", "<br>")
 )
 
-    fig = px.bar(resource_preferred_outcome_by_hour, x="hour", y="proportion", facet_col="time_type", facet_col_wrap=4, height=800, facet_col_spacing=0.05, facet_row_spacing=0.1)
+    fig = px.bar(resource_preferred_outcome_by_hour, x="hour", y="proportion", facet_col="time_type",
+                 facet_col_wrap=4, height=800, facet_col_spacing=0.05, facet_row_spacing=0.13)
 
     return fig
