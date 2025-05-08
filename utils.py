@@ -730,7 +730,7 @@ class Utils:
 
         if subset.empty:
             # Default to available if no data (fail-safe)
-            return True
+            return 'available'
 
         # Get list of reasons and probabilities
         reasons = subset['reason'].tolist()

@@ -7,12 +7,18 @@ import platform
 from datetime import datetime
 
 def format_sigfigs(x, sigfigs=4):
-    if x == 0:
-        return "0"
-    else:
-        from math import log10, floor
-        digits = sigfigs - 1 - floor(log10(abs(x)))
-        return f"{x:.{digits}f}"
+    from math import log10, floor
+
+    try:
+        if x == 0:
+            return "0.0"
+        elif x < 1e-10:
+            return "<1e-10"
+        else:
+            digits = sigfigs - 1 - floor(log10(abs(x)))
+            return f"{x:.{digits}f}"
+    except (ValueError, TypeError):
+        return str(x) 
 
 def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', family="filled", type="icons"):
     """Function that returns a CSS styled container for adding a Material Icon to a Streamlit st.metric value

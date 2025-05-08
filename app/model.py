@@ -340,7 +340,12 @@ if button_run_pressed:
 
                     with iconMetricContainer(key="car_util", icon_unicode="eb3c", type="symbols"):
                         print(utilisation_df_overall)
-                        car_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']==car_callsign]['PRINT_perc'].values[0]
+                        matched = utilisation_df_overall[utilisation_df_overall['callsign'] == car_callsign]
+
+                        if not matched.empty:
+                            car_util_fig = matched['PRINT_perc'].values[0]
+                        else:
+                            car_util_fig = None 
 
                         quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
 
