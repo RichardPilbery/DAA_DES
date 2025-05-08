@@ -140,7 +140,8 @@ if button_run_pressed:
                         amb_data=st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
                         activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
-                        print_debug_messages=debug_messages
+                        print_debug_messages=debug_messages,
+                        master_seed=st.session_state.master_seed
                     )
 
                 results.append(
@@ -170,7 +171,8 @@ if button_run_pressed:
                         amb_data = st.session_state.amb_data,
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
                         activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
-                        print_debug_messages=debug_messages
+                        print_debug_messages=debug_messages,
+                        master_seed=st.session_state.master_seed
 
             )
             collateRunResults()
