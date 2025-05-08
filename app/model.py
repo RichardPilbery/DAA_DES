@@ -77,8 +77,12 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
+    generate_downloadable_report = st.toggle("Generate a Downloadable Summary of Results", False,
+                                             help="This will generate a downloadable report. This can slow down the running of the model, so turn this off if you don't need it.")
+
     debug_messages = st.toggle("Turn on debugging messages", False,
                                help="This will turn on display of messages in the developer terminal")
+
     _app_utils.summary_sidebar(quarto_string=quarto_string)
 
 with stylable_container(key="run_buttons",
@@ -1347,17 +1351,18 @@ the overall time period.*
 
 
         with tab5:
-            try:
-                with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
-                    text_file.write(quarto_string)
+            if generate_downloadable_report:
+                try:
+                    with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
+                        text_file.write(quarto_string)
 
-                msg = _app_utils.generate_quarto_report(run_quarto_check=False)
+                    msg = _app_utils.generate_quarto_report(run_quarto_check=False)
 
-                # print(msg)
+                    # print(msg)
 
-                if msg == "success":
-                    report_message.success("Report Available for Download")
+                    if msg == "success":
+                        report_message.success("Report Available for Download")
 
-            except:
-                ## error message
-                report_message.error(f"Report cannot be generated - please speak to a developer")
+                except:
+                    ## error message
+                    report_message.error(f"Report cannot be generated - please speak to a developer")
