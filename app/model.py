@@ -358,8 +358,50 @@ if button_run_pressed:
             t1_col3, t1_col4 = st.columns(2)
 
         with tab2:
-            tab_2_1, tab_2_2, tab_2_3 = st.tabs(["Resource Utilisation", "Split of Jobs by Callsign Group", "'Missed' Calls"])
+            tab_2_1, tab_2_2, tab_2_3 = st.tabs(["'Missed' Calls", "Resource Utilisation", "Split of Jobs by Callsign Group"])
+
             with tab_2_1:
+                @st.fragment
+                def missed_jobs():
+                    show_proportions_per_hour = st.toggle("Show as proportion of jobs missed per hour", value=False )
+                    by_quarter = st.toggle("Stratify results by quarter", value=False)
+                    st.plotly_chart(_job_count_calculation.plot_missed_jobs(
+                        show_proportions_per_hour=show_proportions_per_hour,
+                        by_quarter=by_quarter
+                        ))
+
+                missed_jobs()
+
+                st.caption("""
+## What is this plot showing?
+
+This chart shows how often helicopter emergency medical services (HEMS) were either available and sent or unavailable during each hour of the day. It compares simulated data (used for testing or planning purposes) with historical data (what actually happened in the past).
+
+- The top chart shows the simulated job counts by hour.
+
+- The bottom chart shows the historical job counts by hour.
+
+## What do the colours mean?
+
+Each bar is split into:
+
+- Dark blue: When a HEMS vehicle (either helicopter or car) was available and sent to a job.
+
+- Light blue: When no HEMS was available for a job received during that time period.
+
+If more of the bar is light blue, this means that there were more jobs in that hour that were not responded to by a HEMS resource due to no HEMS resource being available at the time.
+
+## Using this plot for model quality assurance
+
+If the default historical parameters are being used, this plot can be used to judge if the simulation is mirroring reality well.
+In this case, we would be looking for two things to be consistent across the top and bottom plots:
+
+- the overall pattern of bar heights per hour (reflecting the total number of jobs being received each hour)
+- the split between dark and light blue per hour (reflecting how often a resource is or is not available to respond to a job received in that hour)
+
+""")
+
+            with tab_2_2:
                 @st.fragment
                 def create_utilisation_rwc_plot():
                     call_df = get_job_count_df()
@@ -397,7 +439,7 @@ If the simulation is not using the default parameters, we would not expect the o
     wish to consider the historical split as part of your decision making.
                 """)
 
-                with tab_2_2:
+                with tab_2_3:
                     @st.fragment
                     def plot_callsign_group_split():
                         x_is_callsign_group = st.toggle("Plot callsign group on the horizontal axis",
@@ -411,46 +453,6 @@ If the simulation is not using the default parameters, we would not expect the o
 
                     plot_callsign_group_split()
 
-                with tab_2_3:
-                    @st.fragment
-                    def missed_jobs():
-                        show_proportions_per_hour = st.toggle("Show as proportion of jobs missed per hour", value=False )
-                        by_quarter = st.toggle("Stratify results by quarter", value=False)
-                        st.plotly_chart(_job_count_calculation.plot_missed_jobs(
-                            show_proportions_per_hour=show_proportions_per_hour,
-                            by_quarter=by_quarter
-                            ))
-
-                    missed_jobs()
-
-                    st.caption("""
-## What is this plot showing?
-
-This chart shows how often helicopter emergency medical services (HEMS) were either available and sent or unavailable during each hour of the day. It compares simulated data (used for testing or planning purposes) with historical data (what actually happened in the past).
-
-- The top chart shows the simulated job counts by hour.
-
-- The bottom chart shows the historical job counts by hour.
-
-## What do the colours mean?
-
-Each bar is split into:
-
-- Dark blue: When a HEMS vehicle (either helicopter or car) was available and sent to a job.
-
-- Light blue: When no HEMS was available for a job received during that time period.
-
-If more of the bar is light blue, this means that there were more jobs in that hour that were not responded to by a HEMS resource due to no HEMS resource being available at the time.
-
-## Using this plot for model quality assurance
-
-If the default historical parameters are being used, this plot can be used to judge if the simulation is mirroring reality well.
-In this case, we would be looking for two things to be consistent across the top and bottom plots:
-
-- the overall pattern of bar heights per hour (reflecting the total number of jobs being received each hour)
-- the split between dark and light blue per hour (reflecting how often a resource is or is not available to respond to a job received in that hour)
-
-""")
 
 
         with tab3:
