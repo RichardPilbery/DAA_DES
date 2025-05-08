@@ -897,8 +897,13 @@ Most users will not need to look at the visualisations in this tab.
                             resource_use_events_only["run_number"].unique()
                         )
 
+                    # colour_by_cc_ec = st.toggle("Colour the plot by CC/EC/REG patient benefit",
+                    #                          value=True)
+
                     show_outline = st.toggle("Show an outline to help debug overlapping calls",
                                              value=False)
+
+
 
                     with st.expander("Click here to see the timings of resource use"):
                         st.dataframe(
@@ -917,8 +922,8 @@ Most users will not need to look at the visualisations in this tab.
                                         value_vars="timestamp_dt").drop_duplicates())
 
                         resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
-                            .pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index())
+                            [["P_ID", "time_type", "timestamp_dt", "event_type", "registration", "care_cat"]].drop_duplicates()
+                            .pivot(columns="event_type", index=["P_ID","time_type", "registration", "care_cat"], values="timestamp_dt").reset_index())
 
                         # get the number of resources and assign them a value
                         resources = resource_use_wide.time_type.unique()
@@ -930,7 +935,7 @@ Most users will not need to look at the visualisations in this tab.
                             (results_all_runs["time_type"] == "No Resource Available")
                             ].reset_index(drop=True).copy()
 
-                        missed_job_events = missed_job_events[missed_job_events["run_number"]==run_select_ruep][["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
+                        missed_job_events = missed_job_events[missed_job_events["run_number"]==run_select_ruep][["P_ID", "time_type", "timestamp_dt", "event_type", "registration", "care_cat"]].drop_duplicates()
                         missed_job_events["event_type"] = "resource_use"
 
                         missed_job_events_end = missed_job_events.copy()
@@ -940,7 +945,7 @@ Most users will not need to look at the visualisations in this tab.
                         missed_job_events_full = pd.concat([missed_job_events, missed_job_events_end])
                         missed_job_events_full["registration"] = "No Resource Available"
 
-                        missed_job_events_full_wide = missed_job_events_full.pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index()
+                        missed_job_events_full_wide = missed_job_events_full.pivot(columns="event_type", index=["P_ID","time_type", "registration", "care_cat"], values="timestamp_dt").reset_index()
 
                         resource_use_wide = pd.concat([resource_use_wide, missed_job_events_full_wide]).reset_index(drop=True)
 
@@ -965,6 +970,7 @@ Most users will not need to look at the visualisations in this tab.
                         # is handled in plotly
                         resource_use_wide["duration_seconds"] = (resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]).dt.total_seconds()*1000
                         resource_use_wide["duration_minutes"] = resource_use_wide["duration_seconds"] / 1000 / 60
+                        resource_use_wide["duration_minutes"] = resource_use_wide["duration_minutes"].round(1)
 
                         resource_use_wide["callsign_group"] = resource_use_wide["time_type"].str.extract("(\d+)")
 
@@ -991,6 +997,13 @@ Most users will not need to look at the visualisations in this tab.
                                         (service_schedule["service_end_date"] >= resource_use_wide.resource_use.min())]
 
                         st.dataframe(service_schedule)
+
+                    # # Add cc/ec/reg lookup
+                    # cc_ec_reg_colour_lookup = {
+                    #     'CC': 0,
+                    #     'EC': 1,
+                    #     'REG': 2
+                    # }
 
                     # Create figure
                     resource_use_fig = go.Figure()
@@ -1020,6 +1033,10 @@ Most users will not need to look at the visualisations in this tab.
                                 hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
                             ))
 
+                        # if colour_by_cc_ec:
+                        #     cc_ec_status = callsign_df["care_cat"].values[0]
+                        #     marker_val = dict(color=list(DAA_COLORSCHEME.values())[cc_ec_reg_colour_lookup[cc_ec_status]])
+
                         if show_outline:
                             marker_val=dict(color=list(DAA_COLORSCHEME.values())[idx],
                                         line=dict(color="#FFA400", width=0.2))
@@ -1035,8 +1052,8 @@ Most users will not need to look at the visualisations in this tab.
                             width=0.4,
                             marker=marker_val,
                             name=callsign,
-                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration']],
-                            hovertemplate="Response from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration', 'care_cat']],
+                            hovertemplate="Response to %{customdata[5]} call from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
                             #customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
                             #hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
 
