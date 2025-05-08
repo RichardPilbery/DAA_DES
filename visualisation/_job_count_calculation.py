@@ -6,7 +6,7 @@ in the simulation.
 [x] Jobs by day of the week
 
 [ ] Total number of jobs
-[ ] Total number of jobs by callsign
+[x] Total number of jobs by callsign
 [ ] Total number of jobs by vehicle type
 [ ] Total number of jobs by callsign group
 [x] Jobs attended of those received (missed jobs)
@@ -25,6 +25,7 @@ import plotly.graph_objects as go
 import numpy as np
 import datetime
 from calendar import monthrange, day_name
+import itertools
 
 from _app_utils import DAA_COLORSCHEME, q10, q90
 
@@ -900,3 +901,60 @@ def plot_missed_jobs(historical_df_path="historical_data/historical_missed_calls
             )
 
         return fig
+
+
+
+def plot_jobs_per_callsign(
+        historical_df_path="historical_data/historical_jobs_per_day_per_callsign.csv",
+        simulated_df_path="data/run_results.csv"
+        ):
+    # Create a count of the number of days in the sim that each resource had that many jobs
+    # i.e. how many days did CC70 have 0 jobs, 1 job, 2 jobs, etc.
+    df = pd.read_csv(simulated_df_path)
+
+    df["date"] = pd.to_datetime(df["timestamp_dt"]).dt.date
+    all_counts = df[df["event_type"]=="resource_use"].groupby(["time_type", "date", "run_number"])["P_ID"].count().reset_index()
+    all_counts.rename(columns={'P_ID': "jobs_in_day"}, inplace=True)
+
+    # We must assume any missing day in our initial count df is a 0 count
+    # So generate a df with every possible combo
+    all_combinations = pd.DataFrame(
+        list(itertools.product(all_counts['time_type'].unique(), df['date'].unique(), df['run_number'].unique())),
+        columns=['time_type', 'date', 'run_number']
+    )
+    # Join this in
+    merged = all_combinations.merge(
+        all_counts,
+        on=['time_type', 'date', 'run_number'],
+        how='left'
+        )
+    # Fill na values with 0
+    merged['jobs_in_day'] = merged['jobs_in_day'].fillna(0).astype(int)
+    # Finally transform into pure counts
+    sim_count_df = (merged.groupby(
+        ['time_type', 'jobs_in_day']
+        )[['date']].count()
+        .reset_index()
+        .rename(columns={'date':'count', 'time_type': 'callsign'})
+        )
+
+    sim_count_df['what'] = 'Simulated'
+
+    # Bring in historical data
+    jobs_per_day_per_callsign_historical = pd.read_csv(historical_df_path)
+    jobs_per_day_per_callsign_historical['what'] = 'Historical'
+
+    # Join the two together
+    full_df = pd.concat([jobs_per_day_per_callsign_historical, sim_count_df])
+
+    # Plot as histograms
+    fig = px.histogram(full_df,
+             x="jobs_in_day", y="count", color="what",
+             facet_col="callsign",
+             facet_row="what",
+             histnorm="percent",
+            #  barmode="overlay",
+            #  opacity=1
+             )
+
+    return fig

@@ -373,7 +373,15 @@ class DES_HEMS:
 
             hems_avail = True if hems_res is not None else False
 
-            if hems_avail:
+            if not hems_avail:
+                if not_in_warm_up_period:
+                    self.debug(f"Patient {patient.id}: No HEMS available")
+                    self.add_patient_result_row(patient, "No HEMS available", "queue")
+                    self.add_patient_result_row(patient, "No Resource Available", "resource_request_outcome")
+                    #self.add_patient_result_row(patient, "depart", "arrival_departure")
+
+            # if hems_avail
+            else:
 
                 #self.debug(f"Patient csg is {patient.hems_callsign_group}")
                 patient.hems_vehicle_type = hems_res.vehicle_type
@@ -386,10 +394,12 @@ class DES_HEMS:
 
                 if not_in_warm_up_period:
                     if hems_res is not None:
+                        self.add_patient_result_row(patient, "HEMS Resource Available", "resource_request_outcome")
                         self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
+                        self.debug(f"Patient {patient.id} (preferred callsign group {patient.hems_pref_callsign_group}, preferred resource type {patient.hems_pref_vehicle_type}) sent resource {hems_res.callsign}")
                         self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
-                # Check if HEMS result indicates that resource stodd down before going mobile or en route
+                # Check if HEMS result indicates that resource stood down before going mobile or en route
                 no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False
 
                 # Check if HEMS result indicates no leaving scene/at hospital times
@@ -399,10 +409,6 @@ class DES_HEMS:
 
                 #self.debug(f"Patient outcome is {patient.pt_outcome}")
 
-            else:
-                #self.debug("No HEMS available")
-                self.add_patient_result_row(patient, "No HEMS available", "queue")
-                #self.add_patient_result_row(patient, "depart", "arrival_departure")
 
             #self.debug('Inside hems_avail')
             if self.amb_data:

@@ -345,10 +345,7 @@ class HEMSAvailability():
             # EC = H71 helicopter then car, then CC72, then H70 helicopter then car
             # If no resources then return None
 
-            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
-
-
-            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr) and ad_hoc_reason == "available":
+            if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
 
                 if ( # Skip this resource if any of the following are true:
                     h.in_use or
@@ -356,6 +353,13 @@ class HEMSAvailability():
                     h.registration in self.active_registrations or
                     not h.hems_resource_on_shift(pt.hour, pt.qtr)
                 ):
+                    continue
+
+                ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
+
+                self.debug(f"({h.callsign}) Sampled reason for patient {pt.id} ({pt.hems_cc_or_ec}) is: {ad_hoc_reason}")
+
+                if ad_hoc_reason != "available":
                     continue
 
                 if h.category == preferred_care_category and h.vehicle_type == "helicopter" and not h.being_serviced:
@@ -430,7 +434,7 @@ class HEMSAvailability():
             if primary.callsign in self.active_callsigns:
                 self.debug(f"[BLOCKED] Callsign {primary.callsign} already in use")
                 return resource_event.succeed([None, pref_res[1], None])
-            
+
             self.active_callsign_groups.add(primary.callsign_group)
             self.active_registrations.add(primary.registration)
             self.active_callsigns.add(primary.callsign)
@@ -588,13 +592,18 @@ class HEMSAvailability():
 
         for h in self.store.items:
 
-            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
-            
-            if h.in_use or h.being_serviced or not h.hems_resource_on_shift(pt.hour, pt.qtr) or ad_hoc_reason != "available":
+            if h.in_use or h.being_serviced or not h.hems_resource_on_shift(pt.hour, pt.qtr):
                 continue
 
             # Skip if crew is already in use
             if h.callsign_group in self.active_callsign_groups or h.registration in self.active_registrations:
+                continue
+
+            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr)
+
+            self.debug(f"({h.callsign}) Sampled reason for patient {pt.id} (REG) is: {ad_hoc_reason}")
+
+            if ad_hoc_reason != "available":
                 continue
 
             # Helicopter benefit cases
@@ -657,7 +666,7 @@ class HEMSAvailability():
             if primary.callsign in self.active_callsigns:
                 self.debug(f"[BLOCKED] Regular Callsign {primary.callsign} already in use")
                 return resource_event.succeed([None, pref_res[1], None])
-            
+
             self.active_callsign_groups.add(primary.callsign_group)
             self.active_registrations.add(primary.registration)
             self.active_callsigns.add(primary.callsign)
@@ -697,7 +706,7 @@ class HEMSAvailability():
                             self.active_callsigns.add(secondary.callsign)
 
                     return resource_event.succeed([primary, pref_res[1], secondary])
-                
+
                 else:
                     # Roll back if unsuccessful
                     self.active_callsign_groups.discard(primary.callsign_group)
@@ -708,5 +717,3 @@ class HEMSAvailability():
 
         self.env.process(process())
         return resource_event
-
-

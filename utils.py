@@ -274,7 +274,7 @@ class Utils:
 
         return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
                                 random_state=self.rngs["vehicle_type_selection"]).iloc[0]
-    
+
 
     def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
         """
@@ -422,7 +422,7 @@ class Utils:
             sampled_inc_per_day = self.sample_from_distribution(distribution, rng=self.rngs["calls_per_day"])
 
         return sampled_inc_per_day
-    
+
 
     def sample_from_distribution(self, distr: dict, rng: np.random.Generator) -> float:
         """
@@ -692,7 +692,7 @@ class Utils:
             Sample from ad hoc unavailability probability table based on time bin and quarter.
             Returns True if available, False if unavailable.
         """
-        
+
         if 0 <= hour <= 5:
             bin_label = '00-05'
         elif 6 <= hour <= 11:
@@ -719,8 +719,8 @@ class Utils:
         # Randomly sample reason
         sampled_reason = self.rngs["ad_hoc_reason_selection"].choice(reasons, p=probs)
 
-        if(sampled_reason != "available"):
-            self.debug(f"Sampled reason is: {sampled_reason}")
+        # if(sampled_reason != "available"):
+        #     self.debug(f"Sampled reason is: {sampled_reason}")
 
         return sampled_reason
 

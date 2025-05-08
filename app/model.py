@@ -9,7 +9,7 @@ import os
 # Data processing imports
 import pandas as pd
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 # Plotting
 import plotly.express as px
@@ -237,7 +237,7 @@ if button_run_pressed:
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
-                perc_unattended = _vehicle_calculation.get_perc_unattended_string(results_all_runs)
+                perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
 
                 quarto_string += "## Calls Not Attended\n\n"
 
@@ -248,7 +248,8 @@ if button_run_pressed:
                             perc_unattended,
                             border=True)
                     missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
-                    st.caption(f"This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically")
+                    st.caption(f"**{perc_unattended_normalised}**")
+                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically*")
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
@@ -858,7 +859,9 @@ Most users will not need to look at the visualisations in this tab.
             with tab_4_1:
                 st.subheader("Resource Use")
 
-                resource_use_events_only = results_all_runs[(results_all_runs["event_type"] == "resource_use") | (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True)
+                resource_use_events_only = results_all_runs[
+                    (results_all_runs["event_type"] == "resource_use") |
+                    (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True).copy()
 
                 # Accounting for odd bug being seen in streamlit community cloud
                 if 'P_ID' not in resource_use_events_only.columns:
@@ -895,9 +898,30 @@ Most users will not need to look at the visualisations in this tab.
                             [["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
                             .pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index())
 
-                        # get the number of referrals and assign them a value
+                        # get the number of resources and assign them a value
                         resources = resource_use_wide.time_type.unique()
+                        resources = np.concatenate([resources, ["No Resource Available"]])
                         resource_dict = {resource: index for index, resource in enumerate(resources)}
+
+                        missed_job_events = results_all_runs[
+                            (results_all_runs["event_type"] == "resource_request_outcome") &
+                            (results_all_runs["time_type"] == "No Resource Available")
+                            ].reset_index(drop=True).copy()
+
+                        missed_job_events = missed_job_events[missed_job_events["run_number"]==run_select_ruep][["P_ID", "time_type", "timestamp_dt", "event_type", "registration"]].drop_duplicates()
+                        missed_job_events["event_type"] = "resource_use"
+
+                        missed_job_events_end = missed_job_events.copy()
+                        missed_job_events_end["event_type"] = "resource_use_end"
+                        missed_job_events_end["timestamp_dt"] = pd.to_datetime(missed_job_events_end["timestamp_dt"]) + timedelta(minutes=5)
+
+                        missed_job_events_full = pd.concat([missed_job_events, missed_job_events_end])
+                        missed_job_events_full["registration"] = "No Resource Available"
+
+                        missed_job_events_full_wide = missed_job_events_full.pivot(columns="event_type", index=["P_ID","time_type", "registration"], values="timestamp_dt").reset_index()
+
+                        resource_use_wide = pd.concat([resource_use_wide, missed_job_events_full_wide]).reset_index(drop=True)
+
                         resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
 
                         # Convert time types to numerical values
@@ -952,8 +976,8 @@ Most users will not need to look at the visualisations in this tab.
                     # Add horizontal bars using actual datetime values
                     for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
                         callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
-                        print(f"==callsign_df - {callsign} - for resource use debugging plot==")
-                        print(callsign_df.head(5))
+                        # print(f"==callsign_df - {callsign} - for resource use debugging plot==")
+                        # print(callsign_df.head(5))
 
                         service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
@@ -1062,46 +1086,62 @@ button at the top right - which will only appear when hovering over the plot - t
 the overall time period.*
             """)
 
+                st.subheader("Jobs per Day - By Callsign")
+
+                st.plotly_chart(_job_count_calculation.plot_jobs_per_callsign())
+
+                st.subheader("Minutes per day on Shift")
+
+                daily_availability_df = (
+                    pd.read_csv("data/daily_availability.csv")
+                    .melt(id_vars="month")
+                    .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
+                    )
+
+                st.plotly_chart(
+                    px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
+                )
+
             with tab_4_2:
                 st.subheader("Event Overview")
 
-                @st.fragment
-                def event_overview_plot():
-                    runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
+                # @st.fragment
+                # def event_overview_plot():
+                #     runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
 
-                    events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
+                #     events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
 
-                    # Fix to deal with odd community cloud indexing bug
-                    if 'P_ID' not in events_over_time_df.columns:
-                        events_over_time_df = events_over_time_df.reset_index()
+                #     # Fix to deal with odd community cloud indexing bug
+                #     if 'P_ID' not in events_over_time_df.columns:
+                #         events_over_time_df = events_over_time_df.reset_index()
 
-                    events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
+                #     events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
 
-                    fig = px.scatter(
-                            events_over_time_df,
-                            x="timestamp_dt",
-                            y="time_type",
-                            # facet_row="run_number",
-                            # showlegend=False,
-                            color="time_type",
-                            height=800,
-                            title="Events Over Time - By Run"
-                            )
+                #     fig = px.scatter(
+                #             events_over_time_df,
+                #             x="timestamp_dt",
+                #             y="time_type",
+                #             # facet_row="run_number",
+                #             # showlegend=False,
+                #             color="time_type",
+                #             height=800,
+                #             title="Events Over Time - By Run"
+                #             )
 
-                    fig.update_traces(marker=dict(size=3, opacity=0.5))
+                #     fig.update_traces(marker=dict(size=3, opacity=0.5))
 
-                    fig.update_layout(yaxis_title="", # Remove y-axis label
-                                      yaxis_type='category',
-                                      showlegend=False)
-                    # Remove facet labels
-                    fig.for_each_annotation(lambda x: x.update(text=""))
+                #     fig.update_layout(yaxis_title="", # Remove y-axis label
+                #                       yaxis_type='category',
+                #                       showlegend=False)
+                #     # Remove facet labels
+                #     fig.for_each_annotation(lambda x: x.update(text=""))
 
-                    st.plotly_chart(
-                        fig,
-                            use_container_width=True
-                        )
+                #     st.plotly_chart(
+                #         fig,
+                #             use_container_width=True
+                #         )
 
-                event_overview_plot()
+                # event_overview_plot()
 
                 # Fix to deal with odd community cloud indexing bug
                 if 'P_ID' not in results_all_runs.columns:
