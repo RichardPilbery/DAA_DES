@@ -1427,26 +1427,21 @@ the overall time period.*
 
 
         with tab5:
-            # if generate_downloadable_report:
-
-            def generate_quarto_report():
-                try:
-                    with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
-                        text_file.write(quarto_string)
-
-                    msg = _app_utils.generate_quarto_report(run_quarto_check=False)
-
-                    # print(msg)
-
-                    if msg == "success":
-                        report_message.success("Report Available for Download")
-
-                except:
-                    ## error message
-                    report_message.error(f"Report cannot be generated - please speak to a developer")
-
             @st.fragment()
             def generate_report_button():
-                get_report = st.button("Click here to generate the downloadable report", on_click=generate_quarto_report)
+                if st.button("Click here to generate the downloadable report"):
+                    with st.spinner("Generating report..."):
+                        try:
+                            with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
+                                text_file.write(quarto_string)
+
+                            msg = _app_utils.generate_quarto_report(run_quarto_check=False)
+
+                            if msg == "success":
+                                st.success("Report Available for Download")
+
+                        except Exception as e:
+                            st.error("Report cannot be generated - please speak to a developer")
+
 
             generate_report_button()
