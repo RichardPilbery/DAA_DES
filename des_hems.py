@@ -307,7 +307,8 @@ class DES_HEMS:
 
         if pt.hems_case == 1:
             #self.debug(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
-            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.ampds_card)
+            # pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.ampds_card)
+            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.hems_cc_or_ec)
             #self.debug(f"Callsign is {pt.hems_pref_callsign_group}")
 
             # !!!!!! ASSUMPTION !!!!!!! #
