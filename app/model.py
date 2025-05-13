@@ -345,7 +345,7 @@ if button_run_pressed:
                         if not matched.empty:
                             car_util_fig = matched['PRINT_perc'].values[0]
                         else:
-                            car_util_fig = None 
+                            car_util_fig = None
 
                         quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
 
@@ -901,7 +901,7 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events",
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
                                                           "Process Analytics", "Process Analytics - Resources"])
 
             with tab_4_1:
@@ -1167,16 +1167,16 @@ the overall time period.*
                     px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
                 )
 
-            st.subheader("Jobs Outcome by Category/Preference")
+                st.subheader("Jobs Outcome by Category/Preference")
 
-            @st.fragment
-            def plot_preferred_outcome_by_hour():
-                show_proportions_job_outcomes_by_hour = st.toggle("Show Proportions", False, key="show_proportions_job_outcomes_by_hour")
-                st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour(show_proportions=show_proportions_job_outcomes_by_hour))
+                @st.fragment
+                def plot_preferred_outcome_by_hour():
+                    show_proportions_job_outcomes_by_hour = st.toggle("Show Proportions", False, key="show_proportions_job_outcomes_by_hour")
+                    st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour(show_proportions=show_proportions_job_outcomes_by_hour))
 
-            plot_preferred_outcome_by_hour()
+                plot_preferred_outcome_by_hour()
 
-            st.plotly_chart(_job_outcome_calculation.get_facet_plot_preferred_outcome_by_hour())
+                st.plotly_chart(_job_outcome_calculation.get_facet_plot_preferred_outcome_by_hour())
 
             with tab_4_2:
                 st.subheader("Event Overview")
@@ -1309,6 +1309,51 @@ the overall time period.*
                 patient_viz()
 
             with tab_4_3:
+                @st.fragment
+                def explore_outcomes():
+                    plot_counts = st.toggle("Plot Counts", value=False)
+
+                    st.caption("Note that these plots only cover patients for whom a resource was available to attend")
+
+                    st.subheader("HEMS result by vehicle type")
+                    st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts)
+                    )
+
+                    st.subheader("HEMS result by care category")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
+                                                                   group_cols="care_cat")
+                    )
+
+                    st.subheader("HEMS Result by Outcome")
+                    st.caption("Note this sums to 1 within each outcome, not within each hems result")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
+                                                                   group_cols="outcome")
+                    )
+
+                    st.subheader("Outcome by Vehicle Type")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(
+                        group_cols="vehicle_type",
+                        outcome_col="outcome",
+                        plot_counts=plot_counts)
+                    )
+
+                    st.subheader("Vehicle Type by Care Cat")
+                    st.caption("Note this sums to 1 within each cat, not within each vehicle type")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(
+                         outcome_col="vehicle_type",
+                         group_cols="care_cat",
+                         plot_counts=plot_counts
+                         )
+                    )
+
+                explore_outcomes()
+
+            with tab_4_4:
                 _process_analytics.create_event_log("data/run_results.csv")
 
                 print("Current working directory:", os.getcwd())
@@ -1367,7 +1412,7 @@ the overall time period.*
                     st.warning("Process maps could not be generated")
 
 
-            with tab_4_4:
+            with tab_4_5:
                 try:
                     st.subheader("Activities - by Resource")
                     st.image("visualisation/relative_resource_level.svg")
