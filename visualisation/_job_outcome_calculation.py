@@ -67,3 +67,50 @@ def get_facet_plot_preferred_outcome_by_hour(results_path="data/run_results.csv"
                  facet_col_wrap=4, height=800, facet_col_spacing=0.05, facet_row_spacing=0.13)
 
     return fig
+
+
+
+def plot_patient_outcomes(group_cols="vehicle_type", outcome_col="hems_result",
+                          plot_counts=False,
+                          return_fig=True, run_df_path="data/run_results.csv"):
+    df = pd.read_csv(run_df_path)
+
+    patient_outcomes_df = df[df["time_type"] == "HEMS call start"][["P_ID", "run_number", "heli_benefit", "care_cat", "vehicle_type", "hems_result", "outcome"]].reset_index(drop=True)
+
+    def calculate_grouped_proportions(df, group_cols, outcome_col):
+        """
+        Calculate counts and proportions of an outcome column grouped by one or more columns.
+
+        Parameters:
+        df (pd.DataFrame): The input DataFrame.
+        group_cols (str or list of str): Column(s) to group by (e.g., 'care_cat', 'vehicle_type').
+        outcome_col (str): The name of the outcome column (e.g., 'hems_result').
+
+        Returns:
+        pd.DataFrame: A DataFrame with counts and proportions of outcome values per group.
+        """
+        if isinstance(group_cols, str):
+            group_cols = [group_cols]
+
+        count_df = df.value_counts(group_cols + [outcome_col]).reset_index().sort_values(group_cols + [outcome_col])
+        count_df.rename(columns={0: "count"}, inplace=True)
+
+        # Calculate the total count per group (excluding the outcome column)
+        total_per_group = count_df.groupby(group_cols)["count"].transform("sum")
+        count_df["proportion"] = count_df["count"] / total_per_group
+
+        return count_df
+
+    patient_outcomes_df_grouped_counts = calculate_grouped_proportions(patient_outcomes_df, group_cols, outcome_col)
+
+    if return_fig:
+        if plot_counts:
+            y="count"
+        else:
+            y="proportion"
+
+        fig = px.bar(patient_outcomes_df_grouped_counts, color=group_cols, y=y, x=outcome_col, barmode="group")
+
+        return fig
+    else:
+        return patient_outcomes_df_grouped_counts

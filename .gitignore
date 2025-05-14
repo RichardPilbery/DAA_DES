@@ -163,7 +163,8 @@ cython_debug/
 
 .DS_Store
 
-external_data
+external_data/*
+!external_data/.gitkeep
 data/*
 app/assets/~$text.xlsx
 

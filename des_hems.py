@@ -282,7 +282,7 @@ class DES_HEMS:
         pt.sex = self.utils.sex_selection(pt.ampds_card)
         hems_cc_or_ec = self.utils.care_category_selection(pt.ampds_card)
         pt.hems_cc_or_ec = hems_cc_or_ec
-        self.debug(f"{pt.id} Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
+        self.debug(f"{pt.current_dt}: {pt.id} Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         self.add_patient_result_row(pt, "arrival", "arrival_departure")
 
@@ -296,7 +296,8 @@ class DES_HEMS:
 
         if pt.hems_case == 1:
             #self.debug(f"Going to callsign_group_selection with hour {pt.hour} and AMPDS {pt.ampds_card}")
-            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.ampds_card)
+            # pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.ampds_card)
+            pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.hems_cc_or_ec)
             #self.debug(f"Callsign is {pt.hems_pref_callsign_group}")
 
             # !!!!!! ASSUMPTION !!!!!!! #

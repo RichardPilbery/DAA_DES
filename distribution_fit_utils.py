@@ -181,8 +181,9 @@ class DistributionFitUtils():
         self.enhanced_or_critical_care_by_ampds_card_probs()
 
         # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
-        self.callsign_group_by_ampds_card_and_hour_probs()
-        self.callsign_group_by_ampds_card_probs()
+        # self.callsign_group_by_ampds_card_and_hour_probs()
+        # self.callsign_group_by_ampds_card_probs()
+        self.callsign_group_by_care_category()
 
         # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
         self.hems_result_by_callsign_group_and_vehicle_type_probs()
@@ -380,7 +381,7 @@ class DistributionFitUtils():
         inc_per_day = inc_df.groupby('date_only').size().reset_index(name='jobs_per_day')
         inc_per_day['year'] = inc_per_day['date_only'].dt.year
 
-        # Merge quarter and season from self.df 
+        # Merge quarter and season from self.df
         date_info = self.df[['date_only', 'quarter']].drop_duplicates()
 
         if 'season' not in self.df.columns:
@@ -586,6 +587,48 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_probs.csv', mode = "w+", index=False)
 
+    def callsign_group_by_care_category(self):
+        """
+
+            Calculates the probabilty of a specific callsign being allocated to
+            a call based on the care category
+
+        """
+        callsign_df = (
+            self.df
+            .assign(
+                helicopter_benefit=np.select(
+                    [
+                        self.df["cc_benefit"] == "y",
+                        self.df["ec_benefit"] == "y",
+                        self.df["hems_result"].isin([
+                            "Stand Down En Route",
+                            "Landed but no patient contact",
+                            "Stand Down Before Mobile"
+                        ])
+                    ],
+                    ["y", "y", "n"],
+                    default=self.df["helicopter_benefit"]
+                ),
+                care_category=np.select(
+                    [
+                        self.df["cc_benefit"] == "y",
+                        self.df["ec_benefit"] == "y"
+                    ],
+                    ["CC", "EC"],
+                    default="REG"
+                )
+            )
+        )
+
+        callsign_df = callsign_df[callsign_df['callsign_group'] != 'Other']
+
+        callsign_counts = callsign_df.groupby(['care_category', 'callsign_group']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['care_category'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/callsign_group_by_care_category_probs.csv', mode = "w+", index=False)
 
     def vehicle_type_by_month_probs(self):
         """

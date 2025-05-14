@@ -78,11 +78,11 @@ with col2:
     st.image("app/assets/daa-logo.svg", width=200)
 
 with st.sidebar:
-    generate_downloadable_report = st.toggle("Generate a Downloadable Summary of Results", False,
-                                             help="This will generate a downloadable report. This can slow down the running of the model, so turn this off if you don't need it.")
+    # generate_downloadable_report = st.toggle("Generate a Downloadable Summary of Results", False,
+    #                                          help="This will generate a downloadable report. This can slow down the running of the model, so turn this off if you don't need it.")
 
     debug_messages = st.toggle("Turn on debugging messages", False,
-                               help="This will turn on display of messages in the developer terminal")
+                               help="This will turn on display of messages in the developer terminal and write logging messages to the log.txt file")
 
     _app_utils.summary_sidebar(quarto_string=quarto_string)
 
@@ -345,7 +345,7 @@ if button_run_pressed:
                         if not matched.empty:
                             car_util_fig = matched['PRINT_perc'].values[0]
                         else:
-                            car_util_fig = None 
+                            car_util_fig = None
 
                         quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
 
@@ -901,7 +901,7 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events",
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
                                                           "Process Analytics", "Process Analytics - Resources"])
 
             with tab_4_1:
@@ -1167,16 +1167,16 @@ the overall time period.*
                     px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
                 )
 
-            st.subheader("Jobs Outcome by Category/Preference")
+                st.subheader("Jobs Outcome by Category/Preference")
 
-            @st.fragment
-            def plot_preferred_outcome_by_hour():
-                show_proportions_job_outcomes_by_hour = st.toggle("Show Proportions", False, key="show_proportions_job_outcomes_by_hour")
-                st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour(show_proportions=show_proportions_job_outcomes_by_hour))
+                @st.fragment
+                def plot_preferred_outcome_by_hour():
+                    show_proportions_job_outcomes_by_hour = st.toggle("Show Proportions", False, key="show_proportions_job_outcomes_by_hour")
+                    st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour(show_proportions=show_proportions_job_outcomes_by_hour))
 
-            plot_preferred_outcome_by_hour()
+                plot_preferred_outcome_by_hour()
 
-            st.plotly_chart(_job_outcome_calculation.get_facet_plot_preferred_outcome_by_hour())
+                st.plotly_chart(_job_outcome_calculation.get_facet_plot_preferred_outcome_by_hour())
 
             with tab_4_2:
                 st.subheader("Event Overview")
@@ -1309,91 +1309,139 @@ the overall time period.*
                 patient_viz()
 
             with tab_4_3:
-                _process_analytics.create_event_log("data/run_results.csv")
+                @st.fragment
+                def explore_outcomes():
+                    plot_counts = st.toggle("Plot Counts", value=False)
 
-                print("Current working directory:", os.getcwd())
+                    st.caption("Note that these plots only cover patients for whom a resource was available to attend")
 
-                # This check is a way to guess whether it's running on
-                # Streamlit community cloud
-                if platform.processor() == '':
-                    try:
-                        process1 = subprocess.Popen(["Rscript", "app/generate_bupar_outputs.R"],
-                                                    stdout=subprocess.PIPE,
-                                                    stderr=subprocess.PIPE,
-                                                    text=True,
-                                                    cwd="app")
+                    st.subheader("HEMS result by vehicle type")
+                    st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts)
+                    )
 
-                    except:
-                        # Get absolute path to the R script
-                        script_path = Path(__file__).parent / "generate_bupar_outputs.R"
-                        st.write(f"Trying path: {script_path}" )
+                    st.subheader("HEMS result by care category")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
+                                                                   group_cols="care_cat")
+                    )
 
-                        process1 = subprocess.Popen(["Rscript", str(script_path)],
-                                                    stdout=subprocess.PIPE,
-                                                    stderr=subprocess.PIPE,
-                                                    text=True)
+                    st.subheader("HEMS Result by Outcome")
+                    st.caption("Note this sums to 1 within each outcome, not within each hems result")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
+                                                                   group_cols="outcome")
+                    )
 
-                else:
-                    result = subprocess.run(["Rscript", "app/generate_bupar_outputs.R"],
-                                            capture_output=True, text=True)
-                try:
-                    st.subheader("Process - Absolute Frequency")
-                    st.image("visualisation/absolute_frequency.svg")
-                except:
-                    st.warning("Process maps could not be generated")
+                    st.subheader("Outcome by Vehicle Type")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(
+                        group_cols="vehicle_type",
+                        outcome_col="outcome",
+                        plot_counts=plot_counts)
+                    )
 
-                try:
-                    # st.html("visualisation/anim_process.html")
-                    components.html("visualisation/anim_process.html")
-                except:
-                    st.warning("Animated Process maps could not be generated")
+                    st.subheader("Vehicle Type by Care Cat")
+                    st.caption("Note this sums to 1 within each cat, not within each vehicle type")
+                    st.plotly_chart(
+                    _job_outcome_calculation.plot_patient_outcomes(
+                         outcome_col="vehicle_type",
+                         group_cols="care_cat",
+                         plot_counts=plot_counts
+                         )
+                    )
 
-                try:
-                    # st.subheader("Process - Absolute Cases")
-                    # st.image("visualisation/absolute_case.svg")
+                explore_outcomes()
 
-                    st.subheader("Performance - Average (Mean) Transition and Activity Times")
-                    st.image("visualisation/performance_mean.svg")
+            # with tab_4_4:
+            #     _process_analytics.create_event_log("data/run_results.csv")
 
-                    st.subheader("Performance - Maximum Transition and Activity Times")
-                    st.image("visualisation/performance_max.svg")
+            #     print("Current working directory:", os.getcwd())
 
-                    st.subheader("Activity - Processing Time - activity")
-                    st.image("visualisation/processing_time_activity.svg")
+            #     # This check is a way to guess whether it's running on
+            #     # Streamlit community cloud
+            #     if platform.processor() == '':
+            #         try:
+            #             process1 = subprocess.Popen(["Rscript", "app/generate_bupar_outputs.R"],
+            #                                         stdout=subprocess.PIPE,
+            #                                         stderr=subprocess.PIPE,
+            #                                         text=True,
+            #                                         cwd="app")
 
-                    st.subheader("Activity - Processing Time - Resource/Activity")
-                    st.image("visualisation/processing_time_resource_activity.svg")
-                except:
-                    st.warning("Process maps could not be generated")
+            #         except:
+            #             # Get absolute path to the R script
+            #             script_path = Path(__file__).parent / "generate_bupar_outputs.R"
+            #             st.write(f"Trying path: {script_path}" )
+
+            #             process1 = subprocess.Popen(["Rscript", str(script_path)],
+            #                                         stdout=subprocess.PIPE,
+            #                                         stderr=subprocess.PIPE,
+            #                                         text=True)
+
+            #     else:
+            #         result = subprocess.run(["Rscript", "app/generate_bupar_outputs.R"],
+            #                                 capture_output=True, text=True)
+            #     try:
+            #         st.subheader("Process - Absolute Frequency")
+            #         st.image("visualisation/absolute_frequency.svg")
+            #     except:
+            #         st.warning("Process maps could not be generated")
+
+            #     try:
+            #         # st.html("visualisation/anim_process.html")
+            #         components.html("visualisation/anim_process.html")
+            #     except:
+            #         st.warning("Animated Process maps could not be generated")
+
+            #     try:
+            #         # st.subheader("Process - Absolute Cases")
+            #         # st.image("visualisation/absolute_case.svg")
+
+            #         st.subheader("Performance - Average (Mean) Transition and Activity Times")
+            #         st.image("visualisation/performance_mean.svg")
+
+            #         st.subheader("Performance - Maximum Transition and Activity Times")
+            #         st.image("visualisation/performance_max.svg")
+
+            #         st.subheader("Activity - Processing Time - activity")
+            #         st.image("visualisation/processing_time_activity.svg")
+
+            #         st.subheader("Activity - Processing Time - Resource/Activity")
+            #         st.image("visualisation/processing_time_resource_activity.svg")
+            #     except:
+            #         st.warning("Process maps could not be generated")
 
 
-            with tab_4_4:
-                try:
-                    st.subheader("Activities - by Resource")
-                    st.image("visualisation/relative_resource_level.svg")
-                except:
-                    st.warning("Animated process maps could not be generated")
+            # with tab_4_5:
+            #     try:
+            #         st.subheader("Activities - by Resource")
+            #         st.image("visualisation/relative_resource_level.svg")
+            #     except:
+            #         st.warning("Animated process maps could not be generated")
 
-                try:
-                    # st.html("visualisation/anim_resource_level.html")
-                    components.html("visualisation/anim_resource_level.html")
-                except:
-                    st.warning("Animated process maps could not be generated")
+            #     try:
+            #         # st.html("visualisation/anim_resource_level.html")
+            #         components.html("visualisation/anim_resource_level.html")
+            #     except:
+            #         st.warning("Animated process maps could not be generated")
 
 
         with tab5:
-            if generate_downloadable_report:
-                try:
-                    with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
-                        text_file.write(quarto_string)
+            @st.fragment()
+            def generate_report_button():
+                if st.button("Click here to generate the downloadable report"):
+                    with st.spinner("Generating report..."):
+                        try:
+                            with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
+                                text_file.write(quarto_string)
 
-                    msg = _app_utils.generate_quarto_report(run_quarto_check=False)
+                            msg = _app_utils.generate_quarto_report(run_quarto_check=False)
 
-                    # print(msg)
+                            if msg == "success":
+                                st.success("Report Available for Download")
 
-                    if msg == "success":
-                        report_message.success("Report Available for Download")
+                        except Exception as e:
+                            st.error("Report cannot be generated - please speak to a developer")
 
-                except:
-                    ## error message
-                    report_message.error(f"Report cannot be generated - please speak to a developer")
+
+            generate_report_button()
