@@ -19,9 +19,7 @@ dfa <- bind_rows(df, missed_df)
 
 
 simple_df <- dfa %>%
-  filter(is.na(result) | result != 'Remote advice', inc_date > lubridate::ymd('2023-01-01')) %>% # Removing since unreliable
-  # Now going to include everything not in main cad categories as other
-  #filter(ampds_card %in% AMPDS_card_with_100_df) %>%
+  filter(is.na(result) | result != 'Remote advice', inc_date > lubridate::ymd('2023-01-01')) %>% 
   transmute(
     job_id,
     inc_date,
@@ -47,13 +45,22 @@ simple_df <- dfa %>%
       .default = "Other"
     ),
     hems_result = case_when(
-      patient_result %in% c("Conveyed by land without DAA", "Deceased") ~ "Patient Treated (not conveyed)",
-      patient_result == "Conveyed by land with DAA" ~ "Patient Conveyed",
-      patient_result == "Airlifted" ~ "Patient Conveyed",
-      .default = result
+      patient_result %in% c("Conveyed by land without DAA", "Deceased") ~ "Patient Treated but not conveyed by HEMS",
+      result == "Patient Treated (not conveyed)" & `On scene time` > 0 ~ "Patient Treated but not conveyed by HEMS",
+      result == "Patient Treated (not conveyed)" & (is.na(`On scene time`) | `On scene time` == 0) ~ "Stand Down",
+      patient_result == "Conveyed by land with DAA" ~ "Patient Conveyed by land with HEMS",
+      result %in% c("Airlifted", "Patient Conveyed") ~ "Patient Conveyed by HEMS",
+      grepl("Stand Down", result) ~ "Stand Down",
+      .default = "Unknown"
     ),
     # sd_reason, These results look a little suss...not sure how useful it is going to be.
-    pt_outcome = if_else(is.na(patient_result), "Unknown", patient_result),
+    pt_outcome = case_when(
+      patient_result == "Deceased" ~ "Deceased",
+      hems_result == "Stand Down" ~ "Unknown",
+      grepl("Patient Conveyed", hems_result) ~ "Conveyed",
+      grepl("Conveyed", patient_result) ~ "Conveyed",
+      .default = "Unknown"
+    ),
     age = Age,
     sex = Sex,
     HLIDD = if_else(is.na(`HLIDD?`), 'n', tolower(`HLIDD?`)),
@@ -72,8 +79,10 @@ simple_df <- dfa %>%
       .default = total_minus_all
     ), 
     call_cat = NA_character_
-  ) %>% filter(is.na(callsign) | callsign %in% c("CC70", "CC71", "CC72", "H70", "H71"))
-
+  ) %>% filter(is.na(callsign) | callsign %in% c("CC70", "CC71", "CC72", "H70", "H71"), 
+               # Remove 10 entries where this is true
+               !(hems_result == "Patient Treated but not conveyed by HEMS" & pt_outcome == "Unknown"))
+               
 
 saveRDS(simple_df, 'clean_daa_import_missing_2023_2024.rds')
 simple_df %>% write_csv('clean_daa_import_missing_2023_2024.csv')
