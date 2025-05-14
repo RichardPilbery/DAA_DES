@@ -84,7 +84,6 @@ def display_resource_use_exploration(resource_use_events_only_df, results_all_ru
             if 'P_ID' not in missed_job_events.columns and not missed_job_events.empty:
                  missed_job_events = missed_job_events.reset_index()
 
-
             missed_job_events = missed_job_events[["P_ID", "time_type", "timestamp_dt", "event_type", "registration", "care_cat"]].drop_duplicates()
             missed_job_events["event_type"] = "resource_use"
 
@@ -102,7 +101,6 @@ def display_resource_use_exploration(resource_use_events_only_df, results_all_ru
                 # Ensure columns match if missed_job_events_full_wide is empty
                 # This might need more robust handling based on expected columns
                 pass
-
 
             resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
 
@@ -125,11 +123,16 @@ def display_resource_use_exploration(resource_use_events_only_df, results_all_ru
             ######################################
             try:
                 service_schedule = pd.read_csv("data/service_dates.csv")
-                callsign_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
-                service_schedule = service_schedule.merge(callsign_lookup, on="callsign") # Specify merge key if different
             except FileNotFoundError as e:
-                st.error(f"Error loading service schedule data: {e}. Please ensure 'data/service_dates.csv' and 'actual_data/callsign_registration_lookup.csv' exist.")
+                st.error(f"Error loading service schedule data: {e}. Please ensure 'data/service_dates.csv' exists.")
                 return # Stop execution if files are not found
+            try:
+                callsign_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+            except FileNotFoundError as e:
+                st.error(f"Error loading callsign lookup data: {e}. Please ensure 'actual_data/callsign_registration_lookup.csv' exists.")
+                return # Stop execution if files are not found
+
+            service_schedule = service_schedule.merge(callsign_lookup, on="registration") # Specify merge key if different
 
             service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
             service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
@@ -141,111 +144,111 @@ def display_resource_use_exploration(resource_use_events_only_df, results_all_ru
             # Filter out entries that couldn't be mapped if necessary, or handle NaNs
             service_schedule = service_schedule.dropna(subset=['y_pos'])
 
-
             # Ensure resource_use_wide is not empty before accessing .min()/.max()
             if not resource_use_wide.empty and 'resource_use' in resource_use_wide.columns:
-                 min_date = resource_use_wide.resource_use.min()
-                 max_date = resource_use_wide.resource_use.max()
-                 service_schedule = service_schedule[(service_schedule["service_start_date"] <= max_date) &
-                                                 (service_schedule["service_end_date"] >= min_date)]
+                    min_date = resource_use_wide.resource_use.min()
+                    max_date = resource_use_wide.resource_use.max()
+                    service_schedule = service_schedule[(service_schedule["service_start_date"] <= max_date) &
+                                                    (service_schedule["service_end_date"] >= min_date)]
             else: # Handle case where resource_use_wide might be empty or missing column
-                 service_schedule = pd.DataFrame(columns=service_schedule.columns) # Empty df with same columns
+                    service_schedule = pd.DataFrame(columns=service_schedule.columns) # Empty df with same columns
 
 
             st.dataframe(service_schedule)
 
-            # Create figure
-            resource_use_fig = go.Figure()
+        # Create figure
+        resource_use_fig = go.Figure()
 
-            # Add horizontal bars using actual datetime values
-            # Ensure unique callsigns are taken from the sorted resource_use_wide for consistent y-axis order
-            unique_time_types_sorted = resource_use_wide.time_type.unique()
+        # Add horizontal bars using actual datetime values
+        # Ensure unique callsigns are taken from the sorted resource_use_wide for consistent y-axis order
+        unique_time_types_sorted = resource_use_wide.time_type.unique()
 
-            for idx, callsign in enumerate(unique_time_types_sorted):
-                callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
-                service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
+        for idx, callsign in enumerate(unique_time_types_sorted):
+            callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
+            service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
 
-                # Add in hatched boxes showing the servicing periods
-                if not service_schedule_df.empty:
-                    resource_use_fig.add_trace(go.Bar(
-                        x=service_schedule_df["duration_seconds"],
-                        y=service_schedule_df["y_pos"],
-                        base=service_schedule_df["service_start_date"],
-                        orientation="h",
-                        width=0.6,
-                        marker_pattern_shape="x",
-                        marker=dict(color="rgba(63, 63, 63, 0.30)",
-                                    line=dict(color="black", width=1)),
-                        name=f"Servicing = {callsign}",
-                        customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date', 'registration']],
-                        hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]:.1f} days<br>(%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
-                    ))
+            # Add in hatched boxes showing the servicing periods
+            if not service_schedule_df.empty:
+                resource_use_fig.add_trace(go.Bar(
+                    x=service_schedule_df["duration_seconds"],
+                    y=service_schedule_df["y_pos"],
+                    base=service_schedule_df["service_start_date"],
+                    orientation="h",
+                    width=0.6,
+                    marker_pattern_shape="x",
+                    marker=dict(color="rgba(63, 63, 63, 0.30)",
+                                line=dict(color="black", width=1)),
+                    name=f"Servicing = {callsign}",
+                    customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date', 'registration']],
+                    hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]:.1f} days<br>(%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
+                ))
 
-                # if colour_by_cc_ec: # Logic for this needs DAA_COLORSCHEME and potentially cc_ec_reg_colour_lookup
-                #     if not callsign_df.empty and 'care_cat' in callsign_df.columns:
-                #         cc_ec_status = callsign_df["care_cat"].values[0] # This might need adjustment if multiple care_cat per callsign
-                #         # cc_ec_reg_colour_lookup would also be needed here
-                #         # marker_val = dict(color=list(DAA_COLORSCHEME.values())[cc_ec_reg_colour_lookup[cc_ec_status]])
-                #     else:
-                #         marker_val = dict(color=list(DAA_COLORSCHEME.values())[idx % len(DAA_COLORSCHEME)])
-                # else: # Fallback or default coloring
-                if show_outline:
-                    marker_val=dict(color=list(DAA_COLORSCHEME.values())[idx % len(DAA_COLORSCHEME)], # Use modulo for safety
-                                    line=dict(color="#FFA400", width=0.2))
-                else:
-                    marker_val = dict(color=list(DAA_COLORSCHEME.values())[idx % len(DAA_COLORSCHEME)]) # Use modulo
+            # if colour_by_cc_ec: # Logic for this needs DAA_COLORSCHEME and potentially cc_ec_reg_colour_lookup
+            #     if not callsign_df.empty and 'care_cat' in callsign_df.columns:
+            #         cc_ec_status = callsign_df["care_cat"].values[0] # This might need adjustment if multiple care_cat per callsign
+            #         # cc_ec_reg_colour_lookup would also be needed here
+            #         # marker_val = dict(color=list(DAA_COLORSCHEME.values())[cc_ec_reg_colour_lookup[cc_ec_status]])
+            #     else:
+            #         marker_val = dict(color=list(DAA_COLORSCHEME.values())[idx % len(DAA_COLORSCHEME)])
+            # else: # Fallback or default coloring
+            if show_outline:
+                marker_val=dict(color=list(DAA_COLORSCHEME.values())[idx % len(DAA_COLORSCHEME)], # Use modulo for safety
+                                line=dict(color="#FFA400", width=0.2))
+            else:
+                marker_val = dict(color=list(DAA_COLORSCHEME.values())[idx % len(DAA_COLORSCHEME)]) # Use modulo
 
-                # Add in boxes showing the duration of individual calls
-                if not callsign_df.empty:
-                    resource_use_fig.add_trace(go.Bar(
-                        x=callsign_df["duration_seconds"],
-                        y=callsign_df["y_pos"],
-                        base=callsign_df["resource_use"],
-                        orientation="h",
-                        width=0.4,
-                        marker=marker_val,
-                        name=callsign,
-                        customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration', 'care_cat']],
-                        hovertemplate="Response to %{customdata[5]} call from %{customdata[2]}<br>(registration %{customdata[4]}) lasting %{customdata[3]:.1f} minutes<br>(%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
-                    ))
+            # Add in boxes showing the duration of individual calls
+            if not callsign_df.empty:
+                resource_use_fig.add_trace(go.Bar(
+                    x=callsign_df["duration_seconds"],
+                    y=callsign_df["y_pos"],
+                    base=callsign_df["resource_use"],
+                    orientation="h",
+                    width=0.4,
+                    marker=marker_val,
+                    name=callsign,
+                    customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration', 'care_cat']],
+                    hovertemplate="Response to %{customdata[5]} call from %{customdata[2]}<br>(registration %{customdata[4]}) lasting %{customdata[3]:.1f} minutes<br>(%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
+                ))
 
-            # Layout tweaks
-            resource_use_fig.update_layout(
-                title_text="Resource Use Over Time", # Changed from title
-                barmode='overlay',
-                xaxis=dict(
-                    title_text="Time", # Changed from title
-                    type="date",
-                ),
-                yaxis=dict(
-                    title_text="Callsign", # Changed from title
-                    tickmode="array",
-                    tickvals=list(resource_dict.values()),
-                    ticktext=list(resource_dict.keys()), # These should be the sorted unique callsigns
-                    autorange = "reversed"
-                ),
-                showlegend=True,
-                height=700
-            )
+        # Layout tweaks
+        resource_use_fig.update_layout(
+            title_text="Resource Use Over Time", # Changed from title
+            barmode='overlay',
+            xaxis=dict(
+                title_text="Time", # Changed from title
+                type="date",
+            ),
+            yaxis=dict(
+                title_text="Callsign", # Changed from title
+                tickmode="array",
+                tickvals=list(resource_dict.values()),
+                ticktext=list(resource_dict.keys()), # These should be the sorted unique callsigns
+                autorange = "reversed"
+            ),
+            showlegend=True,
+            height=700
+        )
 
-            resource_use_fig.update_xaxes(rangeslider_visible=True,
-            rangeselector=dict(
-                buttons=list([
-                    dict(count=1, label="1m", step="month", stepmode="backward"),
-                    dict(count=6, label="6m", step="month", stepmode="backward"),
-                    dict(count=1, label="YTD", step="year", stepmode="todate"),
-                    dict(count=1, label="1y", step="year", stepmode="backward"),
-                    dict(step="all")
-                ]))
-            )
-            # Ensure the output directory exists
-            # import os
-            # os.makedirs("app/fig_outputs", exist_ok=True)
-            # resource_use_fig.write_html("app/fig_outputs/resource_use_fig.html",full_html=False, include_plotlyjs='cdn')
+        resource_use_fig.update_xaxes(rangeslider_visible=True,
+        rangeselector=dict(
+            buttons=list([
+                dict(count=1, label="1m", step="month", stepmode="backward"),
+                dict(count=6, label="6m", step="month", stepmode="backward"),
+                dict(count=1, label="YTD", step="year", stepmode="todate"),
+                dict(count=1, label="1y", step="year", stepmode="backward"),
+                dict(step="all")
+            ]))
+        )
+        # Ensure the output directory exists
+        # import os
+        # os.makedirs("app/fig_outputs", exist_ok=True)
+        # resource_use_fig.write_html("app/fig_outputs/resource_use_fig.html",full_html=False, include_plotlyjs='cdn')
 
-            st.plotly_chart(
-                resource_use_fig, use_container_width=True # Added for better responsiveness
-            )
+        st.plotly_chart(
+            resource_use_fig,
+            use_container_width=True # Added for better responsiveness
+        )
 
     # Call the fragment function to render its content
     resource_use_exploration_plots_fragment()

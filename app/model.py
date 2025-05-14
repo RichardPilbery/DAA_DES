@@ -1,32 +1,20 @@
 import streamlit as st
-st.set_page_config(layout="wide")
-
-with open("app/style.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
-
 import platform
-import os
 # Data processing imports
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
-import re
 # Plotting
 import plotly.express as px
-import platform
 import plotly.graph_objects as go
 
 import gc
 
 from scipy.stats import ks_2samp
 
-import subprocess
-
-import streamlit.components.v1 as components
-
 import _app_utils
-from _app_utils import DAA_COLORSCHEME, iconMetricContainer, file_download_confirm, \
-                        get_text, get_text_sheet, to_military_time, format_sigfigs
+from _app_utils import DAA_COLORSCHEME, iconMetricContainer, \
+                        get_text, get_text_sheet, format_sigfigs
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
@@ -36,19 +24,22 @@ sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # Simulation imports
 from des_parallel_process import runSim, parallelProcessJoblib, collateRunResults
-from utils import Utils
-
 from _state_control import setup_state
 
 from streamlit_extras.stylable_container import stylable_container
-from streamlit_extras.metric_cards import style_metric_cards
 
 import visualisation._job_count_calculation as _job_count_calculation
 import visualisation._vehicle_calculation as _vehicle_calculation
 import visualisation._utilisation_result_calculation as _utilisation_result_calculation
 import visualisation._job_time_calcs as _job_time_calcs
-import visualisation._process_analytics as _process_analytics
 import visualisation._job_outcome_calculation as _job_outcome_calculation
+import visualisation._resource_use_exploration as _resource_use_exploration
+
+st.set_page_config(layout="wide")
+
+with open("app/style.css") as css:
+    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+
 
 setup_state()
 
@@ -301,7 +292,7 @@ if button_run_pressed:
                     h70_hist_util_fig = f"*The historical average utilisation of H70 was {h70_hist}%*\n\n"
                     quarto_string += h70_hist_util_fig
 
-                    quarto_string += f"\n\n---\n\n"
+                    quarto_string += "\n\n---\n\n"
 
                     st.caption(h70_hist_util_fig)
 
@@ -322,7 +313,7 @@ if button_run_pressed:
                     quarto_string += h71_hist_util_fig
                     st.caption(h71_hist_util_fig)
 
-                    quarto_string += f"\n\n---\n\n"
+                    quarto_string += "\n\n---\n\n"
 
                 st.caption(get_text("helicopter_utilisation_description", text_df))
 
@@ -360,7 +351,7 @@ if button_run_pressed:
 
                     quarto_string += car_util_fig_hist
 
-                    quarto_string += f"\n\n---\n\n"
+                    quarto_string += "\n\n---\n\n"
 
                     st.caption(car_util_fig_hist)
 
@@ -905,224 +896,18 @@ Most users will not need to look at the visualisations in this tab.
                                                           "Process Analytics", "Process Analytics - Resources"])
 
             with tab_4_1:
-                st.subheader("Resource Use")
-
                 resource_use_events_only = results_all_runs[
                     (results_all_runs["event_type"] == "resource_use") |
-                    (results_all_runs["event_type"] == "resource_use_end")].reset_index(drop=True).copy()
+                    (results_all_runs["event_type"] == "resource_use_end")
+                ].reset_index(drop=True).copy()
 
-                # Accounting for odd bug being seen in streamlit community cloud
-                if 'P_ID' not in resource_use_events_only.columns:
-                    resource_use_events_only = resource_use_events_only.reset_index()
-
-
-                @st.fragment
-                def resource_use_exploration_plots():
-
-                    run_select_ruep = st.selectbox("Choose the run to show",
-                            resource_use_events_only["run_number"].unique()
-                        )
-
-                    # colour_by_cc_ec = st.toggle("Colour the plot by CC/EC/REG patient benefit",
-                    #                          value=True)
-
-                    show_outline = st.toggle("Show an outline to help debug overlapping calls",
-                                             value=False)
-
-
-
-                    with st.expander("Click here to see the timings of resource use"):
-                        st.dataframe(
-                            resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            )
-
-                        st.dataframe(
-                            resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [['callsign', 'callsign_group', 'registration']]
-                            .value_counts()
-                            )
-
-                        st.dataframe(resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                                        [["P_ID", "time_type", "timestamp_dt", "event_type"]]
-                                        .melt(id_vars=["P_ID", "time_type", "event_type"],
-                                        value_vars="timestamp_dt").drop_duplicates())
-
-                        resource_use_wide = (resource_use_events_only[resource_use_events_only["run_number"] == run_select_ruep]
-                            [["P_ID", "time_type", "timestamp_dt", "event_type", "registration", "care_cat"]].drop_duplicates()
-                            .pivot(columns="event_type", index=["P_ID","time_type", "registration", "care_cat"], values="timestamp_dt").reset_index())
-
-                        # get the number of resources and assign them a value
-                        resources = resource_use_wide.time_type.unique()
-                        resources = np.concatenate([resources, ["No Resource Available"]])
-                        resource_dict = {resource: index for index, resource in enumerate(resources)}
-
-                        missed_job_events = results_all_runs[
-                            (results_all_runs["event_type"] == "resource_request_outcome") &
-                            (results_all_runs["time_type"] == "No Resource Available")
-                            ].reset_index(drop=True).copy()
-
-                        missed_job_events = missed_job_events[missed_job_events["run_number"]==run_select_ruep][["P_ID", "time_type", "timestamp_dt", "event_type", "registration", "care_cat"]].drop_duplicates()
-                        missed_job_events["event_type"] = "resource_use"
-
-                        missed_job_events_end = missed_job_events.copy()
-                        missed_job_events_end["event_type"] = "resource_use_end"
-                        missed_job_events_end["timestamp_dt"] = pd.to_datetime(missed_job_events_end["timestamp_dt"]) + timedelta(minutes=5)
-
-                        missed_job_events_full = pd.concat([missed_job_events, missed_job_events_end])
-                        missed_job_events_full["registration"] = "No Resource Available"
-
-                        missed_job_events_full_wide = missed_job_events_full.pivot(columns="event_type", index=["P_ID","time_type", "registration", "care_cat"], values="timestamp_dt").reset_index()
-
-                        resource_use_wide = pd.concat([resource_use_wide, missed_job_events_full_wide]).reset_index(drop=True)
-
-                        resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
-
-                        # Convert time types to numerical values
-                        # resource_use_wide["y_pos"] = resource_use_wide["time_type"].map(resource_dict)
-
-                        # Compute duration for each resource use
-                        resource_use_wide["resource_use_end"] = pd.to_datetime(resource_use_wide["resource_use_end"])
-                        resource_use_wide["resource_use"] = pd.to_datetime(resource_use_wide["resource_use"])
-
-                        # Convert time to numeric (e.g., seconds since the first event)
-                        time_origin = resource_use_wide["resource_use"].min()  # Set the reference time
-                        # resource_use_wide["resource_use_numeric"] = (resource_use_wide["resource_use"] - time_origin).dt.total_seconds()
-                        # resource_use_wide["resource_use_end_numeric"] = (resource_use_wide["resource_use_end"] - time_origin).dt.total_seconds()
-
-                        # Compute duration
-                        resource_use_wide["duration"] = resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]
-
-                        # Compute duration as seconds and multiply by 1000 (to account for how datetime axis
-                        # is handled in plotly
-                        resource_use_wide["duration_seconds"] = (resource_use_wide["resource_use_end"] - resource_use_wide["resource_use"]).dt.total_seconds()*1000
-                        resource_use_wide["duration_minutes"] = resource_use_wide["duration_seconds"] / 1000 / 60
-                        resource_use_wide["duration_minutes"] = resource_use_wide["duration_minutes"].round(1)
-
-                        resource_use_wide["callsign_group"] = resource_use_wide["time_type"].str.extract("(\d+)")
-
-                        resource_use_wide = resource_use_wide.sort_values(["callsign_group", "time_type"])
-
-                        st.dataframe(resource_use_wide)
-
-                        ######################################
-                        # Load in the servicing schedule df
-                        ######################################
-                        service_schedule = pd.read_csv("data/service_dates.csv")
-                        service_schedule = service_schedule.merge(pd.read_csv("actual_data/callsign_registration_lookup.csv"))
-                        # Convert to appropriate datatypes
-                        service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
-                        service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
-                        # Calculate duration for plotting and for hover text
-                        service_schedule["duration_seconds"] = (service_schedule["service_end_date"] - service_schedule["service_start_date"]).dt.total_seconds()*1000
-                        service_schedule["duration_days"] = (service_schedule["duration_seconds"] / 1000) / 60 / 60 / 24
-                        # Match y position of the resource in the rest of the plot
-                        print(f"resource_dict: {resource_dict}")
-                        service_schedule["y_pos"] = service_schedule["callsign"].map(resource_dict)
-                        # Limit the dataframe to only contain servicing
-                        service_schedule = service_schedule[(service_schedule["service_start_date"] <= resource_use_wide.resource_use.max()) &
-                                        (service_schedule["service_end_date"] >= resource_use_wide.resource_use.min())]
-
-                        st.dataframe(service_schedule)
-
-                    # # Add cc/ec/reg lookup
-                    # cc_ec_reg_colour_lookup = {
-                    #     'CC': 0,
-                    #     'EC': 1,
-                    #     'REG': 2
-                    # }
-
-                    # Create figure
-                    resource_use_fig = go.Figure()
-
-                    # Add horizontal bars using actual datetime values
-                    for idx, callsign in enumerate(resource_use_wide.time_type.unique()):
-                        callsign_df = resource_use_wide[resource_use_wide["time_type"]==callsign]
-                        # print(f"==callsign_df - {callsign} - for resource use debugging plot==")
-                        # print(callsign_df.head(5))
-
-                        service_schedule_df = service_schedule[service_schedule["callsign"]==callsign]
-
-                        # Add in hatched boxes showing the servicing periods
-                        if len(service_schedule_df) > 0:
-                            resource_use_fig.add_trace(go.Bar(
-                                x=service_schedule_df["duration_seconds"],  # Duration (Timedelta)
-                                y=service_schedule_df["y_pos"],
-                                base=service_schedule_df["service_start_date"],  # Start time as actual datetime
-                                orientation="h",
-                                width=0.6,
-                                marker_pattern_shape="x",
-                                marker=dict(color="rgba(63, 63, 63, 0.30)",
-                                            line=dict(color="black", width=1)
-                                            ),
-                                name=f"Servicing = {callsign}",
-                                customdata=service_schedule_df[['callsign','duration_days','service_start_date', 'service_end_date', 'registration']],
-                                hovertemplate="Servicing %{customdata[0]} (registration %{customdata[4]}) lasting %{customdata[1]} days (%{customdata[2]|%a %-e %b %Y} to %{customdata[3]|%a %-e %b %Y})<extra></extra>"
-                            ))
-
-                        # if colour_by_cc_ec:
-                        #     cc_ec_status = callsign_df["care_cat"].values[0]
-                        #     marker_val = dict(color=list(DAA_COLORSCHEME.values())[cc_ec_reg_colour_lookup[cc_ec_status]])
-
-                        if show_outline:
-                            marker_val=dict(color=list(DAA_COLORSCHEME.values())[idx],
-                                        line=dict(color="#FFA400", width=0.2))
-                        else:
-                            marker_val = dict(color=list(DAA_COLORSCHEME.values())[idx])
-
-                        # Add in boxes showing the duration of individual calls
-                        resource_use_fig.add_trace(go.Bar(
-                            x=callsign_df["duration_seconds"],  # Duration (Timedelta)
-                            y=callsign_df["y_pos"],
-                            base=callsign_df["resource_use"],  # Start time as actual datetime
-                            orientation="h",
-                            width=0.4,
-                            marker=marker_val,
-                            name=callsign,
-                            customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes', 'registration', 'care_cat']],
-                            hovertemplate="Response to %{customdata[5]} call from %{customdata[2]} (registration %{customdata[4]}) lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
-                            #customdata=callsign_df[['resource_use','resource_use_end','time_type', 'duration_minutes']],
-                            #hovertemplate="Response from %{customdata[2]} lasting %{customdata[3]} minutes (%{customdata[0]|%a %-e %b %Y %H:%M} to %{customdata[1]|%a %-e %b %Y %H:%M})<extra></extra>"
-
-                        ))
-
-                    # Layout tweaks
-                    resource_use_fig.update_layout(
-                        title="Resource Use Over Time",
-                        barmode='overlay',
-                        xaxis=dict(
-                            title="Time",
-                            type="date",  # Ensures proper datetime scaling with zoom
-                            # tickformat="%b %d, %Y",  # Default formatting (months & days)
-                        ),
-                        yaxis=dict(
-                            title="Callsign",
-                            tickmode="array",
-                            tickvals=list(resource_dict.values()),
-                            ticktext=list(resource_dict.keys()),
-                            autorange = "reversed"
-                        ),
-                        showlegend=True,
-                        height=700
+                # Call the refactored function
+                # Ensure DAA_COLORSCHEME is defined and passed
+                _resource_use_exploration.display_resource_use_exploration(
+                    resource_use_events_only,
+                    results_all_runs,
+                    DAA_COLORSCHEME
                     )
-
-                    resource_use_fig.update_xaxes(rangeslider_visible=True,
-                    rangeselector=dict(
-                        buttons=list([
-                            dict(count=1, label="1m", step="month", stepmode="backward"),
-                            dict(count=6, label="6m", step="month", stepmode="backward"),
-                            dict(count=1, label="YTD", step="year", stepmode="todate"),
-                            dict(count=1, label="1y", step="year", stepmode="backward"),
-                            dict(step="all")
-                        ]))
-                    )
-
-                    resource_use_fig.write_html("app/fig_outputs/resource_use_fig.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
-
-                    st.plotly_chart(
-                        resource_use_fig
-                    )
-
-                resource_use_exploration_plots()
 
                 st.caption("""
 This visual shows the resource use of each resource throughout the simulation.
@@ -1440,7 +1225,7 @@ the overall time period.*
                             if msg == "success":
                                 st.success("Report Available for Download")
 
-                        except Exception as e:
+                        except Exception as e: # noqa
                             st.error("Report cannot be generated - please speak to a developer")
 
 
