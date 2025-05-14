@@ -242,17 +242,6 @@ class DES_HEMS:
 
                             [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
 
-                        else:
-                            # Fast forward to 59-minute mark if not already there
-                            if minutes_elapsed < 59:
-                                yield self.env.timeout(59 - minutes_elapsed)
-                                minutes_elapsed = 59
-                                [dow, hod, weekday, month, qtr, current_dt] = self.utils.date_time_of_call(self.sim_start_date, self.env.now)
-
-                            # All remaining calls come in at once at 59 minutes past the hour
-                            self.env.process(self.generate_patient(dow, hod, weekday, month, qtr, current_dt))
-
-
 
                 next_hr = current_dt.floor('h') + pd.Timedelta('1h')
                 yield self.env.timeout(math.ceil(pd.to_timedelta(next_hr - current_dt).total_seconds() / 60))
