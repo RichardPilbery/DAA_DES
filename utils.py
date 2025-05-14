@@ -255,7 +255,7 @@ class Utils:
     def callsign_group_selection(self, ampds_card: str) -> int:
         """
             This function will allocate and return an callsign group
-            based on the hour of day and AMPDS card
+            based on AMPDS card
         """
 
         #print(f"Callsign group selection with {hour} and {ampds_card}")
@@ -270,7 +270,7 @@ class Utils:
     def vehicle_type_selection(self, callsign_group: str) -> int:
         """
             This function will allocate and return a vehicle type
-            based on the month and callsign group
+            based callsign group
         """
 
         df = self.vehicle_type_df[
