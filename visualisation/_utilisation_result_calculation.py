@@ -6,13 +6,9 @@ import pandas as pd
 import plotly.express as px
 
 import _vehicle_calculation
-import _job_count_calculation
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
-import re
 
 from _app_utils import DAA_COLORSCHEME
-
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",

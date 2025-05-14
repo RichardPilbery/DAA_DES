@@ -18,7 +18,7 @@ def format_sigfigs(x, sigfigs=4):
             digits = sigfigs - 1 - floor(log10(abs(x)))
             return f"{x:.{digits}f}"
     except (ValueError, TypeError):
-        return str(x) 
+        return str(x)
 
 def iconMetricContainer(key,icon_unicode,css_style=None,icon_color='grey', family="filled", type="icons"):
     """Function that returns a CSS styled container for adding a Material Icon to a Streamlit st.metric value
@@ -169,7 +169,7 @@ def get_quarto(repo_name, quarto_version="1.5.57"):
         print("Quarto check run")
     except PermissionError:
         print("Permission error encountered when running 'quarto check'")
-    except:
+    except: # noqa
         print("Other unspecified error when running quarto check")
 
 @st.fragment
@@ -215,12 +215,12 @@ def generate_quarto_report(run_quarto_check=False):
 
         print("Quarto Render Command run succesfully")
         print(f"Destination Path: {dest_html_path}")
-    except:
+    except: #noqa
         ## error message
-        print(f"Report cannot be generated")
+        print("Report cannot be generated")
 
     if os.path.exists(dest_html_path):
-        print(f"Destination file found in filesystem - obtaining for download")
+        print(f"Destination file {dest_html_path} found in filesystem - obtaining for download")
         with open(dest_html_path, "r") as f:
             html_data = f.read()
 
@@ -243,7 +243,7 @@ def generate_quarto_report(run_quarto_check=False):
             return "success"
     else:
         ## error message
-        print(f"Generated file found not in filesystem")
+        print("Generated file found not in filesystem")
         try:
             print(f"Report failed to generate\n\n_{result}_")
         except UnboundLocalError:
@@ -342,7 +342,7 @@ to {to_military_time(row["winter_end"])} in winter.
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":
             if st.session_state.overall_demand_mult == 100:
-                demand_adjustment_string = f"Demand is based on historically observed demand with no adjustments."
+                demand_adjustment_string = "Demand is based on historically observed demand with no adjustments."
             elif st.session_state.overall_demand_mult < 100:
                 demand_adjustment_string = f"Modelled demand is {100-st.session_state.overall_demand_mult}% less than historically observed demand."
             elif st.session_state.overall_demand_mult > 100:
