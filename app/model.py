@@ -440,17 +440,10 @@ If the simulation is not using the default parameters, we would not expect the o
     wish to consider the historical split as part of your decision making.
                 """)
 
-                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg =  _utilisation_result_calculation.make_utilisation_model_dataframe(
-                    path="data/run_results.csv",
-                    params_path="data/run_params_used.csv",
-                    service_path="data/service_dates.csv",
-                    callsign_path="actual_data/callsign_registration_lookup.csv",
-                    rota_path="actual_data/HEMS_ROTA.csv"
-                )
-
 
                 st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_summary_plot(
-                    utilisation_df_overall
+                    utilisation_df_overall,
+                    historical_utilisation_df_summary
                 ))
 
                 st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_variation_plot(
