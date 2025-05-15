@@ -10,6 +10,8 @@ import itertools
 from fitter import Fitter, get_common_distributions
 from datetime import timedelta
 from utils import Utils
+from des_parallel_process import parallelProcessJoblib, collateRunResults, removeExistingResults
+from datetime import datetime
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
@@ -986,7 +988,7 @@ class DistributionFitUtils():
 
         df["quarter"] = df["inc_date"].dt.quarter
         count_df_quarter = df[["callsign_group_simplified", "quarter", "hour"]].value_counts().reset_index(name="count").sort_values(['quarter','callsign_group_simplified','hour'])
-        count_df_quarter.to_csv("historical_missed_calls_by_quarter_and_hour.csv", index=False)
+        count_df_quarter.to_csv("historical_data/historical_missed_calls_by_quarter_and_hour.csv", index=False)
 
     def upper_allowable_time_bounds(self):
         """
@@ -1198,12 +1200,53 @@ class DistributionFitUtils():
         final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
 
 
+    def run_sim_on_historical_params(self):
+        # Ensure all rotas are using default values
+        rota = pd.read_csv("tests/rotas_historic/HISTORIC_HEMS_ROTA.csv")
+        rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+        callsign_reg_lookup = pd.read_csv("tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv")
+        callsign_reg_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+        service_history = pd.read_csv("tests/rotas_historic/HISTORIC_service_history.csv")
+        service_history.to_csv("actual_data/service_history.csv", index=False)
+
+        service_sched = pd.read_csv("tests/rotas_historic/HISTORIC_service_schedules_by_model.csv")
+        service_sched.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+        print("Generating simulation results...")
+        removeExistingResults()
+
+        total_runs = 12
+        sim_duration = 60 * 24 * 7 * 52 * 2, # 2 years
+
+        parallelProcessJoblib(
+            total_runs=total_runs,
+            sim_duration=sim_duration,
+            warm_up_time=0,
+            sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+            amb_data=False,
+            print_debug_messages=True
+        )
+
+        collateRunResults()
+
+    results_all_runs = pd.read_csv("data/run_results.csv")
+    # Also run the model to get some base-case outputs
+    resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
+    resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
+    missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
+    missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
+    missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
+
+    missed_jobs_care_cat_summary.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
     test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
+    test.run_sim_on_historical_params()
 
 # Testing ----------
 # python distribution_fit_utils.py
