@@ -136,7 +136,7 @@ def display_resource_use_exploration(resource_use_events_only_df, results_all_ru
 
             service_schedule["service_end_date"] = pd.to_datetime(service_schedule["service_end_date"])
             service_schedule["service_start_date"] = pd.to_datetime(service_schedule["service_start_date"])
-            service_schedule["duration_seconds"] = (service_schedule["service_end_date"] - service_schedule["service_start_date"]).dt.total_seconds()*1000
+            service_schedule["duration_seconds"] = ((service_schedule["service_end_date"] - service_schedule["service_start_date"]) + timedelta(days=1)).dt.total_seconds()*1000
             service_schedule["duration_days"] = (service_schedule["duration_seconds"] / 1000) / 60 / 60 / 24
 
             # Map y_pos using the comprehensive resource_dict
