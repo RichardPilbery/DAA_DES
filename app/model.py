@@ -115,7 +115,7 @@ if button_run_pressed:
     if platform.processor() == '':
         my_bar = st.progress(0, text=progress_text)
 
-    with st.spinner('Simulating the system...'):
+    with st.spinner(f'Simulating {st.session_state.number_of_runs_input} replication(s) of {st.session_state.sim_duration_input} days. This may take several minutes...', show_time=True):
 
         # If running on community cloud, parallelisation will not work
         # so run instead using the runSim function sequentially
@@ -232,6 +232,8 @@ if button_run_pressed:
 
             print(historical_utilisation_df_summary)
 
+            st.subheader("Missed Jobs and Service Benefit")
+
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
@@ -262,99 +264,79 @@ if button_run_pressed:
                     #     st.dataframe(outcome_df)
 
             with t1_col2:
-                quarto_string += "\n\n## Resource Utilisation"
-                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
-                    _utilisation_result_calculation.make_utilisation_model_dataframe(
-                    path="data/run_results.csv",
-                    params_path="data/run_params_used.csv",
-                    service_path="data/service_dates.csv",
-                    callsign_path="actual_data/callsign_registration_lookup.csv",
-                    rota_path="actual_data/HEMS_ROTA.csv"
-                ))
+                st.write("This is where we'll write some stuff about EC/CC")
 
-                print(utilisation_df_overall)
+            st.subheader("Resource Utilisation")
 
-                t1_col_2_a, t1_col_2_b = st.columns(2)
-                with t1_col_2_a:
-                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                        h70_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0]
+            quarto_string += "\n\n## Resource Utilisation"
+            resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
+                _utilisation_result_calculation.make_utilisation_model_dataframe(
+                path="data/run_results.csv",
+                params_path="data/run_params_used.csv",
+                service_path="data/service_dates.csv",
+                callsign_path="actual_data/callsign_registration_lookup.csv",
+                rota_path="actual_data/HEMS_ROTA.csv"
+            ))
 
-                        quarto_string += f"\n\nAverage simulated H70 Utilisation was {h70_util_fig}\n\n"
+            print(utilisation_df_overall)
 
-                        st.metric("Average Simulated H70 Utilisation",
-                                h70_util_fig,
-                                border=True)
+            # Get unique callsigns for helicopters and cars from run_results
+            if 'vehicle_type' in results_all_runs.columns and 'callsign' in results_all_runs.columns:
+                all_helicopter_callsigns = sorted(list(results_all_runs[results_all_runs['vehicle_type'] == 'helicopter']['callsign'].dropna().unique()))
+                all_car_callsigns = sorted(list(results_all_runs[results_all_runs['vehicle_type'] == 'car']['callsign'].dropna().unique()))
+            else:
+                st.error("The 'run_results' DataFrame is missing 'vehicle_type' or 'callsign' columns.")
+                all_helicopter_callsigns = []
+                all_car_callsigns = []
 
-                    h70_hist = _utilisation_result_calculation.get_hist_util_fig(
-                        historical_utilisation_df_summary, "H70", "mean"
+            # --- Display Helicopter Metrics ---
+            st.markdown("### Helicopters")
+            if all_helicopter_callsigns:
+                helo_cols = st.columns(len(all_helicopter_callsigns))
+                for idx, helo_callsign in enumerate(all_helicopter_callsigns):
+                    quarto_string = _utilisation_result_calculation.display_vehicle_utilisation_metric(
+                        st_column=helo_cols[idx],
+                        callsign_to_display=helo_callsign,
+                        vehicle_type_label="Helicopter",
+                        icon_unicode="f60c",
+                        sim_utilisation_df=utilisation_df_overall,
+                        hist_summary_df=historical_utilisation_df_summary,
+                        util_calc_module=_utilisation_result_calculation,
+                        current_quarto_string=quarto_string
                     )
+            else:
+                st.info("No helicopter data found in the current run results.")
 
-                    h70_hist_util_fig = f"*The historical average utilisation of H70 was {h70_hist}%*\n\n"
-                    quarto_string += h70_hist_util_fig
-
-                    quarto_string += "\n\n---\n\n"
-
-                    st.caption(h70_hist_util_fig)
-
-                with t1_col_2_b:
-                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                        h71_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0]
-
-                        quarto_string += f"\n\nAverage simulated H71 Utilisation was {h71_util_fig}\n\n"
-
-                        st.metric("Average Simulated H71 Utilisation",
-                                h71_util_fig,
-                                border=True)
-
-                    h71_hist = _utilisation_result_calculation.get_hist_util_fig(
-                        historical_utilisation_df_summary, "H71", "mean"
-                    )
-                    h71_hist_util_fig = f"*The historical average utilisation of H71 was {h71_hist}%*\n\n"
-                    quarto_string += h71_hist_util_fig
-                    st.caption(h71_hist_util_fig)
-
-                    quarto_string += "\n\n---\n\n"
-
-                st.caption(get_text("helicopter_utilisation_description", text_df))
-
+            st.caption(get_text("helicopter_utilisation_description", text_df))
             st.divider()
 
-            cars = ["CC70", "CC71", "CC72"]
+            # --- Display Car Metrics ---
+            st.markdown("### Cars")
+            if all_car_callsigns:
+                # Your original line for index manipulation.
+                # Ensure this is necessary or adapt if callsigns in historical_utilisation_df_summary match directly
+                # or if the get_hist_util_fig function handles the "CC" prefix.
+                # For the mock, get_hist_util_fig handles "CC" to "C" transformation.
+                # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
 
-            car_metric_cols = st.columns(len(cars))
-
-            # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
-
-            for idx, col in enumerate(car_metric_cols):
-                with col:
-                    car_callsign = cars[idx]
-
-                    with iconMetricContainer(key="car_util", icon_unicode="eb3c", type="symbols"):
-                        print(utilisation_df_overall)
-                        matched = utilisation_df_overall[utilisation_df_overall['callsign'] == car_callsign]
-
-                        if not matched.empty:
-                            car_util_fig = matched['PRINT_perc'].values[0]
-                        else:
-                            car_util_fig = None
-
-                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
-
-                        st.metric(f"Average Simulated {car_callsign} Utilisation",
-                                car_util_fig,
-                                border=True)
-
-                    car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
-                        historical_utilisation_df_summary, car_callsign, "mean"
+                car_metric_cols = st.columns(len(all_car_callsigns))
+                for idx, car_callsign in enumerate(all_car_callsigns):
+                    quarto_string = _utilisation_result_calculation.display_vehicle_utilisation_metric(
+                        st_column=car_metric_cols[idx],
+                        callsign_to_display=car_callsign,
+                        vehicle_type_label="Car",
+                        icon_unicode="eb3c",
+                        sim_utilisation_df=utilisation_df_overall,
+                        hist_summary_df=historical_utilisation_df_summary,
+                        util_calc_module=_utilisation_result_calculation,
+                        current_quarto_string=quarto_string
                     )
-                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
+            else:
+                st.info("No car data found in the current run results.")
 
-                    quarto_string += car_util_fig_hist
-
-                    quarto_string += "\n\n---\n\n"
-
-                    st.caption(car_util_fig_hist)
-
+            # Display a description for car utilisation
+            # st.caption(get_text("car_utilisation_description", text_df))
+            # st.divider() # If you add a caption above, a divider might be good here too.
 
             t1_col3, t1_col4 = st.columns(2)
 
@@ -1225,7 +1207,7 @@ the overall time period.*
             @st.fragment()
             def generate_report_button():
                 if st.button("Click here to generate the downloadable report"):
-                    with st.spinner("Generating report..."):
+                    with st.spinner("Generating report. This may take a minute...", show_time=True):
                         try:
                             with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
                                 text_file.write(quarto_string)

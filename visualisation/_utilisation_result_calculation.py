@@ -8,7 +8,9 @@ import plotly.express as px
 import _vehicle_calculation
 import plotly.graph_objects as go
 
-from _app_utils import DAA_COLORSCHEME
+import streamlit as st
+
+from _app_utils import DAA_COLORSCHEME, iconMetricContainer
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",
@@ -923,3 +925,40 @@ def create_callsign_group_split_rwc_plot(
 
         fig.update_traces(textposition='inside')  # You can also try 'auto' or 'outside'
         return fig
+
+# --- Helper function to display vehicle metric ---
+def display_vehicle_utilisation_metric(st_column, callsign_to_display, vehicle_type_label, icon_unicode,
+                                    sim_utilisation_df, hist_summary_df,
+                                    util_calc_module, current_quarto_string):
+    """
+    Displays the utilisation metrics for a given vehicle in a specified Streamlit column.
+    Returns the updated quarto_string.
+    """
+    with st_column:
+        with iconMetricContainer(key=f"{vehicle_type_label.lower()}_util_{callsign_to_display}", icon_unicode=icon_unicode, type="symbols"):
+            matched_sim = sim_utilisation_df[sim_utilisation_df['callsign'] == callsign_to_display]
+            if not matched_sim.empty:
+                sim_util_fig = matched_sim['PRINT_perc'].values[0]
+                sim_util_display = f"{sim_util_fig}"
+            else:
+                sim_util_fig = "N/A"
+                sim_util_display = "N/A"
+
+            current_quarto_string += f"\n\nAverage simulated {callsign_to_display} Utilisation was {sim_util_fig}\n\n"
+
+            st.metric(f"Average Simulated {callsign_to_display} Utilisation",
+                    sim_util_display,
+                    border=True)
+
+        # Get historical data
+        hist_util_value = util_calc_module.get_hist_util_fig(
+            hist_summary_df, callsign_to_display, "mean"
+        )
+        hist_util_value_display = f"{hist_util_value}%" if isinstance(hist_util_value, (int, float)) else hist_util_value
+
+        hist_util_caption = f"*The historical average utilisation of {callsign_to_display} was {hist_util_value_display}*\n\n"
+        current_quarto_string += hist_util_caption
+        current_quarto_string += "\n\n---\n\n"
+        st.caption(hist_util_caption)
+
+    return current_quarto_string
