@@ -39,8 +39,6 @@ def make_job_count_df(path="../data/run_results.csv",
     """
 
     df = pd.read_csv(path)
-    params_df = pd.read_csv(params_path)
-    n_runs = len(df["run_number"].unique())
 
     # Add callsign column if not already present in the dataframe passed to the function
     if 'callsign' not in df.columns:

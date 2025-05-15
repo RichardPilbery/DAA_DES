@@ -934,19 +934,28 @@ class DistributionFitUtils():
         """
 
         # Multiple resources can be sent to the same job.
-        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign',
+                              'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+                              'time_to_hospital', 'time_to_clear']]
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
 
         monthly_totals_df = monthly_df.groupby(['callsign', 'first_day_of_month'], as_index=False)\
             .agg(n = ('callsign', 'size'), total_time = ('total_time', 'sum'))
 
-        monthly_totals_pivot_df = monthly_totals_df.pivot(index='first_day_of_month', columns='callsign', values=['n', 'total_time'])
+        monthly_totals_pivot_df = monthly_totals_df.pivot(
+            index='first_day_of_month',
+            columns='callsign', values=['n', 'total_time']
+            )
 
         monthly_totals_pivot_df.columns = [f"{col[0]}_{col[1]}" for col in  monthly_totals_pivot_df.columns]
         monthly_totals_pivot_df = monthly_totals_pivot_df.reset_index()
 
-        monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_resource_utilisation.csv', mode="w+", index=False)
+        monthly_totals_pivot_df \
+        .rename(columns={'first_day_of_month': 'month'}) \
+        .to_csv('historical_data/historical_monthly_resource_utilisation.csv',
+                mode="w+",
+                index=False)
 
     def historical_daily_calls_breakdown(self):
 
