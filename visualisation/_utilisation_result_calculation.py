@@ -239,8 +239,6 @@ def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run,
     utilisation_df_per_run = utilisation_df_per_run.reset_index()
     utilisation_df_per_run["vehicle_type"] = utilisation_df_per_run["vehicle_type"].str.title()
 
-
-
     fig = (px.box(utilisation_df_per_run,
         x="perc_time_in_use",
         y="callsign",
@@ -353,6 +351,8 @@ def make_RWC_utilisation_dataframe(
         # Convert date columns to datetime format
         historical_df['month'] = pd.to_datetime(historical_df['month'])
 
+        # Create a dummy dataframe with every date in the range represented
+        # We'll use this to make sure days with 0 activity get factored in to the calculations
         date_range = pd.date_range(start=historical_df['month'].min(),
                         end=pd.offsets.MonthEnd().rollforward(historical_df['month'].max()),
                         freq='D')
@@ -486,11 +486,15 @@ def make_RWC_utilisation_dataframe(
         historical_utilisation_df_complete["percentage_utilisation"].apply(lambda x: f"{x:.1%}")
         )
 
+    historical_utilisation_df_complete.to_csv("historical_data/calculated/complete_utilisation_historical.csv")
+
     historical_utilisation_df_summary = (
         historical_utilisation_df_complete
         .groupby('callsign')['percentage_utilisation']
         .agg(['min', 'max', 'mean', 'median'])*100
         ).round(1)
+
+    historical_utilisation_df_summary.to_csv("historical_data/calculated/complete_utilisation_historical_summary.csv")
 
     print("==historical_utilisation_df_complete==")
     print(historical_utilisation_df_complete)
