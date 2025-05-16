@@ -1,19 +1,19 @@
 hems_result,care_cat,helicopter_benefit,count,total,proportion
+Landed but no patient contact,REG,n,431,4086,0.1055
 Patient Conveyed by HEMS,CC,y,96,263,0.365
 Patient Conveyed by HEMS,EC,y,39,355,0.1099
-Patient Conveyed by HEMS,REG,n,91,4068,0.0224
-Patient Conveyed by HEMS,REG,y,240,522,0.4598
+Patient Conveyed by HEMS,REG,n,91,4086,0.0223
+Patient Conveyed by HEMS,REG,y,240,504,0.4762
 Patient Conveyed by land with HEMS,CC,y,141,263,0.5361
 Patient Conveyed by land with HEMS,EC,y,111,355,0.3127
-Patient Conveyed by land with HEMS,REG,n,466,4068,0.1146
-Patient Conveyed by land with HEMS,REG,y,60,522,0.1149
+Patient Conveyed by land with HEMS,REG,n,466,4086,0.114
+Patient Conveyed by land with HEMS,REG,y,60,504,0.119
 Patient Treated but not conveyed by HEMS,CC,y,22,263,0.0837
 Patient Treated but not conveyed by HEMS,EC,y,198,355,0.5577
-Patient Treated but not conveyed by HEMS,REG,n,955,4068,0.2348
-Patient Treated but not conveyed by HEMS,REG,y,114,522,0.2184
+Patient Treated but not conveyed by HEMS,REG,n,955,4086,0.2337
+Patient Treated but not conveyed by HEMS,REG,y,114,504,0.2262
 Stand Down,CC,y,4,263,0.0152
 Stand Down,EC,y,7,355,0.0197
-Stand Down,REG,n,1349,4068,0.3316
-Stand Down,REG,y,90,522,0.1724
-Unknown,REG,n,1207,4068,0.2967
-Unknown,REG,y,18,522,0.0345
+Stand Down,REG,n,1349,4086,0.3302
+Stand Down,REG,y,90,504,0.1786
+Unknown,REG,n,794,4086,0.1943

@@ -1,4 +1,9 @@
 hems_result,callsign_group,vehicle_type,count,proportion
+Landed but no patient contact,70,car,107,0.1193
+Landed but no patient contact,70,helicopter,154,0.0775
+Landed but no patient contact,71,car,18,0.0723
+Landed but no patient contact,71,helicopter,39,0.0694
+Landed but no patient contact,72,car,113,0.1569
 Patient Conveyed by HEMS,70,car,13,0.0145
 Patient Conveyed by HEMS,70,helicopter,296,0.149
 Patient Conveyed by HEMS,71,car,1,0.004
@@ -19,8 +24,3 @@ Stand Down,70,helicopter,693,0.3489
 Stand Down,71,car,93,0.3735
 Stand Down,71,helicopter,128,0.2278
 Stand Down,72,car,192,0.2667
-Unknown,70,car,107,0.1193
-Unknown,70,helicopter,154,0.0775
-Unknown,71,car,18,0.0723
-Unknown,71,helicopter,39,0.0694
-Unknown,72,car,113,0.1569
