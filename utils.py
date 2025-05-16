@@ -53,8 +53,8 @@ class Utils:
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         # New addition without stratification by month
         self.vehicle_type_df = pd.read_csv('distribution_data/vehicle_type_probs.csv')
-        self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
-        self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
+        # self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
+        # self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
         self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
 
         # NEW PATIENT OUTCOME AND HEMS RESULT DATA FRAMES
@@ -304,18 +304,18 @@ class Utils:
                                 random_state=self.rngs["vehicle_type_selection"]).iloc[0]
 
 
-    def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
-        """
-            This function will allocate a HEMS result based on callsign group and vehicle type
-        """
+    # def hems_result_by_callsign_group_and_vehicle_type_selection(self, callsign_group: str, vehicle_type: str) -> str:
+    #     """
+    #         This function will allocate a HEMS result based on callsign group and vehicle type
+    #     """
 
-        df = self.hems_result_by_callsign_group_and_vehicle_type_df[
-            (self.hems_result_by_callsign_group_and_vehicle_type_df['callsign_group'] == int(callsign_group)) &
-            (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
-        ]
+    #     df = self.hems_result_by_callsign_group_and_vehicle_type_df[
+    #         (self.hems_result_by_callsign_group_and_vehicle_type_df['callsign_group'] == int(callsign_group)) &
+    #         (self.hems_result_by_callsign_group_and_vehicle_type_df['vehicle_type'] == vehicle_type)
+    #     ]
 
-        return pd.Series.sample(df['hems_result'], weights = df['proportion'],
-                                random_state=self.rngs["hems_result_by_callsign_group_and_vehicle_type_selection"]).iloc[0]
+    #     return pd.Series.sample(df['hems_result'], weights = df['proportion'],
+    #                             random_state=self.rngs["hems_result_by_callsign_group_and_vehicle_type_selection"]).iloc[0]
 
     # def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
     #     """

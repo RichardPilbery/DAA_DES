@@ -306,8 +306,8 @@ class DES_HEMS:
             # !!!!!! ASSUMPTION !!!!!!! #
             # About 5% of 'REG' calls might have a helicopter benefit
             helicopter_benefit = 'y'
-            if pt.hems_cc_or_ec == 'REG':
-                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= 0.05 else 'n'
+            # if pt.hems_cc_or_ec == 'REG':
+            #     helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= 0.05 else 'n'
 
             pt.hems_helicopter_benefit = helicopter_benefit
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
@@ -338,10 +338,6 @@ class DES_HEMS:
 
             if hems_allocation is not None:
                 #self.debug(f"allocated {hems_allocation.callsign}")
-
-                # if hems_group_resource_allocation is not None:
-                #     self.add_patient_result_row(pt, hems_allocation.callsign, "resource_use")
-                #     self.add_patient_result_row(pt, hems_group_resource_allocation.callsign_group, "callsign_group_resource_use")
 
                 self.env.process(self.patient_journey(hems_allocation, pt, hems_group_resource_allocation))
             else:
@@ -380,6 +376,10 @@ class DES_HEMS:
                 patient.hems_vehicle_type = hems_res.vehicle_type
                 patient.hems_registration = hems_res.registration
 
+
+                self.add_patient_result_row(patient, patient.hems_vehicle_type, "selected_vehicle_type")
+                self.add_patient_result_row(patient, patient.hems_callsign_group, "selected_callsign_group")
+
                 #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
                 #self.debug(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
                 #patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
@@ -402,15 +402,10 @@ class DES_HEMS:
                         self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
                 # Check if HEMS result indicates that resource stood down before going mobile or en route
-                no_HEMS_at_scene = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route"] else False
+                no_HEMS_at_scene = True if patient.hems_result in ["Stand Down"] else False
 
                 # Check if HEMS result indicates no leaving scene/at hospital times
-                no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
-
-                
-
-                #self.debug(f"Patient outcome is {patient.pt_outcome}")
-
+                no_HEMS_hospital = True if patient.hems_result in ["Stand Down",  "Landed but no patient contact", "Patient Treated but not conveyed by HEMS"] else False
 
             #self.debug('Inside hems_avail')
             if self.amb_data:
@@ -441,11 +436,8 @@ class DES_HEMS:
             patient.time_in_sim = self.env.now - patient_enters_sim
 
             if patient.hems_case == 1 and hems_avail:
-                if patient.hems_result != "Stand Down Before Mobile":
+                if patient.hems_result != "Stand Down":
                     self.add_patient_result_row(patient, "HEMS allocated to call", "queue")
-                else:
-                    self.add_patient_result_row(patient, "HEMS stand down before mobile", "queue")
-
 
             # Mobilisation time ---------------
 
@@ -485,10 +477,8 @@ class DES_HEMS:
             patient.time_in_sim = self.env.now - patient_enters_sim
 
             if (patient.hems_case == 1 and hems_avail):
-                if patient.hems_result != "Stand Down En Route":
+                if patient.hems_result != "Stand Down":
                     self.add_patient_result_row(patient,  "HEMS on scene", "queue")
-                else:
-                    self.add_patient_result_row(patient,  "HEMS stand down en route","queue")
 
             if self.amb_data:
                 self.debug('Ambulance stand down en route')
