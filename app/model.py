@@ -532,7 +532,21 @@ dataset.
                                 )
                             )
 
+                        st.caption("""
+                            We can also take a look at the proportion of jobs allocated to each category
+                            at a high level to confirm the model is reflecting the historical trends.
+
+                            Note that for historic data, we have excluded jobs that were not attended (and therefore
+                            where the care category is not known) from the total number of jobs.
+                            """)
+
+                        st.dataframe(
+                            _job_outcome_calculation.get_care_cat_proportion_table().drop(columns=["Historic Job Counts", "Simulated Job Counts"])
+                        )
+
                     plot_cc_ec_split()
+
+
 
         with tab3:
 

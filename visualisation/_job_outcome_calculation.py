@@ -88,9 +88,47 @@ def get_care_cat_counts_plot_historic(historic_df_path="historical_data/historic
 
     return fig
 
+def get_care_cat_proportion_table(
+        results_path="data/run_results.csv",
+        historic_df_path="historical_data/historical_care_cat_counts.csv"):
 
+    historical_value_counts_by_hour = pd.read_csv(historic_df_path)
 
+    historical_counts_simple = historical_value_counts_by_hour.groupby('care_category')['count'].sum().reset_index().rename(columns={'count': 'Historic Job Counts', 'care_category': 'Care Category'})
 
+    run_results = pd.read_csv(results_path)
+
+    # Amend care category to reflect the small proportion of regular jobs assumed to have
+    # a helicopter benefit
+    run_results.loc[
+        (run_results['heli_benefit'] == 'y') & (run_results['care_cat'] == 'REG'),
+        'care_cat'
+    ] = 'REG - helicopter benefit'
+
+    care_cat_counts_sim = (run_results[
+        run_results["event_type"]=="patient_helicopter_benefit"]
+        [["P_ID", "run_number", "care_cat"]].reset_index()
+        .groupby(["care_cat"]).size()
+        .reset_index(name="count")
+        )
+
+    full_counts = historical_counts_simple.merge(
+            care_cat_counts_sim.rename(columns={'care_cat': 'Care Category', 'count':'Simulated Job Counts'}),
+            how="outer", on="Care Category"
+        )
+
+    # Calculate proportions by column
+    full_counts = full_counts[full_counts["Care Category"] != "Unknown - DAA resource did not attend"].copy()
+
+    full_counts["Historic Percentage"] = full_counts["Historic Job Counts"] / full_counts["Historic Job Counts"].sum()
+    full_counts["Simulated Percentage"] = full_counts["Simulated Job Counts"] / full_counts["Simulated Job Counts"].sum()
+
+    full_counts["Historic Percentage"] = full_counts["Historic Percentage"].apply(lambda x: f"{x:.1%}")
+    full_counts["Simulated Percentage"] = full_counts["Simulated Percentage"].apply(lambda x: f"{x:.1%}")
+
+    full_counts["Care Category"] = pd.Categorical(full_counts["Care Category"], ["CC", "EC", "REG - helicopter benefit", "REG"])
+
+    return full_counts.sort_values('Care Category')
 
 def get_preferred_outcome_by_hour(results_path="data/run_results.csv", show_proportions=False):
     run_results = pd.read_csv(results_path)
