@@ -198,7 +198,7 @@ if button_run_pressed:
         with tab5:
             report_message = st.empty()
 
-            report_message.info("Generating Report...")
+            # report_message.info("Generating Report...")
 
 
         def get_job_count_df():
@@ -970,8 +970,12 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
-                                                          "Process Analytics", "Process Analytics - Resources"])
+            # tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
+            #                                               "Process Analytics", "Process Analytics - Resources"
+            #                                               ])
+
+            tab_4_1, tab_4_2, tab_4_3 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes"
+                                                ])
 
             with tab_4_1:
                 resource_use_events_only = results_all_runs[
@@ -1293,6 +1297,7 @@ the overall time period.*
             @st.fragment()
             def generate_report_button():
                 if st.button("Click here to generate the downloadable report"):
+                    report_message.info("Generating Report...")
                     with st.spinner("Generating report. This may take a minute...", show_time=True):
                         try:
                             with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
