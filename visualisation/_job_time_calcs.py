@@ -153,16 +153,24 @@ def plot_historical_job_duration_vs_simulation_overall(
 
     historical_activity_times_overall['what'] = 'Historical'
     utilisation_model_df['what'] = 'Simulated'
+
+    # Force 'Simulated' to always appear first (left) and 'Historical' second (right)
     historical_activity_times_overall.rename(columns={'value': 'resource_use_duration'}, inplace=True)
 
     full_activity_duration_df = pd.concat([historical_activity_times_overall, utilisation_model_df])
 
+    full_activity_duration_df['what'] = pd.Categorical(
+        full_activity_duration_df['what'],
+        categories=['Simulated', 'Historical'],
+        ordered=True
+    )
+
     if violin:
         fig = px.violin(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
-                    color="what")
+                    color="what", category_orders={"what": ["Simulated", "Historical"]})
     else:
         fig = px.box(full_activity_duration_df, x="vehicle_type", y="resource_use_duration",
-            color="what")
+            color="what", category_orders={"what": ["Simulated", "Historical"]})
 
     fig.update_layout(title="Resource Utilisation Duration vs Historical Averages")
 
@@ -349,12 +357,19 @@ def plot_time_breakdown(run_results_path="data/run_results.csv",
         historical_job_duration_breakdown[historical_job_duration_breakdown["name"]!="total_duration"].drop(columns=["callsign", "job_identifier"])
         ])
 
+    full_job_duration_breakdown_df['what'] = pd.Categorical(
+        full_job_duration_breakdown_df['what'],
+        categories=['Simulated', 'Historical'],
+        ordered=True
+    )
+
     full_job_duration_breakdown_df["name"] = full_job_duration_breakdown_df["name"].str.replace("_", " ").str.title()
 
     fig = px.box(
         full_job_duration_breakdown_df,
         y="value", x="name", color="what",
         facet_row="vehicle_type",
+        category_orders={"what": ["Simulated", "Historical"]},
         labels={"value": "Duration (minutes)",
                 # "vehicle_type": "Vehicle Type",
                 "what": "Time Type (Historical Data vs Simulated Data)",
