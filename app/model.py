@@ -500,20 +500,38 @@ they are not reflected in the model.
 For the model, it has been assumed that the split of CC calls, EC calls and calls where no CC or EC intervention
 is delivered is consistent across the day. We do not have access to this data for time where jobs have not historically
 been attended due to no resource being in service.
-                               """)
+
+This data is affected by the fact that the historical actions will be affected by the crew that attended, and reflect
+care delivered rather than ideal care. For example, if an EC crew attended a job that would benefit
+from a CC intervention (due to no CC crew being on shift or the CC crew already being on another job),
+only EC interventions would be delivered and only an EC benefit would have been recorded in the
+dataset.
+""")
 
                     @st.fragment
                     def plot_cc_ec_split():
                         show_proportions_care_cat_plot = st.toggle("Show Proportions", False)
 
                         st.plotly_chart(
-                            _job_outcome_calculation.get_care_cat_counts(
+                            _job_outcome_calculation.get_care_cat_counts_plot_sim(
                                 show_proportions=show_proportions_care_cat_plot
                                 )
                         )
 
                     plot_cc_ec_split()
 
+                    st.caption("""
+In this plot, we are predicting by the highest level of care provided.
+(e.g. a job marked as 'CC' may also deliver an EC intervention, or an EC job may
+also have a helicopter benefit)
+""")
+
+
+                    @st.fragment
+                    def plot_cc_ec_split_historic():
+                        st.plotly_chart(
+                            _job_outcome_calculation.get_care_cat_counts_plot_historic()
+                        )
 
 
         with tab3:

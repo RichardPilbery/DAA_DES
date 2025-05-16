@@ -1,0 +1,109 @@
+,hour,care_category,count
+107,0,CC,1
+94,0,EC,5
+19,0,REG,58
+82,0,REG - helicopter benefit,12
+69,0,Unknown - DAA resource did not attend,18
+105,1,EC,1
+33,1,REG,37
+100,1,REG - helicopter benefit,2
+79,1,Unknown - DAA resource did not attend,13
+99,2,REG,2
+17,2,Unknown - DAA resource did not attend,65
+21,3,Unknown - DAA resource did not attend,57
+101,4,REG,2
+27,4,Unknown - DAA resource did not attend,45
+102,5,CC,2
+103,5,REG,2
+95,5,REG - helicopter benefit,3
+23,5,Unknown - DAA resource did not attend,50
+96,6,CC,3
+106,6,EC,1
+70,6,REG,15
+97,6,REG - helicopter benefit,3
+37,6,Unknown - DAA resource did not attend,34
+92,7,CC,6
+76,7,EC,14
+16,7,REG,88
+80,7,REG - helicopter benefit,13
+86,7,Unknown - DAA resource did not attend,10
+71,8,CC,15
+63,8,EC,20
+9,8,REG,163
+66,8,REG - helicopter benefit,19
+78,8,Unknown - DAA resource did not attend,14
+57,9,CC,23
+62,9,EC,20
+6,9,REG,208
+38,9,REG - helicopter benefit,33
+65,9,Unknown - DAA resource did not attend,19
+51,10,CC,25
+67,10,EC,19
+0,10,REG,296
+31,10,REG - helicopter benefit,39
+50,10,Unknown - DAA resource did not attend,25
+49,11,CC,25
+35,11,EC,36
+2,11,REG,262
+20,11,REG - helicopter benefit,57
+48,11,Unknown - DAA resource did not attend,25
+56,12,CC,23
+43,12,EC,29
+1,12,REG,277
+32,12,REG - helicopter benefit,38
+45,12,Unknown - DAA resource did not attend,27
+53,13,CC,25
+47,13,EC,25
+5,13,REG,238
+18,13,REG - helicopter benefit,64
+36,13,Unknown - DAA resource did not attend,34
+58,14,CC,23
+46,14,EC,27
+4,14,REG,254
+28,14,REG - helicopter benefit,42
+39,14,Unknown - DAA resource did not attend,33
+61,15,CC,21
+40,15,EC,33
+3,15,REG,257
+25,15,REG - helicopter benefit,48
+52,15,Unknown - DAA resource did not attend,25
+54,16,CC,24
+55,16,EC,24
+7,16,REG,190
+29,16,REG - helicopter benefit,40
+44,16,Unknown - DAA resource did not attend,27
+77,17,CC,14
+60,17,EC,21
+8,17,REG,185
+41,17,REG - helicopter benefit,32
+26,17,Unknown - DAA resource did not attend,46
+85,18,CC,11
+68,18,EC,18
+11,18,REG,152
+59,18,REG - helicopter benefit,23
+24,18,Unknown - DAA resource did not attend,50
+88,19,CC,7
+72,19,EC,15
+10,19,REG,153
+75,19,REG - helicopter benefit,14
+30,19,Unknown - DAA resource did not attend,40
+91,20,CC,6
+73,20,EC,14
+12,20,REG,139
+84,20,REG - helicopter benefit,12
+22,20,Unknown - DAA resource did not attend,51
+98,21,CC,2
+81,21,EC,12
+14,21,REG,97
+83,21,REG - helicopter benefit,12
+34,21,Unknown - DAA resource did not attend,36
+93,22,CC,5
+74,22,EC,14
+13,22,REG,102
+87,22,REG - helicopter benefit,9
+42,22,Unknown - DAA resource did not attend,31
+104,23,CC,2
+89,23,EC,7
+15,23,REG,97
+90,23,REG - helicopter benefit,7
+64,23,Unknown - DAA resource did not attend,19

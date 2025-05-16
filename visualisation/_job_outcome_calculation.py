@@ -12,28 +12,64 @@ Covers variation within the simulation, and comparison with real world data.
 import pandas as pd
 import plotly.express as px
 import textwrap
+import numpy as np
 
 
-def get_care_cat_counts(results_path="data/run_results.csv",
+def get_care_cat_counts_plot_sim(results_path="data/run_results.csv",
                         show_proportions=False):
     run_results = pd.read_csv(results_path)
 
-    care_cat_by_hour = run_results[run_results["time_type"]=="arrival"][["P_ID", "run_number", "care_cat", "hour"]].reset_index().groupby(["hour", "care_cat"]).size().reset_index(name="count")
+    # Amend care category to reflect the small proportion of regular jobs assumed to have
+    # a helicopter benefit
+    run_results.loc[
+        (run_results['heli_benefit'] == 'y') & (run_results['care_cat'] == 'REG'),
+        'care_cat'
+    ] = 'REG - helicopter benefit'
+
+    care_cat_by_hour = (run_results[
+        run_results["event_type"]=="patient_helicopter_benefit"]
+        [["P_ID", "run_number", "care_cat", "hour"]].reset_index()
+        .groupby(["hour", "care_cat"]).size()
+        .reset_index(name="count")
+        )
     # Calculate total per hour
     total_per_hour = care_cat_by_hour.groupby("hour")["count"].transform("sum")
     # Add proportion column
     care_cat_by_hour["proportion"] = care_cat_by_hour["count"] / total_per_hour
 
-    title= "Calls in simulation by hour of day with EC/CC/Regular Care Category"
+    title= "Care Category of calls in simulation by hour of day with EC/CC/Regular - Heli Benefit/Regular"
 
     if not show_proportions:
-        fig = px.bar(care_cat_by_hour, x="hour", y="count", color="care_cat", title=title)
+        fig = px.bar(care_cat_by_hour, x="hour", y="count", color="care_cat", title=title,
+            category_orders={
+                "care_category": ["CC", "EC", "REG - helicopter benefit", "REG"]
+            })
         return fig
 
     # if show_proportions
     else:
-        fig = px.bar(care_cat_by_hour, x="hour", y="proportion", color="care_cat", title=title)
+        fig = px.bar(care_cat_by_hour, x="hour", y="proportion", color="care_cat", title=title,
+            category_orders={
+                "care_category": ["CC", "EC", "REG - helicopter benefit", "REG"]
+            })
         return fig
+
+def get_care_cat_counts_plot_historic(historic_df_path="historical_data/historical_care_cat_counts.csv",
+                        show_proportions=False):
+
+    title = "Care Category of calls in historical data by hour of day with EC/CC/Regular - Heli Benefit/Regular"
+
+    fig = px.bar(pd.read_csv(historic_df_path),
+       x="hour", y="count", color="care_category",
+       title=title,
+       category_orders={
+        "care_category": ["CC", "EC", "REG - helicopter benefit", "REG", "Unknown - DAA resource did not attend"]
+    })
+
+    return fig
+
+
+
 
 
 def get_preferred_outcome_by_hour(results_path="data/run_results.csv", show_proportions=False):

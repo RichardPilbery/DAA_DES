@@ -216,6 +216,7 @@ class DistributionFitUtils():
         self.historical_job_durations_breakdown()
         self.historical_missed_jobs()
         self.historical_jobs_per_day_per_callsign()
+        self.historical_care_cat_counts()
 
         # Calculate proportions of ad hoc unavailability
         self.ad_hoc_unavailability()
@@ -813,6 +814,39 @@ class DistributionFitUtils():
 
         all_counts = merged.groupby(['callsign', 'jobs_in_day']).count().reset_index().rename(columns={"date":"count"})
         all_counts.to_csv("historical_data/historical_jobs_per_day_per_callsign.csv", index=False)
+
+    def historical_care_cat_counts(self):
+        df_historical = self.df
+
+        df_historical['inc_date'] = pd.to_datetime(df_historical['inc_date'])
+
+        df_historical['month_start'] = df_historical.inc_date.dt.strftime("%Y-%m-01")
+        df_historical['hour'] = df_historical.inc_date.dt.hour
+
+        conditions = [
+            df_historical['cc_benefit'] == 'y',
+            df_historical['ec_benefit'] == 'y',
+            df_historical['helicopter_benefit'] == 'y',
+            df_historical['callsign_group'] == 'Other'
+        ]
+
+        choices = [
+            'CC',
+            'EC',
+            'REG - helicopter benefit',
+            'Unknown - DAA resource did not attend'
+        ]
+
+        df_historical['care_category'] = np.select(conditions, choices, default='REG')
+
+        historical_value_counts_by_hour = (
+            df_historical.value_counts(["hour", "care_category"])
+            .reset_index(name="count")
+            )
+
+        (historical_value_counts_by_hour
+         .sort_values(['hour', 'care_category'])
+         .to_csv("historical_data/historical_care_cat_counts.csv"))
 
     def historical_monthly_totals(self):
         """
