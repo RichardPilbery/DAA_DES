@@ -1066,7 +1066,10 @@ class DistributionFitUtils():
         """
 
         # Multiple resources can be sent to the same job.
-        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
+        monthly_df = self.df[[
+            'inc_date', 'first_day_of_month', 'callsign', 'time_allocation',
+            'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital',
+            'time_to_clear']]
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
 
