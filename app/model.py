@@ -224,9 +224,9 @@ if button_run_pressed:
             historical_utilisation_df_complete, historical_utilisation_df_summary = (
                 _utilisation_result_calculation.make_RWC_utilisation_dataframe(
                     historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
-                    rota_path="actual_data/HEMS_ROTA.csv",
-                    callsign_path="actual_data/callsign_registration_lookup.csv",
-                    service_path="data/service_dates.csv"
+                    rota_path="tests/rotas_historic/HISTORIC_HEMS_ROTA.csv",
+                    callsign_path="tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv",
+                    service_path="tests/rotas_historic/HISTORIC_service_dates.csv"
                     )
                 )
 
