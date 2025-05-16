@@ -384,7 +384,11 @@ class DES_HEMS:
                 #self.debug(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
                 #patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
 
-                patient.hems_result = self.utils.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(patient.pt_outcome, int(patient.qtr), patient.hems_vehicle_type, patient.hems_callsign_group)
+                if hems_res == None:
+                    patient.hems_result = 'Unknown'
+                else:
+                    #print(hems_res)
+                    patient.hems_result = self.utils.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(patient.pt_outcome, int(patient.qtr), patient.hems_vehicle_type, patient.hems_callsign_group)
 
                 self.debug(f"{patient.current_dt}: PT_ID:{patient.id} Pt allocated to HEMS result: {patient.hems_result}")
 

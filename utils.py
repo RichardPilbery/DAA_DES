@@ -59,7 +59,7 @@ class Utils:
 
         # NEW PATIENT OUTCOME AND HEMS RESULT DATA FRAMES
         self.patient_outcome_by_care_category_and_quarter_probs_df = pd.read_csv('/Users/tricky999/Dropbox/1-Research/0 - HSMA DAA DES/DAA_DES/distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv')
-        self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
+        self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
 
 
         # Import maximum call duration times
@@ -124,7 +124,7 @@ class Utils:
             "vehicle_type_selection",
             "hems_result_by_callsign_group_and_vehicle_type_selection",
             "hems_result_by_care_category_and_helicopter_benefit_selection",
-            "hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection",
+            "hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection",
             "pt_outcome_selection",
             "sex_selection",
             "age_sampling",
@@ -330,24 +330,24 @@ class Utils:
     #     return pd.Series.sample(df['hems_result'], weights = df['proportion'],
     #                             random_state=self.rngs["hems_result_by_care_category_and_helicopter_benefit_selection"]).iloc[0]
 
-    def hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self, pt_outcome: str, quarter: int, vehicle_type: str, callsign_group: int):
+    def hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self, pt_outcome: str, quarter: int, vehicle_type: str, callsign_group: int):
         """
             This function will allocate a HEMS result based on patient outcome, yearly quarter and HEMS deets.
         """
 
-        print(self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df.head())
+        #(self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df.head())
 
-        df = self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df[
-            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['pt_outcome'] == pt_outcome) &
-            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['quarter'] == quarter) &
-            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['vehicle_type'] == vehicle_type) &
-            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['callsign_group'] == callsign_group)
+        df = self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df[
+            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['pt_outcome'] == pt_outcome) &
+            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['quarter'] == quarter) &
+            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['vehicle_type'] == vehicle_type) &
+            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['callsign_group'] == callsign_group)
         ]
 
-        print(df.head())
+        #print(df.head())
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion'],
-                                 random_state=self.rngs["hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection"]).iloc[0]
+                                 random_state=self.rngs["hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection"]).iloc[0]
 
     def pt_outcome_selection(self, care_category: str, quarter: int) -> int:
         """
