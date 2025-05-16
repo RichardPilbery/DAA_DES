@@ -487,6 +487,21 @@ If the simulation is not using the default parameters, we would not expect the o
 
                 with tab_2_4:
 
+                    st.caption("""
+Historical data has been retrospectively audited to determine when jobs have included interventions that
+could only be delivered by an EC or CC team.
+
+This has then been used to inform the rate at which jobs with an EC or CC benefit are generated in the simulation.
+
+While the numbers are low, it does not include a wide range of additional benefits that HEMS crews
+bring to the scene. Work is now underway to improve the capture of these additional benefits, but
+they are not reflected in the model.
+
+For the model, it has been assumed that the split of CC calls, EC calls and calls where no CC or EC intervention
+is delivered is consistent across the day. We do not have access to this data for time where jobs have not historically
+been attended due to no resource being in service.
+                               """)
+
                     @st.fragment
                     def plot_cc_ec_split():
                         show_proportions_care_cat_plot = st.toggle("Show Proportions", False)

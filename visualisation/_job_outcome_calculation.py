@@ -24,13 +24,15 @@ def get_care_cat_counts(results_path="data/run_results.csv",
     # Add proportion column
     care_cat_by_hour["proportion"] = care_cat_by_hour["count"] / total_per_hour
 
+    title= "Calls in simulation by hour of day with EC/CC/Regular Care Category"
+
     if not show_proportions:
-        fig = px.bar(care_cat_by_hour, x="hour", y="count", color="care_cat")
+        fig = px.bar(care_cat_by_hour, x="hour", y="count", color="care_cat", title=title)
         return fig
 
     # if show_proportions
     else:
-        fig = px.bar(care_cat_by_hour, x="hour", y="proportion", color="care_cat")
+        fig = px.bar(care_cat_by_hour, x="hour", y="proportion", color="care_cat", title=title)
         return fig
 
 
