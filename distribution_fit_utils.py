@@ -180,6 +180,12 @@ class DistributionFitUtils():
         # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
         self.enhanced_or_critical_care_by_ampds_card_probs()
 
+        # Calculate probably of  patient outcome
+        self.patient_outcome_by_care_category_and_quarter_probs()
+
+        # Calculate HEMS result
+        self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs()
+
         # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
         # self.callsign_group_by_ampds_card_and_hour_probs()
         # self.callsign_group_by_ampds_card_probs()
@@ -507,7 +513,6 @@ class DistributionFitUtils():
             json.dump(empirical_samples, f)
 
 
-
     def enhanced_or_critical_care_by_ampds_card_probs(self):
         """
 
@@ -536,6 +541,82 @@ class DistributionFitUtils():
         care_cat_counts['proportion'] = round(care_cat_counts['count'] / total_counts, 3)
 
         care_cat_counts.to_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv', mode = "w+", index = False)
+
+    def patient_outcome_by_care_category_and_quarter_probs(self):
+        """
+
+            Calculates the probabilty of a patient outcome based on care category and yearly quarter
+
+        """
+
+        po_df = self.df[['quarter', 'ec_benefit', 'cc_benefit', 'pt_outcome']].copy()
+
+        def assign_care_category(row):
+            # There are some columns with both EC and CC benefit selected
+            # this function will allocate to only 1
+            if row['cc_benefit'] == 'y':
+                return 'CC'
+            elif row['ec_benefit'] == 'y':
+                return 'EC'
+            else:
+                return 'REG'
+            
+        # There are some values that are missing e.g. CC quarter 1 Deceased
+        # I think we've had problems when trying to sample from this kind of thing before
+        # As a fallback, ensure that 'missing' combinations are given a count and proportion of 0
+        outcomes = po_df['pt_outcome'].unique()
+        care_categories = ['CC', 'EC', 'REG']
+        quarters = po_df['quarter'].unique()
+
+        all_combinations = pd.DataFrame(list(itertools.product(outcomes, care_categories, quarters)),
+                                    columns=['pt_outcome', 'care_category', 'quarter'])
+
+        po_df['care_category'] = po_df.apply(assign_care_category, axis = 1)
+
+        po_cat_counts = po_df.groupby(['pt_outcome', 'care_category', 'quarter']).size().reset_index(name='count')
+
+        merged = pd.merge(all_combinations, po_cat_counts, 
+                      on=['pt_outcome', 'care_category', 'quarter'], 
+                      how='left').fillna({'count': 0})
+        merged['count'] = merged['count'].astype(int)
+
+        total_counts = merged.groupby(['care_category', 'quarter'])['count'].transform('sum')
+        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3) 
+
+        merged.to_csv('distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv', mode = "w+", index = False)
+
+    def hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self):
+        """
+
+            Calculates the probabilty of a given HEMS result based on 
+            patient outcome, yearly quarter, vehicle type and callsign group
+
+        """
+
+        hr_df = self.df[['quarter', 'pt_outcome', 'vehicle_type', 'callsign_group']].copy()
+            
+        # There are some values that are missing e.g. CC quarter 1 Deceased
+        # I think we've had problems when trying to sample from this kind of thing before
+        # As a fallback, ensure that 'missing' combinations are given a count and proportion of 0
+        outcomes = hr_df['pt_outcome'].unique()
+        vehicle_categories = hr_df['vehicle_type'].unique()
+        callsign_group_categories = hr_df['callsign_group'].unique()
+        quarters = hr_df['quarter'].unique()
+
+        all_combinations = pd.DataFrame(list(itertools.product(outcomes, vehicle_categories, callsign_group_categories, quarters)),
+                                    columns=['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])
+
+        hr_cat_counts = hr_df.groupby(['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter']).size().reset_index(name='count')
+
+        merged = pd.merge(all_combinations, hr_cat_counts, 
+                      on=['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'], 
+                      how='left').fillna({'count': 0})
+        merged['count'] = merged['count'].astype(int)
+
+        total_counts = merged.groupby(['vehicle_type', 'callsign_group', 'quarter'])['count'].transform('sum')
+        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3) 
+
+        merged.to_csv('distribution_data/hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv', mode = "w+", index = False)
 
 
 
@@ -934,28 +1015,19 @@ class DistributionFitUtils():
         """
 
         # Multiple resources can be sent to the same job.
-        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign',
-                              'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
-                              'time_to_hospital', 'time_to_clear']]
+        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
 
         monthly_totals_df = monthly_df.groupby(['callsign', 'first_day_of_month'], as_index=False)\
             .agg(n = ('callsign', 'size'), total_time = ('total_time', 'sum'))
 
-        monthly_totals_pivot_df = monthly_totals_df.pivot(
-            index='first_day_of_month',
-            columns='callsign', values=['n', 'total_time']
-            )
+        monthly_totals_pivot_df = monthly_totals_df.pivot(index='first_day_of_month', columns='callsign', values=['n', 'total_time'])
 
         monthly_totals_pivot_df.columns = [f"{col[0]}_{col[1]}" for col in  monthly_totals_pivot_df.columns]
         monthly_totals_pivot_df = monthly_totals_pivot_df.reset_index()
 
-        monthly_totals_pivot_df \
-        .rename(columns={'first_day_of_month': 'month'}) \
-        .to_csv('historical_data/historical_monthly_resource_utilisation.csv',
-                mode="w+",
-                index=False)
+        monthly_totals_pivot_df.rename(columns={'first_day_of_month': 'month'}).to_csv('historical_data/historical_monthly_resource_utilisation.csv', mode="w+", index=False)
 
     def historical_daily_calls_breakdown(self):
 
