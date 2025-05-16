@@ -115,7 +115,7 @@ if button_run_pressed:
     if platform.processor() == '':
         my_bar = st.progress(0, text=progress_text)
 
-    with st.spinner('Simulating the system...'):
+    with st.spinner(f'Simulating {st.session_state.number_of_runs_input} replication(s) of {st.session_state.sim_duration_input} days. This may take several minutes...', show_time=True):
 
         # If running on community cloud, parallelisation will not work
         # so run instead using the runSim function sequentially
@@ -198,7 +198,7 @@ if button_run_pressed:
         with tab5:
             report_message = st.empty()
 
-            report_message.info("Generating Report...")
+            # report_message.info("Generating Report...")
 
 
         def get_job_count_df():
@@ -232,6 +232,8 @@ if button_run_pressed:
 
             print(historical_utilisation_df_summary)
 
+            st.subheader("Missed Jobs and Service Benefit")
+
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
@@ -251,9 +253,10 @@ if button_run_pressed:
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
-                    st.caption(missed_calls_description)
+            with t1_col2:
+                st.caption(missed_calls_description)
 
-                    quarto_string += missed_calls_description
+                quarto_string += missed_calls_description
 
                     # with st.expander("View Breakdown"):
                     #     outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
@@ -261,100 +264,118 @@ if button_run_pressed:
                     #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
                     #     st.dataframe(outcome_df)
 
-            with t1_col2:
-                quarto_string += "\n\n## Resource Utilisation"
-                resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
-                    _utilisation_result_calculation.make_utilisation_model_dataframe(
-                    path="data/run_results.csv",
-                    params_path="data/run_params_used.csv",
-                    service_path="data/service_dates.csv",
-                    callsign_path="actual_data/callsign_registration_lookup.csv",
-                    rota_path="actual_data/HEMS_ROTA.csv"
-                ))
+            st.markdown("### Critical Care, Enhanced Care and Helicopter Benefit")
 
-                print(utilisation_df_overall)
+            col_ec_cc_sim, col_ec_cc_hist_sim = st.columns(2)
 
-                t1_col_2_a, t1_col_2_b = st.columns(2)
-                with t1_col_2_a:
-                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                        h70_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H70']['PRINT_perc'].values[0]
+            def get_missed_jobs_fig(care_category, df):
+                    row = df[
+                        (df["care_cat"]==care_category) &
+                        (df["time_type"]=="No Resource Available")
+                        ]
+                    return row['jobs_per_year_average'].values[0]
 
-                        quarto_string += f"\n\nAverage simulated H70 Utilisation was {h70_util_fig}\n\n"
+            with col_ec_cc_sim:
+                st.markdown("#### Simulation Outputs")
+                resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
+                resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
+                missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
+                missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
+                missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
 
-                        st.metric("Average Simulated H70 Utilisation",
-                                h70_util_fig,
-                                border=True)
+                st.write(f"""
+    The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
-                    h70_hist = _utilisation_result_calculation.get_hist_util_fig(
-                        historical_utilisation_df_summary, "H70", "mean"
+    - **{get_missed_jobs_fig("CC", missed_jobs_care_cat_summary):.0f} critical care** jobs that would be missed due to no resource being available
+    - **{get_missed_jobs_fig("EC", missed_jobs_care_cat_summary):.0f} enhanced care** jobs that would be missed due to no resource being available
+    - **{get_missed_jobs_fig("REG", missed_jobs_care_cat_summary):.0f} regular jobs** that would be missed due to no resource being available
+    - of these missed regular jobs, **{get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary):.0f}** may have benefitted from the attendance of a helicopter
+                            """)
+
+            with col_ec_cc_hist_sim:
+                SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+
+                st.caption(f"""
+    As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
+    However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
+
+    - {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs):.0f} critical care jobs that would be missed due to no resource being available
+    - {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs):.0f} enhanced care jobs that would be missed due to no resource being available
+    - {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs):.0f} regular jobs that would be missed due to no resource being available
+    - of these missed regular jobs, {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs):.0f} may have benefitted from the attendance of a helicopter
+                            """)
+
+            st.subheader("Resource Utilisation")
+
+            quarto_string += "\n\n## Resource Utilisation"
+            resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
+                _utilisation_result_calculation.make_utilisation_model_dataframe(
+                path="data/run_results.csv",
+                params_path="data/run_params_used.csv",
+                service_path="data/service_dates.csv",
+                callsign_path="actual_data/callsign_registration_lookup.csv",
+                rota_path="actual_data/HEMS_ROTA.csv"
+            ))
+
+            print(utilisation_df_overall)
+
+            # Get unique callsigns for helicopters and cars from run_results
+            if 'vehicle_type' in results_all_runs.columns and 'callsign' in results_all_runs.columns:
+                all_helicopter_callsigns = sorted(list(results_all_runs[results_all_runs['vehicle_type'] == 'helicopter']['callsign'].dropna().unique()))
+                all_car_callsigns = sorted(list(results_all_runs[results_all_runs['vehicle_type'] == 'car']['callsign'].dropna().unique()))
+            else:
+                st.error("The 'run_results' DataFrame is missing 'vehicle_type' or 'callsign' columns.")
+                all_helicopter_callsigns = []
+                all_car_callsigns = []
+
+            # --- Display Helicopter Metrics ---
+            st.markdown("### Helicopters")
+            if all_helicopter_callsigns:
+                helo_cols = st.columns(len(all_helicopter_callsigns))
+                for idx, helo_callsign in enumerate(all_helicopter_callsigns):
+                    quarto_string = _utilisation_result_calculation.display_vehicle_utilisation_metric(
+                        st_column=helo_cols[idx],
+                        callsign_to_display=helo_callsign,
+                        vehicle_type_label="Helicopter",
+                        icon_unicode="f60c",
+                        sim_utilisation_df=utilisation_df_overall,
+                        hist_summary_df=historical_utilisation_df_summary,
+                        util_calc_module=_utilisation_result_calculation,
+                        current_quarto_string=quarto_string
                     )
+            else:
+                st.info("No helicopter data found in the current run results.")
 
-                    h70_hist_util_fig = f"*The historical average utilisation of H70 was {h70_hist}%*\n\n"
-                    quarto_string += h70_hist_util_fig
-
-                    quarto_string += "\n\n---\n\n"
-
-                    st.caption(h70_hist_util_fig)
-
-                with t1_col_2_b:
-                    with iconMetricContainer(key="helo_util", icon_unicode="f60c", type="symbols"):
-                        h71_util_fig = utilisation_df_overall[utilisation_df_overall['callsign']=='H71']['PRINT_perc'].values[0]
-
-                        quarto_string += f"\n\nAverage simulated H71 Utilisation was {h71_util_fig}\n\n"
-
-                        st.metric("Average Simulated H71 Utilisation",
-                                h71_util_fig,
-                                border=True)
-
-                    h71_hist = _utilisation_result_calculation.get_hist_util_fig(
-                        historical_utilisation_df_summary, "H71", "mean"
-                    )
-                    h71_hist_util_fig = f"*The historical average utilisation of H71 was {h71_hist}%*\n\n"
-                    quarto_string += h71_hist_util_fig
-                    st.caption(h71_hist_util_fig)
-
-                    quarto_string += "\n\n---\n\n"
-
-                st.caption(get_text("helicopter_utilisation_description", text_df))
-
+            st.caption(get_text("helicopter_utilisation_description", text_df))
             st.divider()
 
-            cars = ["CC70", "CC71", "CC72"]
+            # --- Display Car Metrics ---
+            st.markdown("### Cars")
+            if all_car_callsigns:
+                # Your original line for index manipulation.
+                # Ensure this is necessary or adapt if callsigns in historical_utilisation_df_summary match directly
+                # or if the get_hist_util_fig function handles the "CC" prefix.
+                # For the mock, get_hist_util_fig handles "CC" to "C" transformation.
+                # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
 
-            car_metric_cols = st.columns(len(cars))
-
-            # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
-
-            for idx, col in enumerate(car_metric_cols):
-                with col:
-                    car_callsign = cars[idx]
-
-                    with iconMetricContainer(key="car_util", icon_unicode="eb3c", type="symbols"):
-                        print(utilisation_df_overall)
-                        matched = utilisation_df_overall[utilisation_df_overall['callsign'] == car_callsign]
-
-                        if not matched.empty:
-                            car_util_fig = matched['PRINT_perc'].values[0]
-                        else:
-                            car_util_fig = None
-
-                        quarto_string += f"\n\nAverage simulated {car_callsign} utilisation was {car_util_fig}\n\n"
-
-                        st.metric(f"Average Simulated {car_callsign} Utilisation",
-                                car_util_fig,
-                                border=True)
-
-                    car_util_hist = _utilisation_result_calculation.get_hist_util_fig(
-                        historical_utilisation_df_summary, car_callsign, "mean"
+                car_metric_cols = st.columns(len(all_car_callsigns))
+                for idx, car_callsign in enumerate(all_car_callsigns):
+                    quarto_string = _utilisation_result_calculation.display_vehicle_utilisation_metric(
+                        st_column=car_metric_cols[idx],
+                        callsign_to_display=car_callsign,
+                        vehicle_type_label="Car",
+                        icon_unicode="eb3c",
+                        sim_utilisation_df=utilisation_df_overall,
+                        hist_summary_df=historical_utilisation_df_summary,
+                        util_calc_module=_utilisation_result_calculation,
+                        current_quarto_string=quarto_string
                     )
-                    car_util_fig_hist = f"*The historical average utilisation of {car_callsign} was {car_util_hist}%*\n\n"
+            else:
+                st.info("No car data found in the current run results.")
 
-                    quarto_string += car_util_fig_hist
-
-                    quarto_string += "\n\n---\n\n"
-
-                    st.caption(car_util_fig_hist)
-
+            # Display a description for car utilisation
+            # st.caption(get_text("car_utilisation_description", text_df))
+            # st.divider() # If you add a caption above, a divider might be good here too.
 
             t1_col3, t1_col4 = st.columns(2)
 
@@ -440,6 +461,16 @@ If the simulation is not using the default parameters, we would not expect the o
     wish to consider the historical split as part of your decision making.
                 """)
 
+
+                st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_summary_plot(
+                    utilisation_df_overall,
+                    historical_utilisation_df_summary
+                ))
+
+                st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_variation_plot(
+                    utilisation_df_per_run
+                ))
+
                 with tab_2_3:
                     @st.fragment
                     def plot_callsign_group_split():
@@ -456,14 +487,61 @@ If the simulation is not using the default parameters, we would not expect the o
 
                 with tab_2_4:
 
+                    st.caption("""
+Historical data has been retrospectively audited to determine when jobs have included interventions that
+could only be delivered by an EC or CC team.
+
+This has then been used to inform the rate at which jobs with an EC or CC benefit are generated in the simulation.
+
+While the numbers are low, it does not include a wide range of additional benefits that HEMS crews
+bring to the scene. Work is now underway to improve the capture of these additional benefits, but
+they are not reflected in the model.
+
+For the model, it has been assumed that the split of CC calls, EC calls and calls where no CC or EC intervention
+is delivered is consistent across the day. We do not have access to this data for time where jobs have not historically
+been attended due to no resource being in service.
+
+It is also assumed that the split of care categories is consistent across the year.
+
+This data is affected by the fact that the historical actions will be affected by the crew that attended, and reflect
+care delivered rather than ideal care. For example, if an EC crew attended a job that would benefit
+from a CC intervention (due to no CC crew being on shift or the CC crew already being on another job),
+only EC interventions would be delivered and only an EC benefit would have been recorded in the
+dataset.
+""")
+
                     @st.fragment
                     def plot_cc_ec_split():
                         show_proportions_care_cat_plot = st.toggle("Show Proportions", False)
 
                         st.plotly_chart(
-                            _job_outcome_calculation.get_care_cat_counts(
+                            _job_outcome_calculation.get_care_cat_counts_plot_sim(
                                 show_proportions=show_proportions_care_cat_plot
                                 )
+                        )
+
+                        st.caption("""
+                        In this plot, we are predicting by the highest level of care provided.
+                        (e.g. a job marked as 'CC' may also deliver an EC intervention, or an EC job may
+                        also have a helicopter benefit)
+                        """)
+
+                        st.plotly_chart(
+                                _job_outcome_calculation.get_care_cat_counts_plot_historic(
+                                    show_proportions=show_proportions_care_cat_plot
+                                )
+                            )
+
+                        st.caption("""
+                            We can also take a look at the proportion of jobs allocated to each category
+                            at a high level to confirm the model is reflecting the historical trends.
+
+                            Note that for historic data, we have excluded jobs that were not attended (and therefore
+                            where the care category is not known) from the total number of jobs.
+                            """)
+
+                        st.dataframe(
+                            _job_outcome_calculation.get_care_cat_proportion_table().drop(columns=["Historic Job Counts", "Simulated Job Counts"])
                         )
 
                     plot_cc_ec_split()
@@ -892,8 +970,12 @@ This tab contains visualisations to help model authors do additional checks into
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
-                                                          "Process Analytics", "Process Analytics - Resources"])
+            # tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
+            #                                               "Process Analytics", "Process Analytics - Resources"
+            #                                               ])
+
+            tab_4_1, tab_4_2, tab_4_3 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes"
+                                                ])
 
             with tab_4_1:
                 resource_use_events_only = results_all_runs[
@@ -1215,7 +1297,8 @@ the overall time period.*
             @st.fragment()
             def generate_report_button():
                 if st.button("Click here to generate the downloadable report"):
-                    with st.spinner("Generating report..."):
+                    report_message.info("Generating Report...")
+                    with st.spinner("Generating report. This may take a minute...", show_time=True):
                         try:
                             with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
                                 text_file.write(quarto_string)
