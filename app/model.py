@@ -253,9 +253,10 @@ if button_run_pressed:
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
-                    st.caption(missed_calls_description)
+            with t1_col2:
+                st.caption(missed_calls_description)
 
-                    quarto_string += missed_calls_description
+                quarto_string += missed_calls_description
 
                     # with st.expander("View Breakdown"):
                     #     outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
@@ -263,8 +264,46 @@ if button_run_pressed:
                     #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
                     #     st.dataframe(outcome_df)
 
-            with t1_col2:
-                st.write("This is where we'll write some stuff about EC/CC")
+            st.markdown("### Critical Care, Enhanced Care and Helicopter Benefit")
+
+            col_ec_cc_sim, col_ec_cc_hist_sim = st.columns(2)
+
+            def get_missed_jobs_fig(care_category, df):
+                    row = df[
+                        (df["care_cat"]==care_category) &
+                        (df["time_type"]=="No Resource Available")
+                        ]
+                    return row['jobs_per_year_average'].values[0]
+
+            with col_ec_cc_sim:
+                st.markdown("#### Simulation Outputs")
+                resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
+                resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
+                missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
+                missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
+                missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
+
+                st.write(f"""
+    The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
+
+    - **{get_missed_jobs_fig("CC", missed_jobs_care_cat_summary):.0f} critical care** jobs that would be missed due to no resource being available
+    - **{get_missed_jobs_fig("EC", missed_jobs_care_cat_summary):.0f} enhanced care** jobs that would be missed due to no resource being available
+    - **{get_missed_jobs_fig("REG", missed_jobs_care_cat_summary):.0f} regular jobs** that would be missed due to no resource being available
+    - of these missed regular jobs, **{get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary):.0f}** may have benefitted from the attendance of a helicopter
+                            """)
+
+            with col_ec_cc_hist_sim:
+                SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+
+                st.caption(f"""
+    As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
+    However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
+
+    - {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs):.0f} critical care jobs that would be missed due to no resource being available
+    - {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs):.0f} enhanced care jobs that would be missed due to no resource being available
+    - {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs):.0f} regular jobs that would be missed due to no resource being available
+    - of these missed regular jobs, {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs):.0f} may have benefitted from the attendance of a helicopter
+                            """)
 
             st.subheader("Resource Utilisation")
 
