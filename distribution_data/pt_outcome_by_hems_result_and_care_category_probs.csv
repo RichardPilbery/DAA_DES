@@ -1,18 +1,17 @@
 ,pt_outcome,hems_result,care_category,count,total,proportion
-0,Airlifted,Patient Conveyed,CC,98,243,0.4033
-1,Airlifted,Patient Conveyed,EC,42,159,0.2642
-2,Airlifted,Patient Conveyed,REG,305,937,0.3255
-3,Conveyed by land with DAA,Patient Conveyed,CC,145,243,0.5967
-4,Conveyed by land with DAA,Patient Conveyed,EC,117,159,0.7358
-5,Conveyed by land with DAA,Patient Conveyed,REG,602,937,0.6425
-6,Conveyed by land without DAA,Patient Treated (not conveyed),CC,14,20,0.7
-7,Conveyed by land without DAA,Patient Treated (not conveyed),EC,32,197,0.1624
-8,Conveyed by land without DAA,Patient Treated (not conveyed),REG,759,1126,0.6741
-9,Deceased,Patient Treated (not conveyed),CC,6,20,0.3
-10,Deceased,Patient Treated (not conveyed),EC,165,197,0.8376
-11,Deceased,Patient Treated (not conveyed),REG,297,1126,0.2638
-12,Unknown,Landed but no patient contact,REG,431,431,1.0
-13,Unknown,Patient Conveyed,REG,30,937,0.032
-14,Unknown,Patient Treated (not conveyed),REG,70,1126,0.0622
-15,Unknown,Stand Down Before Mobile,REG,97,97,1.0
-16,Unknown,Stand Down En Route,REG,1214,1214,1.0
+0,Conveyed,Patient Conveyed by HEMS,CC,96,96,1.0
+1,Conveyed,Patient Conveyed by HEMS,EC,39,39,1.0
+2,Conveyed,Patient Conveyed by HEMS,REG,331,331,1.0
+3,Conveyed,Patient Conveyed by land with HEMS,CC,141,141,1.0
+4,Conveyed,Patient Conveyed by land with HEMS,EC,111,111,1.0
+5,Conveyed,Patient Conveyed by land with HEMS,REG,526,526,1.0
+6,Conveyed,Patient Treated but not conveyed by HEMS,CC,16,22,0.7273
+7,Conveyed,Patient Treated but not conveyed by HEMS,EC,33,198,0.1667
+8,Conveyed,Patient Treated but not conveyed by HEMS,REG,772,1069,0.7222
+9,Deceased,Patient Treated but not conveyed by HEMS,CC,6,22,0.2727
+10,Deceased,Patient Treated but not conveyed by HEMS,EC,165,198,0.8333
+11,Deceased,Patient Treated but not conveyed by HEMS,REG,297,1069,0.2778
+12,Unknown,Stand Down,CC,4,4,1.0
+13,Unknown,Stand Down,EC,7,7,1.0
+14,Unknown,Stand Down,REG,1439,1439,1.0
+15,Unknown,Unknown,REG,1225,1225,1.0

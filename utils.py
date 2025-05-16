@@ -56,6 +56,12 @@ class Utils:
         self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
         self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
+
+        # NEW PATIENT OUTCOME AND HEMS RESULT DATA FRAMES
+        self.patient_outcome_by_care_category_and_quarter_probs_df = pd.read_csv('/Users/tricky999/Dropbox/1-Research/0 - HSMA DAA DES/DAA_DES/distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv')
+        self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
+
+
         # Import maximum call duration times
         self.min_max_values_df = pd.read_csv('actual_data/upper_allowable_time_bounds.csv')
 
@@ -118,6 +124,7 @@ class Utils:
             "vehicle_type_selection",
             "hems_result_by_callsign_group_and_vehicle_type_selection",
             "hems_result_by_care_category_and_helicopter_benefit_selection",
+            "hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection",
             "pt_outcome_selection",
             "sex_selection",
             "age_sampling",
@@ -310,29 +317,43 @@ class Utils:
         return pd.Series.sample(df['hems_result'], weights = df['proportion'],
                                 random_state=self.rngs["hems_result_by_callsign_group_and_vehicle_type_selection"]).iloc[0]
 
-    def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
+    # def hems_result_by_care_category_and_helicopter_benefit_selection(self, care_category: str, helicopter_benefit: str) -> str:
+    #     """
+    #         This function will allocate a HEMS result based on care category and helicopter benefit
+    #     """
+
+    #     df = self.hems_result_by_care_category_and_helicopter_benefit_df[
+    #         (self.hems_result_by_care_category_and_helicopter_benefit_df['care_cat'] == care_category) &
+    #         (self.hems_result_by_care_category_and_helicopter_benefit_df['helicopter_benefit'] == helicopter_benefit)
+    #     ]
+
+    #     return pd.Series.sample(df['hems_result'], weights = df['proportion'],
+    #                             random_state=self.rngs["hems_result_by_care_category_and_helicopter_benefit_selection"]).iloc[0]
+
+    def hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self, pt_outcome: str, quarter: int, vehicle_type: str, callsign_group: int):
         """
-            This function will allocate a HEMS result based on care category and helicopter benefit
+            This function will allocate a HEMS result based on patient outcome, yearly quarter and HEMS deets.
         """
 
-        df = self.hems_result_by_care_category_and_helicopter_benefit_df[
-            (self.hems_result_by_care_category_and_helicopter_benefit_df['care_cat'] == care_category) &
-            (self.hems_result_by_care_category_and_helicopter_benefit_df['helicopter_benefit'] == helicopter_benefit)
+        df = self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df[
+            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['pt_outcome'] == pt_outcome) &
+            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['quarter'] == quarter) &
+            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['vehicle_type'] == vehicle_type) &
+            (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['callsign_group'] == callsign_group)
         ]
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion'],
-                                random_state=self.rngs["hems_result_by_care_category_and_helicopter_benefit_selection"]).iloc[0]
+                                 random_state=self.rngs["hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection"]).iloc[0]
 
-    def pt_outcome_selection(self, hems_result: str, care_category: str) -> int:
+    def pt_outcome_selection(self, care_category: str, quarter: int) -> int:
         """
             This function will allocate and return an patient outcome
             based on the HEMS result
         """
 
-
-        df = self.pt_outcome_by_hems_result_and_care_category_df[
-            (self.pt_outcome_by_hems_result_and_care_category_df['care_category'] == care_category) &
-            (self.pt_outcome_by_hems_result_and_care_category_df['hems_result'] == hems_result)
+        df = self.patient_outcome_by_care_category_and_quarter_probs_df[
+            (self.patient_outcome_by_care_category_and_quarter_probs_df['care_category'] == care_category) &
+            (self.patient_outcome_by_care_category_and_quarter_probs_df['quarter'] == quarter)
         ]
 
         #print(df)

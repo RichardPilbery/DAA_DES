@@ -284,6 +284,9 @@ class DES_HEMS:
         pt.hems_cc_or_ec = hems_cc_or_ec
         self.debug(f"{pt.current_dt}: {pt.id} Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
+        pt.pt_outcome = self.utils.pt_outcome_selection(pt.hems_cc_or_ec, int(qtr))
+        self.debug(f"{pt.current_dt}: {pt.id} Pt allocated to {pt.pt_outcome}")
+
         self.add_patient_result_row(pt, "arrival", "arrival_departure")
 
         if self.amb_data:
@@ -395,7 +398,7 @@ class DES_HEMS:
                 # Check if HEMS result indicates no leaving scene/at hospital times
                 no_HEMS_hospital = True if patient.hems_result in ["Stand Down Before Mobile", "Stand Down En Route", "Landed but no patient contact", "Patient Treated (not conveyed)"] else False
 
-                patient.pt_outcome = self.utils.pt_outcome_selection(patient.hems_result, patient.hems_cc_or_ec)
+                
 
                 #self.debug(f"Patient outcome is {patient.pt_outcome}")
 
