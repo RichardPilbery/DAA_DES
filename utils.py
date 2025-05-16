@@ -58,7 +58,7 @@ class Utils:
         self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
 
         # NEW PATIENT OUTCOME AND HEMS RESULT DATA FRAMES
-        self.patient_outcome_by_care_category_and_quarter_probs_df = pd.read_csv('/Users/tricky999/Dropbox/1-Research/0 - HSMA DAA DES/DAA_DES/distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv')
+        self.patient_outcome_by_care_category_and_quarter_probs_df = pd.read_csv('distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv')
         self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
 
 
