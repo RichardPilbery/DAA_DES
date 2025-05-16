@@ -1038,9 +1038,13 @@ class DistributionFitUtils():
             Calculate the median time for each of the job cycle phases stratified by month and vehicle type
         """
 
-        median_df = self.df[['first_day_of_month', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+        median_df = self.df[['first_day_of_month', 'time_allocation',
+                             'time_mobile', 'time_to_scene', 'time_on_scene',
+                             'time_to_hospital', 'time_to_clear', 'vehicle_type']]
 
-        median_df['total_job_time'] = median_df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].sum(axis=1)
+        median_df['total_job_time'] = median_df[[
+            'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear']].sum(axis=1)
 
         # Replacing zeros with NaN to exclude from median calculation
         # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
