@@ -982,11 +982,19 @@ class DistributionFitUtils():
         df = self.df
         df["date"] = pd.to_datetime(df["inc_date"])
         df["hour"] = df["date"].dt.hour
+        df["month_start"] = df["date"].dt.strftime("%Y-%m-01")
         df["callsign_group_simplified"] = df["callsign_group"].apply(lambda x: "No HEMS available" if x=="Other" else "HEMS (helo or car) available and sent")
+        df["quarter"] = df["inc_date"].dt.quarter
+
+        # By month
+        count_df_month = df[["callsign_group_simplified", "month_start"]].value_counts().reset_index(name="count").sort_values(['callsign_group_simplified','month_start'])
+        count_df_month.to_csv("historical_data/historical_missed_calls_by_month.csv", index=False)
+
+        # By hour
         count_df = df[["callsign_group_simplified", "hour"]].value_counts().reset_index(name="count").sort_values(['callsign_group_simplified','hour'])
         count_df.to_csv("historical_data/historical_missed_calls_by_hour.csv", index=False)
 
-        df["quarter"] = df["inc_date"].dt.quarter
+        # By quarter and hour
         count_df_quarter = df[["callsign_group_simplified", "quarter", "hour"]].value_counts().reset_index(name="count").sort_values(['quarter','callsign_group_simplified','hour'])
         count_df_quarter.to_csv("historical_data/historical_missed_calls_by_quarter_and_hour.csv", index=False)
 
