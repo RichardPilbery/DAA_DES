@@ -207,7 +207,7 @@ class DES_HEMS:
 
                 # Now have additional option of determining calls per day by quarter instead of season
                 #self.calls_today = int(self.utils.inc_per_day(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
-                
+
                 # Try with actual sampled values instead
                 self.calls_today = int(self.utils.inc_per_day_samples(qtr, self.daily_calls_by_quarter_or_season) * (self.demand_increase_percent))
 
@@ -300,11 +300,16 @@ class DES_HEMS:
             pt.hems_pref_callsign_group = self.utils.callsign_group_selection(pt.hems_cc_or_ec)
             #self.debug(f"Callsign is {pt.hems_pref_callsign_group}")
 
-            # !!!!!! ASSUMPTION !!!!!!! #
-            # About 5% of 'REG' calls might have a helicopter benefit
+            # Some % of 'REG' calls have a helicopter benefit
+            # Default to y for all patients
+            # NOTE - this may not be strictly true! Some EC/CC may not have a direct heli benefit
             helicopter_benefit = 'y'
+            # Update for REG patients based on historically observed patterns
+            with open("distribution_data/proportion_jobs_heli_benefit.txt", "r") as file:
+                expected_prop_heli_benefit_jobs = float(file.read().strip())
+
             if pt.hems_cc_or_ec == 'REG':
-                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= 0.05 else 'n'
+                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= expected_prop_heli_benefit_jobs else 'n'
 
             pt.hems_helicopter_benefit = helicopter_benefit
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")

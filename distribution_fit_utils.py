@@ -848,6 +848,17 @@ class DistributionFitUtils():
          .sort_values(['hour', 'care_category'])
          .to_csv("historical_data/historical_care_cat_counts.csv"))
 
+        # Also output the % of regular (not cc/ec) jobs with a helicopter benefit
+
+        numerator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit"]["count"].sum()
+
+        denominator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] != "Unknown - DAA resource did not attend"]["count"].sum()
+
+        with open('distribution_data/proportion_jobs_heli_benefit.txt', 'w+') as heli_benefit_file:
+            heli_benefit_file.write(json.dumps((numerator/denominator).round(4)))
+        heli_benefit_file.close()
+
+
     def historical_monthly_totals(self):
         """
             Calculates monthly incident totals from provided dataset of historical data
