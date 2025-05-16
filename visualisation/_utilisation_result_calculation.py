@@ -8,7 +8,9 @@ import plotly.express as px
 import _vehicle_calculation
 import plotly.graph_objects as go
 
-from _app_utils import DAA_COLORSCHEME
+import streamlit as st
+
+from _app_utils import DAA_COLORSCHEME, iconMetricContainer
 
 def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      params_path="../data/run_params_used.csv",
@@ -264,6 +266,7 @@ def make_SIMULATION_utilisation_variation_plot(utilisation_df_per_run,
         return fig
 
 def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall,
+                                             historical_utilisation_df_summary,
                                                car_colour="blue",
                                                helicopter_colour="red",
                                                use_poppins=False):
@@ -302,30 +305,111 @@ def make_SIMULATION_utilisation_summary_plot(utilisation_df_overall,
     """
     utilisation_df_overall = utilisation_df_overall.reset_index()
     utilisation_df_overall["vehicle_type"] = utilisation_df_overall["vehicle_type"].str.title()
+    utilisation_df_overall["perc_time_formatted"] = utilisation_df_overall["perc_time_in_use"].apply(lambda x: f"Simulated: {x:.1%}")
 
-    fig = (px.bar(utilisation_df_overall,
-                    y="perc_time_in_use",
-                    x="callsign",
-                    color="vehicle_type",
-                    title="Average Resource Utilisation Across All Simulation Runs",
-                    labels={
-                     "callsign": "Callsign",
-                     "perc_time_in_use": "Average Percentage of Available<br>Time Spent in Use",
-                     "vehicle_type": "Vehicle Type"
-                 },
-                 color_discrete_map={'Car': DAA_COLORSCHEME[car_colour],
-                                     "Helicopter": DAA_COLORSCHEME[helicopter_colour]})
-            .update_layout(
-                yaxis={
-                    "tickformat": ".0%"  # Formats as percentage with no decimal places
-                })
-                )
-    # TODO: Add indications of good/bad territory for utilisation levels
+    # Create base bar chart
+    fig = px.bar(
+        utilisation_df_overall,
+        y="perc_time_in_use",
+        x="callsign",
+        color="vehicle_type",
+        opacity=0.5,
+        text="perc_time_formatted",
+        title="Average Resource Utilisation Across All Simulation Runs",
+        labels={
+            "callsign": "Callsign",
+            "perc_time_in_use": "Average Percentage of Available<br>Time Spent in Use",
+            "vehicle_type": "Vehicle Type"
+        },
+        color_discrete_map={
+            'Car': DAA_COLORSCHEME.get(car_colour, "blue"), # Use .get for safety
+            'Helicopter': DAA_COLORSCHEME.get(helicopter_colour, "red")
+        },
+        # barmode='group' is default when color is used, which is good.
+    )
+
+    # Place actual label at the bottom of the bar
+    fig.update_traces(textposition='inside', insidetextanchor='start')
+
+    fig.update_layout(
+        bargap=0.4,
+        yaxis_tickformat=".0%",
+        xaxis_type="category",  # Explicitly set x-axis to category
+        # Ensure categories are ordered as per the sorted DataFrame
+        # If callsigns are purely numeric but should be treated as categories, ensure they are strings
+        xaxis={'categoryorder':'array', 'categoryarray': sorted(utilisation_df_overall['callsign'].unique())}
+    )
+
+    # Get the unique, sorted callsigns as they will appear on the x-axis
+    # This order is now determined by the 'categoryarray' in layout or default sorting.
+    x_axis_categories = sorted(utilisation_df_overall['callsign'].unique())
+
+    # Define the width of the historical markers (box and line) relative to category slot
+    # A category slot is 1 unit wide (e.g., from -0.5 to 0.5 around the category's integer index).
+    # We'll make the markers 80% of this width.
+    historical_marker_width_fraction = 0.3  # Half-width, so total width is 0.8
+
+    # Iterate through the callsigns in the order they appear on the axis
+    for num_idx, callsign_str in enumerate(x_axis_categories):
+        if callsign_str in historical_utilisation_df_summary.index:
+            row = historical_utilisation_df_summary.loc[callsign_str]
+            min_val = row["min"] / 100.0  # Convert percentage to 0-1 scale
+            max_val = row["max"] / 100.0
+            mean_val = row["mean"] / 100.0
+
+            # Calculate x-positions for the historical markers
+            # num_idx is the integer position of the category (0, 1, 2, ...)
+            x_pos_start = num_idx - historical_marker_width_fraction
+            x_pos_end = num_idx + historical_marker_width_fraction
+
+            # --- Min/Max shaded rectangle for historical range ---
+            fig.add_shape(
+                type="rect",
+                xref="x", yref="y",  # Refer to data coordinates
+                x0=x_pos_start, y0=min_val,
+                x1=x_pos_end, y1=max_val,
+                fillcolor=DAA_COLORSCHEME.get("historical_box_fill", "rgba(0,0,0,0.08)"),
+                line=dict(color="rgba(0,0,0,0)"), # No border for the box
+                layer="below"  # Draw below the main bars
+            )
+
+            # --- Mean horizontal line for historical mean ---
+            fig.add_shape(
+                type="line",
+                xref="x", yref="y",
+                x0=x_pos_start, y0=mean_val,
+                x1=x_pos_end, y1=mean_val,
+                line=dict(
+                    dash="dot",
+                    color=DAA_COLORSCHEME.get("charcoal", "black"),
+                    width=2
+                ),
+                layer="below" # Draw below main bars
+            )
+
+            # --- Mean value label (text annotation) ---
+            # Using go.Scatter for text annotation, positioned at the center of the category
+            fig.add_trace(go.Scatter(
+                x=[callsign_str],  # Use the category name for x
+                y=[mean_val + (0.01 if max_val < 0.95 else -0.01)], # Adjust y to avoid overlap with top
+                text=[f"Historical: {mean_val * 100:.0f}%"], # Simpler label
+                mode="text",
+                textfont=dict(
+                    color=DAA_COLORSCHEME.get("charcoal", "black"),
+                    size=10
+                ),
+                hoverinfo="skip",
+                showlegend=False
+            ))
+
+    fig.update_layout(legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1))
 
     if use_poppins:
-        return fig.update_layout(font=dict(family="Poppins", size=18, color="black"))
-    else:
-        return fig
+        fig.update_layout(font=dict(family="Poppins", size=18, color=DAA_COLORSCHEME.get("charcoal", "black")))
+    else: # Apply a default font for better appearance
+        fig.update_layout(font=dict(family="Arial, sans-serif", size=12, color=DAA_COLORSCHEME.get("charcoal", "black")))
+
+    return fig
 
 def make_RWC_utilisation_dataframe(
         historical_df_path="../historical_data/historical_monthly_resource_utilisation.csv",
@@ -841,3 +925,40 @@ def create_callsign_group_split_rwc_plot(
 
         fig.update_traces(textposition='inside')  # You can also try 'auto' or 'outside'
         return fig
+
+# --- Helper function to display vehicle metric ---
+def display_vehicle_utilisation_metric(st_column, callsign_to_display, vehicle_type_label, icon_unicode,
+                                    sim_utilisation_df, hist_summary_df,
+                                    util_calc_module, current_quarto_string):
+    """
+    Displays the utilisation metrics for a given vehicle in a specified Streamlit column.
+    Returns the updated quarto_string.
+    """
+    with st_column:
+        with iconMetricContainer(key=f"{vehicle_type_label.lower()}_util_{callsign_to_display}", icon_unicode=icon_unicode, type="symbols"):
+            matched_sim = sim_utilisation_df[sim_utilisation_df['callsign'] == callsign_to_display]
+            if not matched_sim.empty:
+                sim_util_fig = matched_sim['PRINT_perc'].values[0]
+                sim_util_display = f"{sim_util_fig}"
+            else:
+                sim_util_fig = "N/A"
+                sim_util_display = "N/A"
+
+            current_quarto_string += f"\n\nAverage simulated {callsign_to_display} Utilisation was {sim_util_fig}\n\n"
+
+            st.metric(f"Average Simulated {callsign_to_display} Utilisation",
+                    sim_util_display,
+                    border=True)
+
+        # Get historical data
+        hist_util_value = util_calc_module.get_hist_util_fig(
+            hist_summary_df, callsign_to_display, "mean"
+        )
+        hist_util_value_display = f"{hist_util_value}%" if isinstance(hist_util_value, (int, float)) else hist_util_value
+
+        hist_util_caption = f"*The historical average utilisation of {callsign_to_display} was {hist_util_value_display}*\n\n"
+        current_quarto_string += hist_util_caption
+        current_quarto_string += "\n\n---\n\n"
+        st.caption(hist_util_caption)
+
+    return current_quarto_string

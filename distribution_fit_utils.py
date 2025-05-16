@@ -10,6 +10,8 @@ import itertools
 from fitter import Fitter, get_common_distributions
 from datetime import timedelta
 from utils import Utils
+from des_parallel_process import parallelProcessJoblib, collateRunResults, removeExistingResults
+from datetime import datetime
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
@@ -220,6 +222,7 @@ class DistributionFitUtils():
         self.historical_job_durations_breakdown()
         self.historical_missed_jobs()
         self.historical_jobs_per_day_per_callsign()
+        self.historical_care_cat_counts()
 
         # Calculate proportions of ad hoc unavailability
         self.ad_hoc_unavailability()
@@ -897,6 +900,50 @@ class DistributionFitUtils():
         all_counts = merged.groupby(['callsign', 'jobs_in_day']).count().reset_index().rename(columns={"date":"count"})
         all_counts.to_csv("historical_data/historical_jobs_per_day_per_callsign.csv", index=False)
 
+    def historical_care_cat_counts(self):
+        df_historical = self.df
+
+        df_historical['inc_date'] = pd.to_datetime(df_historical['inc_date'])
+
+        df_historical['month_start'] = df_historical.inc_date.dt.strftime("%Y-%m-01")
+        df_historical['hour'] = df_historical.inc_date.dt.hour
+
+        conditions = [
+            df_historical['cc_benefit'] == 'y',
+            df_historical['ec_benefit'] == 'y',
+            df_historical['helicopter_benefit'] == 'y',
+            df_historical['callsign_group'] == 'Other'
+        ]
+
+        choices = [
+            'CC',
+            'EC',
+            'REG - helicopter benefit',
+            'Unknown - DAA resource did not attend'
+        ]
+
+        df_historical['care_category'] = np.select(conditions, choices, default='REG')
+
+        historical_value_counts_by_hour = (
+            df_historical.value_counts(["hour", "care_category"])
+            .reset_index(name="count")
+            )
+
+        (historical_value_counts_by_hour
+         .sort_values(['hour', 'care_category'])
+         .to_csv("historical_data/historical_care_cat_counts.csv"))
+
+        # Also output the % of regular (not cc/ec) jobs with a helicopter benefit
+
+        numerator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit"]["count"].sum()
+
+        denominator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] != "Unknown - DAA resource did not attend"]["count"].sum()
+
+        with open('distribution_data/proportion_jobs_heli_benefit.txt', 'w+') as heli_benefit_file:
+            heli_benefit_file.write(json.dumps((numerator/denominator).round(4)))
+        heli_benefit_file.close()
+
+
     def historical_monthly_totals(self):
         """
             Calculates monthly incident totals from provided dataset of historical data
@@ -991,9 +1038,13 @@ class DistributionFitUtils():
             Calculate the median time for each of the job cycle phases stratified by month and vehicle type
         """
 
-        median_df = self.df[['first_day_of_month', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+        median_df = self.df[['first_day_of_month', 'time_allocation',
+                             'time_mobile', 'time_to_scene', 'time_on_scene',
+                             'time_to_hospital', 'time_to_clear', 'vehicle_type']]
 
-        median_df['total_job_time'] = median_df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].sum(axis=1)
+        median_df['total_job_time'] = median_df[[
+            'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear']].sum(axis=1)
 
         # Replacing zeros with NaN to exclude from median calculation
         # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
@@ -1019,7 +1070,10 @@ class DistributionFitUtils():
         """
 
         # Multiple resources can be sent to the same job.
-        monthly_df = self.df[['inc_date', 'first_day_of_month', 'callsign', 'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']].dropna()
+        monthly_df = self.df[[
+            'inc_date', 'first_day_of_month', 'callsign', 'time_allocation',
+            'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital',
+            'time_to_clear']]
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
 
@@ -1056,13 +1110,21 @@ class DistributionFitUtils():
         df = self.df
         df["date"] = pd.to_datetime(df["inc_date"])
         df["hour"] = df["date"].dt.hour
+        df["month_start"] = df["date"].dt.strftime("%Y-%m-01")
         df["callsign_group_simplified"] = df["callsign_group"].apply(lambda x: "No HEMS available" if x=="Other" else "HEMS (helo or car) available and sent")
+        df["quarter"] = df["inc_date"].dt.quarter
+
+        # By month
+        count_df_month = df[["callsign_group_simplified", "month_start"]].value_counts().reset_index(name="count").sort_values(['callsign_group_simplified','month_start'])
+        count_df_month.to_csv("historical_data/historical_missed_calls_by_month.csv", index=False)
+
+        # By hour
         count_df = df[["callsign_group_simplified", "hour"]].value_counts().reset_index(name="count").sort_values(['callsign_group_simplified','hour'])
         count_df.to_csv("historical_data/historical_missed_calls_by_hour.csv", index=False)
 
-        df["quarter"] = df["inc_date"].dt.quarter
+        # By quarter and hour
         count_df_quarter = df[["callsign_group_simplified", "quarter", "hour"]].value_counts().reset_index(name="count").sort_values(['quarter','callsign_group_simplified','hour'])
-        count_df_quarter.to_csv("historical_missed_calls_by_quarter_and_hour.csv", index=False)
+        count_df_quarter.to_csv("historical_data/historical_missed_calls_by_quarter_and_hour.csv", index=False)
 
     def upper_allowable_time_bounds(self):
         """
@@ -1070,10 +1132,13 @@ class DistributionFitUtils():
             This is currently set to 1.5x the upper quartile of the data distribution
         """
 
-        median_df = self.df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+        median_df = self.df[[
+            'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear', 'vehicle_type']]
 
         # Replacing zeros with NaN to exclude from median calculation
-        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
+        # since if an HEMS result is Stood down en route, then time_on_scene
+        # would be zero and affect the median
         median_df.replace(0, np.nan, inplace=True)
 
         print(median_df.quantile(.75))
@@ -1274,12 +1339,53 @@ class DistributionFitUtils():
         final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
 
 
+    def run_sim_on_historical_params(self):
+        # Ensure all rotas are using default values
+        rota = pd.read_csv("tests/rotas_historic/HISTORIC_HEMS_ROTA.csv")
+        rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+        callsign_reg_lookup = pd.read_csv("tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv")
+        callsign_reg_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+        service_history = pd.read_csv("tests/rotas_historic/HISTORIC_service_history.csv")
+        service_history.to_csv("actual_data/service_history.csv", index=False)
+
+        service_sched = pd.read_csv("tests/rotas_historic/HISTORIC_service_schedules_by_model.csv")
+        service_sched.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+        print("Generating simulation results...")
+        removeExistingResults()
+
+        total_runs = 12
+        sim_duration = 60 * 24 * 7 * 52 * 2, # 2 years
+
+        parallelProcessJoblib(
+            total_runs=total_runs,
+            sim_duration=sim_duration,
+            warm_up_time=0,
+            sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+            amb_data=False,
+            print_debug_messages=True
+        )
+
+        collateRunResults()
+
+    results_all_runs = pd.read_csv("data/run_results.csv")
+    # Also run the model to get some base-case outputs
+    resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
+    resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
+    missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
+    missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
+    missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
+
+    missed_jobs_care_cat_summary.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
     test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
+    test.run_sim_on_historical_params()
 
 # Testing ----------
 # python distribution_fit_utils.py

@@ -197,3 +197,5 @@ tests/test_logs/*.txt
 
 log.txt
 tests/helpers.py
+
+*.ipynb

@@ -722,30 +722,26 @@ def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month
 
 
 def get_historical_attendance_df(
-        attended_jobs_df_path="historical_data/historical_jobs_per_month.csv",
-        all_jobs_df_path="historical_data/historical_monthly_totals_all_calls.csv"
+        data_path="historical_data/historical_missed_calls_by_month.csv"
 ):
-    attended_jobs = pd.read_csv(attended_jobs_df_path)
-    attended_jobs.rename(columns={'total_jobs': 'jobs_attended'}, inplace=True)
 
-    all_received_jobs = pd.read_csv(all_jobs_df_path)
-    all_received_jobs.rename(columns={'inc_date': 'all_received_calls'}, inplace=True)
+    full_jobs_df = pd.read_csv(data_path)
+    full_jobs_df = full_jobs_df.pivot(columns="callsign_group_simplified", index="month_start", values="count").reset_index()
 
-    full_jobs_df = all_received_jobs.merge(attended_jobs, on="month", how="left")
+    full_jobs_df.rename(columns={'HEMS (helo or car) available and sent': 'jobs_attended',
+                                'No HEMS available':'jobs_not_attended'}, inplace=True)
 
-    full_jobs_df['jobs_not_attended'] = full_jobs_df['all_received_calls'] - full_jobs_df['jobs_attended']
+    full_jobs_df['all_received_calls'] = full_jobs_df['jobs_attended'] + full_jobs_df['jobs_not_attended']
     full_jobs_df['perc_unattended_historical'] = full_jobs_df['jobs_not_attended']/full_jobs_df['all_received_calls'].round(2)
 
     return full_jobs_df
 
 def plot_historical_missed_jobs_data(
-        attended_jobs_df_path="historical_data/historical_jobs_per_month.csv",
-        all_jobs_df_path="historical_data/historical_monthly_totals_all_calls.csv",
+        data_path="historical_data/historical_missed_calls_by_month.csv",
         format="stacked_bar"
         ):
 
-    full_jobs_df = get_historical_attendance_df(attended_jobs_df_path=attended_jobs_df_path,
-                                                all_jobs_df_path=all_jobs_df_path)
+    full_jobs_df = get_historical_attendance_df(data_path=data_path)
 
     if format=="stacked_bar":
         return px.bar(
@@ -762,10 +758,15 @@ def plot_historical_missed_jobs_data(
         return px.line(full_jobs_df, x="month", y="perc_unattended_historical")
 
     elif format=="string":
+        # This approach can distort the result by giving more weight to months with higher numbers of calls
+        # However, for system-level performance, which is what we care about here, it's a reasonable option
         all_received_calls_period = full_jobs_df['all_received_calls'].sum()
         all_attended_jobs_period = full_jobs_df['jobs_attended'].sum()
-
         return (((all_received_calls_period - all_attended_jobs_period) / all_received_calls_period)*100)
+
+        # Alternative is to take the mean of means
+        # return full_jobs_df['perc_unattended_historical'].mean()*100
+
 
     else:
         # Melt the DataFrame to long format
