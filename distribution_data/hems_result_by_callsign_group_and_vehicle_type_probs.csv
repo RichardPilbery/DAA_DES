@@ -1,25 +1,26 @@
 hems_result,callsign_group,vehicle_type,count,proportion
-Landed but no patient contact,70,car,107,0.119
+Landed but no patient contact,70,car,107,0.1193
 Landed but no patient contact,70,helicopter,154,0.0775
-Landed but no patient contact,71,car,18,0.0714
+Landed but no patient contact,71,car,18,0.0723
 Landed but no patient contact,71,helicopter,39,0.0694
-Landed but no patient contact,72,car,113,0.1563
-Patient Conveyed,70,car,251,0.2792
-Patient Conveyed,70,helicopter,674,0.339
-Patient Conveyed,71,car,49,0.1944
-Patient Conveyed,71,helicopter,211,0.3754
-Patient Conveyed,72,car,154,0.213
-Patient Treated (not conveyed),70,car,224,0.2492
-Patient Treated (not conveyed),70,helicopter,520,0.2616
-Patient Treated (not conveyed),71,car,110,0.4365
-Patient Treated (not conveyed),71,helicopter,190,0.3381
-Patient Treated (not conveyed),72,car,299,0.4136
-Stand Down Before Mobile,70,car,16,0.0178
-Stand Down Before Mobile,70,helicopter,66,0.0332
-Stand Down Before Mobile,71,helicopter,13,0.0231
-Stand Down Before Mobile,72,car,2,0.0028
-Stand Down En Route,70,car,301,0.3348
-Stand Down En Route,70,helicopter,574,0.2887
-Stand Down En Route,71,car,75,0.2976
-Stand Down En Route,71,helicopter,109,0.194
-Stand Down En Route,72,car,155,0.2144
+Landed but no patient contact,72,car,113,0.1569
+Patient Conveyed by HEMS,70,car,13,0.0145
+Patient Conveyed by HEMS,70,helicopter,296,0.149
+Patient Conveyed by HEMS,71,car,1,0.004
+Patient Conveyed by HEMS,71,helicopter,152,0.2705
+Patient Conveyed by HEMS,72,car,4,0.0056
+Patient Conveyed by land with HEMS,70,car,222,0.2475
+Patient Conveyed by land with HEMS,70,helicopter,327,0.1647
+Patient Conveyed by land with HEMS,71,car,39,0.1566
+Patient Conveyed by land with HEMS,71,helicopter,57,0.1014
+Patient Conveyed by land with HEMS,72,car,133,0.1847
+Patient Treated but not conveyed by HEMS,70,car,211,0.2352
+Patient Treated but not conveyed by HEMS,70,helicopter,516,0.2598
+Patient Treated but not conveyed by HEMS,71,car,98,0.3936
+Patient Treated but not conveyed by HEMS,71,helicopter,186,0.331
+Patient Treated but not conveyed by HEMS,72,car,278,0.3861
+Stand Down,70,car,344,0.3835
+Stand Down,70,helicopter,693,0.3489
+Stand Down,71,car,93,0.3735
+Stand Down,71,helicopter,128,0.2278
+Stand Down,72,car,192,0.2667

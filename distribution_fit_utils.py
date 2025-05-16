@@ -39,11 +39,11 @@ class DistributionFitUtils():
         self.calculate_school_holidays = calculate_school_holidays
 
         self.times_to_fit = [
-            {"hems_result": "Patient Treated (not conveyed)",
+            {"hems_result": "Patient Treated but not conveyed by HEMS",
             "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear']},
-            {"hems_result": "Patient Conveyed" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']},
-            {"hems_result": "Stand Down Before Mobile" , "times_to_fit" : ['time_allocation', 'time_to_clear']},
-            {"hems_result": "Stand Down En Route" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_clear']},
+            {"hems_result": "Patient Conveyed by HEMS" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']},
+            {"hems_result": "Patient Conveyed by land with HEMS" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear']},
+            {"hems_result": "Stand Down" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_clear']},
             {"hems_result": "Landed but no patient contact" , "times_to_fit" : ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_clear']},
         ]
 
@@ -278,14 +278,16 @@ class DistributionFitUtils():
         final_distr = []
 
         for row in self.times_to_fit:
-            print(row)
+            #print(row)
             for ttf in row['times_to_fit']:
                 for vt in vehicle_type:
-                    #print(f"HEMS result is {row['hems_result']} cs is {cs} and times_to_fit is {ttf} and patient outcome {pto}")
+                    #print(f"HEMS result is {row['hems_result']} times_to_fit is {ttf} and vehicle type is  {vt}")
 
                     # This line might not be required if data quality is determined when importing the data
                     max_time = self.min_max_values_df[self.min_max_values_df['time'] == ttf].max_value_mins.iloc[0]
                     min_time = self.min_max_values_df[self.min_max_values_df['time'] == ttf].min_value_mins.iloc[0]
+
+                    #print(f"Max time is {max_time} and Min time is {min_time}")
 
                     if ttf == 'time_on_scene':
                         # There is virtually no data for HEMS_result other than patient conveyed
@@ -305,6 +307,8 @@ class DistributionFitUtils():
                         ][ttf]
                     #print(fit_times[:10])
                     best_fit = self.getBestFit(fit_times, distr=self.sim_tools_distr_plus)
+                    #print(best_fit)
+
                     return_dict = { "vehicle_type": vt, "time_type" : ttf, "best_fit": best_fit, "hems_result": row['hems_result'], "n": len(fit_times)}
                     #print(return_dict)
                     final_distr.append(return_dict)

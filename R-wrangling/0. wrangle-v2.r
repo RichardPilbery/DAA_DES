@@ -17,6 +17,10 @@ missed_df <- read_xlsx('data/DAA_with_missing_2023-2024.xlsx', sheet='Missed') %
 dfa <- bind_rows(df, missed_df)
 
 
+# 2025-05-14
+# Updating patient outcome and HEMS result to be 
+# more intuitive
+
 
 simple_df <- dfa %>%
   filter(is.na(result) | result != 'Remote advice', inc_date > lubridate::ymd('2023-01-01')) %>% 
@@ -51,6 +55,7 @@ simple_df <- dfa %>%
       patient_result == "Conveyed by land with DAA" ~ "Patient Conveyed by land with HEMS",
       result %in% c("Airlifted", "Patient Conveyed") ~ "Patient Conveyed by HEMS",
       grepl("Stand Down", result) ~ "Stand Down",
+      result == "Landed but no patient contact" ~ "Landed but no patient contact",
       .default = "Unknown"
     ),
     # sd_reason, These results look a little suss...not sure how useful it is going to be.
@@ -82,7 +87,51 @@ simple_df <- dfa %>%
   ) %>% filter(is.na(callsign) | callsign %in% c("CC70", "CC71", "CC72", "H70", "H71"), 
                # Remove 10 entries where this is true
                !(hems_result == "Patient Treated but not conveyed by HEMS" & pt_outcome == "Unknown"))
-               
+
 
 saveRDS(simple_df, 'clean_daa_import_missing_2023_2024.rds')
 simple_df %>% write_csv('clean_daa_import_missing_2023_2024.csv')
+
+
+# simple_df %>% count(hems_result, pt_outcome) %>% print(n=30)
+# 
+# min(simple_df$inc_date)
+# max(simple_df$inc_date)
+# 
+# 
+library(tidyverse)
+simple_df <- readRDS('clean_daa_import_missing_2023_2024.rds')
+ 
+simple_df %>% count(hems_result)
+
+simple_df %>% count(vehicle)
+
+simple_df1 <- simple_df %>%
+  mutate(
+    helicopter_benefit = case_when(
+      cc_benefit == 'y' ~ 'y',
+      ec_benefit == 'y' ~ 'y',
+      hems_result %in% c('Stand Down En Route', 'Landed but no patient contact', 'Stand Down Before Mobile') ~ 'n',
+      .default = helicopter_benefit
+    ),
+    care_cat = case_when(
+      cc_benefit == 'y' ~ 'CC',
+      ec_benefit == 'y' ~ 'EC',
+      .default = 'REG'
+    ) 
+  )
+
+simple_df1 %>% glimpse()
+
+
+
+
+simple_df1 %>%
+  filter(care_cat == 'REG') %>%
+  mutate(
+    qtr = lubridate::quarter(inc_date)
+  ) %>%
+  count(callsign_group, vehicle_type, hems_result, qtr) %>%
+  ggplot(aes(x = callsign_group, y = n, fill = vehicle_type)) +
+  geom_col(position = "dodge") +
+  facet_grid(rows = vars(hems_result), cols = vars(qtr), scale = "free_y")
