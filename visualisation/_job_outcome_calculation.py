@@ -42,29 +42,49 @@ def get_care_cat_counts_plot_sim(results_path="data/run_results.csv",
     if not show_proportions:
         fig = px.bar(care_cat_by_hour, x="hour", y="count", color="care_cat", title=title,
             category_orders={
-                "care_category": ["CC", "EC", "REG - helicopter benefit", "REG"]
+                "care_cat": ["CC", "EC", "REG - helicopter benefit", "REG"]
             })
-        return fig
 
     # if show_proportions
     else:
         fig = px.bar(care_cat_by_hour, x="hour", y="proportion", color="care_cat", title=title,
             category_orders={
-                "care_category": ["CC", "EC", "REG - helicopter benefit", "REG"]
+                "care_cat": ["CC", "EC", "REG - helicopter benefit", "REG"]
             })
-        return fig
+
+    fig.update_layout(xaxis=dict(dtick=1))
+
+    return fig
 
 def get_care_cat_counts_plot_historic(historic_df_path="historical_data/historical_care_cat_counts.csv",
                         show_proportions=False):
 
+    care_cat_by_hour_historic = pd.read_csv(historic_df_path)
+
+    total_per_hour = care_cat_by_hour_historic.groupby("hour")["count"].transform("sum")
+    # Add proportion column
+    care_cat_by_hour_historic["proportion"] = care_cat_by_hour_historic["count"] / total_per_hour
+
     title = "Care Category of calls in historical data by hour of day with EC/CC/Regular - Heli Benefit/Regular"
 
-    fig = px.bar(pd.read_csv(historic_df_path),
-       x="hour", y="count", color="care_category",
-       title=title,
-       category_orders={
-        "care_category": ["CC", "EC", "REG - helicopter benefit", "REG", "Unknown - DAA resource did not attend"]
-    })
+    if not show_proportions:
+        fig = px.bar(care_cat_by_hour_historic,
+            x="hour", y="count", color="care_category",
+            title=title,
+            category_orders={
+                "care_category": ["CC", "EC", "REG - helicopter benefit", "REG", "Unknown - DAA resource did not attend"]
+            }
+        )
+    else:
+        fig = px.bar(care_cat_by_hour_historic,
+            x="hour", y="proportion", color="care_category",
+            title=title,
+            category_orders={
+                "care_category": ["CC", "EC", "REG - helicopter benefit", "REG", "Unknown - DAA resource did not attend"]
+            }
+        )
+
+    fig.update_layout(xaxis=dict(dtick=1))
 
     return fig
 
