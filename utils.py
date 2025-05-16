@@ -335,12 +335,16 @@ class Utils:
             This function will allocate a HEMS result based on patient outcome, yearly quarter and HEMS deets.
         """
 
+        print(self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df.head())
+
         df = self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df[
             (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['pt_outcome'] == pt_outcome) &
             (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['quarter'] == quarter) &
             (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['vehicle_type'] == vehicle_type) &
             (self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['callsign_group'] == callsign_group)
         ]
+
+        print(df.head())
 
         return pd.Series.sample(df['hems_result'], weights = df['proportion'],
                                  random_state=self.rngs["hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_selection"]).iloc[0]

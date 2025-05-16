@@ -285,7 +285,7 @@ class DES_HEMS:
         self.debug(f"{pt.current_dt}: {pt.id} Pt allocated to {pt.hems_cc_or_ec} from AMPDS {pt.ampds_card}")
 
         pt.pt_outcome = self.utils.pt_outcome_selection(pt.hems_cc_or_ec, int(qtr))
-        self.debug(f"{pt.current_dt}: {pt.id} Pt allocated to {pt.pt_outcome}")
+        self.debug(f"{pt.current_dt}: {pt.id} Pt allocated to patient outcome: {pt.pt_outcome}")
 
         self.add_patient_result_row(pt, "arrival", "arrival_departure")
 
@@ -382,7 +382,12 @@ class DES_HEMS:
 
                 #patient.hems_result = self.utils.hems_result_by_callsign_group_and_vehicle_type_selection(patient.hems_callsign_group, patient.hems_vehicle_type)
                 #self.debug(f"{patient.hems_cc_or_ec} and {patient.hems_helicopter_benefit}")
-                patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
+                #patient.hems_result = self.utils.hems_result_by_care_category_and_helicopter_benefit_selection(patient.hems_cc_or_ec, patient.hems_helicopter_benefit)
+
+                patient.hems_result = self.utils.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(patient.pt_outcome, int(patient.qtr), patient.hems_vehicle_type, patient.hems_callsign_group)
+
+                self.debug(f"{patient.current_dt}: PT_ID:{patient.id} Pt allocated to HEMS result: {patient.hems_result}")
+
                 patient.callsign = hems_res.callsign
 
                 if not_in_warm_up_period:

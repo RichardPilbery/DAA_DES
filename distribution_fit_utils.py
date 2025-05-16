@@ -622,7 +622,39 @@ class DistributionFitUtils():
 
         merged.to_csv('distribution_data/hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv', mode = "w+", index = False)
 
+    def hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self):
+        """
 
+            Calculates the probabilty of a given HEMS result based on 
+            patient outcome, yearly quarter, vehicle type and callsign group
+
+        """
+
+        hr_df = self.df[['hems_result', 'quarter', 'pt_outcome', 'vehicle_type', 'callsign_group']].copy()
+            
+        # There are some values that are missing e.g. CC quarter 1 Deceased
+        # I think we've had problems when trying to sample from this kind of thing before
+        # As a fallback, ensure that 'missing' combinations are given a count and proportion of 0
+        hems_results = hr_df['hems_result'].unique()
+        outcomes = hr_df['pt_outcome'].unique()
+        vehicle_categories = hr_df['vehicle_type'].unique()
+        callsign_group_categories = hr_df['callsign_group'].unique()
+        quarters = hr_df['quarter'].unique()
+
+        all_combinations = pd.DataFrame(list(itertools.product(hems_results, outcomes, vehicle_categories, callsign_group_categories, quarters)),
+                                    columns=['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])
+
+        hr_cat_counts = hr_df.groupby(['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter']).size().reset_index(name='count')
+
+        merged = pd.merge(all_combinations, hr_cat_counts, 
+                      on=['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'], 
+                      how='left').fillna({'count': 0})
+        merged['count'] = merged['count'].astype(int)
+
+        total_counts = merged.groupby(['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])['count'].transform('sum')
+        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3) 
+
+        merged.to_csv('distribution_data/hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv', mode = "w+", index = False)
 
     def hourly_arrival_by_qtr_probs(self):
         """
