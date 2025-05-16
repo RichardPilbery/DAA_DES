@@ -1132,10 +1132,13 @@ class DistributionFitUtils():
             This is currently set to 1.5x the upper quartile of the data distribution
         """
 
-        median_df = self.df[['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'vehicle_type']].dropna()
+        median_df = self.df[[
+            'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
+            'time_to_hospital', 'time_to_clear', 'vehicle_type']]
 
         # Replacing zeros with NaN to exclude from median calculation
-        # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
+        # since if an HEMS result is Stood down en route, then time_on_scene
+        # would be zero and affect the median
         median_df.replace(0, np.nan, inplace=True)
 
         print(median_df.quantile(.75))
