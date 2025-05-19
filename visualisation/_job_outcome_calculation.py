@@ -94,7 +94,12 @@ def get_care_cat_proportion_table(
 
     historical_value_counts_by_hour = pd.read_csv(historic_df_path)
 
-    historical_counts_simple = historical_value_counts_by_hour.groupby('care_category')['count'].sum().reset_index().rename(columns={'count': 'Historic Job Counts', 'care_category': 'Care Category'})
+    historical_counts_simple = (
+        historical_value_counts_by_hour
+        .groupby('care_category')['count'].sum()
+        .reset_index()
+        .rename(columns={'count': 'Historic Job Counts', 'care_category': 'Care Category'})
+        )
 
     run_results = pd.read_csv(results_path)
 
@@ -113,7 +118,8 @@ def get_care_cat_proportion_table(
         )
 
     full_counts = historical_counts_simple.merge(
-            care_cat_counts_sim.rename(columns={'care_cat': 'Care Category', 'count':'Simulated Job Counts'}),
+            care_cat_counts_sim
+            .rename(columns={'care_cat': 'Care Category', 'count':'Simulated Job Counts'}),
             how="outer", on="Care Category"
         )
 
@@ -132,11 +138,19 @@ def get_care_cat_proportion_table(
 
 def get_preferred_outcome_by_hour(results_path="data/run_results.csv", show_proportions=False):
     run_results = pd.read_csv(results_path)
-    resource_preferred_outcome_by_hour = run_results[run_results["event_type"]=="resource_preferred_outcome"][["P_ID", "run_number", "care_cat", "time_type", "hour"]].reset_index().groupby(["time_type", "hour"]).size().reset_index(name="count")
+    resource_preferred_outcome_by_hour =(
+        run_results[run_results["event_type"]=="resource_preferred_outcome"]
+        [["P_ID", "run_number", "care_cat", "time_type", "hour"]].reset_index()
+        .groupby(["time_type", "hour"]).size()
+        .reset_index(name="count")
+        )
     # Calculate total per hour
     total_per_hour = resource_preferred_outcome_by_hour.groupby("hour")["count"].transform("sum")
     # Add proportion column
-    resource_preferred_outcome_by_hour["proportion"] = resource_preferred_outcome_by_hour["count"] / total_per_hour
+    resource_preferred_outcome_by_hour["proportion"] = (
+        resource_preferred_outcome_by_hour["count"] /
+        total_per_hour
+        )
 
     if not show_proportions:
         fig = px.bar(resource_preferred_outcome_by_hour, x="hour", y="count", color="time_type")
@@ -153,7 +167,10 @@ def get_facet_plot_preferred_outcome_by_hour(results_path="data/run_results.csv"
     # Calculate total per hour
     total_per_hour = resource_preferred_outcome_by_hour.groupby("hour")["count"].transform("sum")
     # Add proportion column
-    resource_preferred_outcome_by_hour["proportion"] = resource_preferred_outcome_by_hour["count"] / total_per_hour
+    resource_preferred_outcome_by_hour["proportion"] = (
+        resource_preferred_outcome_by_hour["count"] /
+        total_per_hour
+        )
 
     resource_preferred_outcome_by_hour["time_type"] = resource_preferred_outcome_by_hour["time_type"].apply(
     lambda x: textwrap.fill(x, width=25).replace("\n", "<br>")
@@ -197,7 +214,10 @@ def plot_patient_outcomes(group_cols="vehicle_type", outcome_col="hems_result",
 
         return count_df
 
-    patient_outcomes_df_grouped_counts = calculate_grouped_proportions(patient_outcomes_df, group_cols, outcome_col)
+    patient_outcomes_df_grouped_counts = calculate_grouped_proportions
+    (patient_outcomes_df,
+     group_cols, outcome_col
+     )
 
     if return_fig:
         if plot_counts:
@@ -205,7 +225,10 @@ def plot_patient_outcomes(group_cols="vehicle_type", outcome_col="hems_result",
         else:
             y="proportion"
 
-        fig = px.bar(patient_outcomes_df_grouped_counts, color=group_cols, y=y, x=outcome_col, barmode="group")
+        fig = px.bar(patient_outcomes_df_grouped_counts,
+                     color=group_cols, y=y, x=outcome_col,
+                     barmode="group"
+                     )
 
         return fig
     else:
