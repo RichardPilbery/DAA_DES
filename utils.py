@@ -41,25 +41,30 @@ class Utils:
         # Set up remaining attributes #
         ###############################
         self.print_debug_messages = print_debug_messages
+
         # Load in mean inter_arrival_times
         self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
         self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_ampds_card_probs.csv')
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
         self.care_cat_by_ampds_df = pd.read_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv')
-        # self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
-        # self.callsign_by_ampds_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_probs.csv')
         self.callsign_by_care_category_df = pd.read_csv('distribution_data/callsign_group_by_care_category_probs.csv')
         self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         # New addition without stratification by month
         self.vehicle_type_df = pd.read_csv('distribution_data/vehicle_type_probs.csv')
+
+        # ========= ARCHIVED CODE ================== #
+        # self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
+        # self.callsign_by_ampds_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_probs.csv')
         # self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')
         # self.hems_result_by_care_category_and_helicopter_benefit_df = pd.read_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv')
-        self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
+        # self.pt_outcome_by_hems_result_and_care_category_df = pd.read_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv')
+        # ========= END ARCHIVED CODE ============== #
 
         # NEW PATIENT OUTCOME AND HEMS RESULT DATA FRAMES
         self.patient_outcome_by_care_category_and_quarter_probs_df = pd.read_csv('distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv')
-        self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
+        # self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
+        self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df = pd.read_csv('distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv')
 
 
         # Import maximum call duration times
@@ -330,18 +335,26 @@ class Utils:
     #     return pd.Series.sample(df['hems_result'], weights = df['proportion'],
     #                             random_state=self.rngs["hems_result_by_care_category_and_helicopter_benefit_selection"]).iloc[0]
 
-    def hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self, pt_outcome: str, quarter: int, vehicle_type: str, callsign_group: int):
+    def hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs(self, pt_outcome: str, quarter: int, vehicle_type: str, callsign_group: int, hour: int):
         """
             This function will allocate a HEMS result based on patient outcome, yearly quarter and HEMS deets.
         """
 
+        if (hour >= 7) and (hour <= 18):
+            time_of_day = 'day'
+        else:
+            time_of_day = 'night'
+
+        self.debug(f"{hour}: {time_of_day}")
+
         #(self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df.head())
 
-        df = self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df[
-            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['pt_outcome'] == pt_outcome) &
-            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['quarter'] == quarter) &
-            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['vehicle_type'] == vehicle_type) &
-            (self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df['callsign_group'] == callsign_group)
+        df = self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df[
+            (self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df['pt_outcome'] == pt_outcome) &
+            (self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df['quarter'] == quarter) &
+            (self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df['vehicle_type'] == vehicle_type) &
+            (self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df['callsign_group'] == callsign_group) &
+            (self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs_df['time_of_day'] == time_of_day)
         ]
 
         #print(df.head())
