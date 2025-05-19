@@ -346,16 +346,23 @@ class HEMSAvailability():
             # If no resources then return None
 
             if not h.in_use and h.hems_resource_on_shift(pt.hour, pt.qtr):
+                # self.debug(f"Checking whether to generate ad-hoc reason for {h} ({h.vehicle_type} - {h.callsign_group})")
 
                 if ( # Skip this resource if any of the following are true:
                     h.in_use or
+                    h.being_serviced or
+                    not h.hems_resource_on_shift(pt.hour, pt.qtr) or
+                    # Skip if crew is already in use
                     h.callsign_group in self.active_callsign_groups or
-                    h.registration in self.active_registrations or
-                    not h.hems_resource_on_shift(pt.hour, pt.qtr)
+                    h.registration in self.active_registrations
                 ):
+                    # self.debug(f"Skipping ad-hoc unavailability check for {h}")
                     continue
 
-                ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)
+                if h.vehicle_type == "car":
+                    ad_hoc_reason = "available"
+                else:
+                    ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)
 
                 self.debug(f"({h.callsign}) Sampled reason for patient {pt.id} ({pt.hems_cc_or_ec}) is: {ad_hoc_reason}")
 
@@ -592,14 +599,21 @@ class HEMSAvailability():
 
         for h in self.store.items:
 
-            if h.in_use or h.being_serviced or not h.hems_resource_on_shift(pt.hour, pt.qtr):
+            if (
+                h.in_use or
+                h.being_serviced or
+                not h.hems_resource_on_shift(pt.hour, pt.qtr) or
+                # Skip if crew is already in use
+                h.callsign_group in self.active_callsign_groups or
+                h.registration in self.active_registrations
+                ):
                 continue
 
-            # Skip if crew is already in use
-            if h.callsign_group in self.active_callsign_groups or h.registration in self.active_registrations:
-                continue
 
-            ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)
+            if h.vehicle_type == "car":
+                ad_hoc_reason = "available"
+            else:
+                ad_hoc_reason = self.utilityClass.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)
 
             self.debug(f"({h.callsign}) Sampled reason for patient {pt.id} (REG) is: {ad_hoc_reason}")
 
