@@ -277,25 +277,43 @@ if button_run_pressed:
 
             with col_ec_cc_sim:
                 st.markdown("#### Simulation Outputs")
-                resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
-                resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
-                missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
-                missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
-                missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
+                resource_requests = (
+                    results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+                    .copy()
+                    )
+                resource_requests["care_cat"] = (
+                    resource_requests.apply(
+                        lambda x: "REG - Helicopter Benefit"
+                        if x["heli_benefit"]=="y" and x["care_cat"]=="REG"
+                        else x["care_cat"], axis=1))
+                missed_jobs_care_cat_summary = (
+                    resource_requests[["care_cat", "time_type"]]
+                    .value_counts().reset_index(name="jobs")
+                    .sort_values(["care_cat", "time_type"]).copy()
+                    )
+                missed_jobs_care_cat_summary["jobs_average"] = (
+                    missed_jobs_care_cat_summary["jobs"] / st.session_state.number_of_runs_input)
+                missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+                    missed_jobs_care_cat_summary["jobs_average"] / st.session_state.sim_duration_input*365).round(0)
 
-                st.write(f"""
+                missed_jobs_sim_string = f"""
     The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
     - **{get_missed_jobs_fig("CC", missed_jobs_care_cat_summary):.0f} critical care** jobs that would be missed due to no resource being available
     - **{get_missed_jobs_fig("EC", missed_jobs_care_cat_summary):.0f} enhanced care** jobs that would be missed due to no resource being available
     - **{get_missed_jobs_fig("REG", missed_jobs_care_cat_summary):.0f} regular jobs** that would be missed due to no resource being available
     - of these missed regular jobs, **{get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary):.0f}** may have benefitted from the attendance of a helicopter
-                            """)
+                            """
+
+                st.write(missed_jobs_sim_string)
+
+                quarto_string += "## Missed Jobs\n\n"
+                quarto_string += missed_jobs_sim_string
 
             with col_ec_cc_hist_sim:
                 SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
 
-                st.caption(f"""
+                missed_jobs_historical_comparison = f"""
     As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
     However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
 
@@ -303,7 +321,12 @@ if button_run_pressed:
     - {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs):.0f} enhanced care jobs that would be missed due to no resource being available
     - {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs):.0f} regular jobs that would be missed due to no resource being available
     - of these missed regular jobs, {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs):.0f} may have benefitted from the attendance of a helicopter
-                            """)
+                            """
+
+                st.caption(missed_jobs_historical_comparison)
+
+                quarto_string += "### Historical Missed Jobs\n\n"
+                quarto_string += missed_jobs_historical_comparison
 
             st.subheader("Resource Utilisation")
 
