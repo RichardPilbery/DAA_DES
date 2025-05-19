@@ -1045,11 +1045,11 @@ class DistributionFitUtils():
 
         median_df['total_job_time'] = median_df[[
             'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
-            'time_to_hospital', 'time_to_clear']].sum(axis=1)
+            'time_to_hospital', 'time_to_clear']].sum(axis=1, skipna=True)
 
         # Replacing zeros with NaN to exclude from median calculation
         # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
-        median_df.replace(0, np.nan, inplace=True)
+        # median_df.replace(0, np.nan, inplace=True)
 
         # Grouping by month and resource_type, calculating medians
         median_times = median_df.groupby(['first_day_of_month', 'vehicle_type']).median(numeric_only=True).reset_index()
@@ -1057,7 +1057,8 @@ class DistributionFitUtils():
         pivot_data = median_times.pivot_table(
             index='first_day_of_month',
             columns='vehicle_type',
-            values=['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'total_job_time']
+            values=['time_allocation', 'time_mobile', 'time_to_scene',
+                    'time_on_scene', 'time_to_hospital', 'time_to_clear', 'total_job_time']
         )
 
         pivot_data.columns = [f"median_{col[1]}_{col[0]}" for col in pivot_data.columns]
@@ -1074,7 +1075,7 @@ class DistributionFitUtils():
         monthly_df = self.df[[
             'inc_date', 'first_day_of_month', 'callsign', 'time_allocation',
             'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital',
-            'time_to_clear']]
+            'time_to_clear']].copy()
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
 
