@@ -182,9 +182,6 @@ class DistributionFitUtils():
         # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
         self.enhanced_or_critical_care_by_ampds_card_probs()
 
-        # Calculate probably of patient outcome
-        self.patient_outcome_by_care_category_and_quarter_probs()
-
         # Calculate HEMS result
         self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs()
 
@@ -199,6 +196,11 @@ class DistributionFitUtils():
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         self.vehicle_type_by_month_probs()
         self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
+
+        # ============= ARCHIVED CODE ================= #
+        # Calculate probably of patient outcome
+        # self.patient_outcome_by_care_category_and_quarter_probs()
+        # ============= END ARCHIVED CODE ================= #
 
         # ============= ARCHIVED CODE ================= #
         # self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs()
