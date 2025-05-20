@@ -441,8 +441,8 @@ def plot_monthly_calls(call_df, show_individual_runs=False, use_poppins=False,
 
 
             # Add a filled range (shaded area) for the historical range
-            print("==_job_count_calculation plot_monthly_calls(): call_counts_monthly")
-            print(call_counts_monthly)
+            # print("==_job_count_calculation plot_monthly_calls(): call_counts_monthly")
+            # print(call_counts_monthly)
 
             # Ensure we only have one row per month to avoid issues with filling the historical range
             call_counts_historical_plotting_min_max = (
@@ -502,8 +502,8 @@ def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month
 
     # Ensure the days in the simulated dataset are formatted the same as the historical dataset
     daily_calls_per_run['day'] = daily_calls_per_run['day'].apply(lambda x: day_dict[x])
-
-    print(daily_calls_per_run)
+    # print("============ daily_calls_per_run ===========")
+    # print(daily_calls_per_run)
 
     # Create a blank figure to build on
     fig = go.Figure()
@@ -538,14 +538,16 @@ def plot_daily_call_counts(call_df, params_df, box_plot=False, average_per_month
 
             return pd.DataFrame(results)
 
-        print(jobs_per_day_historic)
+        # print("===========jobs_per_day_historic============")
+        # print(jobs_per_day_historic)
         # Compute the average calls per day
         jobs_per_day_historic = compute_average_calls(jobs_per_day_historic)
         jobs_per_day_historic['month'] = pd.to_datetime(jobs_per_day_historic['month'],dayfirst=True)
 
         jobs_per_day_historic['year_numeric'] = jobs_per_day_historic['month'].apply(lambda x: x.year)
         jobs_per_day_historic['month_numeric'] = jobs_per_day_historic['month'].apply(lambda x: x.month)
-        print(jobs_per_day_historic)
+        # print("======== jobs_per_day_historic - updated ========")
+        # print(jobs_per_day_historic)
 
         jobs_per_day_historic_long = jobs_per_day_historic.melt(
             id_vars=['month','month_numeric', 'year_numeric']

@@ -1,9 +1,9 @@
 ,care_cat,time_type,jobs,jobs_average,jobs_per_year_average
-3,CC,HEMS Resource Available,2722,226.83333333333334,113.0
-7,CC,No Resource Available,394,32.833333333333336,16.0
-2,EC,HEMS Resource Available,3692,307.6666666666667,154.0
-6,EC,No Resource Available,502,41.833333333333336,21.0
-0,REG,HEMS Resource Available,45588,3799.0,1900.0
-1,REG,No Resource Available,6729,560.75,280.0
-4,REG - Helicopter Benefit,HEMS Resource Available,1610,134.16666666666666,67.0
-5,REG - Helicopter Benefit,No Resource Available,1117,93.08333333333333,47.0
+5,CC,HEMS Resource Available,5461,227.54166666666666,114.0
+7,CC,No Resource Available,749,31.208333333333332,16.0
+2,EC,HEMS Resource Available,7331,305.4583333333333,153.0
+6,EC,No Resource Available,1056,44.0,22.0
+0,REG,HEMS Resource Available,84249,3510.375,1755.0
+1,REG,No Resource Available,11935,497.2916666666667,249.0
+3,REG - Helicopter Benefit,HEMS Resource Available,7274,303.0833333333333,152.0
+4,REG - Helicopter Benefit,No Resource Available,5659,235.79166666666666,118.0

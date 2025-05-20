@@ -238,16 +238,8 @@ As of March 2025, the app has been tested on a pc with the following specs
 - Processor: 12th Gen Intel(R) Core(TM) i7-12700H, 2300 Mhz, 14 Core(s), 20 Logical Processor(s)
 - Installed Physical Memory (RAM): 32.0 GB
 
-When executing the model through the streamlit interface, the following run times were observed.
+When executing the model through the streamlit interface, running locally so parallel processing can be used, the following run times were observed.
 
-**1 year simulated time, default demand, default parameters (2 helicopters, 1 additional car)**
+**2 years simulated time, default demand, default parameters (2 helicopters, 1 additional car)**
 
-- 1 run, 365 days: TBD
-- 10 runs, 365 days: TBD
-- 30 runs, 365 days: TBD
-
-**3 years simulated time, default demand, default parameters (2 helicopters, 1 additional car)**
-
-- 1 run, 1095 days (3 years): TBD
-- 10 runs, 1095 days (3 years): TBD
-- 30 runs, 1095 days (3 years): TBD
+- 12 runs, 730 days: ~90 seconds

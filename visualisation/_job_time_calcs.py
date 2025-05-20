@@ -17,6 +17,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import plotly.express as px
 from _utilisation_result_calculation import make_utilisation_model_dataframe
+import _processing_functions
 import plotly.graph_objects as go
 from scipy.stats import ks_2samp
 import streamlit as st
@@ -270,6 +271,80 @@ def plot_total_times(utilisation_model_df, by_run=False):
 
     return fig
 
+def plot_total_times_by_hems_or_pt_outcome(run_results, y, color, column_of_interest="hems_result",
+                                           show_group_averages=True):
+    resource_use_only = run_results[run_results["event_type"].isin(["resource_use", "resource_use_end"])]
+
+    resource_use_wide = (
+        resource_use_only[["P_ID", "run_number", "event_type", "timestamp_dt",
+                           "callsign_group", "vehicle_type", "callsign", column_of_interest]]
+        .pivot(index=["P_ID", "run_number", "callsign_group", "vehicle_type", "callsign", column_of_interest],
+               columns="event_type", values="timestamp_dt").reset_index()
+               )
+
+        # If utilisation start time is missing, then set to start of model + warm-up time (if relevant)
+    # as can assume this is a call that started before the warm-up period elapsed but finished
+    # after the warm-up period elapsed
+    # TODO: need to add in a check to ensure this only happens for calls at the end of the model,
+    # not due to errors elsewhere that could fail to assign a resource end time
+    resource_use_wide = _processing_functions.fill_missing_values(
+        resource_use_wide, "resource_use",
+        _processing_functions.get_param("warm_up_end_date", pd.read_csv("data/run_params_used.csv"))
+        )
+
+    # Calculate number of minutes the attending resource was in use on each call
+    resource_use_wide["resource_use_duration"] = _processing_functions.calculate_time_difference(
+        resource_use_wide, 'resource_use', 'resource_use_end', unit='minutes'
+        )
+
+    # Calculate average duration per HEMS result
+    mean_durations = (resource_use_wide
+                      .groupby(y)["resource_use_duration"]
+                      .mean()
+                      .sort_values(ascending=True))
+
+    # Create sorted list of HEMS results
+    sorted_results = mean_durations.index.tolist()
+
+    fig = px.box(resource_use_wide,
+            x="resource_use_duration",
+            y=y,
+            color=color,
+            color_discrete_sequence=list(DAA_COLORSCHEME.values()),
+            category_orders={y: sorted_results},
+            labels={
+                "resource_use_duration": "Resource Use Duration (minutes)",
+                "vehicle_type": "Vehicle Type",
+                "hems_result": "HEMS Result",
+                "outcome": "Patient Outcome",
+                "callsign": "Callsign",
+                "callsign_group": "Callsign Group"
+            },
+            height=900)
+
+    if show_group_averages:
+        # Add vertical lines for group means
+        # Map hems_result to its numerical position on the y-axis
+        # Reversed mapping: top of plot gets highest numeric y-position
+        result_order = sorted_results
+        n = len(result_order)
+        y_positions = {result: n - i - 1 for i, result in enumerate(result_order)}
+
+        for result, avg_duration in mean_durations.items():
+            y_center = y_positions[result]
+            # Plot horizontal line centered at this group
+            fig.add_shape(
+                type="line",
+                x0=avg_duration,
+                x1=avg_duration,
+                y0=y_center - 0.4,
+                y1=y_center + 0.4,
+                xref="x",
+                yref="y",
+                line=dict(color="black", dash="dash"),
+            )
+
+    return fig
 
 
 def calculate_ks_for_job_durations(historical_data_series, simulated_data_series,

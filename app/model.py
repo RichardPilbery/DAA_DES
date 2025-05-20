@@ -72,7 +72,10 @@ with st.sidebar:
     # generate_downloadable_report = st.toggle("Generate a Downloadable Summary of Results", False,
     #                                          help="This will generate a downloadable report. This can slow down the running of the model, so turn this off if you don't need it.")
 
-    debug_messages = st.toggle("Turn on debugging messages", False,
+    debug_messages = st.toggle("Turn on debugging messages",
+                               value=st.session_state.debugging_messages_to_log,
+                               key="key_debugging_messages_to_log",
+                               on_change= lambda: setattr(st.session_state, 'debugging_messages_to_log', st.session_state.key_debugging_messages_to_log),
                                help="This will turn on display of messages in the developer terminal and write logging messages to the log.txt file")
 
     _app_utils.summary_sidebar(quarto_string=quarto_string)
@@ -224,9 +227,9 @@ if button_run_pressed:
             historical_utilisation_df_complete, historical_utilisation_df_summary = (
                 _utilisation_result_calculation.make_RWC_utilisation_dataframe(
                     historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
-                    rota_path="actual_data/HEMS_ROTA.csv",
-                    callsign_path="actual_data/callsign_registration_lookup.csv",
-                    service_path="data/service_dates.csv"
+                    rota_path="tests/rotas_historic/HISTORIC_HEMS_ROTA.csv",
+                    callsign_path="tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv",
+                    service_path="tests/rotas_historic/HISTORIC_service_dates.csv"
                     )
                 )
 
@@ -277,33 +280,63 @@ if button_run_pressed:
 
             with col_ec_cc_sim:
                 st.markdown("#### Simulation Outputs")
-                resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
-                resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
-                missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
-                missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
-                missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
 
-                st.write(f"""
+                resource_requests = (
+                    results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+                    .copy()
+                    )
+
+                resource_requests["care_cat"] = (
+                    resource_requests.apply(
+                        lambda x: "REG - Helicopter Benefit"
+                        if x["heli_benefit"]=="y" and x["care_cat"]=="REG"
+                        else x["care_cat"], axis=1))
+
+                missed_jobs_care_cat_summary = (
+                    resource_requests[["care_cat", "time_type"]]
+                    .value_counts().reset_index(name="jobs")
+                    .sort_values(["care_cat", "time_type"]).copy()
+                    )
+
+                missed_jobs_care_cat_summary["jobs_average"] = (
+                    missed_jobs_care_cat_summary["jobs"] / st.session_state.number_of_runs_input)
+
+                missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+                    (missed_jobs_care_cat_summary["jobs_average"] /
+                    float(st.session_state.sim_duration_input)) * 365
+                    ).round(0)
+
+                missed_jobs_sim_string = f"""
     The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
     - **{get_missed_jobs_fig("CC", missed_jobs_care_cat_summary):.0f} critical care** jobs that would be missed due to no resource being available
     - **{get_missed_jobs_fig("EC", missed_jobs_care_cat_summary):.0f} enhanced care** jobs that would be missed due to no resource being available
     - **{get_missed_jobs_fig("REG", missed_jobs_care_cat_summary):.0f} regular jobs** that would be missed due to no resource being available
-    - of these missed regular jobs, **{get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary):.0f}** may have benefitted from the attendance of a helicopter
-                            """)
+        - of these missed regular jobs, **{get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary):.0f}** may have benefitted from the attendance of a helicopter
+                            """
+
+                st.write(missed_jobs_sim_string)
+
+                quarto_string += "## Missed Jobs\n\n"
+                quarto_string += missed_jobs_sim_string
 
             with col_ec_cc_hist_sim:
                 SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
 
-                st.caption(f"""
+                missed_jobs_historical_comparison = f"""
     As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
     However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
 
     - {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs):.0f} critical care jobs that would be missed due to no resource being available
     - {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs):.0f} enhanced care jobs that would be missed due to no resource being available
     - {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs):.0f} regular jobs that would be missed due to no resource being available
-    - of these missed regular jobs, {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs):.0f} may have benefitted from the attendance of a helicopter
-                            """)
+        - of these missed regular jobs, {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs):.0f} may have benefitted from the attendance of a helicopter
+                            """
+
+                st.caption(missed_jobs_historical_comparison)
+
+                quarto_string += "### Historical Missed Jobs\n\n"
+                quarto_string += missed_jobs_historical_comparison
 
             st.subheader("Resource Utilisation")
 
@@ -974,7 +1007,7 @@ Most users will not need to look at the visualisations in this tab.
             #                                               "Process Analytics", "Process Analytics - Resources"
             #                                               ])
 
-            tab_4_1, tab_4_2, tab_4_3 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes"
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes", "Debug Job Durations"
                                                 ])
 
             with tab_4_1:
@@ -1183,42 +1216,131 @@ the overall time period.*
                     st.caption("Note that these plots only cover patients for whom a resource was available to attend")
 
                     st.subheader("HEMS result by vehicle type")
-                    st.plotly_chart(
-                        _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts)
-                    )
+                    try:
+                        st.plotly_chart(
+                            _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
+                                                                        plot_counts=plot_counts)
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("HEMS result by care category")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
-                                                                   group_cols="care_cat")
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
+                                                                    plot_counts=plot_counts,
+                                                                    group_cols="care_cat")
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("HEMS Result by Outcome")
                     st.caption("Note this sums to 1 within each outcome, not within each hems result")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
-                                                                   group_cols="outcome")
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
+                                                                    plot_counts=plot_counts,
+                                                                    group_cols="outcome")
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("Outcome by Vehicle Type")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(
-                        group_cols="vehicle_type",
-                        outcome_col="outcome",
-                        plot_counts=plot_counts)
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(
+                            df=results_all_runs,
+                            group_cols="vehicle_type",
+                            outcome_col="outcome",
+                            plot_counts=plot_counts)
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("Vehicle Type by Care Cat")
                     st.caption("Note this sums to 1 within each cat, not within each vehicle type")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(
-                         outcome_col="vehicle_type",
-                         group_cols="care_cat",
-                         plot_counts=plot_counts
-                         )
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(
+                            df=results_all_runs,
+                            outcome_col="vehicle_type",
+                            group_cols="care_cat",
+                            plot_counts=plot_counts
+                            )
+                        )
+                    except:
+                        st.write("Error generating chart")
+
+                    st.header("Outcome variation across day")
+
+                    try:
+                        hourly_hems_result_counts = results_all_runs[results_all_runs["time_type"]=="HEMS call start"].groupby(["hems_result", "hour"]).size().reset_index(name="count")
+                        total_per_group = hourly_hems_result_counts.groupby("hour")["count"].transform("sum")
+                        hourly_hems_result_counts["proportion"] = hourly_hems_result_counts["count"] / total_per_group
+
+                        if plot_counts:
+                            y_col_hourly_hems_result = "count"
+                        else:
+                            y_col_hourly_hems_result = "proportion"
+
+                        st.plotly_chart(
+                            px.bar(
+                            hourly_hems_result_counts,
+                            x="hour",
+                            y=y_col_hourly_hems_result,
+                            color="hems_result"
+                            )
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                 explore_outcomes()
+
+
+            with tab_4_4:
+                st.subheader("Duration by HEMS Outcome and Vehicle Type")
+                st.caption("Outcomes are sorted by the average job duration (shortest first)")
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="hems_result", color="vehicle_type",
+                        column_of_interest="hems_result",
+                        show_group_averages=True)
+                )
+
+
+                st.markdown("#### Per-vehicle focus")
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="vehicle_type", color="hems_result",
+                        column_of_interest="hems_result",
+                        show_group_averages=False)
+                )
+
+                st.divider()
+
+                st.subheader("Duration by Patient Outcome and Vehicle Type")
+                st.caption("Outcomes are sorted by the average job duration (shortest first)")
+
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="outcome", color="vehicle_type",
+                        column_of_interest="outcome",
+                        show_group_averages=True)
+                )
+
+                st.markdown("#### Per-vehicle focus")
+
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="vehicle_type", color="outcome",
+                        column_of_interest="outcome",
+                        show_group_averages=False)
+                )
+
 
             # with tab_4_4:
             #     _process_analytics.create_event_log("data/run_results.csv")

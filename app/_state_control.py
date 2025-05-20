@@ -29,7 +29,8 @@ DEFAULT_INPUTS = {
     "rota_initialised": False,
     # "activity_duration_multiplier": 1.0
     "activity_duration_multiplier": 1.0,
-    "master_seed": 42
+    "master_seed": 42,
+    "debugging_messages_to_log": False
 }
 
 # Adjust some parameters depending on whether it is running

@@ -199,3 +199,4 @@ log.txt
 tests/helpers.py
 
 *.ipynb
+data/run_params_used.csv

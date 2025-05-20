@@ -182,22 +182,13 @@ class DistributionFitUtils():
         # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
         self.enhanced_or_critical_care_by_ampds_card_probs()
 
-        # Calculate probably of  patient outcome
-        self.patient_outcome_by_care_category_and_quarter_probs()
-
         # Calculate HEMS result
-        self.hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs()
+        self.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs()
 
-        # Calculate probabily of callsign being allocated to a job based on AMPDS card and hour of day
+        # Calculate probability of callsign being allocated to a job based on AMPDS card and hour of day
         # self.callsign_group_by_ampds_card_and_hour_probs()
         # self.callsign_group_by_ampds_card_probs()
         self.callsign_group_by_care_category()
-
-        # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
-        self.hems_result_by_callsign_group_and_vehicle_type_probs()
-
-        # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
-        self.hems_result_by_care_cat_and_helicopter_benefit_probs()
 
         # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
         self.pt_outcome_by_hems_result_and_care_category_probs()
@@ -205,6 +196,26 @@ class DistributionFitUtils():
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         self.vehicle_type_by_month_probs()
         self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
+
+        # ============= ARCHIVED CODE ================= #
+        # Calculate probably of patient outcome
+        # self.patient_outcome_by_care_category_and_quarter_probs()
+        # ============= END ARCHIVED CODE ================= #
+
+        # ============= ARCHIVED CODE ================= #
+        # self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs()
+        # ============= END ARCHIVED CODE ================= #
+
+        # ============= ARCHIVED CODE ================= #
+        # Calculate probabily of HEMS result being allocated to a job based on callsign and hour of day
+        # self.hems_result_by_callsign_group_and_vehicle_type_probs()
+        # ============= END ARCHIVED CODE ================= #
+
+        # ============= ARCHIVED CODE ================= #
+        # Calculate probability of HEMS result being allocated to a job based on care category and helicopter benefit
+        # self.hems_result_by_care_cat_and_helicopter_benefit_probs()
+        # ============= END ARCHIVED CODE ================= #
+
 
         # Calculate school holidays since servicing schedules typically avoid these dates
         if self.calculate_school_holidays:
@@ -567,7 +578,7 @@ class DistributionFitUtils():
                 return 'EC'
             else:
                 return 'REG'
-            
+
         # There are some values that are missing e.g. CC quarter 1 Deceased
         # I think we've had problems when trying to sample from this kind of thing before
         # As a fallback, ensure that 'missing' combinations are given a count and proportion of 0
@@ -582,48 +593,101 @@ class DistributionFitUtils():
 
         po_cat_counts = po_df.groupby(['pt_outcome', 'care_category', 'quarter']).size().reset_index(name='count')
 
-        merged = pd.merge(all_combinations, po_cat_counts, 
-                      on=['pt_outcome', 'care_category', 'quarter'], 
+        merged = pd.merge(all_combinations, po_cat_counts,
+                      on=['pt_outcome', 'care_category', 'quarter'],
                       how='left').fillna({'count': 0})
         merged['count'] = merged['count'].astype(int)
 
         total_counts = merged.groupby(['care_category', 'quarter'])['count'].transform('sum')
-        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3) 
+        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3)
 
         merged.to_csv('distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv', mode = "w+", index = False)
 
-    def hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self):
+    # def hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs(self):
+    #     """
+
+    #         Calculates the probabilty of a given HEMS result based on
+    #         patient outcome, yearly quarter, vehicle type and callsign group
+
+    #     """
+
+    #     hr_df = self.df[['hems_result', 'quarter', 'pt_outcome', 'vehicle_type', 'callsign_group']].copy()
+
+    #     # There are some values that are missing e.g. CC quarter 1 Deceased
+    #     # I think we've had problems when trying to sample from this kind of thing before
+    #     # As a fallback, ensure that 'missing' combinations are given a count and proportion of 0
+    #     # hems_results = hr_df['hems_result'].unique()
+    #     # outcomes = hr_df['pt_outcome'].unique()
+    #     # vehicle_categories = [x for x in hr_df['vehicle_type'].unique() if pd.notna(x)]
+    #     # callsign_group_categories = hr_df['callsign_group'].unique()
+    #     # quarters = hr_df['quarter'].unique()
+
+    #     # all_combinations = pd.DataFrame(list(itertools.product(hems_results, outcomes, vehicle_categories, callsign_group_categories, quarters)),
+    #     #                             columns=['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])
+
+    #     hr_cat_counts = hr_df.groupby(['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter']).size().reset_index(name='count')
+
+    #     # merged = pd.merge(all_combinations, hr_cat_counts,
+    #     #               on=['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'],
+    #     #               how='left').fillna({'count': 0})
+    #     # merged['count'] = merged['count'].astype(int)
+
+    #     merged = hr_cat_counts
+
+    #     total_counts = merged.groupby(['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])['count'].transform('sum')
+    #     merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3)
+
+    #     merged.to_csv('distribution_data/hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv', mode = "w+", index = False)
+
+    def hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs(self):
         """
 
-            Calculates the probabilty of a given HEMS result based on 
-            patient outcome, yearly quarter, vehicle type and callsign group
+            Calculates the probabilty of a given HEMS result based on
+                - patient outcome
+                - yearly quarter
+                - time of day (7am - 6pm, 7pm - 6am)
+                - vehicle type
+                - and callsign group
 
         """
+        self.df['inc_date'] = pd.to_datetime(self.df['inc_date'])
+        self.df['hour'] = self.df['inc_date'].dt.hour
+        self.df['time_of_day'] = self.df['hour'].apply(lambda x: 'day' if x >= 7 and x <= 18 else "night")
 
-        hr_df = self.df[['quarter', 'pt_outcome', 'vehicle_type', 'callsign_group']].copy()
-            
+        hr_df = self.df[[
+            'hems_result', 'quarter', 'pt_outcome',
+            'vehicle_type', 'callsign_group', 'time_of_day'
+            ]].copy()
+
         # There are some values that are missing e.g. CC quarter 1 Deceased
         # I think we've had problems when trying to sample from this kind of thing before
         # As a fallback, ensure that 'missing' combinations are given a count and proportion of 0
-        outcomes = hr_df['pt_outcome'].unique()
-        vehicle_categories = hr_df['vehicle_type'].unique()
-        callsign_group_categories = hr_df['callsign_group'].unique()
-        quarters = hr_df['quarter'].unique()
+        # hems_results = hr_df['hems_result'].unique()
+        # outcomes = hr_df['pt_outcome'].unique()
+        # vehicle_categories = [x for x in hr_df['vehicle_type'].unique() if pd.notna(x)]
+        # callsign_group_categories = hr_df['callsign_group'].unique()
+        # quarters = hr_df['quarter'].unique()
 
-        all_combinations = pd.DataFrame(list(itertools.product(outcomes, vehicle_categories, callsign_group_categories, quarters)),
-                                    columns=['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])
+        # all_combinations = pd.DataFrame(list(itertools.product(hems_results, outcomes, vehicle_categories, callsign_group_categories, quarters)),
+        #                             columns=['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'])
 
-        hr_cat_counts = hr_df.groupby(['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter']).size().reset_index(name='count')
+        hr_cat_counts = hr_df.groupby(['hems_result', 'pt_outcome',
+                                       'vehicle_type', 'callsign_group',
+                                       'quarter', 'time_of_day']).size().reset_index(name='count')
 
-        merged = pd.merge(all_combinations, hr_cat_counts, 
-                      on=['pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'], 
-                      how='left').fillna({'count': 0})
-        merged['count'] = merged['count'].astype(int)
+        # merged = pd.merge(all_combinations, hr_cat_counts,
+        #               on=['hems_result', 'pt_outcome', 'vehicle_type', 'callsign_group', 'quarter'],
+        #               how='left').fillna({'count': 0})
+        # merged['count'] = merged['count'].astype(int)
 
-        total_counts = merged.groupby(['vehicle_type', 'callsign_group', 'quarter'])['count'].transform('sum')
-        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3) 
+        merged = hr_cat_counts
 
-        merged.to_csv('distribution_data/hems_reults_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs.csv', mode = "w+", index = False)
+        total_counts = merged.groupby(['pt_outcome',
+                                       'vehicle_type', 'callsign_group',
+                                       'quarter', 'time_of_day'])['count'].transform('sum')
+        merged['proportion'] = round(merged['count'] / total_counts.replace(0, 1), 3)
+
+        merged.to_csv('distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv', mode = "w+", index = False)
 
 
 
@@ -747,7 +811,7 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/vehicle_type_probs.csv', mode = "w+")
 
-
+    #========== ARCHIVED CODE ============ #
     def hems_result_by_callsign_group_and_vehicle_type_probs(self):
         """
 
@@ -764,51 +828,54 @@ class DistributionFitUtils():
         hems_counts['proportion'] = round(hems_counts['count'] / total_counts, 4)
 
         hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+", index=False)
+    #========== END ARCHIVED CODE ============ #
 
 
-    def hems_result_by_care_cat_and_helicopter_benefit_probs(self):
-        """
+    #========== ARCHIVED CODE ============ #
+    # def hems_result_by_care_cat_and_helicopter_benefit_probs(self):
+    #     """
 
-            Calculates the probabilty of a specific HEMS result being allocated to
-            a call based on the care category amd whether a helicopter is beneficial
+    #         Calculates the probabilty of a specific HEMS result being allocated to
+    #         a call based on the care category amd whether a helicopter is beneficial
 
-        """
+    #     """
 
-        # Wrangle the data...trying numpy for a change
+    #     # Wrangle the data...trying numpy for a change
 
-        hems_df = (
-            self.df
-            .assign(
-                helicopter_benefit=np.select(
-                    [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y",
-                        self.df["hems_result"].isin([
-                            "Stand Down En Route",
-                            "Landed but no patient contact",
-                            "Stand Down Before Mobile"
-                        ])
-                    ],
-                    ["y", "y", "n"],
-                    default=self.df["helicopter_benefit"]
-                ),
-                care_cat=np.select(
-                    [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y"
-                    ],
-                    ["CC", "EC"],
-                    default="REG"
-                )
-            )
-        )
+    #     hems_df = (
+    #         self.df
+    #         .assign(
+    #             helicopter_benefit=np.select(
+    #                 [
+    #                     self.df["cc_benefit"] == "y",
+    #                     self.df["ec_benefit"] == "y",
+    #                     self.df["hems_result"].isin([
+    #                         "Stand Down En Route",
+    #                         "Landed but no patient contact",
+    #                         "Stand Down Before Mobile"
+    #                     ])
+    #                 ],
+    #                 ["y", "y", "n"],
+    #                 default=self.df["helicopter_benefit"]
+    #             ),
+    #             care_cat=np.select(
+    #                 [
+    #                     self.df["cc_benefit"] == "y",
+    #                     self.df["ec_benefit"] == "y"
+    #                 ],
+    #                 ["CC", "EC"],
+    #                 default="REG"
+    #             )
+    #         )
+    #     )
 
-        hems_counts = hems_df.groupby(['hems_result', 'care_cat', 'helicopter_benefit']).size().reset_index(name='count')
+    #     hems_counts = hems_df.groupby(['hems_result', 'care_cat', 'helicopter_benefit']).size().reset_index(name='count')
 
-        hems_counts['total'] = hems_counts.groupby(['care_cat', 'helicopter_benefit'])['count'].transform('sum')
-        hems_counts['proportion'] = round(hems_counts['count'] / hems_counts['total'], 4)
+    #     hems_counts['total'] = hems_counts.groupby(['care_cat', 'helicopter_benefit'])['count'].transform('sum')
+    #     hems_counts['proportion'] = round(hems_counts['count'] / hems_counts['total'], 4)
 
-        hems_counts.to_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv', mode = "w+", index=False)
+    #     hems_counts.to_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv', mode = "w+", index=False)
+    #========== END ARCHIVED CODE ============ #
 
 
     def pt_outcome_by_hems_result_and_care_category_probs(self):
@@ -1044,11 +1111,11 @@ class DistributionFitUtils():
 
         median_df['total_job_time'] = median_df[[
             'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
-            'time_to_hospital', 'time_to_clear']].sum(axis=1)
+            'time_to_hospital', 'time_to_clear']].sum(axis=1, skipna=True)
 
         # Replacing zeros with NaN to exclude from median calculation
         # since if an HEMS result is Stood down en route, then time_on_scene would be zero and affect the median
-        median_df.replace(0, np.nan, inplace=True)
+        # median_df.replace(0, np.nan, inplace=True)
 
         # Grouping by month and resource_type, calculating medians
         median_times = median_df.groupby(['first_day_of_month', 'vehicle_type']).median(numeric_only=True).reset_index()
@@ -1056,7 +1123,8 @@ class DistributionFitUtils():
         pivot_data = median_times.pivot_table(
             index='first_day_of_month',
             columns='vehicle_type',
-            values=['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital', 'time_to_clear', 'total_job_time']
+            values=['time_allocation', 'time_mobile', 'time_to_scene',
+                    'time_on_scene', 'time_to_hospital', 'time_to_clear', 'total_job_time']
         )
 
         pivot_data.columns = [f"median_{col[1]}_{col[0]}" for col in pivot_data.columns]
@@ -1073,7 +1141,7 @@ class DistributionFitUtils():
         monthly_df = self.df[[
             'inc_date', 'first_day_of_month', 'callsign', 'time_allocation',
             'time_mobile', 'time_to_scene', 'time_on_scene', 'time_to_hospital',
-            'time_to_clear']]
+            'time_to_clear']].copy()
 
         monthly_df['total_time'] = monthly_df.filter(regex=r'^time_').sum(axis=1)
 
@@ -1305,7 +1373,7 @@ class DistributionFitUtils():
         )
         final_df = pd.DataFrame(results.tolist())
 
-        print(final_df)
+        #print(final_df)
 
         # downtime by bin + quarter + reason
         grouped = final_df.groupby(['registration', 'six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
@@ -1356,8 +1424,9 @@ class DistributionFitUtils():
         print("Generating simulation results...")
         removeExistingResults()
 
-        total_runs = 12
-        sim_duration = 60 * 24 * 7 * 52 * 2, # 2 years
+        total_runs = 24
+        sim_years = 2
+        sim_duration = 60 * 24 * 7 * 52 * sim_years
 
         parallelProcessJoblib(
             total_runs=total_runs,
@@ -1370,15 +1439,39 @@ class DistributionFitUtils():
 
         collateRunResults()
 
-    results_all_runs = pd.read_csv("data/run_results.csv")
-    # Also run the model to get some base-case outputs
-    resource_requests = results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"].copy()
-    resource_requests["care_cat"] = resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y" and x["care_cat"]=="REG" else x["care_cat"], axis=1)
-    missed_jobs_care_cat_summary = resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs").sort_values(["care_cat", "time_type"]).copy()
-    missed_jobs_care_cat_summary["jobs_average"] = (missed_jobs_care_cat_summary["jobs"]/12)
-    missed_jobs_care_cat_summary["jobs_per_year_average"] = (missed_jobs_care_cat_summary["jobs_average"]/730*365).round(0)
+        try:
+            results_all_runs = pd.read_csv("data/run_results.csv")
+            # Also run the model to get some base-case outputs
+            resource_requests = (
+                results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+                .copy()
+                )
 
-    missed_jobs_care_cat_summary.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+            resource_requests["care_cat"] = (
+                resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y"
+                                        and x["care_cat"]=="REG" else x["care_cat"],
+                                        axis=1)
+                                        )
+
+            missed_jobs_care_cat_summary = (
+                resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs")
+                .sort_values(["care_cat", "time_type"])
+                .copy()
+                )
+
+            missed_jobs_care_cat_summary["jobs_average"] = (
+                missed_jobs_care_cat_summary["jobs"]/
+                total_runs
+                )
+
+            missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+                (missed_jobs_care_cat_summary["jobs_average"] / float(sim_years*365)*365)
+                ).round(0)
+
+            missed_jobs_care_cat_summary.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+
+        except FileNotFoundError:
+            pass
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils

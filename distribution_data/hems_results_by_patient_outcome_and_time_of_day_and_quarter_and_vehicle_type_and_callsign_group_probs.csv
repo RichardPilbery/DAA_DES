@@ -1,0 +1,180 @@
+hems_result,pt_outcome,vehicle_type,callsign_group,quarter,time_of_day,count,proportion
+Landed but no patient contact,Unknown,car,70,1,day,20,0.351
+Landed but no patient contact,Unknown,car,70,1,night,15,0.231
+Landed but no patient contact,Unknown,car,70,2,day,7,0.184
+Landed but no patient contact,Unknown,car,70,2,night,5,0.147
+Landed but no patient contact,Unknown,car,70,3,day,13,0.217
+Landed but no patient contact,Unknown,car,70,3,night,16,0.267
+Landed but no patient contact,Unknown,car,70,4,day,18,0.265
+Landed but no patient contact,Unknown,car,70,4,night,13,0.188
+Landed but no patient contact,Unknown,car,71,1,day,5,0.179
+Landed but no patient contact,Unknown,car,71,2,day,3,0.12
+Landed but no patient contact,Unknown,car,71,3,day,7,0.269
+Landed but no patient contact,Unknown,car,71,4,day,3,0.097
+Landed but no patient contact,Unknown,car,72,1,day,29,0.397
+Landed but no patient contact,Unknown,car,72,1,night,1,0.5
+Landed but no patient contact,Unknown,car,72,2,day,30,0.375
+Landed but no patient contact,Unknown,car,72,2,night,3,1.0
+Landed but no patient contact,Unknown,car,72,3,day,29,0.367
+Landed but no patient contact,Unknown,car,72,4,day,21,0.328
+Landed but no patient contact,Unknown,helicopter,70,1,day,24,0.19
+Landed but no patient contact,Unknown,helicopter,70,1,night,5,0.119
+Landed but no patient contact,Unknown,helicopter,70,2,day,28,0.152
+Landed but no patient contact,Unknown,helicopter,70,2,night,8,0.119
+Landed but no patient contact,Unknown,helicopter,70,3,day,41,0.217
+Landed but no patient contact,Unknown,helicopter,70,3,night,12,0.188
+Landed but no patient contact,Unknown,helicopter,70,4,day,29,0.201
+Landed but no patient contact,Unknown,helicopter,70,4,night,7,0.226
+Landed but no patient contact,Unknown,helicopter,71,1,day,6,0.188
+Landed but no patient contact,Unknown,helicopter,71,2,day,11,0.229
+Landed but no patient contact,Unknown,helicopter,71,3,day,14,0.255
+Landed but no patient contact,Unknown,helicopter,71,4,day,8,0.25
+Patient Conveyed by HEMS,Conveyed,car,70,1,day,2,0.036
+Patient Conveyed by HEMS,Conveyed,car,70,1,night,1,0.021
+Patient Conveyed by HEMS,Conveyed,car,70,2,day,3,0.081
+Patient Conveyed by HEMS,Conveyed,car,70,2,night,2,0.074
+Patient Conveyed by HEMS,Conveyed,car,70,3,day,2,0.054
+Patient Conveyed by HEMS,Conveyed,car,70,4,day,3,0.051
+Patient Conveyed by HEMS,Conveyed,car,71,4,day,1,0.029
+Patient Conveyed by HEMS,Conveyed,car,72,2,day,1,0.01
+Patient Conveyed by HEMS,Conveyed,car,72,4,day,1,0.016
+Patient Conveyed by HEMS,Conveyed,car,72,4,night,2,1.0
+Patient Conveyed by HEMS,Conveyed,helicopter,70,1,day,53,0.335
+Patient Conveyed by HEMS,Conveyed,helicopter,70,1,night,7,0.269
+Patient Conveyed by HEMS,Conveyed,helicopter,70,2,day,72,0.316
+Patient Conveyed by HEMS,Conveyed,helicopter,70,2,night,15,0.214
+Patient Conveyed by HEMS,Conveyed,helicopter,70,3,day,79,0.38
+Patient Conveyed by HEMS,Conveyed,helicopter,70,3,night,16,0.296
+Patient Conveyed by HEMS,Conveyed,helicopter,70,4,day,47,0.32
+Patient Conveyed by HEMS,Conveyed,helicopter,70,4,night,7,0.269
+Patient Conveyed by HEMS,Conveyed,helicopter,71,1,day,37,0.529
+Patient Conveyed by HEMS,Conveyed,helicopter,71,2,day,34,0.366
+Patient Conveyed by HEMS,Conveyed,helicopter,71,3,day,56,0.444
+Patient Conveyed by HEMS,Conveyed,helicopter,71,4,day,25,0.5
+Patient Conveyed by land with HEMS,Conveyed,car,70,1,day,34,0.618
+Patient Conveyed by land with HEMS,Conveyed,car,70,1,night,36,0.75
+Patient Conveyed by land with HEMS,Conveyed,car,70,2,day,20,0.541
+Patient Conveyed by land with HEMS,Conveyed,car,70,2,night,16,0.593
+Patient Conveyed by land with HEMS,Conveyed,car,70,3,day,26,0.703
+Patient Conveyed by land with HEMS,Conveyed,car,70,3,night,19,0.76
+Patient Conveyed by land with HEMS,Conveyed,car,70,4,day,41,0.695
+Patient Conveyed by land with HEMS,Conveyed,car,70,4,night,30,0.566
+Patient Conveyed by land with HEMS,Conveyed,car,71,1,day,9,0.36
+Patient Conveyed by land with HEMS,Conveyed,car,71,2,day,8,0.276
+Patient Conveyed by land with HEMS,Conveyed,car,71,3,day,5,0.227
+Patient Conveyed by land with HEMS,Conveyed,car,71,4,day,17,0.5
+Patient Conveyed by land with HEMS,Conveyed,car,72,1,day,29,0.296
+Patient Conveyed by land with HEMS,Conveyed,car,72,1,night,1,0.333
+Patient Conveyed by land with HEMS,Conveyed,car,72,2,day,43,0.417
+Patient Conveyed by land with HEMS,Conveyed,car,72,2,night,3,0.5
+Patient Conveyed by land with HEMS,Conveyed,car,72,3,day,30,0.38
+Patient Conveyed by land with HEMS,Conveyed,car,72,4,day,27,0.422
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,1,day,59,0.373
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,1,night,10,0.385
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,2,day,69,0.303
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,2,night,34,0.486
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,3,day,74,0.356
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,3,night,21,0.389
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,4,day,49,0.333
+Patient Conveyed by land with HEMS,Conveyed,helicopter,70,4,night,11,0.423
+Patient Conveyed by land with HEMS,Conveyed,helicopter,71,1,day,10,0.143
+Patient Conveyed by land with HEMS,Conveyed,helicopter,71,2,day,21,0.226
+Patient Conveyed by land with HEMS,Conveyed,helicopter,71,3,day,17,0.135
+Patient Conveyed by land with HEMS,Conveyed,helicopter,71,3,night,1,1.0
+Patient Conveyed by land with HEMS,Conveyed,helicopter,71,4,day,8,0.16
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,1,day,19,0.345
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,1,night,11,0.229
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,2,day,14,0.378
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,2,night,9,0.333
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,3,day,9,0.243
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,3,night,6,0.24
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,4,day,15,0.254
+Patient Treated but not conveyed by HEMS,Conveyed,car,70,4,night,23,0.434
+Patient Treated but not conveyed by HEMS,Conveyed,car,71,1,day,16,0.64
+Patient Treated but not conveyed by HEMS,Conveyed,car,71,2,day,21,0.724
+Patient Treated but not conveyed by HEMS,Conveyed,car,71,3,day,17,0.773
+Patient Treated but not conveyed by HEMS,Conveyed,car,71,4,day,16,0.471
+Patient Treated but not conveyed by HEMS,Conveyed,car,71,4,night,1,1.0
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,1,day,69,0.704
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,1,night,2,0.667
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,2,day,59,0.573
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,2,night,3,0.5
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,3,day,49,0.62
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,3,night,1,1.0
+Patient Treated but not conveyed by HEMS,Conveyed,car,72,4,day,36,0.562
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,1,day,46,0.291
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,1,night,9,0.346
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,2,day,87,0.382
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,2,night,21,0.3
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,3,day,55,0.264
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,3,night,17,0.315
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,4,day,51,0.347
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,70,4,night,8,0.308
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,71,1,day,23,0.329
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,71,2,day,38,0.409
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,71,3,day,53,0.421
+Patient Treated but not conveyed by HEMS,Conveyed,helicopter,71,4,day,17,0.34
+Patient Treated but not conveyed by HEMS,Deceased,car,70,1,day,22,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,1,night,16,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,2,day,10,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,2,night,7,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,3,day,12,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,3,night,12,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,4,day,16,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,70,4,night,10,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,71,1,day,3,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,71,1,night,1,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,71,2,day,10,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,71,3,day,4,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,71,4,day,9,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,1,day,22,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,1,night,1,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,2,day,9,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,2,night,1,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,3,day,12,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,4,day,13,1.0
+Patient Treated but not conveyed by HEMS,Deceased,car,72,4,night,1,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,1,day,40,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,1,night,11,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,2,day,45,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,2,night,14,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,3,day,55,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,3,night,8,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,4,day,41,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,70,4,night,8,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,71,1,day,17,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,71,2,day,8,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,71,3,day,19,1.0
+Patient Treated but not conveyed by HEMS,Deceased,helicopter,71,4,day,11,1.0
+Stand Down,Unknown,car,70,1,day,37,0.649
+Stand Down,Unknown,car,70,1,night,50,0.769
+Stand Down,Unknown,car,70,2,day,31,0.816
+Stand Down,Unknown,car,70,2,night,29,0.853
+Stand Down,Unknown,car,70,3,day,47,0.783
+Stand Down,Unknown,car,70,3,night,44,0.733
+Stand Down,Unknown,car,70,4,day,50,0.735
+Stand Down,Unknown,car,70,4,night,56,0.812
+Stand Down,Unknown,car,71,1,day,23,0.821
+Stand Down,Unknown,car,71,2,day,22,0.88
+Stand Down,Unknown,car,71,3,day,19,0.731
+Stand Down,Unknown,car,71,3,night,1,1.0
+Stand Down,Unknown,car,71,4,day,28,0.903
+Stand Down,Unknown,car,72,1,day,44,0.603
+Stand Down,Unknown,car,72,1,night,1,0.5
+Stand Down,Unknown,car,72,2,day,50,0.625
+Stand Down,Unknown,car,72,3,day,50,0.633
+Stand Down,Unknown,car,72,3,night,3,1.0
+Stand Down,Unknown,car,72,4,day,43,0.672
+Stand Down,Unknown,car,72,4,night,1,1.0
+Stand Down,Unknown,helicopter,70,1,day,102,0.81
+Stand Down,Unknown,helicopter,70,1,night,37,0.881
+Stand Down,Unknown,helicopter,70,2,day,156,0.848
+Stand Down,Unknown,helicopter,70,2,night,59,0.881
+Stand Down,Unknown,helicopter,70,3,day,148,0.783
+Stand Down,Unknown,helicopter,70,3,night,52,0.812
+Stand Down,Unknown,helicopter,70,4,day,115,0.799
+Stand Down,Unknown,helicopter,70,4,night,24,0.774
+Stand Down,Unknown,helicopter,71,1,day,26,0.812
+Stand Down,Unknown,helicopter,71,2,day,37,0.771
+Stand Down,Unknown,helicopter,71,3,day,41,0.745
+Stand Down,Unknown,helicopter,71,4,day,24,0.75
