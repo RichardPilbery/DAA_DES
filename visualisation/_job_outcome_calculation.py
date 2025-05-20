@@ -183,12 +183,18 @@ def get_facet_plot_preferred_outcome_by_hour(results_path="data/run_results.csv"
 
 
 
-def plot_patient_outcomes(group_cols="vehicle_type", outcome_col="hems_result",
+def plot_patient_outcomes(df, group_cols="vehicle_type",
+                          outcome_col="hems_result",
                           plot_counts=False,
                           return_fig=True, run_df_path="data/run_results.csv"):
     df = pd.read_csv(run_df_path)
 
-    patient_outcomes_df = df[df["time_type"] == "HEMS call start"][["P_ID", "run_number", "heli_benefit", "care_cat", "vehicle_type", "hems_result", "outcome"]].reset_index(drop=True)
+    patient_outcomes_df = (
+        df[df["time_type"] == "HEMS call start"]
+        [["P_ID", "run_number", "heli_benefit", "care_cat", "vehicle_type", "hems_result", "outcome"]]
+        .reset_index(drop=True)
+        .copy()
+        )
 
     def calculate_grouped_proportions(df, group_cols, outcome_col):
         """
@@ -214,9 +220,8 @@ def plot_patient_outcomes(group_cols="vehicle_type", outcome_col="hems_result",
 
         return count_df
 
-    patient_outcomes_df_grouped_counts = calculate_grouped_proportions
-    (patient_outcomes_df,
-     group_cols, outcome_col
+    patient_outcomes_df_grouped_counts = calculate_grouped_proportions(
+        patient_outcomes_df, group_cols, outcome_col
      )
 
     if return_fig:
