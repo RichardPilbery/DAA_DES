@@ -1007,7 +1007,7 @@ Most users will not need to look at the visualisations in this tab.
             #                                               "Process Analytics", "Process Analytics - Resources"
             #                                               ])
 
-            tab_4_1, tab_4_2, tab_4_3 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes"
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes", "Debug Job Durations"
                                                 ])
 
             with tab_4_1:
@@ -1297,7 +1297,49 @@ the overall time period.*
                 explore_outcomes()
 
 
+            with tab_4_4:
+                st.subheader("Duration by HEMS Outcome and Vehicle Type")
+                st.caption("Outcomes are sorted by the average job duration (shortest first)")
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="hems_result", color="vehicle_type",
+                        column_of_interest="hems_result",
+                        show_group_averages=True)
+                )
 
+
+                st.markdown("#### Per-vehicle focus")
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="vehicle_type", color="hems_result",
+                        column_of_interest="hems_result",
+                        show_group_averages=False)
+                )
+
+                st.divider()
+
+                st.subheader("Duration by Patient Outcome and Vehicle Type")
+                st.caption("Outcomes are sorted by the average job duration (shortest first)")
+
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="outcome", color="vehicle_type",
+                        column_of_interest="outcome",
+                        show_group_averages=True)
+                )
+
+                st.markdown("#### Per-vehicle focus")
+
+                st.plotly_chart(
+                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
+                        results_all_runs,
+                        y="vehicle_type", color="outcome",
+                        column_of_interest="outcome",
+                        show_group_averages=False)
+                )
 
 
             # with tab_4_4:
