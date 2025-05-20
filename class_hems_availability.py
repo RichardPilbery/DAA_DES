@@ -493,12 +493,12 @@ class HEMSAvailability():
             priority = None
             lookup = None
 
-            # 1. Best case: matches preferred care category *and* is a helicopter
+            # 1. Best case: resource category matches preferred care category *and* is a helicopter
             if h.category == preferred_category and h.vehicle_type == "helicopter":
                 priority = 1
                 lookup = ResourceAllocationReason.MATCH_PREFERRED_CARE_CAT_HELI
 
-            # 2. Next best: matches preferred category, but is a car
+            # 2. Next best: resource category matches preferred care category, but is a car
             elif h.category == preferred_category:
                 priority = 2
                 lookup = ResourceAllocationReason.MATCH_PREFERRED_CARE_CAT_CAR
@@ -819,6 +819,11 @@ class HEMSAvailability():
                 continue # Skip this unit if not usable
 
             # --- HELICOPTER BENEFIT CASE ---
+            # P3 = Helicopter patient
+            # Resources allocated in following order:
+            # IF H71 available = SEND
+            # ELSE H70 available = SEND
+
             if helicopter_benefit == "y":
                 # Priority 1: EC-category helicopter (assumed most beneficial)
                 if h.vehicle_type == "helicopter" and h.category == "EC":
@@ -830,6 +835,11 @@ class HEMSAvailability():
                     hems = h
                     preferred = 2
                     preferred_lookup = ResourceAllocationReason.HELI_MATCH_CC_HELI
+
+                # If no EC or CC helicopters are available, then:
+                # - hems remains None
+                # - preferred_lookup remains at its initial value (ResourceAllocationReason.NONE_AVAILABLE)
+                # - The function exits the loop without assigning a resource.
 
             # --- REGULAR JOB WITH NO SIMULATED HELICOPTER BENEFIT ---
             else:
