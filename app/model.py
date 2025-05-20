@@ -1213,42 +1213,89 @@ the overall time period.*
                     st.caption("Note that these plots only cover patients for whom a resource was available to attend")
 
                     st.subheader("HEMS result by vehicle type")
-                    st.plotly_chart(
-                        _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts)
-                    )
+                    try:
+                        st.plotly_chart(
+                            _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
+                                                                        plot_counts=plot_counts)
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("HEMS result by care category")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
-                                                                   group_cols="care_cat")
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
+                                                                    plot_counts=plot_counts,
+                                                                    group_cols="care_cat")
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("HEMS Result by Outcome")
                     st.caption("Note this sums to 1 within each outcome, not within each hems result")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(plot_counts=plot_counts,
-                                                                   group_cols="outcome")
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
+                                                                    plot_counts=plot_counts,
+                                                                    group_cols="outcome")
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("Outcome by Vehicle Type")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(
-                        group_cols="vehicle_type",
-                        outcome_col="outcome",
-                        plot_counts=plot_counts)
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(
+                            df=results_all_runs,
+                            group_cols="vehicle_type",
+                            outcome_col="outcome",
+                            plot_counts=plot_counts)
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                     st.subheader("Vehicle Type by Care Cat")
                     st.caption("Note this sums to 1 within each cat, not within each vehicle type")
-                    st.plotly_chart(
-                    _job_outcome_calculation.plot_patient_outcomes(
-                         outcome_col="vehicle_type",
-                         group_cols="care_cat",
-                         plot_counts=plot_counts
-                         )
-                    )
+                    try:
+                        st.plotly_chart(
+                        _job_outcome_calculation.plot_patient_outcomes(
+                            df=results_all_runs,
+                            outcome_col="vehicle_type",
+                            group_cols="care_cat",
+                            plot_counts=plot_counts
+                            )
+                        )
+                    except:
+                        st.write("Error generating chart")
+
+                    st.header("Outcome variation across day")
+
+                    try:
+                        hourly_hems_result_counts = results_all_runs[results_all_runs["time_type"]=="HEMS call start"].groupby(["hems_result", "hour"]).size().reset_index(name="count")
+                        total_per_group = hourly_hems_result_counts.groupby("hour")["count"].transform("sum")
+                        hourly_hems_result_counts["proportion"] = hourly_hems_result_counts["count"] / total_per_group
+
+                        if plot_counts:
+                            y_col_hourly_hems_result = "count"
+                        else:
+                            y_col_hourly_hems_result = "proportion"
+
+                        st.plotly_chart(
+                            px.bar(
+                            hourly_hems_result_counts,
+                            x="hour",
+                            y=y_col_hourly_hems_result,
+                            color="hems_result"
+                            )
+                        )
+                    except:
+                        st.write("Error generating chart")
 
                 explore_outcomes()
+
+
+
+
 
             # with tab_4_4:
             #     _process_analytics.create_event_log("data/run_results.csv")
