@@ -231,8 +231,8 @@ def calculate_available_hours_v2(params_df,
 
     daily_available_minutes = theoretical_availability_df_long.copy()
 
-    print("==Daily Available Minutes==")
-    print(daily_available_minutes)
+    # print("==Daily Available Minutes==")
+    # print(daily_available_minutes)
 
     total_avail_minutes = daily_available_minutes.groupby('callsign')[['theoretical_availability']].sum(numeric_only=True).reset_index().rename(columns={'theoretical_availability':'total_available_minutes_in_sim'})
 
@@ -254,8 +254,8 @@ def resource_allocation_outcomes(event_log_df):
          .rename(columns={'time_type': 'Count'})
          .reset_index().rename(columns={'time_type': 'Resource Allocation Attempt Outcome'})
     )
-    print("==_vehicle_calculation.py - resource_allocation_outcomes==")
-    print(resource_allocation_outcomes_df)
+    # print("==_vehicle_calculation.py - resource_allocation_outcomes==")
+    # print(resource_allocation_outcomes_df)
     return resource_allocation_outcomes_df
 
 
