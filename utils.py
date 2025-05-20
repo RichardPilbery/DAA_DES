@@ -345,7 +345,7 @@ class Utils:
         else:
             time_of_day = 'night'
 
-        self.debug(f"{hour}: {time_of_day}")
+        self.debug(f"Hour is {hour}: for hems_result sampling, this is {time_of_day}")
 
         #(self.hems_results_by_patient_outcome_and_quarter_and_vehicle_type_and_callsign_group_probs_df.head())
 

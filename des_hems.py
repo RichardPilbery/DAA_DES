@@ -405,7 +405,7 @@ class DES_HEMS:
                     if hems_res is not None:
                         self.add_patient_result_row(patient, "HEMS Resource Available", "resource_request_outcome")
                         self.add_patient_result_row(patient, hems_res.callsign, "resource_use")
-                        self.debug(f"Patient {patient.id} (preferred callsign group {patient.hems_pref_callsign_group}, preferred resource type {patient.hems_pref_vehicle_type}) sent resource {hems_res.callsign}")
+                        self.debug(f"{patient.current_dt} Patient {patient.id} (preferred callsign group {patient.hems_pref_callsign_group}, preferred resource type {patient.hems_pref_vehicle_type}) sent resource {hems_res.callsign}")
                         self.add_patient_result_row(patient, hems_res.callsign, "callsign_group_resource_use")
 
                 # Check if HEMS result indicates that resource stood down before going mobile or en route
