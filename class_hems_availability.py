@@ -838,6 +838,11 @@ class HEMSAvailability():
                     hems = h
                     preferred_lookup = ResourceAllocationReason.REG_NO_HELI_BENEFIT_GROUP_AND_VEHICLE
                     break
+                # Next best: send a helicopter
+                elif h.vehicle_type == "helicopter" and preferred > 3:
+                    hems = h
+                    preferred = 3
+                    preferred_lookup = ResourceAllocationReason.REG_NO_HELI_BENEFIT_VEHICLE
                 # Next best: match only on preferred callsign group
                 elif h.callsign_group == preferred_group and preferred > 4:
                     hems = h
