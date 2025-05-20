@@ -1424,7 +1424,7 @@ class DistributionFitUtils():
         print("Generating simulation results...")
         removeExistingResults()
 
-        total_runs = 12
+        total_runs = 24
         sim_years = 2
         sim_duration = 60 * 24 * 7 * 52 * sim_years
 
