@@ -72,7 +72,10 @@ with st.sidebar:
     # generate_downloadable_report = st.toggle("Generate a Downloadable Summary of Results", False,
     #                                          help="This will generate a downloadable report. This can slow down the running of the model, so turn this off if you don't need it.")
 
-    debug_messages = st.toggle("Turn on debugging messages", False,
+    debug_messages = st.toggle("Turn on debugging messages",
+                               value=st.session_state.debugging_messages_to_log,
+                               key="key_debugging_messages_to_log",
+                               on_change= lambda: setattr(st.session_state, 'debugging_messages_to_log', st.session_state.key_debugging_messages_to_log),
                                help="This will turn on display of messages in the developer terminal and write logging messages to the log.txt file")
 
     _app_utils.summary_sidebar(quarto_string=quarto_string)
