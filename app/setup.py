@@ -156,8 +156,9 @@ def fleet_setup():
 
     final_df = pd.concat([updated_helos_df, updated_backup_cars_df, updated_cars_df])
 
-    final_df[callsign_lookup_columns].to_csv("actual_data/callsign_registration_lookup.csv", index=False)
-    final_df[models_columns].to_csv("actual_data/service_schedules_by_model.csv", index=False)
+    final_df[callsign_lookup_columns].drop_duplicates().to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+    final_df[models_columns].drop_duplicates().to_csv("actual_data/service_schedules_by_model.csv", index=False)
 
     # hems_rota_default['callsign_group'] = hems_rota_default['callsign_group'].astype('str')
     hems_rota = hems_rota_default[hems_rota_default["callsign"].isin(final_df.callsign.unique())]
