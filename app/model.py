@@ -281,6 +281,10 @@ if button_run_pressed:
             with col_ec_cc_sim:
                 st.markdown("#### Simulation Outputs")
 
+
+
+                # ------- Calculate missed jobs in simulation --------- #
+
                 resource_requests = (
                     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
                     .copy()
@@ -306,13 +310,44 @@ if button_run_pressed:
                     float(st.session_state.sim_duration_input)) * 365
                     ).round(0)
 
+                sim_missed_cc = get_missed_jobs_fig("CC", missed_jobs_care_cat_summary)
+                sim_missed_ec = get_missed_jobs_fig("EC", missed_jobs_care_cat_summary)
+                sim_missed_all_reg = get_missed_jobs_fig("REG", missed_jobs_care_cat_summary) + get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary)
+                sim_missed_reg_heli_benefit = get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary)
+
+                # ----------------------------------------------------------------------- #
+
+                # ======= Calculate missed jobs under historical rotas/conditions ======= #
+                SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+
+                hist_missed_cc = get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs)
+                hist_missed_ec = get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs)
+                hist_missed_all_reg = get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs)+get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs)
+                hist_missed_reg_heli_benefit = get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs)
+                # ======================================================================= #
+
+                # '''''''''''' Calculate the difference '''''''''''' #
+                diff_missed_cc = sim_missed_cc - hist_missed_cc
+                diff_missed_ec = sim_missed_ec - hist_missed_ec
+                diff_missed_all_reg = sim_missed_all_reg - hist_missed_all_reg
+                diff_missed_reg_heli_benefit = sim_missed_reg_heli_benefit - hist_missed_reg_heli_benefit
+
+                def format_diff(value):
+                    if value > 0:
+                        return f":red[+{value:.0f}]"
+                    elif value < 0:
+                        return f":green[{value:.0f}]"
+                    else:
+                        return
+                # '''''''''''''''''''''''''''''''''''''''''''''''''' #
+
                 missed_jobs_sim_string = f"""
     The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
-    - **{get_missed_jobs_fig("CC", missed_jobs_care_cat_summary):.0f} critical care** jobs that would be missed due to no resource being available
-    - **{get_missed_jobs_fig("EC", missed_jobs_care_cat_summary):.0f} enhanced care** jobs that would be missed due to no resource being available
-    - **{get_missed_jobs_fig("REG", missed_jobs_care_cat_summary):.0f} regular jobs** that would be missed due to no resource being available
-        - of these missed regular jobs, **{get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary):.0f}** may have benefitted from the attendance of a helicopter
+    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)} from historical*)
+    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)} from historical*)
+    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)} from historical*)
+        - of these missed regular jobs, **{sim_missed_reg_heli_benefit:.0f}** may have benefitted from the attendance of a helicopter (*{format_diff(diff_missed_reg_heli_benefit)} from historical*)
                             """
 
                 st.write(missed_jobs_sim_string)
@@ -321,16 +356,15 @@ if button_run_pressed:
                 quarto_string += missed_jobs_sim_string
 
             with col_ec_cc_hist_sim:
-                SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
 
                 missed_jobs_historical_comparison = f"""
     As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
     However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
 
-    - {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs):.0f} critical care jobs that would be missed due to no resource being available
-    - {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs):.0f} enhanced care jobs that would be missed due to no resource being available
-    - {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs):.0f} regular jobs that would be missed due to no resource being available
-        - of these missed regular jobs, {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs):.0f} may have benefitted from the attendance of a helicopter
+    - {hist_missed_cc:.0f} critical care jobs that would be missed due to no resource being available
+    - {hist_missed_ec:.0f} enhanced care jobs that would be missed due to no resource being available
+    - {hist_missed_all_reg:.0f} jobs with no predicted CC or EC intervention that would be missed due to no resource being available
+        - of these missed regular jobs, {hist_missed_reg_heli_benefit:.0f} may have benefitted from the attendance of a helicopter
                             """
 
                 st.caption(missed_jobs_historical_comparison)
