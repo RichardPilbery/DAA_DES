@@ -334,20 +334,20 @@ if button_run_pressed:
 
                 def format_diff(value):
                     if value > 0:
-                        return f":red[+{value:.0f}]"
+                        return f"**:red[+{value:.0f}]** from historical"
                     elif value < 0:
-                        return f":green[{value:.0f}]"
+                        return f"**:green[{value:.0f}]** from historical"
                     else:
-                        return
+                        return "**:gray[no difference]** from historical"
                 # '''''''''''''''''''''''''''''''''''''''''''''''''' #
 
                 missed_jobs_sim_string = f"""
     The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
-    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)} from historical*)
-    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)} from historical*)
-    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)} from historical*)
-        - of these missed regular jobs, **{sim_missed_reg_heli_benefit:.0f}** may have benefitted from the attendance of a helicopter (*{format_diff(diff_missed_reg_heli_benefit)} from historical*)
+    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)}*)
+    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)}*)
+    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)}*)
+        - of these missed regular jobs, **{sim_missed_reg_heli_benefit:.0f}** may have benefitted from the attendance of a helicopter (*{format_diff(diff_missed_reg_heli_benefit)}*)
                             """
 
                 st.write(missed_jobs_sim_string)
