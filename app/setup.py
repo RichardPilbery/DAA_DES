@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import time, datetime
+import calendar
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
@@ -176,11 +177,93 @@ updated_helos_df, updated_cars_df  = fleet_setup()
 
 st.markdown("#### Set the Fleet Rota Details")
 
-col_summer, col_winter, col_summer_winter_spacing = st.columns(3)
-with col_summer:
-    st.caption(get_text("summer_rota_help", text_df))
-with col_winter:
-    st.caption(get_text("winter_rota_help", text_df))
+@st.fragment
+def rota_start_end_dates():
+
+    # Mapping months to numbers
+    month_mapping = {
+        'January': 1, 'February': 2, 'March': 3, 'April': 4,
+        'May': 5, 'June': 6, 'July': 7, 'August': 8,
+        'September': 9, 'October': 10, 'November': 11, 'December': 12
+    }
+
+    reverse_month_mapping = {v: k for k, v in month_mapping.items()}
+
+    col_summer_start, col_summer_end, col_summer_spacing = st.columns(3)
+
+    with col_summer_start:
+        start_month = st.selectbox(
+            "Select **start** month (inclusive) for Summer Rota",
+            list(month_mapping.keys()),
+            index=st.session_state.summer_start_month_index,
+            key="key_summer_start_month_index",
+            on_change= lambda: setattr(st.session_state,
+                                       'summer_start_month_index',
+                                       # note index is 1 less than actual month due to zero indexing in python
+                                       month_mapping[st.session_state.key_summer_start_month_index]-1),
+            )
+    with col_summer_end:
+        end_month = st.selectbox(
+            "Select **end** month (inclusive) for Summer Rota",
+            list(month_mapping.keys()),
+            index=st.session_state.summer_end_month_index,
+            key="key_summer_end_month_index",
+            on_change= lambda: setattr(st.session_state,
+                                       'summer_end_month_index',
+                                       # note index is 1 less than actual month due to zero indexing in python
+                                       month_mapping[st.session_state.key_summer_end_month_index]-1),
+
+            )
+
+
+    # Convert selected months to numbers
+    start_month_num = month_mapping[start_month]
+    end_month_num = month_mapping[end_month]
+
+    # Ensure the summer end month is later than the start month
+    if start_month_num <= end_month_num:
+        # Summer rota
+        summer_start_date = f"1st {start_month}"
+        summer_end_day = calendar.monthrange(2024, end_month_num)[1]  # Assume leap year for Feb
+        summer_end_date = f"{summer_end_day}th {end_month}"
+
+        # Winter rota
+        winter_start_num = (end_month_num % 12) + 1  # month after summer end
+        winter_end_num = (start_month_num - 1) if start_month_num > 1 else 12  # month before summer start
+
+        winter_start_date = f"1st {reverse_month_mapping[winter_start_num]}"
+        winter_end_day = calendar.monthrange(2024, winter_end_num)[1]  # same leap year assumption
+        winter_end_date = f"{winter_end_day}th {reverse_month_mapping[winter_end_num]}"
+
+        # Output
+        st.write(f"☀️ Summer rota runs from {summer_start_date} to {summer_end_date} (inclusive)")
+        st.write(f"❄️ Winter rota runs from {winter_start_date} to {winter_end_date} (inclusive)")
+
+        pd.DataFrame([
+            {'what': 'summer_start_month', 'month': start_month_num},
+            {'what': 'summer_end_month', 'month': end_month_num}]
+            ).to_csv("actual_data/rota_start_end_months.csv", index=False)
+    else:
+        default_start_month = DEFAULT_INPUTS["summer_start_month_index"] + 1
+        default_end_month = DEFAULT_INPUTS["summer_end_month_index"] + 1
+        default_start_month_name = reverse_month_mapping[default_start_month]
+        default_end_month_name = reverse_month_mapping[default_end_month]
+
+        default_summer_end_day = calendar.monthrange(2024, end_month_num)[1]  # Assume leap year for Feb
+        default_summer_end_date = f"{default_summer_end_day}th {default_end_month_name}"
+        st.error(f"""End month must be later than start month. Using default summer start of 1st {default_start_month_name} and summer end of {default_summer_end_date}.""")
+        pd.DataFrame([
+            {'what': 'summer_start_month', 'month': default_start_month},
+            {'what': 'summer_end_month', 'month': default_end_month}]
+            ).to_csv("actual_data/rota_start_end_months.csv", index=False)
+
+rota_start_end_dates()
+
+# col_summer, col_winter, col_summer_winter_spacing = st.columns(3)
+# with col_summer:
+#     st.caption(get_text("summer_rota_help", text_df))
+# with col_winter:
+#     st.caption(get_text("winter_rota_help", text_df))
 
 
 

@@ -30,7 +30,9 @@ DEFAULT_INPUTS = {
     # "activity_duration_multiplier": 1.0
     "activity_duration_multiplier": 1.0,
     "master_seed": 42,
-    "debugging_messages_to_log": False
+    "debugging_messages_to_log": False,
+    "summer_start_month_index": 3,
+    "summer_end_month_index": 9
 }
 
 # Adjust some parameters depending on whether it is running
