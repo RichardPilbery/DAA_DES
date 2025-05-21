@@ -119,6 +119,7 @@ def fleet_setup():
                                 (potential_fleet["callsign_count"] == 1)]
 
     default_helos = default_helos.head(num_helicopters)
+    default_helos["has_car"] = True
 
     default_cars = default_cars.head(num_cars)
 
@@ -130,7 +131,17 @@ def fleet_setup():
         hide_index=True
         )
 
-    updated_helos_df.to_csv('actual_data/callsign_registration_lookup.csv', index=False)
+    st.markdown("#### Define the Backup Cars")
+
+    backup_cars = potential_fleet[(potential_fleet["vehicle_type"]=="car") &
+                                  (potential_fleet["callsign_count"] > 1) &
+                                  (potential_fleet["callsign_group"]).isin(updated_helos_df[updated_helos_df["has_car"]==True]["callsign_group"].unique())
+                                  ]
+
+    updated_backup_cars_df = st.data_editor(
+        backup_cars,
+        hide_index=True
+    )
 
     st.markdown("### Define the Cars")
     st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
@@ -140,13 +151,13 @@ def fleet_setup():
         hide_index=True
         )
 
-    final_df = pd.concat([updated_helos_df,updated_cars_df])
+    final_df = pd.concat([updated_helos_df, updated_backup_cars_df, updated_cars_df])
 
     final_df[callsign_lookup_columns].to_csv("actual_data/callsign_registration_lookup.csv", index=False)
     final_df[models_columns].to_csv("actual_data/service_schedules_by_model.csv", index=False)
 
-    hems_rota_default['callsign_group'] = hems_rota_default['callsign_group'].astype('str')
-    hems_rota = hems_rota_default[hems_rota_default["callsign_group"].isin(final_df.callsign_group.unique())]
+    # hems_rota_default['callsign_group'] = hems_rota_default['callsign_group'].astype('str')
+    hems_rota = hems_rota_default[hems_rota_default["callsign"].isin(final_df.callsign.unique())]
     hems_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
 
     return updated_helos_df, updated_cars_df
