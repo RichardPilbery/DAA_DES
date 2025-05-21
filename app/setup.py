@@ -259,6 +259,107 @@ def rota_start_end_dates():
 
 rota_start_end_dates()
 
+@st.fragment()
+def rota_setup():
+    # Load the default callsigns
+    callsign_registration_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+
+    # Load default rota config
+    try:
+        df_default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+    except FileNotFoundError:
+        st.error("HEMS_ROTA_DEFAULT.csv not found!")
+        st.stop()
+
+    st.title("HEMS Rota Builder")
+
+    rota_data = {}
+
+    for idx, row in callsign_registration_lookup_df.iterrows():
+        callsign = row['callsign']
+        model = row['model']
+
+        st.subheader(f"Set up rota for {callsign} ({model})")
+
+        # Try to load existing config rows for this callsign
+        existing_rota = df_default_rota[df_default_rota["callsign"] == callsign].copy()
+
+        if not existing_rota.empty:
+            num_rows = len(existing_rota)
+        else:
+            num_rows = st.number_input(f"Number of shifts for {callsign}", min_value=1, max_value=5, value=2, key=f"{callsign}_num_rows")
+
+            # Determine default category
+            default_category = "EC" if "Airbus" in model else "CC"
+
+            existing_rota = pd.DataFrame({
+                "callsign": [callsign]*num_rows,
+                "category": [default_category]*num_rows,
+                "vehicle_type": ["helicopter" if "Airbus" in model else "car"]*num_rows,
+                "callsign_group": [callsign[-2:]]*num_rows,
+                "summer_start": [7]*num_rows,
+                "winter_start": [7]*num_rows,
+                "summer_end": [19]*num_rows,
+                "winter_end": [19]*num_rows,
+            })
+
+        # Data editor
+        edited_df = st.data_editor(
+            existing_rota.set_index('callsign'),
+            column_order=["category", "summer_start", "summer_end", "winter_start", "winter_end"],
+            column_config={
+                "category": st.column_config.SelectboxColumn(
+                    label="Category",
+                    options=["CC", "EC"],
+                    required=True
+                ),
+                "summer_start": st.column_config.NumberColumn(
+                    label="Summer Start Hour",
+                    min_value=0,
+                    max_value=23,
+                    step=1,
+                    required=True
+                ),
+                "summer_end": st.column_config.NumberColumn(
+                    label="Summer End Hour",
+                    min_value=0,
+                    max_value=23,
+                    step=1,
+                    required=True
+                ),
+                "winter_start": st.column_config.NumberColumn(
+                    label="Winter Start Hour",
+                    min_value=0,
+                    max_value=23,
+                    step=1,
+                    required=True
+                ),
+                "winter_end": st.column_config.NumberColumn(
+                    label="Winter End Hour",
+                    min_value=0,
+                    max_value=23,
+                    step=1,
+                    required=True
+                )
+            },
+            hide_index=True,
+            num_rows="dynamic",
+            key=f"{callsign}_editor"
+        )
+
+        rota_data[callsign] = edited_df.reset_index(drop=False)
+
+    # Preview of full rota
+    st.markdown("## Full Rota Preview")
+    full_rota_df = pd.concat(rota_data.values(), ignore_index=True)
+    full_rota_df["callsign_group"] = full_rota_df["callsign"].str.extract(r"(\d+)")
+    full_rota_df = full_rota_df[df_default_rota.columns]
+    st.dataframe(full_rota_df, hide_index=True)
+    full_rota_df.to_csv('actual_data/HEMS_ROTA.csv', index=False)
+    st.write("Final rota automatically saved!")
+
+rota_setup()
+
 # col_summer, col_winter, col_summer_winter_spacing = st.columns(3)
 # with col_summer:
 #     st.caption(get_text("summer_rota_help", text_df))
