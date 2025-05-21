@@ -98,14 +98,14 @@ class HEMSAvailability():
         # Daily servicing check (in case sim starts during a service)
         [dow, hod, weekday, month, qtr, current_dt] = self.utilityClass.date_time_of_call(self.sim_start_date, self.env.now)
 
-        self.daily_servicing_check(current_dt, hod, qtr)
+        self.daily_servicing_check(current_dt, hod, month)
 
     def debug(self, message: str):
         if self.print_debug_messages:
             logging.debug(message)
             #print(message)
 
-    def daily_servicing_check(self, current_dt: datetime, hour: int, qtr: int):
+    def daily_servicing_check(self, current_dt: datetime, hour: int, month: int):
         """
             Function to iterate through the store and trigger the service check
             function in the HEMS class
@@ -167,13 +167,13 @@ class HEMSAvailability():
             self.debug(f"HEMS [{h.category} / {h.registration}] moved to service store")
             self.debug("***********")
 
-        self.debug(self.current_store_status(hour, qtr))
-        self.debug(self.current_store_status(hour, qtr, 'service'))
+        self.debug(self.current_store_status(hour, month))
+        self.debug(self.current_store_status(hour, month, 'service'))
 
         [dow, hod, weekday, month, qtr, current_dt] = self.utilityClass.date_time_of_call(self.sim_start_date, self.env.now)
         for h in self.store.items:
             if h.registration == 'g-daan':
-                self.debug(f"[{self.env.now}] g-daan status: in_use={h.in_use}, callsign={h.callsign}, group={h.callsign_group}, on_shift={h.hems_resource_on_shift(hod, qtr)}")
+                self.debug(f"[{self.env.now}] g-daan status: in_use={h.in_use}, callsign={h.callsign}, group={h.callsign_group}, on_shift={h.hems_resource_on_shift(hod, month)}")
 
         self.debug('------ END OF DAILY SERVICING CHECK -------')
 
@@ -336,7 +336,7 @@ class HEMSAvailability():
     def resource_allocation_lookup(self, reason: ResourceAllocationReason) -> str:
         return self.LOOKUP_LIST[reason.value]
 
-    def current_store_status(self, hour, qtr, store = 'resource') -> list[str]:
+    def current_store_status(self, hour, month, store = 'resource') -> list[str]:
             """
                 Debugging function to return current state of store
             """
@@ -347,10 +347,10 @@ class HEMSAvailability():
 
             if store == 'resource':
                 for h in self.store.items:
-                    current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(hour, qtr)} {h.registration})")
+                    current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(hour, month)} {h.registration})")
             else:
                 for h in self.serviceStore.items:
-                    current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(hour, qtr)} {h.registration})")
+                    current_store_items.append(f"{h.callsign} ({h.category} online: {h.hems_resource_on_shift(hour, month)} {h.registration})")
 
             return current_store_items
 
@@ -474,7 +474,7 @@ class HEMSAvailability():
             if (
                 h.in_use or  # Already dispatched
                 h.being_serviced or # Currently under maintenance
-                not h.hems_resource_on_shift(pt.hour, pt.qtr) or # Not scheduled for shift now
+                not h.hems_resource_on_shift(pt.hour, pt.month) or # Not scheduled for shift now
                 h.callsign_group in self.active_callsign_groups or # Another unit from this group is active (so crew is engaged elsewhere)
                 h.registration in self.active_registrations # This specific unit is already dispatched
             ):
@@ -589,7 +589,7 @@ class HEMSAvailability():
                         r != primary and
                         r.callsign_group == pt.hems_callsign_group and
                         r.category == pt.hems_category and
-                        r.hems_resource_on_shift(pt.hour, pt.qtr) and
+                        r.hems_resource_on_shift(pt.hour, pt.month) and
                         r.callsign_group not in self.active_callsign_groups and
                         r.registration not in self.active_registrations and
                         r.callsign not in self.active_callsigns
@@ -803,7 +803,7 @@ class HEMSAvailability():
             if (
                 h.in_use or # Already dispatched
                 h.being_serviced or # Currently under maintenance
-                not h.hems_resource_on_shift(pt.hour, pt.qtr) or # Not scheduled for shift now
+                not h.hems_resource_on_shift(pt.hour, pt.month) or # Not scheduled for shift now
                 h.callsign_group in self.active_callsign_groups or  # Another unit from this group is active (so crew is engaged elsewhere)
                 h.registration in self.active_registrations # This specific unit is already dispatched
             ):
@@ -921,7 +921,7 @@ class HEMSAvailability():
                         r != primary and
                         r.callsign_group == pt.hems_callsign_group and
                         r.category == pt.hems_category and
-                        r.hems_resource_on_shift(pt.hour, pt.qtr) and
+                        r.hems_resource_on_shift(pt.hour, pt.month) and
                         r.callsign_group not in self.active_callsign_groups and
                         r.registration not in self.active_registrations and
                         r.callsign not in self.active_callsigns
