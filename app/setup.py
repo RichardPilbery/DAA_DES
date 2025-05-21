@@ -128,7 +128,8 @@ def fleet_setup():
 
     updated_helos_df = st.data_editor(
         default_helos,
-        hide_index=True
+        hide_index=True,
+        key="helicopter_data_editor"
         )
 
     st.markdown("#### Define the Backup Cars")
@@ -140,7 +141,8 @@ def fleet_setup():
 
     updated_backup_cars_df = st.data_editor(
         backup_cars,
-        hide_index=True
+        hide_index=True,
+        key="backup_car_data_editor"
     )
 
     st.markdown("### Define the Cars")
@@ -148,7 +150,8 @@ def fleet_setup():
 
     updated_cars_df = st.data_editor(
         default_cars,
-        hide_index=True
+        hide_index=True,
+        key="standalone_car_data_editor"
         )
 
     final_df = pd.concat([updated_helos_df, updated_backup_cars_df, updated_cars_df])
