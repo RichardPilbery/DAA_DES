@@ -240,7 +240,7 @@ if button_run_pressed:
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
-                perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
+                total_average_calls_received_per_year, perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
 
                 quarto_string += "## Calls Not Attended\n\n"
 
@@ -252,7 +252,7 @@ if button_run_pressed:
                             border=True)
                     missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
                     st.caption(f"**{perc_unattended_normalised}**")
-                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically*")
+                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically (approximately {total_average_calls_received_per_year*(float(missed_calls_hist_string)/100):.0f} calls per year)*")
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
@@ -475,6 +475,11 @@ In this case, we would be looking for two things to be consistent across the top
 
 """)
 
+            # NOTE!
+            # The final plot in this tab (summary of missed calls over runs) is not created
+            # # until tab_2_4, when a related plot is created.
+            # It then gets put here.
+
             with tab_2_2:
                 @st.fragment
                 def create_utilisation_rwc_plot():
@@ -573,8 +578,14 @@ dataset.
                     df_hist_breakdown["what"] = "Historical (Simulated with Historical Rotas)"
                     st.subheader("Variation in projected missed calls across simulation runs")
                     st.write("This is compared with an estimate of the missed calls per year by category using historic rotas")
+
                     st.plotly_chart(
                         _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown)
+                    )
+
+                    tab_2_1.plotly_chart(
+                        _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown,
+                                                                           what="summary")
                     )
 
                     st.subheader("Job Categories - Simulation vs Historical")
