@@ -654,40 +654,43 @@ fleet_setup()
 
 # fleet_editors(final_helo_df, final_car_df)
 
-st.divider()
+# st.divider()
 
-st.header("Demand Parameters")
+# st.header("Demand Parameters")
 
-st.caption("""
-At present it is only possible to apply an overall demand adjustment, which increases the number
-of calls that will be received per day in the model. You can use the slider below to carry out
-this adjustment.
+# st.caption("""
+# At present it is only possible to apply an overall demand adjustment, which increases the number
+# of calls that will be received per day in the model. You can use the slider below to carry out
+# this adjustment.
 
-In future, the model will allow more granular control of additional demand.
-""")
+# In future, the model will allow more granular control of additional demand.
+# """)
 
-demand_adjust_type = "Overall Demand Adjustment"
+# demand_adjust_type = "Overall Demand Adjustment"
 
-# TODO: Add to session state
-# demand_adjust_type = st.radio("Adjust High-level Demand",
-#          ["Overall Demand Adjustment",
-#           "Per Season Demand Adjustment",
-#           "Per AMPDS Code Demand Adjustment"],
-#           key="demand_adjust_type",
-#           horizontal=True,
-#           disabled=True
-#           )
+# # TODO: Add to session state
+# # demand_adjust_type = st.radio("Adjust High-level Demand",
+# #          ["Overall Demand Adjustment",
+# #           "Per Season Demand Adjustment",
+# #           "Per AMPDS Code Demand Adjustment"],
+# #           key="demand_adjust_type",
+# #           horizontal=True,
+# #           disabled=True
+# #           )
 
-if demand_adjust_type == "Overall Demand Adjustment":
-    overall_demand_mult = st.slider(
-        "Overall Demand Adjustment",
-        min_value=90,
-        max_value=200,
-        value=st.session_state.overall_demand_mult,
-        format="%d%%",
-        on_change= lambda: setattr(st.session_state, 'overall_demand_mult', st.session_state.key_overall_demand_mult),
-        key="key_overall_demand_mult"
-        )
+# if demand_adjust_type == "Overall Demand Adjustment":
+#     overall_demand_mult = st.slider(
+#         "Overall Demand Adjustment",
+#         min_value=90,
+#         max_value=200,
+#         value=st.session_state.overall_demand_mult,
+#         format="%d%%",
+#         on_change= lambda: setattr(st.session_state, 'overall_demand_mult', st.session_state.key_overall_demand_mult),
+#         key="key_overall_demand_mult"
+#         )
+
+overall_demand_mult = 100
+
 # elif demand_adjust_type == "Per Season Demand Adjustment":
 #     season_demand_col_1, season_demand_col_2, season_demand_col_3, season_demand_col_4 = st.columns(4)
 
