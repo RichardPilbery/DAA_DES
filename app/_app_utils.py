@@ -355,38 +355,90 @@ hr {
             )
         )
 
-        for idx, row in rota[rota["vehicle_type"]=="helicopter"].iterrows():
-            helicopter_rota_string = f"""
-{row["callsign"]} is an {row["model"]} and runs a {row["category"]} service
-from {to_military_time(row["summer_start"])}
-to {to_military_time(row["summer_end"])} in summer
-and {to_military_time(row["winter_start"])}
-to {to_military_time(row["winter_end"])} in winter.
-"""
-            # quarto_string += "🚁 "
-            quarto_string += helicopter_rota_string
-            st.caption(helicopter_rota_string)
+        # Group by helicopter resources
+        helicopters = rota[rota["vehicle_type"] == "helicopter"]
+        grouped_heli = helicopters.groupby("callsign")
+
+        quarto_string = ""
+
+        for callsign, group in grouped_heli:
+            model = group.iloc[0]["model"]
+            header = f"{callsign} is an {model} and\n"
+            body = ""
+            for _, row in group.iterrows():
+                summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
+                winter = f"\n- runs a {row['category']} service from {to_military_time(row['winter_start'])} to {to_military_time(row['winter_end'])} in winter"
+                body += f"    {summer}\n    {winter}\n\n"
+            result = header + body + "\n"
+            quarto_string += result
+            st.caption(result)
+
+        # Grouping callsign groups
+        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
+        callsign_group_counts.columns = ['callsign_group', 'count']
+
+        extra_cars_only = list(callsign_group_counts[callsign_group_counts['count'] == 1]['callsign_group'].values)
+        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count'] > 1]['callsign_group'].values)
+
+        # Backup cars
+        backup_cars = rota[rota["callsign_group"].isin(backup_cars_only) & (rota["vehicle_type"] != "helicopter")]
+        grouped_backup = backup_cars.groupby("callsign")
+
+        quarto_string += "\n\n### Backup Cars\n\n"
+
+        for callsign, car_group in grouped_backup:
+            model = car_group.iloc[0]["model"]
+            group_id = car_group.iloc[0]["callsign_group"]
+
+            heli_group = helicopters[helicopters["callsign_group"] == group_id]
+
+            # Compare car and heli rotas for group
+            identical = (
+                car_group[["summer_start", "summer_end", "winter_start", "winter_end", "category"]]
+                .reset_index(drop=True)
+                .equals(
+                    heli_group[["summer_start", "summer_end", "winter_start", "winter_end", "category"]]
+                    .reset_index(drop=True)
+                )
+            )
+
+            if identical:
+                message = f"The backup car {callsign} in group {group_id} has the same rota as the helicopter.\n\n"
+                quarto_string += message
+                st.caption(message)
+            else:
+                message = f"The backup car {callsign} in group {group_id} has a different rota to the helicopter.\n\n"
+                quarto_string += message
+                st.caption(message)
+                header = f"{callsign} is a {model} and\n"
+                body = ""
+                for _, row in car_group.iterrows():
+                    summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
+                    winter = f"\n- runs a {row['category']} service from {to_military_time(row['winter_start'])} to {to_military_time(row['winter_end'])} in winter"
+                    body += f"    {summer}\n    {winter}\n\n"
+                result = header + body + "\n"
+                quarto_string += result
+                st.caption(result)
+
+        # Extra (non-backup) cars
+        extra_cars = rota[rota["callsign_group"].isin(extra_cars_only) & (rota["vehicle_type"] != "helicopter")]
+        grouped_extra = extra_cars.groupby("callsign")
 
         num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
-        quarto_string += "\n\n### "
-        quarto_string += num_cars_string
-        quarto_string += "\n\n"
+        quarto_string += "\n\n### " + num_cars_string + "\n\n"
         st.write(num_cars_string)
-        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
-        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
 
-
-        for idx, row in rota[rota["callsign_group"].isin(backup_cars_only)].iterrows():
-            car_rota_string = f"""
-{row["callsign"]} is a {row["model"]} and runs
-from {to_military_time(row["summer_start"])}
-to {to_military_time(row["summer_end"])} in summer
-and {to_military_time(row["winter_start"])}
-to {to_military_time(row["winter_end"])} in winter.
-"""
-            # quarto_string += "🚗 "
-            quarto_string += car_rota_string
-            st.caption(car_rota_string)
+        for callsign, group in grouped_extra:
+            model = group.iloc[0]["model"]
+            header = f"{callsign} is a {model} and\n"
+            body = ""
+            for _, row in group.iterrows():
+                summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
+                winter = f"\n- runs a {row['category']} service from {to_military_time(row['winter_start'])} to {to_military_time(row['winter_end'])} in winter"
+                body += f"    {summer}\n    {winter}\n\n"
+            result = header + body + "\n"
+            quarto_string += result
+            st.caption(result)
 
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":

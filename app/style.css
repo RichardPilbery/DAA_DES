@@ -7,7 +7,8 @@
 [data-testid="stSidebar"] h3,
 [data-testid="stSidebar"] h4,
 [data-testid="stSidebar"] a,
-[data-testid="stSidebar"] p  {
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] ul  {
     color: white
 }
 
