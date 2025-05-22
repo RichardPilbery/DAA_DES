@@ -132,15 +132,18 @@ def fleet_setup():
         default_helos,
         hide_index=True,
         key="helicopter_data_editor",
-        column_order=["callsign", "callsign_group", "registration", "has_car", "model", "service_schedule_months", "service_duration_weeks"],
+        column_order=["callsign",
+                    #   "callsign_group",
+                      "registration", "has_car", "model", #"service_schedule_months", "service_duration_weeks"
+                      ],
         column_config={
                         "registration": st.column_config.TextColumn(label="Registration", required=True),
                         "callsign": st.column_config.TextColumn(label="Callsign", required=True),
                         "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
                         "has_car": st.column_config.CheckboxColumn(label="Has a Backup Car"),
                         "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]["model"].unique(), required=True),
-                        "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
-                        "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
                     },
         )
 
@@ -155,14 +158,17 @@ def fleet_setup():
         backup_cars,
         hide_index=True,
         key="backup_car_data_editor",
-        column_order=["callsign", "callsign_group", "registration", "model", "service_schedule_months", "service_duration_weeks"],
+        column_order=["callsign",
+                    #   "callsign_group",
+                      "registration", "model", #"service_schedule_months", "service_duration_weeks"
+                      ],
         column_config={
                         "registration": st.column_config.TextColumn(label="Registration", required=True),
                         "callsign": st.column_config.TextColumn(label="Callsign", required=True),
                         "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
                         "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
-                        "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
-                        "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
                     },
     )
 
@@ -173,14 +179,18 @@ def fleet_setup():
         default_cars,
         hide_index=True,
         key="standalone_car_data_editor",
-        column_order=["callsign", "callsign_group", "registration", "model", "service_schedule_months", "service_duration_weeks"],
+        column_order=["callsign",
+                    #   "callsign_group",
+                      "registration", "model",
+                    #   "service_schedule_months", "service_duration_weeks"
+                      ],
         column_config={
                         "registration": st.column_config.TextColumn(label="Registration", required=True),
                         "callsign": st.column_config.TextColumn(label="Callsign", required=True),
-                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        # "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
                         "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
-                        "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
-                        "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
                     },
         )
 
