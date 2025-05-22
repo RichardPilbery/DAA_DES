@@ -198,11 +198,17 @@ def fleet_setup():
 
     final_df[callsign_lookup_columns].drop_duplicates().to_csv("actual_data/callsign_registration_lookup.csv", index=False)
 
-    final_df[models_columns].drop_duplicates().to_csv("actual_data/service_schedules_by_model.csv", index=False)
+    # final_df[models_columns].drop_duplicates().to_csv("actual_data/service_schedules_by_model.csv", index=False)
 
     # hems_rota_default['callsign_group'] = hems_rota_default['callsign_group'].astype('str')
     hems_rota = hems_rota_default[hems_rota_default["callsign"].isin(final_df.callsign.unique())]
     hems_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+    with st.expander("Click here to view the final fleet dataframes"):
+        st.markdown("### Callsign Lookup")
+        st.dataframe(final_df[callsign_lookup_columns].drop_duplicates(), hide_index=True)
+        st.markdown("### Vehicle Model Details")
+        st.dataframe(pd.read_csv("actual_data/service_schedules_by_model.csv"), hide_index=True)
 
     return updated_helos_df, updated_cars_df
 
