@@ -582,6 +582,7 @@ dataset.
                     st.plotly_chart(
                         _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown)
                     )
+                    tab_2_1.subheader("Variation in missed calls across simulation runs")
 
                     tab_2_1.plotly_chart(
                         _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown,

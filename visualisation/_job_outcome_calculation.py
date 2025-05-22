@@ -327,26 +327,43 @@ def get_missed_call_df(results_all_runs,
         raise("Invalid option passed. Allowed options for the *what* parameter are 'summary' or 'breakdown'")
 
 
-def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown):
+def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown, what="breakdown"):
     full_df = pd.concat([df_sim_breakdown, df_hist_breakdown])
+    full_df_no_resource_avail = full_df[full_df["time_type"]=="No Resource Available"]
 
-    category_order = ["CC", "EC", "REG - Helicopter Benefit", "REG"]
+    if what == "breakdown":
+        category_order = ["CC", "EC", "REG - Helicopter Benefit", "REG"]
 
-    fig = px.box(
-        full_df [full_df["time_type"]=="No Resource Available"],
-        x="jobs_per_year",
-        y="care_cat",
-        color="what",
-        points="all",  # or "suspectedoutliers"
-        boxmode='group',
-        height=800,
-        labels={
-            "jobs_per_year": "Estimated Average Jobs per Year",
-            "care_cat": "Care Category",
-            "what": "Simulation Results vs Simulated Historical Data"
-        },
-        category_orders={"care_cat": category_order},
-    )
+        fig = px.box(
+            full_df_no_resource_avail,
+            x="jobs_per_year",
+            y="care_cat",
+            color="what",
+            points="all",  # or "suspectedoutliers"
+            boxmode='group',
+            height=800,
+            labels={
+                "jobs_per_year": "Estimated Average Jobs per Year",
+                "care_cat": "Care Category",
+                "what": "Simulation Results vs Simulated Historical Data"
+            },
+            category_orders={"care_cat": category_order},
+        )
+
+    if what == "summary":
+        full_df_no_resource_avail_per_run = (
+            full_df_no_resource_avail
+            .groupby(["run_number", "what"])[['jobs_per_year']]
+            .sum().reset_index()
+            )
+        fig = px.box(
+            full_df_no_resource_avail_per_run,
+            x="jobs_per_year",
+            color="what",
+            points="all",
+            boxmode='group',
+            height=400
+        )
 
     fig.update_layout(
         legend=dict(orientation="h", y=1.1, x=0.5, xanchor='center')
