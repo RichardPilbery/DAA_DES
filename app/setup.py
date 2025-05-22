@@ -131,7 +131,17 @@ def fleet_setup():
     updated_helos_df = st.data_editor(
         default_helos,
         hide_index=True,
-        key="helicopter_data_editor"
+        key="helicopter_data_editor",
+        column_order=["callsign", "callsign_group", "registration", "has_car", "model", "service_schedule_months", "service_duration_weeks"],
+        column_config={
+                        "registration": st.column_config.TextColumn(label="Registration", required=True),
+                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
+                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        "has_car": st.column_config.CheckboxColumn(label="Has a Backup Car"),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]["model"].unique(), required=True),
+                        "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                    },
         )
 
     st.markdown("#### Define the Backup Cars")
@@ -144,16 +154,34 @@ def fleet_setup():
     updated_backup_cars_df = st.data_editor(
         backup_cars,
         hide_index=True,
-        key="backup_car_data_editor"
+        key="backup_car_data_editor",
+        column_order=["callsign", "callsign_group", "registration", "model", "service_schedule_months", "service_duration_weeks"],
+        column_config={
+                        "registration": st.column_config.TextColumn(label="Registration", required=True),
+                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
+                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
+                        "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                    },
     )
 
-    st.markdown("### Define the Cars")
+    st.markdown("### Define the Standalone Cars")
     st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
 
     updated_cars_df = st.data_editor(
         default_cars,
         hide_index=True,
-        key="standalone_car_data_editor"
+        key="standalone_car_data_editor",
+        column_order=["callsign", "callsign_group", "registration", "model", "service_schedule_months", "service_duration_weeks"],
+        column_config={
+                        "registration": st.column_config.TextColumn(label="Registration", required=True),
+                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
+                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
+                        "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                    },
         )
 
     final_df = pd.concat([updated_helos_df, updated_backup_cars_df, updated_cars_df])
