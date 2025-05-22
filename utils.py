@@ -72,8 +72,9 @@ class Utils:
 
         # Load ad hoc unavailability probability table
         try:
-            # THis file may not exist depending on when utility is called e.g. fitting
+            # This file may not exist depending on when utility is called e.g. fitting
             self.ad_hoc_probs = pd.read_csv("distribution_data/ad_hoc_unavailability.csv")
+            # Remove ad-hoc probs for any times outside of historical
         except:
             self.debug('ad_hoc spreadsheet does not exist yet')
 
@@ -762,10 +763,10 @@ class Utils:
 
     def sample_ad_hoc_reason(self, hour: int, quarter: int, registration: str) -> bool:
         """
-            Sample from ad hoc unavailability probability table based on time bin and quarter.
-            Returns True if available, False if unavailable.
+        Sample from ad hoc unavailability probability table based on time bin and quarter.
+        Returns a reason string (e.g. 'available', 'crew', 'weather', etc.).
         """
-
+        # Determine time bin
         if 0 <= hour <= 5:
             bin_label = '00-05'
         elif 6 <= hour <= 11:
@@ -775,7 +776,7 @@ class Utils:
         else:
             bin_label = '18-23'
 
-        # Filter to matching bin + quarter
+        # Main subset for registration, bin, and quarter
         subset = self.ad_hoc_probs[
             (self.ad_hoc_probs['registration'] == registration) &
             (self.ad_hoc_probs['six_hour_bin'] == bin_label) &
@@ -783,22 +784,64 @@ class Utils:
         ]
 
         if subset.empty:
-            # Default to available if no data (fail-safe)
+            self.debug(f"[AD HOC] No data for {registration} in bin {bin_label}, Q{quarter}. Falling back to all registrations.")
+            subset = self.ad_hoc_probs[
+                (self.ad_hoc_probs['six_hour_bin'] == bin_label) &
+                (self.ad_hoc_probs['quarter'] == quarter)
+            ]
+            if subset.empty:
+                self.debug(f"[AD HOC] No data at all for bin {bin_label}, Q{quarter}. Defaulting to 'available'.")
+                return 'available'
+
+        filled_subset = subset.copy()
+
+        for idx, row in filled_subset.iterrows():
+            if pd.isna(row['probability']):
+                reason = row['reason']
+                # Try registration-wide average across all bins in this quarter
+                reg_avg = self.ad_hoc_probs[
+                    (self.ad_hoc_probs['registration'] == row['registration']) &
+                    (self.ad_hoc_probs['quarter'] == row['quarter']) &
+                    (self.ad_hoc_probs['reason'] == reason) &
+                    (self.ad_hoc_probs['probability'].notna())
+                ]['probability'].mean()
+
+                if pd.isna(reg_avg):
+                    # Fall back: average for this bin/quarter across all registrations
+                    fallback_avg = self.ad_hoc_probs[
+                        (self.ad_hoc_probs['six_hour_bin'] == row['six_hour_bin']) &
+                        (self.ad_hoc_probs['quarter'] == row['quarter']) &
+                        (self.ad_hoc_probs['reason'] == reason) &
+                        (self.ad_hoc_probs['probability'].notna())
+                    ]['probability'].mean()
+
+                    if pd.notna(fallback_avg):
+                        self.debug(f"[AD HOC] Missing prob for {registration}, {bin_label}, Q{quarter}, reason '{reason}'. Using fallback avg across registrations: {fallback_avg:.4f}")
+                        filled_subset.at[idx, 'probability'] = fallback_avg
+                    else:
+                        self.debug(f"[AD HOC] Missing prob for {registration}, {bin_label}, Q{quarter}, reason '{reason}'. No fallback avg found. Defaulting to 'available'.")
+                        return 'available'
+                else:
+                    self.debug(f"[AD HOC] Missing prob for {registration}, {bin_label}, Q{quarter}, reason '{reason}'. Using reg-wide avg: {reg_avg:.4f}")
+                    filled_subset.at[idx, 'probability'] = reg_avg
+
+        if filled_subset['probability'].isna().any():
+            self.debug(f"[AD HOC] Still missing probabilities after imputation for {registration}, {bin_label}, Q{quarter}. Defaulting to 'available'.")
             return 'available'
 
-        # Get list of reasons and probabilities
-        reasons = subset['reason'].tolist()
-        probs = subset['probability'].tolist()
+        total_prob = filled_subset['probability'].sum()
+        if total_prob == 0 or pd.isna(total_prob):
+            self.debug(f"[AD HOC] Total probability is zero or NaN for {registration}, {bin_label}, Q{quarter}. Defaulting to 'available'.")
+            return 'available'
 
-        # Randomly sample reason
-        sampled_reason = self.rngs["ad_hoc_reason_selection"].choice(reasons, p=probs)
+        norm_probs = filled_subset['probability'] / total_prob
 
-        # if(sampled_reason != "available"):
-        #     self.debug(f"Sampled reason is: {sampled_reason}")
+        sampled_reason = self.rngs["ad_hoc_reason_selection"].choice(
+            filled_subset['reason'].tolist(),
+            p=norm_probs.tolist()
+        )
 
         return sampled_reason
-
-
 
 class SeededDistribution:
     def __init__(self, dist, rng, **kwargs):

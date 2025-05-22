@@ -222,7 +222,7 @@ class DES_HEMS:
                 #self.debug(ia_dict)
 
                 # Also run scripts to check HEMS resources to see whether they are starting/finishing service
-                yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, qtr))
+                yield self.env.process(self.hems_resources.daily_servicing_check(current_dt, hod, month))
 
 
             if self.calls_today > 0:

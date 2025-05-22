@@ -838,13 +838,17 @@ def create_UTIL_rwc_plot(call_df,
 
     fig.update_layout(
         xaxis=dict(
-            titlefont = dict(size=20),
+            title = dict(font=dict(size=20)),
             tickfont = dict(size=25),
             tickmode='array',
             tickvals=tick_vals,  # Ensure ticks are at integer positions
             range=[min_x - 0.5, max_x + 0.5]  # Extend range to start 0.5 units earlier
         ),
-        yaxis=dict(ticksuffix="%", titlefont = dict(size = 15), tickfont = dict(size=20),
+        yaxis=dict(
+            ticksuffix="%",
+            title = dict(
+                dict(font=dict(size=15))),
+                   tickfont = dict(size=20),
                      range=[0, 100]),
 
         legend = dict(font = dict(size = 15)),

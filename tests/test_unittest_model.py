@@ -94,12 +94,39 @@ def test_model_runs():
 
       collateRunResults()
 
-      save_logs("test_model_runs.txt")
+      save_logs("test_model_runs_5_weeks.txt")
 
       # Read simulation results
       results_df = pd.read_csv("data/run_results.csv")
 
-      assert len(results_df) > 5, "[FAIL - BASIC FUNCTIONS] Model failed to run"
+      assert len(results_df) > 5, "[FAIL - BASIC FUNCTIONS] Model failed to run for a period of 5 weeks"
+
+   finally:
+      del results_df
+      gc.collect()
+
+@pytest.mark.medium
+def test_model_runs_more():
+   try:
+      removeExistingResults(remove_run_results_csv=True)
+
+      parallelProcessJoblib(
+         total_runs=1,
+         sim_duration=60 * 24 * 7 * 52 * 2, # Run for two years
+         warm_up_time=0,
+         sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+         amb_data=False,
+         print_debug_messages=True
+         )
+
+      collateRunResults()
+
+      save_logs("test_model_runs_2_years.txt")
+
+      # Read simulation results
+      results_df = pd.read_csv("data/run_results.csv")
+
+      assert len(results_df) > 5, "[FAIL - BASIC FUNCTIONS] Model failed to run for a period of 2 years"
 
    finally:
       del results_df

@@ -30,7 +30,9 @@ DEFAULT_INPUTS = {
     # "activity_duration_multiplier": 1.0
     "activity_duration_multiplier": 1.0,
     "master_seed": 42,
-    "debugging_messages_to_log": False
+    "debugging_messages_to_log": False,
+    "summer_start_month_index": 3,
+    "summer_end_month_index": 9
 }
 
 # Adjust some parameters depending on whether it is running
@@ -77,8 +79,16 @@ def setup_state():
 def reset_to_defaults():
     for session_state_key, session_state_default_value in DEFAULT_INPUTS.items():
             st.session_state[session_state_key] = session_state_default_value
+
+    callsign_registration_lookup = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
+    callsign_registration_lookup.to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+    models = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
+    models.to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
     base_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
     base_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
     st.toast("All parameters have been reset to the default values",
              icon=":material/history:")
 
