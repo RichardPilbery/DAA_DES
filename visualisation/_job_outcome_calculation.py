@@ -11,6 +11,7 @@ Covers variation within the simulation, and comparison with real world data.
 
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import textwrap
 import numpy as np
 
@@ -327,7 +328,8 @@ def get_missed_call_df(results_all_runs,
         raise("Invalid option passed. Allowed options for the *what* parameter are 'summary' or 'breakdown'")
 
 
-def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown, what="breakdown"):
+def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown, what="breakdown",
+                              historical_yearly_missed_calls_estimate=None):
     full_df = pd.concat([df_sim_breakdown, df_hist_breakdown])
     full_df_no_resource_avail = full_df[full_df["time_type"]=="No Resource Available"]
 
@@ -350,23 +352,93 @@ def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown, what="breakdo
             category_orders={"care_cat": category_order},
         )
 
+        fig.update_layout(
+            legend=dict(orientation="h", y=1.1, x=0.5, xanchor='center')
+        )
+
     if what == "summary":
+
         full_df_no_resource_avail_per_run = (
             full_df_no_resource_avail
             .groupby(["run_number", "what"])[['jobs_per_year']]
             .sum().reset_index()
             )
+
+        # Compute data bounds for x-axis
+        x_min = full_df_no_resource_avail_per_run["jobs_per_year"].min()
+        x_max = full_df_no_resource_avail_per_run["jobs_per_year"].max()
+        padding = 0.20 * (x_max - x_min)
+        x_range = [x_min - padding, x_max + padding]
+
         fig = px.box(
             full_df_no_resource_avail_per_run,
             x="jobs_per_year",
+            y="what",
             color="what",
             points="all",
             boxmode='group',
             height=400
         )
 
-    fig.update_layout(
-        legend=dict(orientation="h", y=1.1, x=0.5, xanchor='center')
-    )
+        # Update x-axis range
+        fig.update_layout(xaxis_range=x_range, showlegend=False)
+
+        if historical_yearly_missed_calls_estimate is not None:
+            # Add the dotted vertical line
+            fig.add_vline(
+                x=historical_yearly_missed_calls_estimate,
+                line_dash="dot",
+                line_color="black",
+                line_width=2,
+                annotation_text=f"Historical Estimate: {historical_yearly_missed_calls_estimate:.0f}",
+                annotation_position="top"
+            )
+
+        # Step 1: Compute Q1 and Q3
+        q_df = (
+            full_df_no_resource_avail_per_run
+            .groupby("what")["jobs_per_year"]
+            .quantile([0.25, 0.5, 0.75])
+            .unstack()
+            .reset_index()
+            .rename(columns={0.25: "q1", 0.5: "median", 0.75: "q3"})
+        )
+
+        # Step 2: Calculate IQR and upper whisker cap
+        q_df["iqr"] = q_df["q3"] - q_df["q1"]
+        q_df["upper_whisker_cap"] = q_df["q3"] + 1.5 * q_df["iqr"]
+
+        # Step 3: Find the max non-outlier per group
+        max_non_outliers = (
+            full_df_no_resource_avail_per_run
+            .merge(q_df[["what", "upper_whisker_cap"]], on="what")
+        )
+        max_non_outliers = (
+            max_non_outliers[max_non_outliers["jobs_per_year"] <= max_non_outliers["upper_whisker_cap"]]
+            .groupby("what")["jobs_per_year"]
+            .max()
+            .reset_index()
+            .rename(columns={"jobs_per_year": "max_non_outlier"})
+        )
+
+        # Step 4: Merge with median data
+        annot_df = pd.merge(q_df[["what", "median"]], max_non_outliers, on="what")
+
+        # Step 5: Add annotations just to the right of the whisker
+        for _, row in annot_df.iterrows():
+            fig.add_annotation(
+                x=row["max_non_outlier"] + padding * 0.1,
+                y=row["what"],
+                text=f"Median: {row['median']:.0f}",
+                showarrow=True,
+                arrowhead=2,
+                ax=0,
+                ay=0,
+                font=dict(size=12, color="gray"),
+                bgcolor="white",
+                bordercolor="gray",
+                borderwidth=1,
+            )
+
 
     return fig

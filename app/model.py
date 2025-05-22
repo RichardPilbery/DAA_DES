@@ -585,8 +585,11 @@ dataset.
                     tab_2_1.subheader("Variation in missed calls across simulation runs")
 
                     tab_2_1.plotly_chart(
-                        _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown,
-                                                                           what="summary")
+                        _job_outcome_calculation.plot_missed_calls_boxplot(
+                            df_sim_breakdown, df_hist_breakdown,
+                            what="summary",
+                            historical_yearly_missed_calls_estimate=total_average_calls_received_per_year*(float(missed_calls_hist_string)/100)
+                            )
                     )
 
                     st.subheader("Job Categories - Simulation vs Historical")
