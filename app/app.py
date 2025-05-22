@@ -10,8 +10,9 @@ setup_state()
 if "visited_setup_page" not in st.session_state:
     st.session_state["visited_setup_page"] = False
 
-# Restore all default rotas etc on load to ensure expected behaviour
-reset_to_defaults(reset_session_state=False, reset_csvs=True, notify=False)
+if "first_load" not in st.session_state:
+    reset_to_defaults(reset_session_state=False, reset_csvs=True, notify=False)
+    st.session_state["first_load"] = False
 
 if platform.processor() == '':
     get_quarto("quarto_streamlit_community_cloud") # This name must match the repository name on GitHub
