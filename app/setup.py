@@ -45,185 +45,11 @@ st.caption(get_text("reset_parameters_warning", text_df))
 
 st.divider()
 
-@st.fragment
-def fleet_setup():
-
-    st.header(get_text("header_fleet_setup", text_df))
-
-    st.caption("""At present, the fleet cannot be expanded beyond what is currently
-               available, though resources can be removed. """)
-
-    col_1_fleet_setup, col_2_fleet_setup, blank_col_fleet_setup = st.columns(3)
-
-    with col_1_fleet_setup:
-        num_helicopters = st.number_input(
-            get_text("set_num_helicopters", text_df),
-            min_value=1,
-            max_value=2,
-            disabled=False,
-            value=st.session_state.num_helicopters,
-            help=get_text("help_helicopters", text_df),
-            on_change= lambda: setattr(st.session_state,
-                                       'num_helicopters',
-                                       st.session_state.key_num_helicopters),
-            key="key_num_helicopters"
-            )
-
-    with col_2_fleet_setup:
-        num_cars = st.number_input(
-            get_text("set_num_additional_cars", text_df),
-            min_value=0,
-            max_value=1,
-            disabled=False,
-            value=st.session_state.num_cars,
-            help=get_text("help_cars", text_df),
-            on_change= lambda: setattr(st.session_state,
-                                       'num_cars',
-                                       st.session_state.key_num_cars),
-            key="key_num_cars"
-            )
-
-    # Pull in the callsign and model lookup
-    # For each, we will pull through the edited dataframe and the default dataframe
-    # This allows us to ensure we are able to add in information about any default resources
-    # even if we have removed it from the saved non-default lookups
-    callsign_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
-    callsign_lookup_default = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
-    callsign_lookup_columns = callsign_lookup.columns
-
-    models = pd.read_csv("actual_data/service_schedules_by_model.csv")
-    models_default = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
-    models_columns = models.columns
-
-    hems_rota_default = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
-
-    callsign_lookup = pd.concat([callsign_lookup, callsign_lookup_default]).reset_index(drop=True)
-    callsign_lookup = callsign_lookup.drop_duplicates(keep='first')
-    print(callsign_lookup)
-
-    models = pd.concat([models, models_default]).reset_index(drop=True)
-    models = models.drop_duplicates(keep='first', subset=["model", "vehicle_type"])
-    print(models)
-
-    potential_fleet = callsign_lookup.merge(
-        models, how="left", on=['model']
-        )
-
-    potential_fleet["callsign_group"] = potential_fleet["callsign"].str.extract(r"(\d+)")
-
-    potential_fleet["callsign_count"] = (
-        potential_fleet.groupby('callsign_group')['callsign_group'].transform('count')
-        )
-
-    default_helos = potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]
-
-    default_cars = potential_fleet[(potential_fleet["vehicle_type"]=="car") &
-                                (potential_fleet["callsign_count"] == 1)]
-
-    default_helos = default_helos.head(num_helicopters)
-    default_helos["has_car"] = True
-
-    default_cars = default_cars.head(num_cars)
-
-    st.markdown("### Define the Helicopters")
-    st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
-
-    updated_helos_df = st.data_editor(
-        default_helos,
-        hide_index=True,
-        key="helicopter_data_editor",
-        column_order=["callsign",
-                    #   "callsign_group",
-                      "registration", "has_car", "model", #"service_schedule_months", "service_duration_weeks"
-                      ],
-        column_config={
-                        "registration": st.column_config.TextColumn(label="Registration", required=True),
-                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
-                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
-                        "has_car": st.column_config.CheckboxColumn(label="Has a Backup Car"),
-                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]["model"].unique(), required=True),
-                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
-                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
-                    },
-        )
-
-    st.markdown("#### Define the Backup Cars")
-
-    backup_cars = potential_fleet[(potential_fleet["vehicle_type"]=="car") &
-                                  (potential_fleet["callsign_count"] > 1) &
-                                  (potential_fleet["callsign_group"]).isin(updated_helos_df[updated_helos_df["has_car"]==True]["callsign_group"].unique())
-                                  ]
-
-    updated_backup_cars_df = st.data_editor(
-        backup_cars,
-        hide_index=True,
-        key="backup_car_data_editor",
-        column_order=["callsign",
-                    #   "callsign_group",
-                      "registration", "model", #"service_schedule_months", "service_duration_weeks"
-                      ],
-        column_config={
-                        "registration": st.column_config.TextColumn(label="Registration", required=True),
-                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
-                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
-                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
-                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
-                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
-                    },
-    )
-
-    st.markdown("### Define the Standalone Cars")
-    st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
-
-    updated_cars_df = st.data_editor(
-        default_cars,
-        hide_index=True,
-        key="standalone_car_data_editor",
-        column_order=["callsign",
-                    #   "callsign_group",
-                      "registration", "model",
-                    #   "service_schedule_months", "service_duration_weeks"
-                      ],
-        column_config={
-                        "registration": st.column_config.TextColumn(label="Registration", required=True),
-                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
-                        # "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
-                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
-                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
-                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
-                    },
-        )
-
-    final_df = pd.concat([updated_helos_df, updated_backup_cars_df, updated_cars_df])
-
-    final_df[callsign_lookup_columns].drop_duplicates().to_csv("actual_data/callsign_registration_lookup.csv", index=False)
-
-    # final_df[models_columns].drop_duplicates().to_csv("actual_data/service_schedules_by_model.csv", index=False)
-
-    # hems_rota_default['callsign_group'] = hems_rota_default['callsign_group'].astype('str')
-    hems_rota = hems_rota_default[hems_rota_default["callsign"].isin(final_df.callsign.unique())]
-    hems_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
-
-    with st.expander("Click here to view the final fleet dataframes"):
-        st.markdown("### Callsign Lookup")
-        st.dataframe(final_df[callsign_lookup_columns].drop_duplicates(), hide_index=True)
-        st.markdown("### Vehicle Model Details")
-        st.dataframe(pd.read_csv("actual_data/service_schedules_by_model.csv"), hide_index=True)
-
-    return updated_helos_df, updated_cars_df
-
-# Setup up the initial fleet dataframes using default values
-updated_helos_df, updated_cars_df  = fleet_setup()
-# print("=== Initial Fleet Dataframes ===")
-# print("Helos")
-# print(default_helos)
-# print("Car")
-# print(default_cars)
-
 st.header("HEMS Rota Builder")
 
 @st.fragment
 def rota_start_end_dates():
+    st.markdown("### Summer and Winter Setup")
 
     # Mapping months to numbers
     month_mapping = {
@@ -304,8 +130,174 @@ def rota_start_end_dates():
 
 rota_start_end_dates()
 
-@st.fragment()
-def rota_setup():
+
+@st.fragment
+def fleet_setup():
+
+    st.markdown(f"""### {get_text("header_fleet_setup", text_df)}""")
+
+    st.caption("""At present, the fleet cannot be expanded beyond what is currently
+               available, though resources can be removed. """)
+
+    col_1_fleet_setup, col_2_fleet_setup, blank_col_fleet_setup = st.columns(3)
+
+    with col_1_fleet_setup:
+        num_helicopters = st.number_input(
+            get_text("set_num_helicopters", text_df),
+            min_value=1,
+            max_value=2,
+            disabled=False,
+            value=st.session_state.num_helicopters,
+            help=get_text("help_helicopters", text_df),
+            on_change= lambda: setattr(st.session_state,
+                                       'num_helicopters',
+                                       st.session_state.key_num_helicopters),
+            key="key_num_helicopters"
+            )
+
+    with col_2_fleet_setup:
+        num_cars = st.number_input(
+            get_text("set_num_additional_cars", text_df),
+            min_value=0,
+            max_value=1,
+            disabled=False,
+            value=st.session_state.num_cars,
+            help=get_text("help_cars", text_df),
+            on_change= lambda: setattr(st.session_state,
+                                       'num_cars',
+                                       st.session_state.key_num_cars),
+            key="key_num_cars"
+            )
+
+    # Pull in the callsign and model lookup
+    # For each, we will pull through the edited dataframe and the default dataframe
+    # This allows us to ensure we are able to add in information about any default resources
+    # even if we have removed it from the saved non-default lookups
+    callsign_lookup = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+    callsign_lookup_default = pd.read_csv("actual_data/callsign_registration_lookup_DEFAULT.csv")
+    callsign_lookup_columns = callsign_lookup.columns
+
+    models = pd.read_csv("actual_data/service_schedules_by_model.csv")
+    models_default = pd.read_csv("actual_data/service_schedules_by_model_DEFAULT.csv")
+    models_columns = models.columns
+
+    hems_rota_default = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
+
+    callsign_lookup = pd.concat([callsign_lookup, callsign_lookup_default]).reset_index(drop=True)
+    callsign_lookup = callsign_lookup.drop_duplicates(keep='first')
+    print(callsign_lookup)
+
+    models = pd.concat([models, models_default]).reset_index(drop=True)
+    models = models.drop_duplicates(keep='first', subset=["model", "vehicle_type"])
+    print(models)
+
+    potential_fleet = callsign_lookup.merge(
+        models, how="left", on=['model']
+        )
+
+    potential_fleet["callsign_group"] = potential_fleet["callsign"].str.extract(r"(\d+)")
+
+    potential_fleet["callsign_count"] = (
+        potential_fleet.groupby('callsign_group')['callsign_group'].transform('count')
+        )
+
+    default_helos = potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]
+
+    default_cars = potential_fleet[(potential_fleet["vehicle_type"]=="car") &
+                                (potential_fleet["callsign_count"] == 1)]
+
+    default_helos = default_helos.head(num_helicopters)
+    default_helos["has_car"] = True
+
+    default_cars = default_cars.head(num_cars)
+
+    st.markdown("#### Define the Helicopters")
+    st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
+
+    updated_helos_df = st.data_editor(
+        default_helos,
+        hide_index=True,
+        key="helicopter_data_editor",
+        column_order=["callsign",
+                    #   "callsign_group",
+                      "registration", "has_car", "model", #"service_schedule_months", "service_duration_weeks"
+                      ],
+        column_config={
+                        "registration": st.column_config.TextColumn(label="Registration", required=True),
+                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
+                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        "has_car": st.column_config.CheckboxColumn(label="Has a Backup Car"),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]["model"].unique(), required=True),
+                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                    },
+        )
+
+    st.markdown("#### Define the Backup Cars")
+
+    backup_cars = potential_fleet[(potential_fleet["vehicle_type"]=="car") &
+                                  (potential_fleet["callsign_count"] > 1) &
+                                  (potential_fleet["callsign_group"]).isin(updated_helos_df[updated_helos_df["has_car"]==True]["callsign_group"].unique())
+                                  ]
+
+    updated_backup_cars_df = st.data_editor(
+        backup_cars,
+        hide_index=True,
+        key="backup_car_data_editor",
+        column_order=["callsign",
+                    #   "callsign_group",
+                      "registration", "model", #"service_schedule_months", "service_duration_weeks"
+                      ],
+        column_config={
+                        "registration": st.column_config.TextColumn(label="Registration", required=True),
+                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
+                        "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
+                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                    },
+    )
+
+    st.markdown("#### Define the Standalone Cars")
+    st.caption("Columns with the :material/edit_note: symbol can be edited by double clicking the relevant table cell.")
+
+    updated_cars_df = st.data_editor(
+        default_cars,
+        hide_index=True,
+        key="standalone_car_data_editor",
+        column_order=["callsign",
+                    #   "callsign_group",
+                      "registration", "model",
+                    #   "service_schedule_months", "service_duration_weeks"
+                      ],
+        column_config={
+                        "registration": st.column_config.TextColumn(label="Registration", required=True),
+                        "callsign": st.column_config.TextColumn(label="Callsign", required=True),
+                        # "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="car"]["model"].unique(), required=True),
+                        # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
+                        # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
+                    },
+        )
+
+    final_df = pd.concat([updated_helos_df, updated_backup_cars_df, updated_cars_df])
+
+    final_df[callsign_lookup_columns].drop_duplicates().to_csv("actual_data/callsign_registration_lookup.csv", index=False)
+
+    # final_df[models_columns].drop_duplicates().to_csv("actual_data/service_schedules_by_model.csv", index=False)
+
+    # hems_rota_default['callsign_group'] = hems_rota_default['callsign_group'].astype('str')
+    hems_rota = hems_rota_default[hems_rota_default["callsign"].isin(final_df.callsign.unique())]
+    hems_rota.to_csv("actual_data/HEMS_ROTA.csv", index=False)
+
+    with st.expander("Click here to view the final fleet dataframes"):
+        st.markdown("### Callsign Lookup")
+        st.dataframe(final_df[callsign_lookup_columns].drop_duplicates(), hide_index=True)
+        st.markdown("### Vehicle Model Details")
+        st.dataframe(pd.read_csv("actual_data/service_schedules_by_model.csv"), hide_index=True)
+
+    st.markdown("### Individual Rota Setup")
+
     # Load callsign registration
     callsign_registration_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
     callsign_registration_lookup_df["callsign_group"] = callsign_registration_lookup_df["callsign"].str.extract(r"(\d+)")
@@ -481,7 +473,7 @@ def rota_setup():
     full_rota_df.to_csv('actual_data/HEMS_ROTA.csv', index=False)
     st.success("Final rota automatically saved!")
 
-rota_setup()
+fleet_setup()
 
 # col_summer, col_winter, col_summer_winter_spacing = st.columns(3)
 # with col_summer:
