@@ -12,6 +12,17 @@
     color: white
 }
 
+
+[data-testid="stSidebar"] ul,
+[data-testid="stSidebar"] ul li,
+[data-testid="stSidebar"] ul ul {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.1;
+}
+
 [data-testid="stSidebar"] {
     background-color: #00205b ;
 }

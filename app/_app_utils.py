@@ -338,7 +338,7 @@ hr {
         quarto_string += "### "
         quarto_string += num_helos_string
         quarto_string += "\n\n"
-        st.write(num_helos_string)
+        st.write(f"### {num_helos_string}")
 
 
         rota = (
@@ -363,7 +363,7 @@ hr {
 
         for callsign, group in grouped_heli:
             model = group.iloc[0]["model"]
-            header = f"{callsign} is an {model} and\n"
+            header = f"#### {callsign} is an {model} and\n"
             body = ""
             for _, row in group.iterrows():
                 summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
@@ -410,7 +410,7 @@ hr {
                 message = f"The backup car {callsign} in group {group_id} has a different rota to the helicopter.\n\n"
                 quarto_string += message
                 st.caption(message)
-                header = f"{callsign} is a {model} and\n"
+                header = f"#### {callsign} is a {model} and\n"
                 body = ""
                 for _, row in car_group.iterrows():
                     summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
@@ -426,11 +426,11 @@ hr {
 
         num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
         quarto_string += "\n\n### " + num_cars_string + "\n\n"
-        st.write(num_cars_string)
+        st.write(f"### {num_cars_string}")
 
         for callsign, group in grouped_extra:
             model = group.iloc[0]["model"]
-            header = f"{callsign} is a {model} and\n"
+            header = f"#### {callsign} is a {model} and\n"
             body = ""
             for _, row in group.iterrows():
                 summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
