@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from pandas.api.types import CategoricalDtype
 from datetime import time, datetime
 import calendar
 # Workaround to deal with relative import issues
@@ -175,7 +176,7 @@ updated_helos_df, updated_cars_df  = fleet_setup()
 # print("Car")
 # print(default_cars)
 
-st.markdown("#### Set the Fleet Rota Details")
+st.header("HEMS Rota Builder")
 
 @st.fragment
 def rota_start_end_dates():
@@ -261,102 +262,180 @@ rota_start_end_dates()
 
 @st.fragment()
 def rota_setup():
-    # Load the default callsigns
+    # Load callsign registration
     callsign_registration_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+    callsign_registration_lookup_df["callsign_group"] = callsign_registration_lookup_df["callsign"].str.extract(r"(\d+)")
+    callsign_registration_lookup_df["vehicle_type"] = callsign_registration_lookup_df["model"].apply(
+        lambda x: "helicopter" if "Airbus" in x else "car"
+    )
 
-    # Load default rota config
+    # Load default rota
     try:
         df_default_rota = pd.read_csv("actual_data/HEMS_ROTA_DEFAULT.csv")
     except FileNotFoundError:
         st.error("HEMS_ROTA_DEFAULT.csv not found!")
         st.stop()
 
-    st.title("HEMS Rota Builder")
+    # Sort: group, then helicopter first
+    vehicle_order = CategoricalDtype(categories=["helicopter", "car"], ordered=True)
+    callsign_registration_lookup_df["vehicle_type"] = callsign_registration_lookup_df["vehicle_type"].astype(vehicle_order)
+    sorted_lookup_df = callsign_registration_lookup_df.sort_values(by=["callsign_group", "vehicle_type"])
 
     rota_data = {}
+    helicopter_rotas_by_group = {}
 
-    for idx, row in callsign_registration_lookup_df.iterrows():
+    for idx, row in sorted_lookup_df.iterrows():
         callsign = row['callsign']
         model = row['model']
+        vehicle_type = row['vehicle_type']
+        group = row['callsign_group']
 
-        st.subheader(f"Set up rota for {callsign} ({model})")
+        st.markdown(f"#### Set up rota for {callsign} ({model})")
 
-        # Try to load existing config rows for this callsign
         existing_rota = df_default_rota[df_default_rota["callsign"] == callsign].copy()
 
         if not existing_rota.empty:
             num_rows = len(existing_rota)
         else:
             num_rows = st.number_input(f"Number of shifts for {callsign}", min_value=1, max_value=5, value=2, key=f"{callsign}_num_rows")
-
-            # Determine default category
-            default_category = "EC" if "Airbus" in model else "CC"
-
+            default_category = "EC" if vehicle_type == "helicopter" else "CC"
             existing_rota = pd.DataFrame({
                 "callsign": [callsign]*num_rows,
                 "category": [default_category]*num_rows,
-                "vehicle_type": ["helicopter" if "Airbus" in model else "car"]*num_rows,
-                "callsign_group": [callsign[-2:]]*num_rows,
+                "vehicle_type": [vehicle_type]*num_rows,
+                "callsign_group": [group]*num_rows,
                 "summer_start": [7]*num_rows,
                 "winter_start": [7]*num_rows,
                 "summer_end": [19]*num_rows,
                 "winter_end": [19]*num_rows,
             })
 
-        # Data editor
-        edited_df = st.data_editor(
-            existing_rota.set_index('callsign'),
-            column_order=["category", "summer_start", "summer_end", "winter_start", "winter_end"],
-            column_config={
-                "category": st.column_config.SelectboxColumn(
-                    label="Category",
-                    options=["CC", "EC"],
-                    required=True
-                ),
-                "summer_start": st.column_config.NumberColumn(
-                    label="Summer Start Hour",
-                    min_value=0,
-                    max_value=23,
-                    step=1,
-                    required=True
-                ),
-                "summer_end": st.column_config.NumberColumn(
-                    label="Summer End Hour",
-                    min_value=0,
-                    max_value=23,
-                    step=1,
-                    required=True
-                ),
-                "winter_start": st.column_config.NumberColumn(
-                    label="Winter Start Hour",
-                    min_value=0,
-                    max_value=23,
-                    step=1,
-                    required=True
-                ),
-                "winter_end": st.column_config.NumberColumn(
-                    label="Winter End Hour",
-                    min_value=0,
-                    max_value=23,
-                    step=1,
-                    required=True
+        if vehicle_type == "car" and group in helicopter_rotas_by_group:
+            toggle_key = f"{callsign}_same_as_heli"
+            overwrite_key = f"{callsign}_overwrite_heli_rota"
+            prev_toggle_key = f"{toggle_key}_prev"
+
+            # Initialize session state keys
+            if prev_toggle_key not in st.session_state:
+                st.session_state[prev_toggle_key] = True # Default: try to use heli rota
+            if toggle_key not in st.session_state:
+                 # Initialize toggle state based on prev_toggle_key's default or existing value
+                st.session_state[toggle_key] = st.session_state[prev_toggle_key]
+            if overwrite_key not in st.session_state:
+                st.session_state[overwrite_key] = False
+                # If starting in sync mode, flag initial overwrite
+                if st.session_state[toggle_key]:
+                     st.session_state[overwrite_key] = True
+
+
+            # Get the toggle state from *before* this script run's interaction for change detection
+            previous_run_toggle_value = st.session_state[prev_toggle_key]
+
+            # Toggle widget. Its state is stored in st.session_state[toggle_key].
+            # The `value` parameter is mainly for the first render if key is not in session_state.
+            # For subsequent renders, the widget uses the value from st.session_state[toggle_key].
+            use_heli_rota = st.toggle(
+                f"Use same rota as helicopter for group {group}?",
+                key=toggle_key # Streamlit manages state via this key
+            )
+
+            # Detect change from False (custom) to True (sync with heli)
+            if use_heli_rota and not previous_run_toggle_value:
+                st.session_state[overwrite_key] = True  # Flag to overwrite rota with helicopter's
+
+            # Update prev_toggle_key for the next script run
+            st.session_state[prev_toggle_key] = use_heli_rota
+
+            if use_heli_rota:
+                # If using helicopter rota, always fetch a fresh copy.
+                # The overwrite_key helps manage the transition message or specific one-time actions if needed.
+                edited_df = helicopter_rotas_by_group[group].copy()
+                edited_df["callsign"] = callsign
+                edited_df["vehicle_type"] = "car"
+
+                if st.session_state[overwrite_key]:
+                    # If an overwrite was specifically flagged (transition from custom to heli),
+                    # you could add specific actions here. Then reset the flag.
+                    st.session_state[overwrite_key] = False
+
+                st.info(f"Using helicopter rota for {callsign}.")
+            else:
+                # Custom rota for the car
+                edited_df = st.data_editor(
+                    existing_rota.set_index('callsign'),
+                    column_order=["category", "summer_start", "summer_end", "winter_start", "winter_end"],
+                    column_config={
+                        "category": st.column_config.SelectboxColumn(label="Category", options=["CC", "EC"], required=True),
+                        "summer_start": st.column_config.NumberColumn(label="Summer Start Hour", min_value=0, max_value=23, step=1, required=True),
+                        "summer_end": st.column_config.NumberColumn(label="Summer End Hour", min_value=0, max_value=23, step=1, required=True),
+                        "winter_start": st.column_config.NumberColumn(label="Winter Start Hour", min_value=0, max_value=23, step=1, required=True),
+                        "winter_end": st.column_config.NumberColumn(label="Winter End Hour", min_value=0, max_value=23, step=1, required=True)
+                    },
+                    hide_index=True,
+                    num_rows="dynamic",
+                    key=f"{callsign}_editor"
                 )
-            },
-            hide_index=True,
-            num_rows="dynamic",
-            key=f"{callsign}_editor"
-        )
+        else:
+            # Default editor for helicopters or cars not in a group with a processed helicopter
+            edited_df = st.data_editor(
+                existing_rota.set_index('callsign'),
+                column_order=["category", "summer_start", "summer_end", "winter_start", "winter_end"],
+                column_config={
+                    "category": st.column_config.SelectboxColumn(label="Category", options=["CC", "EC"], required=True),
+                    "summer_start": st.column_config.NumberColumn(label="Summer Start Hour", min_value=0, max_value=23, step=1, required=True),
+                    "summer_end": st.column_config.NumberColumn(label="Summer End Hour", min_value=0, max_value=23, step=1, required=True),
+                    "winter_start": st.column_config.NumberColumn(label="Winter Start Hour", min_value=0, max_value=23, step=1, required=True),
+                    "winter_end": st.column_config.NumberColumn(label="Winter End Hour", min_value=0, max_value=23, step=1, required=True)
+                },
+                hide_index=True,
+                num_rows="dynamic",
+                key=f"{callsign}_editor"
+            )
 
         rota_data[callsign] = edited_df.reset_index(drop=False)
 
-    # Preview of full rota
+        if vehicle_type == "helicopter":
+            # Ensure the helicopter_rotas_by_group stores the DataFrame with the 'callsign' column,
+            # even if it's temporarily set as index in data_editor.
+            # We need a clean copy without 'callsign' as index for later .copy() operations.
+            helicopter_rotas_by_group[group] = edited_df.reset_index(drop=True)
+
+
     st.markdown("## Full Rota Preview")
     full_rota_df = pd.concat(rota_data.values(), ignore_index=True)
-    full_rota_df["callsign_group"] = full_rota_df["callsign"].str.extract(r"(\d+)")
+
+    # Reconstruct 'callsign_group' and 'vehicle_type' for consistent final DataFrame structure if needed
+    # This depends on whether df_default_rota.columns includes these explicitly or if they are derived.
+    # Assuming df_default_rota.columns is the source of truth for final columns:
+    # Add missing columns that are expected in df_default_rota if not present in full_rota_df
+    # For example, if 'callsign_group' and 'vehicle_type' are critical for the output CSV based on df_default_rota schema:
+
+    # Ensure 'callsign_group' is present (it was extracted from callsign_registration_lookup_df earlier)
+    # We need to map it back or re-extract if not directly in edited_df
+    temp_callsign_details = callsign_registration_lookup_df[["callsign", "callsign_group", "vehicle_type"]].drop_duplicates(subset=['callsign'])
+    full_rota_df = pd.merge(full_rota_df, temp_callsign_details, on="callsign", how="left", suffixes=('', '_lookup'))
+
+    # Prioritize columns from the merge if they existed, otherwise keep original (e.g. vehicle_type might be car/helicopter)
+    if 'vehicle_type_lookup' in full_rota_df.columns:
+        full_rota_df['vehicle_type'] = full_rota_df['vehicle_type_lookup']
+        full_rota_df.drop(columns=['vehicle_type_lookup'], inplace=True)
+    if 'callsign_group_lookup' in full_rota_df.columns:
+         full_rota_df['callsign_group'] = full_rota_df['callsign_group_lookup']
+         full_rota_df.drop(columns=['callsign_group_lookup'], inplace=True)
+
+
+    # Ensure consistent column order and only include columns present in the default rota file
+    # This also handles if edited_df accidentally gained/lost columns vs the default schema
+    final_columns = [col for col in df_default_rota.columns if col in full_rota_df.columns]
+    missing_cols = [col for col in df_default_rota.columns if col not in final_columns]
+    for col in missing_cols: # Add any missing columns with NaN, so structure matches
+        full_rota_df[col] = pd.NA
+
     full_rota_df = full_rota_df[df_default_rota.columns]
+
     st.dataframe(full_rota_df, hide_index=True)
     full_rota_df.to_csv('actual_data/HEMS_ROTA.csv', index=False)
-    st.write("Final rota automatically saved!")
+    st.success("Final rota automatically saved!")
 
 rota_setup()
 
