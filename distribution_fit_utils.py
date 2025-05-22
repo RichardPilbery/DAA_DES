@@ -12,9 +12,11 @@ from datetime import timedelta
 from utils import Utils
 from des_parallel_process import parallelProcessJoblib, collateRunResults, removeExistingResults
 from datetime import datetime
+import visualisation._job_outcome_calculation as _job_outcome_calculation
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
 
 class DistributionFitUtils():
     """
@@ -1424,7 +1426,7 @@ class DistributionFitUtils():
         print("Generating simulation results...")
         removeExistingResults()
 
-        total_runs = 24
+        total_runs = 30
         sim_years = 2
         sim_duration = 60 * 24 * 7 * 52 * sim_years
 
@@ -1441,34 +1443,49 @@ class DistributionFitUtils():
 
         try:
             results_all_runs = pd.read_csv("data/run_results.csv")
-            # Also run the model to get some base-case outputs
-            resource_requests = (
-                results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
-                .copy()
-                )
+            # # Also run the model to get some base-case outputs
+            # resource_requests = (
+            #     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+            #     .copy()
+            #     )
 
-            resource_requests["care_cat"] = (
-                resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y"
-                                        and x["care_cat"]=="REG" else x["care_cat"],
-                                        axis=1)
-                                        )
+            # resource_requests["care_cat"] = (
+            #     resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y"
+            #                             and x["care_cat"]=="REG" else x["care_cat"],
+            #                             axis=1)
+            #                             )
 
-            missed_jobs_care_cat_summary = (
-                resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs")
-                .sort_values(["care_cat", "time_type"])
-                .copy()
-                )
+            # missed_jobs_care_cat_summary = (
+            #     resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs")
+            #     .sort_values(["care_cat", "time_type"])
+            #     .copy()
+            #     )
 
-            missed_jobs_care_cat_summary["jobs_average"] = (
-                missed_jobs_care_cat_summary["jobs"]/
-                total_runs
-                )
+            # missed_jobs_care_cat_summary["jobs_average"] = (
+            #     missed_jobs_care_cat_summary["jobs"]/
+            #     total_runs
+            #     )
 
-            missed_jobs_care_cat_summary["jobs_per_year_average"] = (
-                (missed_jobs_care_cat_summary["jobs_average"] / float(sim_years*365)*365)
-                ).round(0)
+            # missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+            #     (missed_jobs_care_cat_summary["jobs_average"] / float(sim_years*365)*365)
+            #     ).round(0)
+
+            missed_jobs_care_cat_summary = _job_outcome_calculation.get_missed_call_df(
+                    results_all_runs=results_all_runs,
+                    run_length_days = float(sim_years*365),
+                    what="summary"
+                    )
 
             missed_jobs_care_cat_summary.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+
+
+            missed_jobs_care_cat_breakdown = _job_outcome_calculation.get_missed_call_df(
+                    results_all_runs=results_all_runs,
+                    run_length_days = float(sim_years*365),
+                    what="breakdown"
+                    )
+
+            missed_jobs_care_cat_breakdown.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_breakdown.csv")
 
         except FileNotFoundError:
             pass
@@ -1477,7 +1494,7 @@ if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
     test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
-    test.import_and_wrangle()
+    # test.import_and_wrangle()
     test.run_sim_on_historical_params()
 
 # Testing ----------

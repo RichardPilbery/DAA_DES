@@ -238,3 +238,118 @@ def plot_patient_outcomes(df, group_cols="vehicle_type",
         return fig
     else:
         return patient_outcomes_df_grouped_counts
+
+
+                # ------- Calculate missed jobs in simulation --------- #
+
+                # resource_requests = (
+                #     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+                #     .copy()
+                #     )
+
+                # resource_requests["care_cat"] = (
+                #     resource_requests.apply(
+                #         lambda x: "REG - Helicopter Benefit"
+                #         if x["heli_benefit"]=="y" and x["care_cat"]=="REG"
+                #         else x["care_cat"], axis=1))
+
+                # missed_jobs_care_cat_summary = (
+                #     resource_requests[["care_cat", "time_type"]]
+                #     .value_counts().reset_index(name="jobs")
+                #     .sort_values(["care_cat", "time_type"]).copy()
+                #     )
+
+                # missed_jobs_care_cat_summary["jobs_average"] = (
+                #     missed_jobs_care_cat_summary["jobs"] / st.session_state.number_of_runs_input)
+
+                # missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+                #     (missed_jobs_care_cat_summary["jobs_average"] /
+                #     float(st.session_state.sim_duration_input)) * 365
+                #     ).round(0)
+
+def get_missed_call_df(results_all_runs,
+                       run_length_days, what="summary"):
+    # Filter for relevant events
+    resource_requests = (
+        results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+        .copy()
+    )
+
+    # Recode care_cat when helicopter benefit applies
+    resource_requests["care_cat"] = resource_requests.apply(
+        lambda x: "REG - Helicopter Benefit"
+        if x["heli_benefit"] == "y" and x["care_cat"] == "REG"
+        else x["care_cat"],
+        axis=1
+    )
+
+    # Group by care_cat, time_type, and run_number to get jobs per run
+    jobs_per_run = (
+        resource_requests.groupby(["care_cat", "time_type", "run_number"])
+        .size()
+        .reset_index(name="jobs")
+    )
+
+    if what=="breakdown":
+        jobs_per_run["jobs_per_year"] = (jobs_per_run["jobs"]/ run_length_days) * 365
+        return jobs_per_run
+
+
+    elif what=="summary":
+
+        # Then aggregate to get average, min, and max per group
+        missed_jobs_care_cat_summary = (
+            jobs_per_run.groupby(["care_cat", "time_type"])
+            .agg(
+                jobs_average=("jobs", "mean"),
+                jobs_min=("jobs", "min"),
+                jobs_max=("jobs", "max")
+            )
+            .reset_index()
+        )
+
+        # Add annualised average per year
+        missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+            (missed_jobs_care_cat_summary["jobs_average"] / run_length_days) * 365
+        ).round(0)
+
+        missed_jobs_care_cat_summary["jobs_per_year_min"] = (
+            (missed_jobs_care_cat_summary["jobs_min"] / run_length_days) * 365
+        ).round(0)
+
+        missed_jobs_care_cat_summary["jobs_per_year_max"] = (
+            (missed_jobs_care_cat_summary["jobs_max"] / run_length_days) * 365
+        ).round(0)
+
+        return missed_jobs_care_cat_summary
+
+    else:
+        raise("Invalid option passed. Allowed options for the *what* parameter are 'summary' or 'breakdown'")
+
+
+def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown):
+    full_df = pd.concat([df_sim_breakdown, df_hist_breakdown])
+
+    category_order = ["CC", "EC", "REG - Helicopter Benefit", "REG"]
+
+    fig = px.box(
+        full_df [full_df["time_type"]=="No Resource Available"],
+        x="jobs_per_year",
+        y="care_cat",
+        color="what",
+        points="all",  # or "suspectedoutliers"
+        boxmode='group',
+        height=800,
+        labels={
+            "jobs_per_year": "Estimated Average Jobs per Year",
+            "care_cat": "Care Category",
+            "what": "Simulation Results vs Simulated Historical Data"
+        },
+        category_orders={"care_cat": category_order},
+    )
+
+    fig.update_layout(
+        legend=dict(orientation="h", y=1.1, x=0.5, xanchor='center')
+    )
+
+    return fig
