@@ -1,12 +1,17 @@
 import streamlit as st
-from _state_control import setup_state
+from _state_control import setup_state, reset_to_defaults
 from _app_utils import get_quarto
 import platform
 
+# Ensure state parameters (necessary for passing parameters between separate
+# pages) are defined
 setup_state()
 
 if "visited_setup_page" not in st.session_state:
     st.session_state["visited_setup_page"] = False
+
+# Restore all default rotas etc on load to ensure expected behaviour
+reset_to_defaults(reset_session_state=False, reset_csvs=True, notify=False)
 
 if platform.processor() == '':
     get_quarto("quarto_streamlit_community_cloud") # This name must match the repository name on GitHub
