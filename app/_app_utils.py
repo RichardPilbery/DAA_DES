@@ -5,6 +5,36 @@ import os
 import subprocess
 import platform
 from datetime import datetime
+import calendar
+
+# Mapping months to numbers
+MONTH_MAPPING = {
+    'January': 1, 'February': 2, 'March': 3, 'April': 4,
+    'May': 5, 'June': 6, 'July': 7, 'August': 8,
+    'September': 9, 'October': 10, 'November': 11, 'December': 12
+}
+
+REVERSE_MONTH_MAPPING = {v: k for k, v in MONTH_MAPPING.items()}
+
+def get_rota_month_strings(start_month, end_month):
+    # Convert selected months to numbers
+    start_month_num = MONTH_MAPPING[start_month]
+    end_month_num = MONTH_MAPPING[end_month]
+
+    # Summer rota
+    summer_start_date = f"1st {start_month}"
+    summer_end_day = calendar.monthrange(2024, end_month_num)[1]  # Assume leap year for Feb
+    summer_end_date = f"{summer_end_day}th {end_month}"
+
+    # Winter rota
+    winter_start_num = (end_month_num % 12) + 1  # month after summer end
+    winter_end_num = (start_month_num - 1) if start_month_num > 1 else 12  # month before summer start
+
+    winter_start_date = f"1st {REVERSE_MONTH_MAPPING[winter_start_num]}"
+    winter_end_day = calendar.monthrange(2024, winter_end_num)[1]  # same leap year assumption
+    winter_end_date = f"{winter_end_day}th {REVERSE_MONTH_MAPPING[winter_end_num]}"
+
+    return start_month_num, end_month_num, summer_start_date, summer_end_date, summer_end_day, winter_start_date, winter_end_date, winter_end_day
 
 def format_sigfigs(x, sigfigs=4):
     from math import log10, floor
@@ -284,6 +314,25 @@ hr {
                 st.switch_page("setup.py")
         st.subheader("Model Input Summary")
         quarto_string += "## Model Input Summary\n\n"
+
+        rota_start_end_months = pd.read_csv("actual_data/rota_start_end_months.csv")
+
+        start_month_num, end_month_num, summer_start_date, summer_end_date, summer_end_day,  winter_start_date, winter_end_date, winter_end_day = get_rota_month_strings(
+            start_month=rota_start_end_months[rota_start_end_months["what"]=="summer_start_month_string"]["month"].values[0],
+            end_month=rota_start_end_months[rota_start_end_months["what"]=="summer_end_month_string"]["month"].values[0]
+            )
+
+        summer_string = f"☀️ Summer rota runs from {summer_start_date} to {summer_end_date} (inclusive)"
+        winter_string = f"❄️ Winter rota runs from {winter_start_date} to {winter_end_date} (inclusive)"
+
+        st.write(summer_string)
+        st.write(winter_string)
+
+        quarto_string += "\n\n"
+        quarto_string += summer_string
+        quarto_string += "\n"
+        quarto_string += winter_string
+        quarto_string += "\n\n"
 
         num_helos_string = f"Number of Helicopters: {st.session_state.num_helicopters}"
         quarto_string += "### "

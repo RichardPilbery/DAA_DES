@@ -1,3 +1,5 @@
 what,month
 summer_start_month,4
 summer_end_month,10
+summer_start_month_string,April
+summer_end_month_string,October
