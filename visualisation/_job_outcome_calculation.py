@@ -32,7 +32,8 @@ def get_care_cat_counts_plot_sim(results_path="data/run_results.csv",
         [["P_ID", "run_number", "care_cat", "hour"]].reset_index()
         .groupby(["hour", "care_cat"]).size()
         .reset_index(name="count")
-        )
+        ).copy()
+
     # Calculate total per hour
     total_per_hour = care_cat_by_hour.groupby("hour")["count"].transform("sum")
     # Add proportion column
@@ -116,7 +117,7 @@ def get_care_cat_proportion_table(
         [["P_ID", "run_number", "care_cat"]].reset_index()
         .groupby(["care_cat"]).size()
         .reset_index(name="count")
-        )
+        ).copy()
 
     full_counts = historical_counts_simple.merge(
             care_cat_counts_sim
@@ -139,12 +140,14 @@ def get_care_cat_proportion_table(
 
 def get_preferred_outcome_by_hour(results_path="data/run_results.csv", show_proportions=False):
     run_results = pd.read_csv(results_path)
+
     resource_preferred_outcome_by_hour =(
         run_results[run_results["event_type"]=="resource_preferred_outcome"]
         [["P_ID", "run_number", "care_cat", "time_type", "hour"]].reset_index()
         .groupby(["time_type", "hour"]).size()
         .reset_index(name="count")
-        )
+        ).copy()
+
     # Calculate total per hour
     total_per_hour = resource_preferred_outcome_by_hour.groupby("hour")["count"].transform("sum")
     # Add proportion column
@@ -164,7 +167,16 @@ def get_preferred_outcome_by_hour(results_path="data/run_results.csv", show_prop
 
 def get_facet_plot_preferred_outcome_by_hour(results_path="data/run_results.csv"):
     run_results = pd.read_csv(results_path)
-    resource_preferred_outcome_by_hour = run_results[run_results["event_type"]=="resource_preferred_outcome"][["P_ID", "run_number", "care_cat", "time_type", "hour"]].reset_index().groupby(["time_type", "hour"]).size().reset_index(name="count")
+
+    resource_preferred_outcome_by_hour = (
+        run_results[run_results["event_type"]=="resource_preferred_outcome"]
+        [["P_ID", "run_number", "care_cat", "time_type", "hour"]]
+        .reset_index()
+        .groupby(["time_type", "hour"])
+        .size()
+        .reset_index(name="count")
+        ).copy()
+
     # Calculate total per hour
     total_per_hour = resource_preferred_outcome_by_hour.groupby("hour")["count"].transform("sum")
     # Add proportion column
@@ -271,6 +283,7 @@ def plot_patient_outcomes(df, group_cols="vehicle_type",
 def get_missed_call_df(results_all_runs,
                        run_length_days, what="summary"):
     # Filter for relevant events
+
     resource_requests = (
         results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
         .copy()
@@ -330,7 +343,9 @@ def get_missed_call_df(results_all_runs,
 
 def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown, what="breakdown",
                               historical_yearly_missed_calls_estimate=None):
+
     full_df = pd.concat([df_sim_breakdown, df_hist_breakdown])
+
     full_df_no_resource_avail = full_df[full_df["time_type"]=="No Resource Available"]
 
     if what == "breakdown":
