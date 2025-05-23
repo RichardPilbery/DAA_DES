@@ -43,17 +43,17 @@ class Utils:
         self.print_debug_messages = print_debug_messages
 
         # Load in mean inter_arrival_times
-        self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
         self.hourly_arrival_by_qtr_probs_df = pd.read_csv('distribution_data/hourly_arrival_by_qtr_probs.csv')
         self.hour_by_ampds_df = pd.read_csv('distribution_data/hour_by_ampds_card_probs.csv')
         self.sex_by_ampds_df = pd.read_csv('distribution_data/sex_by_ampds_card_probs.csv')
         self.care_cat_by_ampds_df = pd.read_csv('distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv')
         self.callsign_by_care_category_df = pd.read_csv('distribution_data/callsign_group_by_care_category_probs.csv')
-        self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
         # New addition without stratification by month
         self.vehicle_type_df = pd.read_csv('distribution_data/vehicle_type_probs.csv')
 
-        # ========= ARCHIVED CODE ================== #
+        # ========= ARCHIVED CODE ================== ##
+        # self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
+        # self.inter_arrival_rate_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
         # self.callsign_by_ampds_and_hour_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_and_hour_probs.csv')
         # self.callsign_by_ampds_df = pd.read_csv('distribution_data/callsign_group_by_ampds_card_probs.csv')
         # self.hems_result_by_callsign_group_and_vehicle_type_df = pd.read_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv')

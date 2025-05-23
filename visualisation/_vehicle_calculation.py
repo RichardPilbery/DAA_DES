@@ -363,9 +363,12 @@ def get_perc_unattended_string_normalised(event_log_df, params_df="data/run_para
 
         perc_unattendable = num_unattendable/total_calls
 
+        total_average_calls_missed_per_year = (num_unattendable/num_runs/sim_duration_days)*365
+        total_average_calls_received_per_year = ((total_calls/num_runs/sim_duration_days)*365)
+
         if perc_unattendable < 0.01:
-            return f"{(num_unattendable/num_runs):.0f} of {(total_calls/num_runs):.0f} (< 0.1%)", f"This equates to around {((num_unattendable/num_runs/sim_duration_days)*365):.0f} of {((total_calls/num_runs/sim_duration_days)*365):.0f} calls per year"
+            return total_average_calls_received_per_year, f"{(num_unattendable/num_runs):.0f} of {(total_calls/num_runs):.0f} (< 0.1%)", f"This equates to around {total_average_calls_missed_per_year:.0f} of {total_average_calls_received_per_year:.0f} calls per year having no resource available to attend."
         else:
-            return f"{(num_unattendable/num_runs):.0f} of {(total_calls/num_runs):.0f} ({perc_unattendable:.1%})", f"This equates to around {((num_unattendable/num_runs/sim_duration_days)*365):.0f} of {((total_calls/num_runs/sim_duration_days)*365):.0f} calls per year"
+            return total_average_calls_received_per_year, f"{(num_unattendable/num_runs):.0f} of {(total_calls/num_runs):.0f} ({perc_unattendable:.1%})", f"This equates to around {total_average_calls_missed_per_year:.0f} of {total_average_calls_received_per_year:.0f} calls per year having no resource available to attend."
     except:
-        return "Error"
+        return 2500, "Error", "Error"

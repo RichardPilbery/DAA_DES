@@ -240,7 +240,7 @@ if button_run_pressed:
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
-                perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
+                total_average_calls_received_per_year, perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
 
                 quarto_string += "## Calls Not Attended\n\n"
 
@@ -252,7 +252,7 @@ if button_run_pressed:
                             border=True)
                     missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
                     st.caption(f"**{perc_unattended_normalised}**")
-                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically*")
+                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically (approximately {total_average_calls_received_per_year*(float(missed_calls_hist_string)/100):.0f} calls per year)*")
 
                     missed_calls_description = get_text("missed_calls_description", text_df)
 
@@ -271,44 +271,26 @@ if button_run_pressed:
 
             col_ec_cc_sim, col_ec_cc_hist_sim = st.columns(2)
 
-            def get_missed_jobs_fig(care_category, df):
+            def get_missed_jobs_fig(care_category, df, what="average"):
                     row = df[
                         (df["care_cat"]==care_category) &
                         (df["time_type"]=="No Resource Available")
                         ]
-                    return row['jobs_per_year_average'].values[0]
+                    if what == "average":
+                        return row['jobs_per_year_average'].values[0]
+                    elif what == "min":
+                        return row['jobs_per_year_min'].values[0]
+                    elif what == "max":
+                        return row['jobs_per_year_max'].values[0]
 
             with col_ec_cc_sim:
                 st.markdown("#### Simulation Outputs")
 
-
-
-                # ------- Calculate missed jobs in simulation --------- #
-
-                resource_requests = (
-                    results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
-                    .copy()
+                missed_jobs_care_cat_summary = _job_outcome_calculation.get_missed_call_df(
+                    results_all_runs=results_all_runs,
+                    run_length_days = float(st.session_state.sim_duration_input),
+                    what="summary"
                     )
-
-                resource_requests["care_cat"] = (
-                    resource_requests.apply(
-                        lambda x: "REG - Helicopter Benefit"
-                        if x["heli_benefit"]=="y" and x["care_cat"]=="REG"
-                        else x["care_cat"], axis=1))
-
-                missed_jobs_care_cat_summary = (
-                    resource_requests[["care_cat", "time_type"]]
-                    .value_counts().reset_index(name="jobs")
-                    .sort_values(["care_cat", "time_type"]).copy()
-                    )
-
-                missed_jobs_care_cat_summary["jobs_average"] = (
-                    missed_jobs_care_cat_summary["jobs"] / st.session_state.number_of_runs_input)
-
-                missed_jobs_care_cat_summary["jobs_per_year_average"] = (
-                    (missed_jobs_care_cat_summary["jobs_average"] /
-                    float(st.session_state.sim_duration_input)) * 365
-                    ).round(0)
 
                 sim_missed_cc = get_missed_jobs_fig("CC", missed_jobs_care_cat_summary)
                 sim_missed_ec = get_missed_jobs_fig("EC", missed_jobs_care_cat_summary)
@@ -344,9 +326,12 @@ if button_run_pressed:
                 missed_jobs_sim_string = f"""
     The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
-    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)}*)
-    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)}*)
-    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)}*)
+    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)}*), with an estimated range of {get_missed_jobs_fig("CC", missed_jobs_care_cat_summary, "min"):.0f} to {get_missed_jobs_fig("CC", missed_jobs_care_cat_summary, "max"):.0f}
+
+    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)}*) with an estimated range of {get_missed_jobs_fig("EC", missed_jobs_care_cat_summary, "min"):.0f} to {get_missed_jobs_fig("EC", missed_jobs_care_cat_summary, "max"):.0f}
+
+    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)}*) with an estimated range of {get_missed_jobs_fig("REG", missed_jobs_care_cat_summary, "min")+get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary, "min"):.0f} to {get_missed_jobs_fig("REG", missed_jobs_care_cat_summary, "max")+get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary, "max"):.0f}
+
         - of these missed regular jobs, **{sim_missed_reg_heli_benefit:.0f}** may have benefitted from the attendance of a helicopter (*{format_diff(diff_missed_reg_heli_benefit)}*)
                             """
 
@@ -361,10 +346,10 @@ if button_run_pressed:
     As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
     However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
 
-    - {hist_missed_cc:.0f} critical care jobs that would be missed due to no resource being available
-    - {hist_missed_ec:.0f} enhanced care jobs that would be missed due to no resource being available
-    - {hist_missed_all_reg:.0f} jobs with no predicted CC or EC intervention that would be missed due to no resource being available
-        - of these missed regular jobs, {hist_missed_reg_heli_benefit:.0f} may have benefitted from the attendance of a helicopter
+    - {hist_missed_cc:.0f} critical care jobs that would be missed due to no resource being available *(estimated range of {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs, "max"):.0f})*
+    - {hist_missed_ec:.0f} enhanced care jobs that would be missed due to no resource being available *(estimated range of {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs, "max"):.0f})*
+    - {hist_missed_all_reg:.0f} jobs with no predicted CC or EC intervention that would be missed due to no resource being available *(estimated range of {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs, "min")+get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs, "max")+get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "max"):.0f})*
+        - of these missed regular jobs, {hist_missed_reg_heli_benefit:.0f} may have benefitted from the attendance of a helicopter *(estimated range of {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "max"):.0f})*
                             """
 
                 st.caption(missed_jobs_historical_comparison)
@@ -490,6 +475,11 @@ In this case, we would be looking for two things to be consistent across the top
 
 """)
 
+            # NOTE!
+            # The final plot in this tab (summary of missed calls over runs) is not created
+            # # until tab_2_4, when a related plot is created.
+            # It then gets put here.
+
             with tab_2_2:
                 @st.fragment
                 def create_utilisation_rwc_plot():
@@ -577,9 +567,36 @@ only EC interventions would be delivered and only an EC benefit would have been 
 dataset.
 """)
 
+                    df_sim_breakdown = _job_outcome_calculation.get_missed_call_df(
+                       results_all_runs,
+                       run_length_days=730,
+                       what="breakdown"
+                       )
+                    df_sim_breakdown["what"] = "Simulation"
+
+                    df_hist_breakdown = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_breakdown.csv")
+                    df_hist_breakdown["what"] = "Historical (Simulated with Historical Rotas)"
+                    st.subheader("Variation in projected missed calls across simulation runs")
+                    st.write("This is compared with an estimate of the missed calls per year by category using historic rotas")
+
+                    st.plotly_chart(
+                        _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown)
+                    )
+                    tab_2_1.subheader("Variation in missed calls across simulation runs")
+
+                    tab_2_1.plotly_chart(
+                        _job_outcome_calculation.plot_missed_calls_boxplot(
+                            df_sim_breakdown, df_hist_breakdown,
+                            what="summary",
+                            historical_yearly_missed_calls_estimate=total_average_calls_received_per_year*(float(missed_calls_hist_string)/100)
+                            )
+                    )
+
+                    st.subheader("Job Categories - Simulation vs Historical")
+
                     @st.fragment
                     def plot_cc_ec_split():
-                        show_proportions_care_cat_plot = st.toggle("Show Proportions", False)
+                        show_proportions_care_cat_plot = st.toggle("Show Proportions", True)
 
                         st.plotly_chart(
                             _job_outcome_calculation.get_care_cat_counts_plot_sim(

@@ -19,8 +19,8 @@ class ResourceAllocationReason(IntEnum):
     CC_MATCH_EC_CAR = 4
     EC_MATCH_CC_HELI = 5
     EC_MATCH_CC_CAR = 6
-    HELI_MATCH_EC_HELI = 7  # (unused but reserved for future logic)
-    HELI_MATCH_CC_HELI = 8  # (unused but reserved for future logic)
+    REG_HELI_BENEFIT_MATCH_EC_HELI = 7
+    REG_HELI_BENEFIT_MATCH_CC_HELI = 8
     REG_NO_HELI_BENEFIT_GROUP_AND_VEHICLE = 9
     REG_NO_HELI_BENEFIT_GROUP = 10
     OTHER_VEHICLE_TYPE = 11
@@ -49,13 +49,13 @@ class HEMSAvailability():
             "HEMS CC case EC car available", # 4
             "HEMS EC case CC helicopter available", # 5
             "HEMS EC case CC car available", # 6
-            "HEMS REG helicopter case EC helicopter available",  # optional / reserved
-            "HEMS REG helicopter case CC helicopter available",  # optional / reserved
+            "HEMS REG helicopter case EC helicopter available",
+            "HEMS REG helicopter case CC helicopter available",
             "HEMS REG case no helicopter benefit preferred group and vehicle type allocated", # 9
             "HEMS REG case no helicopter benefit preferred group allocated", # 10
             "No HEMS resource available (pref vehicle type = 'Other')", # 11
             "HEMS REG case no helicopter benefit first free resource allocated", # 12
-            "HEMS REG case no helicopter benefit free helicopter allocated"
+            "HEMS REG case no helicopter benefit free helicopter allocated" #13
         ]
 
         self.env = env
@@ -628,6 +628,7 @@ class HEMSAvailability():
         self.active_registrations.discard(resource.registration)
         self.active_callsigns.discard(resource.callsign)
         self.store.put(resource)
+        self.debug(f"{resource.callsign} finished job")
 
         if secondary_resource is not None:
             secondary_resource.in_use = False
@@ -635,6 +636,9 @@ class HEMSAvailability():
             self.active_registrations.discard(secondary_resource.registration)
             self.active_callsigns.discard(secondary_resource.callsign)
             self.store.put(secondary_resource)
+            self.debug(f"{secondary_resource.callsign} free as {resource.callsign} finished job")
+
+
 
     def years_between(self, start_date: datetime, end_date: datetime) -> list[int]:
         """
@@ -821,20 +825,20 @@ class HEMSAvailability():
             # --- HELICOPTER BENEFIT CASE ---
             # P3 = Helicopter patient
             # Resources allocated in following order:
-            # IF H71 available = SEND
-            # ELSE H70 available = SEND
+            # IF H70 available = SEND
+            # ELSE H71 available = SEND
 
             if helicopter_benefit == "y":
-                # Priority 1: EC-category helicopter (assumed most beneficial)
-                if h.vehicle_type == "helicopter" and h.category == "EC":
+                # Priority 1: CC-category helicopter (assumed most beneficial)
+                if h.vehicle_type == "helicopter" and h.category == "CC":
                     hems = h
-                    preferred_lookup = ResourceAllocationReason.HELI_MATCH_EC_HELI
+                    preferred_lookup = ResourceAllocationReason.REG_HELI_BENEFIT_MATCH_CC_HELI
                     break
-                # Priority 2: Any helicopter (less preferred than EC, hence priority = 2)
+                # Priority 2: Any helicopter (less preferred than CC, hence priority = 2)
                 elif h.vehicle_type == "helicopter" and preferred > 2:
                     hems = h
                     preferred = 2
-                    preferred_lookup = ResourceAllocationReason.HELI_MATCH_CC_HELI
+                    preferred_lookup = ResourceAllocationReason.REG_HELI_BENEFIT_MATCH_EC_HELI
 
                 # If no EC or CC helicopters are available, then:
                 # - hems remains None
@@ -865,7 +869,7 @@ class HEMSAvailability():
                     preferred_lookup = ResourceAllocationReason.REG_NO_HELI_BENEFIT_ANY
 
         # Return the best found HEMS resource and reason for selection
-        self.debug(f"Selected REG lookup: {preferred_lookup.name} ({preferred_lookup.value})")
+        self.debug(f"Selected REG (heli benefit = {helicopter_benefit}) lookup: {preferred_lookup.name} ({preferred_lookup.value})")
         return [hems, self.resource_allocation_lookup(preferred_lookup if hems else ResourceAllocationReason.NONE_AVAILABLE)]
 
 

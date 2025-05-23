@@ -5,6 +5,36 @@ import os
 import subprocess
 import platform
 from datetime import datetime
+import calendar
+
+# Mapping months to numbers
+MONTH_MAPPING = {
+    'January': 1, 'February': 2, 'March': 3, 'April': 4,
+    'May': 5, 'June': 6, 'July': 7, 'August': 8,
+    'September': 9, 'October': 10, 'November': 11, 'December': 12
+}
+
+REVERSE_MONTH_MAPPING = {v: k for k, v in MONTH_MAPPING.items()}
+
+def get_rota_month_strings(start_month, end_month):
+    # Convert selected months to numbers
+    start_month_num = MONTH_MAPPING[start_month]
+    end_month_num = MONTH_MAPPING[end_month]
+
+    # Summer rota
+    summer_start_date = f"1st {start_month}"
+    summer_end_day = calendar.monthrange(2024, end_month_num)[1]  # Assume leap year for Feb
+    summer_end_date = f"{summer_end_day}th {end_month}"
+
+    # Winter rota
+    winter_start_num = (end_month_num % 12) + 1  # month after summer end
+    winter_end_num = (start_month_num - 1) if start_month_num > 1 else 12  # month before summer start
+
+    winter_start_date = f"1st {REVERSE_MONTH_MAPPING[winter_start_num]}"
+    winter_end_day = calendar.monthrange(2024, winter_end_num)[1]  # same leap year assumption
+    winter_end_date = f"{winter_end_day}th {REVERSE_MONTH_MAPPING[winter_end_num]}"
+
+    return start_month_num, end_month_num, summer_start_date, summer_end_date, summer_end_day, winter_start_date, winter_end_date, winter_end_day
 
 def format_sigfigs(x, sigfigs=4):
     from math import log10, floor
@@ -285,11 +315,30 @@ hr {
         st.subheader("Model Input Summary")
         quarto_string += "## Model Input Summary\n\n"
 
+        rota_start_end_months = pd.read_csv("actual_data/rota_start_end_months.csv")
+
+        start_month_num, end_month_num, summer_start_date, summer_end_date, summer_end_day,  winter_start_date, winter_end_date, winter_end_day = get_rota_month_strings(
+            start_month=rota_start_end_months[rota_start_end_months["what"]=="summer_start_month_string"]["month"].values[0],
+            end_month=rota_start_end_months[rota_start_end_months["what"]=="summer_end_month_string"]["month"].values[0]
+            )
+
+        summer_string = f"☀️ Summer rota runs from {summer_start_date} to {summer_end_date} (inclusive)"
+        winter_string = f"❄️ Winter rota runs from {winter_start_date} to {winter_end_date} (inclusive)"
+
+        st.write(summer_string)
+        st.write(winter_string)
+
+        quarto_string += "\n\n"
+        quarto_string += summer_string
+        quarto_string += "\n"
+        quarto_string += winter_string
+        quarto_string += "\n\n"
+
         num_helos_string = f"Number of Helicopters: {st.session_state.num_helicopters}"
         quarto_string += "### "
         quarto_string += num_helos_string
         quarto_string += "\n\n"
-        st.write(num_helos_string)
+        st.write(f"### {num_helos_string}")
 
 
         rota = (
@@ -306,38 +355,90 @@ hr {
             )
         )
 
-        for idx, row in rota[rota["vehicle_type"]=="helicopter"].iterrows():
-            helicopter_rota_string = f"""
-{row["callsign"]} is an {row["model"]} and runs a {row["category"]} service
-from {to_military_time(row["summer_start"])}
-to {to_military_time(row["summer_end"])} in summer
-and {to_military_time(row["winter_start"])}
-to {to_military_time(row["winter_end"])} in winter.
-"""
-            # quarto_string += "🚁 "
-            quarto_string += helicopter_rota_string
-            st.caption(helicopter_rota_string)
+        # Group by helicopter resources
+        helicopters = rota[rota["vehicle_type"] == "helicopter"]
+        grouped_heli = helicopters.groupby("callsign")
+
+        quarto_string = ""
+
+        for callsign, group in grouped_heli:
+            model = group.iloc[0]["model"]
+            header = f"#### {callsign} is an {model} and\n"
+            body = ""
+            for _, row in group.iterrows():
+                summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
+                winter = f"\n- runs a {row['category']} service from {to_military_time(row['winter_start'])} to {to_military_time(row['winter_end'])} in winter"
+                body += f"    {summer}\n    {winter}\n\n"
+            result = header + body + "\n"
+            quarto_string += result
+            st.caption(result)
+
+        # Grouping callsign groups
+        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
+        callsign_group_counts.columns = ['callsign_group', 'count']
+
+        extra_cars_only = list(callsign_group_counts[callsign_group_counts['count'] == 1]['callsign_group'].values)
+        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count'] > 1]['callsign_group'].values)
+
+        # Backup cars
+        backup_cars = rota[rota["callsign_group"].isin(backup_cars_only) & (rota["vehicle_type"] != "helicopter")]
+        grouped_backup = backup_cars.groupby("callsign")
+
+        quarto_string += "\n\n### Backup Cars\n\n"
+
+        for callsign, car_group in grouped_backup:
+            model = car_group.iloc[0]["model"]
+            group_id = car_group.iloc[0]["callsign_group"]
+
+            heli_group = helicopters[helicopters["callsign_group"] == group_id]
+
+            # Compare car and heli rotas for group
+            identical = (
+                car_group[["summer_start", "summer_end", "winter_start", "winter_end", "category"]]
+                .reset_index(drop=True)
+                .equals(
+                    heli_group[["summer_start", "summer_end", "winter_start", "winter_end", "category"]]
+                    .reset_index(drop=True)
+                )
+            )
+
+            if identical:
+                message = f"The backup car {callsign} in group {group_id} has the same rota as the helicopter.\n\n"
+                quarto_string += message
+                st.caption(message)
+            else:
+                message = f"The backup car {callsign} in group {group_id} has a different rota to the helicopter.\n\n"
+                quarto_string += message
+                st.caption(message)
+                header = f"#### {callsign} is a {model} and\n"
+                body = ""
+                for _, row in car_group.iterrows():
+                    summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
+                    winter = f"\n- runs a {row['category']} service from {to_military_time(row['winter_start'])} to {to_military_time(row['winter_end'])} in winter"
+                    body += f"    {summer}\n    {winter}\n\n"
+                result = header + body + "\n"
+                quarto_string += result
+                st.caption(result)
+
+        # Extra (non-backup) cars
+        extra_cars = rota[rota["callsign_group"].isin(extra_cars_only) & (rota["vehicle_type"] != "helicopter")]
+        grouped_extra = extra_cars.groupby("callsign")
 
         num_cars_string = f"Number of **Extra** (non-backup) Cars: {st.session_state.num_cars}"
-        quarto_string += "\n\n### "
-        quarto_string += num_cars_string
-        quarto_string += "\n\n"
-        st.write(num_cars_string)
-        callsign_group_counts = rota['callsign_group'].value_counts().reset_index()
-        backup_cars_only = list(callsign_group_counts[callsign_group_counts['count']==1]['callsign_group'].values)
+        quarto_string += "\n\n### " + num_cars_string + "\n\n"
+        st.write(f"### {num_cars_string}")
 
-
-        for idx, row in rota[rota["callsign_group"].isin(backup_cars_only)].iterrows():
-            car_rota_string = f"""
-{row["callsign"]} is a {row["model"]} and runs
-from {to_military_time(row["summer_start"])}
-to {to_military_time(row["summer_end"])} in summer
-and {to_military_time(row["winter_start"])}
-to {to_military_time(row["winter_end"])} in winter.
-"""
-            # quarto_string += "🚗 "
-            quarto_string += car_rota_string
-            st.caption(car_rota_string)
+        for callsign, group in grouped_extra:
+            model = group.iloc[0]["model"]
+            header = f"#### {callsign} is a {model} and\n"
+            body = ""
+            for _, row in group.iterrows():
+                summer = f"\n- runs a {row['category']} service from {to_military_time(row['summer_start'])} to {to_military_time(row['summer_end'])} in summer"
+                winter = f"\n- runs a {row['category']} service from {to_military_time(row['winter_start'])} to {to_military_time(row['winter_end'])} in winter"
+                body += f"    {summer}\n    {winter}\n\n"
+            result = header + body + "\n"
+            quarto_string += result
+            st.caption(result)
 
 
         if st.session_state.demand_adjust_type == "Overall Demand Adjustment":

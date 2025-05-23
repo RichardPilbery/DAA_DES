@@ -12,9 +12,11 @@ from datetime import timedelta
 from utils import Utils
 from des_parallel_process import parallelProcessJoblib, collateRunResults, removeExistingResults
 from datetime import datetime
+import visualisation._job_outcome_calculation as _job_outcome_calculation
 
 os.chdir(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+
 
 class DistributionFitUtils():
     """
@@ -156,7 +158,6 @@ class DistributionFitUtils():
         self.removeExistingResults(Utils.HISTORICAL_FOLDER)
         self.removeExistingResults(Utils.DISTRIBUTION_FOLDER)
 
-
         #get proportions of AMPDS card by hour of day
         self.hour_by_ampds_card_probs()
 
@@ -169,17 +170,14 @@ class DistributionFitUtils():
         # Determine 'best' distributions for age ranges straitifed by AMPDS card
         self.age_distributions()
 
-        # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
-        self.inter_arrival_times()
-
-        # Alternaitve approach to IA times. Start with probabilty of call at given hour stratified by quarter
+        # Alternative approach to IA times. Start with probabilty of call at given hour stratified by quarter
         self.hourly_arrival_by_qtr_probs()
 
-        # Calculates the mean and standard deviaion of the number of incidents per day stratified by quarter
+        # Calculates the mean and standard deviation of the number of incidents per day stratified by quarter
         self.incidents_per_day()
         self.incidents_per_day_samples()
 
-        # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
+        # Calculate probability of enhanced or critical care being required based on AMPDS card
         self.enhanced_or_critical_care_by_ampds_card_probs()
 
         # Calculate HEMS result
@@ -190,16 +188,24 @@ class DistributionFitUtils():
         # self.callsign_group_by_ampds_card_probs()
         self.callsign_group_by_care_category()
 
-        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        self.pt_outcome_by_hems_result_and_care_category_probs()
-
         # Calculate probability of a particular vehicle type based on callsign group and month of year
-        self.vehicle_type_by_month_probs()
+        # self.vehicle_type_by_month_probs()
         self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
+
+        # Calculate the patient outcome (conveyed, deceased, unknown)
+        self.patient_outcome_by_care_category_and_quarter_probs()
+
+        # ============= ARCHIVED CODE ================= #
+        # Calculate the mean inter-arrival times stratified by yearly quarter and hour of day
+        # self.inter_arrival_times()
+        # ============= END ARCHIVED CODE ================= #
+
 
         # ============= ARCHIVED CODE ================= #
         # Calculate probably of patient outcome
-        # self.patient_outcome_by_care_category_and_quarter_probs()
+        # Note - this still needs to be run to support another one?
+        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
+        # self.pt_outcome_by_hems_result_and_care_category_probs()
         # ============= END ARCHIVED CODE ================= #
 
         # ============= ARCHIVED CODE ================= #
@@ -236,8 +242,10 @@ class DistributionFitUtils():
         self.historical_care_cat_counts()
 
         # Calculate proportions of ad hoc unavailability
-        self.ad_hoc_unavailability()
-
+        try:
+            self.ad_hoc_unavailability()
+        except FileNotFoundError:
+            print("Couldn't find ad-hoc unavailability file")
 
     def hour_by_ampds_card_probs(self):
         """
@@ -357,35 +365,35 @@ class DistributionFitUtils():
         convert_file.close()
 
 
-    def inter_arrival_times(self):
-        """
+    # def inter_arrival_times(self):
+    #     """
 
-            Calculate the mean inter-arrival times for patients
-            stratified by hour, and and yearly quarter
+    #         Calculate the mean inter-arrival times for patients
+    #         stratified by hour, and and yearly quarter
 
-        """
+    #     """
 
-        ia_df = self.df[['date_only', 'quarter', 'hour']].dropna()
+    #     ia_df = self.df[['date_only', 'quarter', 'hour']].dropna()
 
-        count_df = ia_df.groupby(['hour', 'date_only', 'quarter']).size().reset_index(name='n')
+    #     count_df = ia_df.groupby(['hour', 'date_only', 'quarter']).size().reset_index(name='n')
 
-        ia_times_df = (
-            count_df.groupby(['hour', 'quarter'])
-            .agg(
-                # max_arrivals_per_hour=('n', lambda x: round(60 / np.max(x), 3)),
-                # min_arrivals_per_hour=('n', lambda x: round(60 / np.min(x),3)),
-                mean_cases=('n', lambda x: round(x.mean(), 1)),
-                # sd_cases=('n', lambda x: round(x.std(), 3)),
-                mean_iat=('n', lambda x: 60 / x.mean())
-                # n=('n', 'size')
-            )
-            .reset_index()
-        )
-        # Additional column for NSPPThinning
-        ia_times_df['t'] = ia_times_df['hour']
-        ia_times_df['arrival_rate'] = ia_times_df['mean_iat'].apply(lambda x: 1/x)
+    #     ia_times_df = (
+    #         count_df.groupby(['hour', 'quarter'])
+    #         .agg(
+    #             # max_arrivals_per_hour=('n', lambda x: round(60 / np.max(x), 3)),
+    #             # min_arrivals_per_hour=('n', lambda x: round(60 / np.min(x),3)),
+    #             mean_cases=('n', lambda x: round(x.mean(), 1)),
+    #             # sd_cases=('n', lambda x: round(x.std(), 3)),
+    #             mean_iat=('n', lambda x: 60 / x.mean())
+    #             # n=('n', 'size')
+    #         )
+    #         .reset_index()
+    #     )
+    #     # Additional column for NSPPThinning
+    #     ia_times_df['t'] = ia_times_df['hour']
+    #     ia_times_df['arrival_rate'] = ia_times_df['mean_iat'].apply(lambda x: 1/x)
 
-        ia_times_df.to_csv('distribution_data/inter_arrival_times.csv', mode='w+')
+    #     ia_times_df.to_csv('distribution_data/inter_arrival_times.csv', mode='w+')
 
 
     def incidents_per_day(self):
@@ -534,7 +542,7 @@ class DistributionFitUtils():
     def enhanced_or_critical_care_by_ampds_card_probs(self):
         """
 
-            Calculates the probabilty of enhanced or critica care resource beign required
+            Calculates the probabilty of enhanced or critical care resource beign required
             based on the AMPDS card
 
         """
@@ -782,19 +790,21 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_care_category_probs.csv', mode = "w+", index=False)
 
-    def vehicle_type_by_month_probs(self):
-        """
+    #========== ARCHIVED CODE ============ #
+    # def vehicle_type_by_month_probs(self):
+    #     """
 
-            Calculates the probabilty of a car/helicopter being allocated to
-            a call based on the callsign group and month of the year
+    #         Calculates the probabilty of a car/helicopter being allocated to
+    #         a call based on the callsign group and month of the year
 
-        """
-        callsign_counts = self.df.groupby(['callsign_group', 'month', 'vehicle_type']).size().reset_index(name='count')
+    #     """
+    #     callsign_counts = self.df.groupby(['callsign_group', 'month', 'vehicle_type']).size().reset_index(name='count')
 
-        total_counts = callsign_counts.groupby(['callsign_group', 'month'])['count'].transform('sum')
-        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+    #     total_counts = callsign_counts.groupby(['callsign_group', 'month'])['count'].transform('sum')
+    #     callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
-        callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
+    #     callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
+    #========== END ARCHIVED CODE ============ #
 
     def vehicle_type_probs(self):
         """
@@ -811,7 +821,6 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/vehicle_type_probs.csv', mode = "w+")
 
-    #========== ARCHIVED CODE ============ #
     def hems_result_by_callsign_group_and_vehicle_type_probs(self):
         """
 
@@ -828,7 +837,6 @@ class DistributionFitUtils():
         hems_counts['proportion'] = round(hems_counts['count'] / total_counts, 4)
 
         hems_counts.to_csv('distribution_data/hems_result_by_callsign_group_and_vehicle_type_probs.csv', mode = "w+", index=False)
-    #========== END ARCHIVED CODE ============ #
 
 
     #========== ARCHIVED CODE ============ #
@@ -877,48 +885,48 @@ class DistributionFitUtils():
     #     hems_counts.to_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv', mode = "w+", index=False)
     #========== END ARCHIVED CODE ============ #
 
+    #========== ARCHIVED CODE ============ #
+    # def pt_outcome_by_hems_result_and_care_category_probs(self):
+    #     """
 
-    def pt_outcome_by_hems_result_and_care_category_probs(self):
-        """
+    #         Calculates the probabilty of a specific patient outcome based on HEMS result
 
-            Calculates the probabilty of a specific patient outcome based on HEMS result
+    #     """
 
-        """
+    #     hems_df = (
+    #         self.df
+    #         .assign(
+    #             helicopter_benefit=np.select(
+    #                 [
+    #                     self.df["cc_benefit"] == "y",
+    #                     self.df["ec_benefit"] == "y",
+    #                     self.df["hems_result"].isin([
+    #                         "Stand Down En Route",
+    #                         "Landed but no patient contact",
+    #                         "Stand Down Before Mobile"
+    #                     ])
+    #                 ],
+    #                 ["y", "y", "n"],
+    #                 default=self.df["helicopter_benefit"]
+    #             ),
+    #             care_category=np.select(
+    #                 [
+    #                     self.df["cc_benefit"] == "y",
+    #                     self.df["ec_benefit"] == "y"
+    #                 ],
+    #                 ["CC", "EC"],
+    #                 default="REG"
+    #             )
+    #         )
+    #     )
 
-        hems_df = (
-            self.df
-            .assign(
-                helicopter_benefit=np.select(
-                    [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y",
-                        self.df["hems_result"].isin([
-                            "Stand Down En Route",
-                            "Landed but no patient contact",
-                            "Stand Down Before Mobile"
-                        ])
-                    ],
-                    ["y", "y", "n"],
-                    default=self.df["helicopter_benefit"]
-                ),
-                care_category=np.select(
-                    [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y"
-                    ],
-                    ["CC", "EC"],
-                    default="REG"
-                )
-            )
-        )
+    #     po_counts = hems_df.groupby(['pt_outcome', 'hems_result', 'care_category']).size().reset_index(name='count')
 
-        po_counts = hems_df.groupby(['pt_outcome', 'hems_result', 'care_category']).size().reset_index(name='count')
+    #     po_counts['total'] = po_counts.groupby(['hems_result', 'care_category'])['count'].transform('sum')
+    #     po_counts['proportion'] = round(po_counts['count'] / po_counts['total'], 4)
 
-        po_counts['total'] = po_counts.groupby(['hems_result', 'care_category'])['count'].transform('sum')
-        po_counts['proportion'] = round(po_counts['count'] / po_counts['total'], 4)
-
-        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv', mode = "w+")
-
+    #     po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv', mode = "w+")
+    #========== END ARCHIVED CODE ============ #
 
     def school_holidays(self) -> None:
         """"
@@ -1107,7 +1115,7 @@ class DistributionFitUtils():
 
         median_df = self.df[['first_day_of_month', 'time_allocation',
                              'time_mobile', 'time_to_scene', 'time_on_scene',
-                             'time_to_hospital', 'time_to_clear', 'vehicle_type']]
+                             'time_to_hospital', 'time_to_clear', 'vehicle_type']].copy()
 
         median_df['total_job_time'] = median_df[[
             'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
@@ -1360,51 +1368,54 @@ class DistributionFitUtils():
         Process ad hoc unavailability records into a stratified probability table
         based on six-hour bin and quarterly calendar period.
         """
+        try:
+            adhoc_df = pd.read_csv('external_data/ad_hoc.csv', parse_dates=['offline', 'online'])
+            adhoc_df = adhoc_df[['aircraft', 'offline', 'online', 'reason']]
 
-        adhoc_df = pd.read_csv('external_data/ad_hoc.csv', parse_dates=['offline', 'online'])
-        adhoc_df = adhoc_df[['aircraft', 'offline', 'online', 'reason']]
+            rota_df = pd.read_csv("actual_data/HEMS_ROTA.csv")
+            callsign_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
 
-        rota_df = pd.read_csv("actual_data/HEMS_ROTA.csv")
-        callsign_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+            results = adhoc_df.apply(
+                lambda row: self.calculate_availability_row(row, rota_df, callsign_lookup_df),
+                axis=1
+            )
+            final_df = pd.DataFrame(results.tolist())
 
-        results = adhoc_df.apply(
-            lambda row: self.calculate_availability_row(row, rota_df, callsign_lookup_df),
-            axis=1
-        )
-        final_df = pd.DataFrame(results.tolist())
+            #print(final_df)
 
-        #print(final_df)
+            # downtime by bin + quarter + reason
+            grouped = final_df.groupby(['registration', 'six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
 
-        # downtime by bin + quarter + reason
-        grouped = final_df.groupby(['registration', 'six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
+            # Scheduled time by bin + quarter (for calculating availability)
+            scheduled_totals = final_df.groupby(['registration','six_hour_bin', 'quarter'])['scheduled_minutes'].sum().reset_index()
+            scheduled_totals = scheduled_totals.rename(columns={'scheduled_minutes': 'total_scheduled'})
 
-        # Scheduled time by bin + quarter (for calculating availability)
-        scheduled_totals = final_df.groupby(['registration','six_hour_bin', 'quarter'])['scheduled_minutes'].sum().reset_index()
-        scheduled_totals = scheduled_totals.rename(columns={'scheduled_minutes': 'total_scheduled'})
+            # Merge downtime total
+            downtime_totals = grouped.groupby(['registration','six_hour_bin', 'quarter'])['total_offline'].sum().reset_index()
+            downtime_totals = downtime_totals.rename(columns={'total_offline': 'total_downtime'})
 
-        # Merge downtime total
-        downtime_totals = grouped.groupby(['registration','six_hour_bin', 'quarter'])['total_offline'].sum().reset_index()
-        downtime_totals = downtime_totals.rename(columns={'total_offline': 'total_downtime'})
+            # Calculate availability
+            availability_df = pd.merge(scheduled_totals, downtime_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left').fillna(0)
+            availability_df['reason'] = 'available'
+            availability_df['probability'] = (availability_df['total_scheduled'] - availability_df['total_downtime']) / availability_df['total_scheduled']
+            available_probs = availability_df[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']]
 
-        # Calculate availability
-        availability_df = pd.merge(scheduled_totals, downtime_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left').fillna(0)
-        availability_df['reason'] = 'available'
-        availability_df['probability'] = (availability_df['total_scheduled'] - availability_df['total_downtime']) / availability_df['total_scheduled']
-        available_probs = availability_df[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']]
+            # Add unavailability reason probabilities
+            # Merge rota time into grouped
+            grouped = pd.merge(grouped, scheduled_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left')
+            grouped['probability'] = grouped['total_offline'] / grouped['total_scheduled']
 
-        # Add unavailability reason probabilities
-        # Merge rota time into grouped
-        grouped = pd.merge(grouped, scheduled_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left')
-        grouped['probability'] = grouped['total_offline'] / grouped['total_scheduled']
+            # Combine everything
+            final_prob_df = pd.concat([
+                grouped[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']],
+                available_probs
+            ], ignore_index=True)
 
-        # Combine everything
-        final_prob_df = pd.concat([
-            grouped[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']],
-            available_probs
-        ], ignore_index=True)
-
-        final_prob_df = final_prob_df.sort_values(by=['registration', 'quarter', 'six_hour_bin', 'reason']).reset_index(drop=True)
-        final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
+            final_prob_df = final_prob_df.sort_values(by=['registration', 'quarter', 'six_hour_bin', 'reason']).reset_index(drop=True)
+            final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
+        except FileNotFoundError:
+            print("Couldn't generate ad-hoc unavailability due to missing file")
+            pass
 
 
     def run_sim_on_historical_params(self):
@@ -1424,7 +1435,7 @@ class DistributionFitUtils():
         print("Generating simulation results...")
         removeExistingResults()
 
-        total_runs = 24
+        total_runs = 30
         sim_years = 2
         sim_duration = 60 * 24 * 7 * 52 * sim_years
 
@@ -1441,41 +1452,57 @@ class DistributionFitUtils():
 
         try:
             results_all_runs = pd.read_csv("data/run_results.csv")
-            # Also run the model to get some base-case outputs
-            resource_requests = (
-                results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
-                .copy()
-                )
+            # # Also run the model to get some base-case outputs
+            # resource_requests = (
+            #     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
+            #     .copy()
+            #     )
 
-            resource_requests["care_cat"] = (
-                resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y"
-                                        and x["care_cat"]=="REG" else x["care_cat"],
-                                        axis=1)
-                                        )
+            # resource_requests["care_cat"] = (
+            #     resource_requests.apply(lambda x: "REG - Helicopter Benefit" if x["heli_benefit"]=="y"
+            #                             and x["care_cat"]=="REG" else x["care_cat"],
+            #                             axis=1)
+            #                             )
 
-            missed_jobs_care_cat_summary = (
-                resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs")
-                .sort_values(["care_cat", "time_type"])
-                .copy()
-                )
+            # missed_jobs_care_cat_summary = (
+            #     resource_requests[["care_cat", "time_type"]].value_counts().reset_index(name="jobs")
+            #     .sort_values(["care_cat", "time_type"])
+            #     .copy()
+            #     )
 
-            missed_jobs_care_cat_summary["jobs_average"] = (
-                missed_jobs_care_cat_summary["jobs"]/
-                total_runs
-                )
+            # missed_jobs_care_cat_summary["jobs_average"] = (
+            #     missed_jobs_care_cat_summary["jobs"]/
+            #     total_runs
+            #     )
 
-            missed_jobs_care_cat_summary["jobs_per_year_average"] = (
-                (missed_jobs_care_cat_summary["jobs_average"] / float(sim_years*365)*365)
-                ).round(0)
+            # missed_jobs_care_cat_summary["jobs_per_year_average"] = (
+            #     (missed_jobs_care_cat_summary["jobs_average"] / float(sim_years*365)*365)
+            #     ).round(0)
+
+            missed_jobs_care_cat_summary = _job_outcome_calculation.get_missed_call_df(
+                    results_all_runs=results_all_runs,
+                    run_length_days = float(sim_years*365),
+                    what="summary"
+                    )
 
             missed_jobs_care_cat_summary.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
+
+
+            missed_jobs_care_cat_breakdown = _job_outcome_calculation.get_missed_call_df(
+                    results_all_runs=results_all_runs,
+                    run_length_days = float(sim_years*365),
+                    what="breakdown"
+                    )
+
+            missed_jobs_care_cat_breakdown.to_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_breakdown.csv")
 
         except FileNotFoundError:
             pass
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
-    test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
+    test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv',
+                                calculate_school_holidays=True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
     test.run_sim_on_historical_params()

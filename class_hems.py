@@ -47,8 +47,8 @@ class HEMS(Ambulance):
 
         # Read in the summer months from a file
         summer_months = pd.read_csv("actual_data/rota_start_end_months.csv")
-        summer_start_month = summer_months[summer_months["what"]=="summer_start_month"]["month"].values[0]
-        summer_end_month = summer_months[summer_months["what"]=="summer_end_month"]["month"].values[0]
+        summer_start_month = int(summer_months[summer_months["what"]=="summer_start_month"]["month"].values[0])
+        summer_end_month = int(summer_months[summer_months["what"]=="summer_end_month"]["month"].values[0])
 
         self.summer_season = [x for x in range(summer_start_month, summer_end_month+1)]
 
