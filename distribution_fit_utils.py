@@ -1494,7 +1494,7 @@ if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
     test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
-    # test.import_and_wrangle()
+    test.import_and_wrangle()
     test.run_sim_on_historical_params()
 
 # Testing ----------
