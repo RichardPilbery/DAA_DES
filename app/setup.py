@@ -203,7 +203,7 @@ def fleet_setup():
                         "callsign": st.column_config.TextColumn(label="Callsign", required=True),
                         "callsign_group": st.column_config.TextColumn(label="Callsign", disabled=True),
                         "has_car": st.column_config.CheckboxColumn(label="Has a Backup Car"),
-                        "model": st.column_config.SelectboxColumn(label="Model", options=potential_fleet[potential_fleet["vehicle_type"]=="helicopter"]["model"].unique(), required=True),
+                        "model": st.column_config.SelectboxColumn(label="Model", options=models[models["vehicle_type"]=="helicopter"]["model"].unique(), required=True),
                         # "service_schedule_months": st.column_config.NumberColumn(label="Servicing Interval (Months)", disabled=True),
                         # "service_duration_weeks": st.column_config.NumberColumn(label="Servicing Interval (Weeks)", disabled=True)
                     },
