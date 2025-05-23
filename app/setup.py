@@ -760,7 +760,7 @@ def additional_params_expander():
     number_of_runs_input = st.slider(
             "Number of Runs",
             min_value=1,
-            max_value=30,
+            max_value=100,
             value=st.session_state.number_of_runs_input,
             on_change= lambda: setattr(st.session_state, 'number_of_runs_input', st.session_state.key_number_of_runs_input),
             key="key_number_of_runs_input",
