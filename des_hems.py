@@ -314,6 +314,13 @@ class DES_HEMS:
             if pt.hems_cc_or_ec == 'REG':
                 helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= expected_prop_heli_benefit_jobs else 'n'
 
+            # Following conversation with HT 21/5
+            # Also count as having had a helicopter benefit if the patient is conveyed by HEMS
+            # This is consistent with how things are done in the golden codes paper
+            # https://static-content.springer.com/esm/art%3A10.1186%2Fs13049-023-01094-w/MediaObjects/13049_2023_1094_MOESM1_ESM.pdf
+            if pt.hems_result == "Patient Conveyed by HEMS":
+                helicopter_benefit = 'y'
+
             pt.hems_helicopter_benefit = helicopter_benefit
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
             self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
