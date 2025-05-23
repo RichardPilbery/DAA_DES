@@ -339,7 +339,8 @@ class DES_HEMS:
                 hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_regular_resource(pt)
             else:
                 hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
-                #self.debug(hems_res_list)
+
+            self.debug(f"{pt.id} hems_res_list: {hems_res_list}")
 
             hems_allocation = hems_res_list[0]
 
@@ -573,8 +574,8 @@ class DES_HEMS:
             # Always return the resource at the end of the patient journey.
             if hems_res is not None:
                 self.hems_resources.return_resource(hems_res, secondary_hems_res)
+                self.debug(f"Attempting to return {hems_res} and {secondary_hems_res} to resource store")
                 self.add_patient_result_row(patient, hems_res.callsign, "resource_use_end")
-
 
     def add_patient_result_row(self,
                                patient: Patient,
