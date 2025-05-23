@@ -181,7 +181,7 @@ class DistributionFitUtils():
         self.incidents_per_day()
         self.incidents_per_day_samples()
 
-        # Calculate probabilityy of enhanced or critical care being required based on AMPDS card
+        # Calculate probability of enhanced or critical care being required based on AMPDS card
         self.enhanced_or_critical_care_by_ampds_card_probs()
 
         # Calculate HEMS result
@@ -192,16 +192,17 @@ class DistributionFitUtils():
         # self.callsign_group_by_ampds_card_probs()
         self.callsign_group_by_care_category()
 
-        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
-        self.pt_outcome_by_hems_result_and_care_category_probs()
-
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         self.vehicle_type_by_month_probs()
         self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
 
+        self.patient_outcome_by_care_category_and_quarter_probs()
+
         # ============= ARCHIVED CODE ================= #
         # Calculate probably of patient outcome
-        # self.patient_outcome_by_care_category_and_quarter_probs()
+        # Note - this still needs to be run to support another one?
+        # Calculate probability of a specific patient outcome being allocated to a job based on HEMS result and callsign
+        # self.pt_outcome_by_hems_result_and_care_category_probs()
         # ============= END ARCHIVED CODE ================= #
 
         # ============= ARCHIVED CODE ================= #
@@ -536,7 +537,7 @@ class DistributionFitUtils():
     def enhanced_or_critical_care_by_ampds_card_probs(self):
         """
 
-            Calculates the probabilty of enhanced or critica care resource beign required
+            Calculates the probabilty of enhanced or critical care resource beign required
             based on the AMPDS card
 
         """
@@ -879,48 +880,48 @@ class DistributionFitUtils():
     #     hems_counts.to_csv('distribution_data/hems_result_by_care_cat_and_helicopter_benefit_probs.csv', mode = "w+", index=False)
     #========== END ARCHIVED CODE ============ #
 
+    #========== ARCHIVED CODE ============ #
+    # def pt_outcome_by_hems_result_and_care_category_probs(self):
+    #     """
 
-    def pt_outcome_by_hems_result_and_care_category_probs(self):
-        """
+    #         Calculates the probabilty of a specific patient outcome based on HEMS result
 
-            Calculates the probabilty of a specific patient outcome based on HEMS result
+    #     """
 
-        """
+    #     hems_df = (
+    #         self.df
+    #         .assign(
+    #             helicopter_benefit=np.select(
+    #                 [
+    #                     self.df["cc_benefit"] == "y",
+    #                     self.df["ec_benefit"] == "y",
+    #                     self.df["hems_result"].isin([
+    #                         "Stand Down En Route",
+    #                         "Landed but no patient contact",
+    #                         "Stand Down Before Mobile"
+    #                     ])
+    #                 ],
+    #                 ["y", "y", "n"],
+    #                 default=self.df["helicopter_benefit"]
+    #             ),
+    #             care_category=np.select(
+    #                 [
+    #                     self.df["cc_benefit"] == "y",
+    #                     self.df["ec_benefit"] == "y"
+    #                 ],
+    #                 ["CC", "EC"],
+    #                 default="REG"
+    #             )
+    #         )
+    #     )
 
-        hems_df = (
-            self.df
-            .assign(
-                helicopter_benefit=np.select(
-                    [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y",
-                        self.df["hems_result"].isin([
-                            "Stand Down En Route",
-                            "Landed but no patient contact",
-                            "Stand Down Before Mobile"
-                        ])
-                    ],
-                    ["y", "y", "n"],
-                    default=self.df["helicopter_benefit"]
-                ),
-                care_category=np.select(
-                    [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y"
-                    ],
-                    ["CC", "EC"],
-                    default="REG"
-                )
-            )
-        )
+    #     po_counts = hems_df.groupby(['pt_outcome', 'hems_result', 'care_category']).size().reset_index(name='count')
 
-        po_counts = hems_df.groupby(['pt_outcome', 'hems_result', 'care_category']).size().reset_index(name='count')
+    #     po_counts['total'] = po_counts.groupby(['hems_result', 'care_category'])['count'].transform('sum')
+    #     po_counts['proportion'] = round(po_counts['count'] / po_counts['total'], 4)
 
-        po_counts['total'] = po_counts.groupby(['hems_result', 'care_category'])['count'].transform('sum')
-        po_counts['proportion'] = round(po_counts['count'] / po_counts['total'], 4)
-
-        po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv', mode = "w+")
-
+    #     po_counts.to_csv('distribution_data/pt_outcome_by_hems_result_and_care_category_probs.csv', mode = "w+")
+    #========== END ARCHIVED CODE ============ #
 
     def school_holidays(self) -> None:
         """"
@@ -1109,7 +1110,7 @@ class DistributionFitUtils():
 
         median_df = self.df[['first_day_of_month', 'time_allocation',
                              'time_mobile', 'time_to_scene', 'time_on_scene',
-                             'time_to_hospital', 'time_to_clear', 'vehicle_type']]
+                             'time_to_hospital', 'time_to_clear', 'vehicle_type']].copy()
 
         median_df['total_job_time'] = median_df[[
             'time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
@@ -1492,7 +1493,8 @@ class DistributionFitUtils():
 
 if __name__ == "__main__":
     from distribution_fit_utils import DistributionFitUtils
-    test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv', True)
+    test = DistributionFitUtils('external_data/clean_daa_import_missing_2023_2024.csv',
+                                calculate_school_holidays=True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
     test.run_sim_on_historical_params()
