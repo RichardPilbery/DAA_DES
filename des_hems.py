@@ -102,7 +102,7 @@ class DES_HEMS:
         # stand downs etc.
         self.results_df = None
 
-        self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
+        # self.inter_arrival_times_df = pd.read_csv('distribution_data/inter_arrival_times.csv')
 
         self.activity_duration_multiplier = activity_duration_multiplier
 
