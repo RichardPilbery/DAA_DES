@@ -7,8 +7,20 @@
 [data-testid="stSidebar"] h3,
 [data-testid="stSidebar"] h4,
 [data-testid="stSidebar"] a,
-[data-testid="stSidebar"] p  {
+[data-testid="stSidebar"] p,
+[data-testid="stSidebar"] ul  {
     color: white
+}
+
+
+[data-testid="stSidebar"] ul,
+[data-testid="stSidebar"] ul li,
+[data-testid="stSidebar"] ul ul {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    line-height: 1.1;
 }
 
 [data-testid="stSidebar"] {

@@ -49,7 +49,7 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
         df = _processing_functions.make_callsign_column(df)
 
     # Restrict to only events in the event log where resource use was starting or ending
-    resource_use_only = df[df["event_type"].isin(["resource_use", "resource_use_end"])]
+    resource_use_only = df[df["event_type"].isin(["resource_use", "resource_use_end"])].copy()
 
     del df
 

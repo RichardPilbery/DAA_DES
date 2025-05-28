@@ -242,4 +242,7 @@ When executing the model through the streamlit interface, running locally so par
 
 **2 years simulated time, default demand, default parameters (2 helicopters, 1 additional car)**
 
-- 12 runs, 730 days: ~90 seconds
+*including generation of all plots via web interface*
+
+- **12 runs, 730 days:** ~2 minutes (~90 seconds for initial model running)
+- **100 runs, 730 days:** ~8 minutes (~4 minutes for initial model running)

@@ -799,7 +799,7 @@ def plot_missed_jobs(historical_df_path="historical_data/historical_missed_calls
         historical_df = pd.read_csv(historical_df_path)
         simulated_df = pd.read_csv(simulated_df_path)
 
-        simulated_df_resource_preferred_outcome = simulated_df[simulated_df["event_type"] == "resource_preferred_outcome"]
+        simulated_df_resource_preferred_outcome = simulated_df[simulated_df["event_type"] == "resource_preferred_outcome"].copy()
 
         simulated_df_resource_preferred_outcome["outcome_simplified"] = (
             simulated_df_resource_preferred_outcome["time_type"].apply(
