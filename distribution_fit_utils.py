@@ -186,7 +186,8 @@ class DistributionFitUtils():
         # Calculate probability of callsign being allocated to a job based on AMPDS card and hour of day
         # self.callsign_group_by_ampds_card_and_hour_probs()
         # self.callsign_group_by_ampds_card_probs()
-        self.callsign_group_by_care_category()
+        # self.callsign_group_by_care_category()
+        self.callsign_group()
 
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         # self.vehicle_type_by_month_probs()
@@ -747,33 +748,73 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_probs.csv', mode = "w+", index=False)
 
-    def callsign_group_by_care_category(self):
+    def callsign_group(self):
         """
-
             Calculates the probabilty of a specific callsign being allocated to
-            a call based on the care category
-
+            a call
         """
+        df = self.df.copy()
+
+        # Convert time fields to numeric
+        time_fields = [
+            "time_allocation", "time_mobile", "time_to_scene",
+            "time_on_scene", "time_to_hospital", "time_to_clear"
+        ]
+        for col in time_fields:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Calculate total job duration in minutes
+        df["job_duration_min"] = df[time_fields].sum(axis=1, skipna=True)
+
+        # Compute job start and end times
+        df["start_time"] = df["inc_date"]
+        df["end_time"] = df["start_time"] + pd.to_timedelta(df["job_duration_min"], unit="m")
+
+        # Sort jobs by start time
+        df = df.sort_values(by="start_time").reset_index(drop=True)
+
+        # Set to hold indices of jobs that overlap (but only the later-starting ones)
+        overlapping = set()
+
+        # Check for overlaps
+        for i in range(len(df)):
+            this_end = df.at[i, "end_time"]
+
+            # Compare only to later jobs
+            for j in range(i + 1, len(df)):
+                next_start = df.at[j, "start_time"]
+                if next_start >= this_end:
+                    break  # No more possible overlaps
+                # If it starts before i's job ends, it's overlapping
+                overlapping.add(j)
+
+        # Mark the overlaps in the dataframe
+        df["overlaps"] = df.index.isin(overlapping)
+
+        # Filter out overlapping jobs
+        df_no_overlap = df[~df["overlaps"]]
+
+
         callsign_df = (
-            self.df
+            df_no_overlap
             .assign(
                 helicopter_benefit=np.select(
                     [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y",
-                        self.df["hems_result"].isin([
+                        df_no_overlap["cc_benefit"] == "y",
+                        df_no_overlap["ec_benefit"] == "y",
+                        df_no_overlap["hems_result"].isin([
                             "Stand Down En Route",
                             "Landed but no patient contact",
                             "Stand Down Before Mobile"
                         ])
                     ],
                     ["y", "y", "n"],
-                    default=self.df["helicopter_benefit"]
+                    default=df_no_overlap["helicopter_benefit"]
                 ),
                 care_category=np.select(
                     [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y"
+                        df_no_overlap["cc_benefit"] == "y",
+                        df_no_overlap["ec_benefit"] == "y"
                     ],
                     ["CC", "EC"],
                     default="REG"
@@ -783,12 +824,98 @@ class DistributionFitUtils():
 
         callsign_df = callsign_df[callsign_df['callsign_group'] != 'Other']
 
-        callsign_counts = callsign_df.groupby(['care_category', 'callsign_group']).size().reset_index(name='count')
+        callsign_counts = callsign_df.groupby(['callsign_group']).size().reset_index(name='count')
 
-        total_counts = callsign_counts.groupby(['care_category'])['count'].transform('sum')
+        total_counts = len(callsign_df)
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
-        callsign_counts.to_csv('distribution_data/callsign_group_by_care_category_probs.csv', mode = "w+", index=False)
+        callsign_counts.to_csv('distribution_data/callsign_group_probs.csv', mode = "w+", index=False)
+
+
+    # def callsign_group_by_care_category(self):
+    #     """
+
+    #         Calculates the probabilty of a specific callsign being allocated to
+    #         a call based on the care category
+
+    #     """
+    #     df = self.df.copy()
+
+    #     # Convert time fields to numeric
+    #     time_fields = [
+    #         "time_allocation", "time_mobile", "time_to_scene",
+    #         "time_on_scene", "time_to_hospital", "time_to_clear"
+    #     ]
+    #     for col in time_fields:
+    #         df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    #     # Calculate total job duration in minutes
+    #     df["job_duration_min"] = df[time_fields].sum(axis=1, skipna=True)
+
+    #     # Compute job start and end times
+    #     df["start_time"] = df["inc_date"]
+    #     df["end_time"] = df["start_time"] + pd.to_timedelta(df["job_duration_min"], unit="m")
+
+    #     # Sort jobs by start time
+    #     df = df.sort_values(by="start_time").reset_index(drop=True)
+
+    #     # Set to hold indices of jobs that overlap (but only the later-starting ones)
+    #     overlapping = set()
+
+    #     # Check for overlaps
+    #     for i in range(len(df)):
+    #         this_end = df.at[i, "end_time"]
+
+    #         # Compare only to later jobs
+    #         for j in range(i + 1, len(df)):
+    #             next_start = df.at[j, "start_time"]
+    #             if next_start >= this_end:
+    #                 break  # No more possible overlaps
+    #             # If it starts before i's job ends, it's overlapping
+    #             overlapping.add(j)
+
+    #     # Mark the overlaps in the dataframe
+    #     df["overlaps"] = df.index.isin(overlapping)
+
+    #     # Filter out overlapping jobs
+    #     df_no_overlap = df[~df["overlaps"]]
+
+
+    #     callsign_df = (
+    #         df_no_overlap
+    #         .assign(
+    #             helicopter_benefit=np.select(
+    #                 [
+    #                     df_no_overlap["cc_benefit"] == "y",
+    #                     df_no_overlap["ec_benefit"] == "y",
+    #                     df_no_overlap["hems_result"].isin([
+    #                         "Stand Down En Route",
+    #                         "Landed but no patient contact",
+    #                         "Stand Down Before Mobile"
+    #                     ])
+    #                 ],
+    #                 ["y", "y", "n"],
+    #                 default=df_no_overlap["helicopter_benefit"]
+    #             ),
+    #             care_category=np.select(
+    #                 [
+    #                     df_no_overlap["cc_benefit"] == "y",
+    #                     df_no_overlap["ec_benefit"] == "y"
+    #                 ],
+    #                 ["CC", "EC"],
+    #                 default="REG"
+    #             )
+    #         )
+    #     )
+
+    #     callsign_df = callsign_df[callsign_df['callsign_group'] != 'Other']
+
+    #     callsign_counts = callsign_df.groupby(['care_category', 'callsign_group']).size().reset_index(name='count')
+
+    #     total_counts = callsign_counts.groupby(['care_category'])['count'].transform('sum')
+    #     callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+    #     callsign_counts.to_csv('distribution_data/callsign_group_by_care_category_probs.csv', mode = "w+", index=False)
 
     #========== ARCHIVED CODE ============ #
     # def vehicle_type_by_month_probs(self):
