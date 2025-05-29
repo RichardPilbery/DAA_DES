@@ -200,3 +200,5 @@ tests/helpers.py
 
 *.ipynb
 data/run_params_used.csv
+code_documenter/output_py/*
+!code_documenter/output_py/.gitkeep
