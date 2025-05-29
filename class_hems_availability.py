@@ -880,10 +880,10 @@ class HEMSAvailability():
         resource_event: Event = self.env.event()
 
         def process() -> Generator[Any, Any, None]:
-            if pt.hems_pref_vehicle_type == "Other":
-                pref_res = [None, self.resource_allocation_lookup(11)]
-            else:
-                pref_res = self.preferred_regular_group_available(pt)
+            # if pt.hems_pref_vehicle_type == "Other":
+            #     pref_res = [None, self.resource_allocation_lookup(11)]
+            # else:
+            pref_res = self.preferred_regular_group_available(pt)
 
             if pref_res[0] is None:
                 return resource_event.succeed([None, pref_res[1], None])
