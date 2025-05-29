@@ -2208,7 +2208,7 @@ if __name__ == "__main__":
                                 calculate_school_holidays=True)
     #test = DistributionFitUtils('external_data/clean_daa_import.csv')
     test.import_and_wrangle()
-    # test.run_sim_on_historical_params()
+    test.run_sim_on_historical_params()
 
 # Testing ----------
 # python distribution_fit_utils.py
