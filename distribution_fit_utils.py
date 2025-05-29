@@ -796,6 +796,29 @@ class DistributionFitUtils():
         # Filter out overlapping jobs
         df_no_overlap = df[~df["overlaps"]]
 
+        # We will use the ad-hoc unavailability to remove any instances where we already know one of
+        # the vehicles to be recorded as offline
+
+        data = df_no_overlap.copy()
+
+        # TODO: Ideally we'd also remove any instances where we know one of the helos to have been
+        # off for servicing if that data is available
+        ad_hoc = pd.read_csv("external_data/ad_hoc.csv", parse_dates=["offline", "online"])
+        ad_hoc["aircraft"] = ad_hoc["aircraft"].str.lower()
+
+        data["inc_date"] = pd.to_datetime(data["inc_date"], format="ISO8601")
+        data["vehicle"] = data["vehicle"].str.lower()
+
+        # Create a cross-join between data and ad_hoc
+        data['key'] = 1
+        ad_hoc['key'] = 1
+        merged = data.merge(ad_hoc, on='key')
+
+        # Keep rows where inc_date falls within the offline period
+        overlap = merged[(merged['inc_date'] >= merged['offline']) & (merged['inc_date'] <= merged['online'])]
+
+        # Filter out those rows from the original data
+        df_no_overlap = data[~data['inc_date'].isin(overlap['inc_date'])].drop(columns='key')
 
         callsign_df = (
             df_no_overlap
