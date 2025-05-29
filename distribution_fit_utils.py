@@ -191,7 +191,8 @@ class DistributionFitUtils():
 
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         # self.vehicle_type_by_month_probs()
-        self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
+        self.vehicle_type_by_quarter_probs()
+        # self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
 
         # Calculate the patient outcome (conveyed, deceased, unknown)
         self.patient_outcome_by_care_category_and_quarter_probs()
@@ -933,6 +934,54 @@ class DistributionFitUtils():
 
     #     callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
     #========== END ARCHIVED CODE ============ #
+    def vehicle_type_by_quarter_probs(self):
+        """
+
+            Calculates the probabilty of a car/helicopter being allocated to
+            a call based on the callsign group and quarter of the year
+
+            Quarter accounts for seasonal variation without being as affected by
+
+        """
+        data = self.df.copy()
+
+        # We will use the ad-hoc unavailability to remove any instances where we already know one of
+        # the vehicles to be recorded as offline
+
+        # TODO: Ideally we'd also remove any instances where we know one of the helos to have been
+        # off for servicing if that data is available
+        ad_hoc = pd.read_csv("external_data/ad_hoc.csv", parse_dates=["offline", "online"])
+        ad_hoc["aircraft"] = ad_hoc["aircraft"].str.lower()
+
+        data["inc_date"] = pd.to_datetime(data["inc_date"], format="ISO8601")
+        data["vehicle"] = data["vehicle"].str.lower()
+
+        # Create a cross-join between data and ad_hoc
+        data['key'] = 1
+        ad_hoc['key'] = 1
+        merged = data.merge(ad_hoc, on='key')
+
+        # Keep rows where inc_date falls within the offline period
+        overlap = merged[(merged['inc_date'] >= merged['offline']) & (merged['inc_date'] <= merged['online'])]
+
+        # Filter out those rows from the original data
+        filtered_data = data[~data['inc_date'].isin(overlap['inc_date'])].drop(columns='key')
+
+        # First, calculate overall props
+        callsign_counts = filtered_data.groupby(['callsign_group', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_probs.csv', mode = "w+")
+
+        # Then, redo by quarter
+        callsign_counts = filtered_data.groupby(['callsign_group', 'quarter', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group', 'quarter'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_by_quarter_probs.csv', mode = "w+")
 
     def vehicle_type_probs(self):
         """

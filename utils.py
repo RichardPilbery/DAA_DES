@@ -51,6 +51,7 @@ class Utils:
         self.callsign_group_df = pd.read_csv('distribution_data/callsign_group_probs.csv')
         # New addition without stratification by month
         self.vehicle_type_df = pd.read_csv('distribution_data/vehicle_type_probs.csv')
+        self.vehicle_type_quarter_df = pd.read_csv('distribution_data/vehicle_type_by_quarter_probs.csv')
 
         # ========= ARCHIVED CODE ================== ##
         # self.vehicle_type_by_month_df = pd.read_csv('distribution_data/vehicle_type_by_month_probs.csv')
@@ -308,14 +309,28 @@ class Utils:
         return pd.Series.sample(self.callsign_group_df['callsign_group'], weights = self.callsign_group_df['proportion'],
                                 random_state=self.rngs["callsign_group_selection"]).iloc[0]
 
-    def vehicle_type_selection(self, callsign_group: str) -> int:
+    # def vehicle_type_selection(self, callsign_group: str) -> int:
+    #     """
+    #         This function will allocate and return a vehicle type
+    #         based callsign group
+    #     """
+
+    #     df = self.vehicle_type_df[
+    #         (self.vehicle_type_df['callsign_group'] == int(callsign_group)) # Cater for Other
+    #     ]
+
+    #     return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
+    #                             random_state=self.rngs["vehicle_type_selection"]).iloc[0]
+
+    def vehicle_type_selection_qtr(self, callsign_group: str, qtr: int) -> int:
         """
             This function will allocate and return a vehicle type
             based callsign group
         """
 
-        df = self.vehicle_type_df[
-            (self.vehicle_type_df['callsign_group'] == int(callsign_group)) # Cater for Other
+        df = self.vehicle_type_quarter_df[
+            (self.vehicle_type_quarter_df['callsign_group'] == int(callsign_group)) & # Cater for Other
+            (self.vehicle_type_quarter_df['quarter'] == int(qtr))
         ]
 
         return pd.Series.sample(df['vehicle_type'], weights = df['proportion'],
