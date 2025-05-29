@@ -326,8 +326,8 @@ class DES_HEMS:
             self.add_patient_result_row(pt, pt.hems_cc_or_ec, "patient_care_category")
             self.add_patient_result_row(pt, pt.hems_helicopter_benefit, "patient_helicopter_benefit")
 
-            #pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.hems_pref_callsign_group)
-            pt.hems_pref_vehicle_type = 'helicopter'
+            pt.hems_pref_vehicle_type = self.utils.vehicle_type_selection(pt.hems_pref_callsign_group)
+            # pt.hems_pref_vehicle_type = 'helicopter'
             #pt.hems_pref_callsign_group = '70'
             #pt.hems_helicopter_benefit = 'y'
 
