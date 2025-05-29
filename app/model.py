@@ -366,7 +366,8 @@ if button_run_pressed:
                 params_path="data/run_params_used.csv",
                 service_path="data/service_dates.csv",
                 callsign_path="actual_data/callsign_registration_lookup.csv",
-                rota_path="actual_data/HEMS_ROTA.csv"
+                rota_path="actual_data/HEMS_ROTA.csv",
+                rota_times="actual_data/rota_start_end_months.csv"
             ))
 
             print(utilisation_df_overall)
@@ -960,7 +961,8 @@ reflect the patterns of demand observed historically.
                                 params_path="data/run_params_used.csv",
                                 rota_path="actual_data/HEMS_ROTA.csv",
                                 service_path="data/service_dates.csv",
-                                callsign_path="actual_data/callsign_registration_lookup.csv"
+                                callsign_path="actual_data/callsign_registration_lookup.csv",
+                                rota_times="actual_data/rota_start_end_months.csv"
                                 )
 
                     plot_violin=st.toggle("Violin Plot?", value=False)

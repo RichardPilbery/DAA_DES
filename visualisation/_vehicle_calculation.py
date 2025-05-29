@@ -128,7 +128,9 @@ def calculate_available_hours_v2(params_df,
     rota_data,#=pd.read_csv("../actual_data/HEMS_ROTA.csv"),
     service_data,#=pd.read_csv("../data/service_dates.csv"),
     callsign_data,
-    long_format_df=False
+    long_format_df=False,
+    summer_start=4,
+    summer_end=9
 ):
     """
     Version of a function to calculate the number of hours a resource is available for use
@@ -165,7 +167,8 @@ def calculate_available_hours_v2(params_df,
     service_df['service_end_date'] = pd.to_datetime(service_df['service_end_date'])
 
     def is_summer(date_obj):
-        return current_date.month in [4,5,6,7,8,9]
+        # return date_obj.month in [4,5,6,7,8,9]
+        return date_obj.month in [i for i in range(summer_start, summer_end+1)]
 
     # Initialize columns in df_availability for each unique callsign
     for callsign in rota_df['callsign'].unique():

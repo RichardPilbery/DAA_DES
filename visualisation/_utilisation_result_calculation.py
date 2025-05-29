@@ -17,10 +17,14 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
                                      rota_path="../actual_data/HEMS_ROTA.csv",
                                      callsign_path="../actual_data/callsign_registration_lookup.csv",
                                      service_path="../data/service_dates.csv",
+                                     rota_times="../actual_data/rota_start_end_months.csv"
                                      ):
     df = pd.read_csv(path)
     params_df = pd.read_csv(params_path)
     n_runs = len(df["run_number"].unique())
+
+    rota_months = pd.read_csv(rota_times)
+
 
     daily_availability, total_avail_minutes = (
         _vehicle_calculation.calculate_available_hours_v2(
@@ -28,7 +32,9 @@ def make_utilisation_model_dataframe(path="../data/run_results.csv",
             rota_data=pd.read_csv(rota_path),
             service_data=pd.read_csv(service_path),
             callsign_data=pd.read_csv(callsign_path),
-            long_format_df=False
+            long_format_df=False,
+            summer_start=int(rota_months[rota_months["what"]=="summer_start_month"]["month"].values[0]),
+            summer_end=int(rota_months[rota_months["what"]=="summer_end_month"]["month"].values[0])
                     )
                 )
 
