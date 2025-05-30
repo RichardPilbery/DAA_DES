@@ -2273,6 +2273,7 @@ class DistributionFitUtils():
 
         try:
             results_all_runs = pd.read_csv("data/run_results.csv")
+            results_all_runs.to_csv("historical_data/calculated/SIM_hist_params.csv", index=False)
             # # Also run the model to get some base-case outputs
             # resource_requests = (
             #     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]

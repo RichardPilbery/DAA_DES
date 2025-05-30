@@ -235,7 +235,7 @@ if button_run_pressed:
 
             print(historical_utilisation_df_summary)
 
-            st.subheader("Missed Jobs and Service Benefit")
+            st.subheader("Missed Jobs")
 
             t1_col1, t1_col2 = st.columns(2)
 
@@ -267,7 +267,11 @@ if button_run_pressed:
                     #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
                     #     st.dataframe(outcome_df)
 
-            st.markdown("### Critical Care, Enhanced Care and Helicopter Benefit")
+            st.divider()
+
+            st.markdown("## Critical Care, Enhanced Care and Helicopter Benefit")
+
+            st.markdown("### Missed Jobs")
 
             col_ec_cc_sim, col_ec_cc_hist_sim = st.columns(2)
 
@@ -356,6 +360,49 @@ if button_run_pressed:
 
                 quarto_string += "### Historical Missed Jobs\n\n"
                 quarto_string += missed_jobs_historical_comparison
+
+            st.markdown("### Suboptimal Resource Allocation")
+
+            col_ec_cc_suboptimal_sim, col_ec_cc_suboptimal_hist_sim = st.columns(2)
+
+            with col_ec_cc_suboptimal_sim:
+                mean_cc_sent_ec, min_cc_sent_ec, max_cc_sent_ec = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(results_all_runs, st.session_state.sim_duration_input)
+
+                mean_heli_ben_sent_car, min_heli_ben_sent_car, max_heli_ben_sent_car = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(results_all_runs, st.session_state.sim_duration_input)
+
+                SIM_hist_complete = pd.read_csv("historical_data/calculated/SIM_hist_params.csv")
+
+                mean_cc_sent_ec_HIST, min_cc_sent_ec_HIST, max_cc_sent_ec_HIST = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(SIM_hist_complete, 730) # TODO - fix hardcoded param which may change
+
+                mean_heli_ben_sent_car_HIST, min_heli_ben_sent_car_HIST, max_heli_ben_sent_car_HIST = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(SIM_hist_complete, 730) # TODO - fix hardcoded param which may change
+
+
+                suboptimal_jobs_sim_string = f"""
+                The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
+
+                - **{mean_cc_sent_ec:.0f} critical care (CC)** jobs that would be sent an enhanced care (EC) resource (*{format_diff(mean_cc_sent_ec-mean_cc_sent_ec_HIST)}*), with an estimated range of {min_cc_sent_ec:.0f} to {max_cc_sent_ec:.0f}
+
+                - **{mean_heli_ben_sent_car:.0f} jobs that would benefit from a helicopter** that would be sent a car (*{format_diff(mean_heli_ben_sent_car-mean_heli_ben_sent_car_HIST)}*) with an estimated range of {min_heli_ben_sent_car:.0f} to {max_heli_ben_sent_car:.0f}
+                """
+
+                st.write(suboptimal_jobs_sim_string)
+
+                quarto_string += "## Suboptimal Resource Allocation to Jobs\n\n"
+                quarto_string += suboptimal_jobs_sim_string
+
+            with col_ec_cc_suboptimal_hist_sim:
+                suboptimal_jobs_hist_string = f"""
+                As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
+                However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
+
+                - **{mean_cc_sent_ec_HIST:.0f} critical care (CC)** jobs that would be sent an enhanced care (EC) resource, with an estimated range of {min_cc_sent_ec_HIST:.0f} to {max_cc_sent_ec_HIST:.0f}
+
+                - **{mean_heli_ben_sent_car_HIST:.0f} jobs that would benefit from a helicopter** that would be sent a car, with an estimated range of {min_heli_ben_sent_car_HIST:.0f} to {max_heli_ben_sent_car_HIST:.0f}
+                """
+                st.write(suboptimal_jobs_hist_string)
+
+                quarto_string += "## Suboptimal Resource Allocation to Jobs - Historical Comparison\n\n"
+                quarto_string += suboptimal_jobs_hist_string
 
             st.subheader("Resource Utilisation")
 

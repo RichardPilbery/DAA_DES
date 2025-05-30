@@ -202,3 +202,4 @@ tests/helpers.py
 data/run_params_used.csv
 code_documenter/output_py/*
 !code_documenter/output_py/.gitkeep
+historical_data/calculated/SIM_hist_params.csv
