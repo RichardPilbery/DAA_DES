@@ -526,7 +526,8 @@ If the simulation is not using the default parameters, we would not expect the o
                 ))
 
                 st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_variation_plot(
-                    utilisation_df_per_run
+                    utilisation_df_per_run,
+                    historical_utilisation_df_summary
                 ))
 
                 with tab_2_3:
