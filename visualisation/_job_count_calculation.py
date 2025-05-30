@@ -26,6 +26,7 @@ import numpy as np
 import datetime
 from calendar import monthrange, day_name
 import itertools
+from plotly.subplots import make_subplots
 
 from _app_utils import DAA_COLORSCHEME, q10, q90
 
@@ -1072,5 +1073,148 @@ def plot_jobs_per_callsign(
             #  barmode="overlay",
             #  opacity=1
              )
+
+    return fig
+
+
+def plot_job_count_heatmap(run_results, normalise_per_day=False, simulated_days=None):
+    run_results = run_results[run_results["event_type"] == "resource_use"][["P_ID", "run_number", "hour", "time_type"]].copy()
+
+    # Unique values
+    hours = list(range(24))  # 0–23 hours
+    callsigns = run_results['time_type'].unique()
+
+    # Cartesian product of all combinations to ensure we have a value on the x axis
+    # for the hours with no data in
+    full_index = pd.MultiIndex.from_product([callsigns, hours], names=['time_type', 'hour'])
+
+    # # # Group by callsign and hour, and count the number of occurrences
+    heatmap_data = run_results.groupby(['time_type', 'hour']).size().reindex(full_index, fill_value=0).reset_index(name='count')
+
+    # Normalise by number of runs
+    heatmap_data['count'] = heatmap_data['count']/len(run_results["run_number"].unique())
+
+    if normalise_per_day and simulated_days is not None:
+        heatmap_data['count'] = heatmap_data['count']/simulated_days
+
+    # Create pivot table for heatmap matrix
+    pivot = heatmap_data.pivot(index='time_type', columns='hour', values='count').fillna(0)
+
+    fig = go.Figure(data=go.Heatmap(
+        z=pivot.values,
+        x=[str(h) for h in pivot.columns],
+        y=pivot.index,
+        colorscale='Blues',
+        colorbar=dict(title='Count'),
+        showscale=True,
+        xgap=1,  # Gap between columns (simulates vertical borders)
+        ygap=1   # Gap between rows (simulates horizontal borders)
+    ))
+
+    if normalise_per_day and simulated_days:
+        title = 'Heatmap of Average Hourly Simulated Calls Responded to by Hour and Callsign'
+    else:
+        title = 'Heatmap of Total Hourly Simulated Calls Responded to by Hour and Callsign (Run Average)'
+
+
+    fig.update_layout(
+        title=title,
+        xaxis_title='Hour of Day',
+        yaxis_title='Callsign',
+        height=600,
+        xaxis=dict(dtick=1)
+    )
+
+    return fig
+
+def plot_job_count_heatmap_monthly(run_results, normalise_per_day=False, simulated_days=None):
+    run_results = (
+        run_results[run_results["event_type"] == "resource_use"]
+        [["P_ID", "run_number", "hour", "timestamp_dt", "time_type"]].copy()
+        )
+
+    run_results["timestamp_dt"] = pd.to_datetime(run_results["timestamp_dt"], format="ISO8601")
+
+    # Extract month from datetime
+    run_results['month'] = run_results['timestamp_dt'].dt.strftime('%B')  # e.g., 'January', 'February'
+
+     # Set fixed order for months
+    month_order = pd.date_range('2000-01-01', periods=12, freq='MS').strftime('%B').tolist()
+    run_results['month'] = pd.Categorical(run_results['month'], categories=month_order, ordered=True)
+
+    # Prepare full grid of (month, hour, callsign)
+    hours = list(range(24))
+    months = month_order
+    callsigns = sorted(run_results['time_type'].unique())
+
+    full_index = pd.MultiIndex.from_product([months, hours, callsigns], names=['month', 'hour', 'time_type'])
+
+    grouped = (
+        run_results.groupby(['month', 'hour', 'time_type'])
+        .size()
+        .reindex(full_index, fill_value=0)
+        .reset_index(name='count')
+    )
+
+    # Normalize
+    grouped['count'] = grouped['count'] / run_results['run_number'].nunique()
+    if normalise_per_day and simulated_days:
+        grouped['count'] = grouped['count'] / simulated_days
+
+    # Pivot to 2D arrays for each callsign
+    subplot_data = {
+        callsign: grouped[grouped['time_type'] == callsign]
+        .pivot(index='month', columns='hour', values='count')
+        .reindex(index=month_order)  # Ensure full month order
+        .fillna(0)
+        for callsign in callsigns
+    }
+
+    # Create subplots
+    fig = make_subplots(
+        rows=len(callsigns),
+        cols=1,
+        shared_xaxes=True,
+        shared_yaxes=False,
+        subplot_titles=[f'Callsign: {c}' for c in callsigns],
+        vertical_spacing=0.1
+    )
+
+    for i, callsign in enumerate(callsigns, start=1):
+        z = subplot_data[callsign].values
+        x = [str(h) for h in subplot_data[callsign].columns]
+        y = subplot_data[callsign].index.tolist()
+
+        fig.add_trace(
+            go.Heatmap(
+                z=z,
+                x=x,
+                y=y,
+                colorscale='Blues',
+                colorbar=dict(title='Count') if i == 1 else None,
+                showscale=(i == 1),
+                xgap=1,
+                ygap=1
+            ),
+            row=i, col=1
+        )
+
+    if normalise_per_day and simulated_days:
+        title = 'Average Hourly Job Count by Month and Callsign'
+    else:
+        title = 'Total Hourly Job Count Across Simulated Period by Month and Callsign (Run Average)'
+
+    fig.update_layout(
+        height=350 * len(callsigns),
+        title=title,
+        # xaxis_title='Hour of Day',
+        yaxis_title='Month'
+    )
+
+    fig.update_yaxes(autorange='reversed')
+
+    # Make x-axis labels show on all subplots
+    for i in range(1, len(callsigns) + 1):
+        fig.update_xaxes(showticklabels=True, dtick=1, title_text='Hour of Day', row=i, col=1)
 
     return fig

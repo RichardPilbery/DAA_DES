@@ -433,7 +433,11 @@ if button_run_pressed:
             t1_col3, t1_col4 = st.columns(2)
 
         with tab2:
-            tab_2_1, tab_2_2, tab_2_3, tab_2_4 = st.tabs(["'Missed' Calls", "Resource Utilisation", "Split of Jobs by Callsign Group", "CC and EC Benefit"])
+            tab_2_1, tab_2_2, tab_2_3, tab_2_4, tab_2_5 = st.tabs(
+                ["'Missed' Calls", "Resource Utilisation",
+                 "Split of Jobs by Callsign Group", "CC and EC Benefit",
+                 "Resource Tasking"]
+                 )
 
             with tab_2_1:
                 @st.fragment
@@ -632,7 +636,32 @@ dataset.
 
                     plot_cc_ec_split()
 
+            with tab_2_5:
+                @st.fragment
+                def job_count_heatmap():
+                    normalise_heatmap_daily_jobs = st.toggle("Normalise by average daily jobs", False)
 
+                    fig_jobs_by_callsign_heatmap = _job_count_calculation.plot_job_count_heatmap(
+                        run_results=results_all_runs,
+                        normalise_per_day=normalise_heatmap_daily_jobs,
+                        simulated_days=st.session_state.sim_duration_input
+                        )
+
+                    st.plotly_chart(
+                        fig_jobs_by_callsign_heatmap
+                    )
+
+                    fig_jobs_by_callsign_heatmap_monthly = _job_count_calculation.plot_job_count_heatmap_monthly(
+                        run_results=results_all_runs,
+                        normalise_per_day=normalise_heatmap_daily_jobs,
+                        simulated_days=st.session_state.sim_duration_input
+                        )
+
+                    st.plotly_chart(
+                        fig_jobs_by_callsign_heatmap_monthly
+                    )
+
+                job_count_heatmap()
 
         with tab3:
 
