@@ -235,7 +235,7 @@ if button_run_pressed:
 
             print(historical_utilisation_df_summary)
 
-            st.subheader("Missed Jobs and Service Benefit")
+            st.subheader("Missed Jobs")
 
             t1_col1, t1_col2 = st.columns(2)
 
@@ -267,7 +267,11 @@ if button_run_pressed:
                     #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
                     #     st.dataframe(outcome_df)
 
-            st.markdown("### Critical Care, Enhanced Care and Helicopter Benefit")
+            st.divider()
+
+            st.markdown("## Critical Care, Enhanced Care and Helicopter Benefit")
+
+            st.markdown("### Missed Jobs")
 
             col_ec_cc_sim, col_ec_cc_hist_sim = st.columns(2)
 
@@ -357,6 +361,49 @@ if button_run_pressed:
                 quarto_string += "### Historical Missed Jobs\n\n"
                 quarto_string += missed_jobs_historical_comparison
 
+            st.markdown("### Suboptimal Resource Allocation")
+
+            col_ec_cc_suboptimal_sim, col_ec_cc_suboptimal_hist_sim = st.columns(2)
+
+            with col_ec_cc_suboptimal_sim:
+                mean_cc_sent_ec, min_cc_sent_ec, max_cc_sent_ec = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(results_all_runs, st.session_state.sim_duration_input)
+
+                mean_heli_ben_sent_car, min_heli_ben_sent_car, max_heli_ben_sent_car = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(results_all_runs, st.session_state.sim_duration_input)
+
+                SIM_hist_complete = pd.read_csv("historical_data/calculated/SIM_hist_params.csv")
+
+                mean_cc_sent_ec_HIST, min_cc_sent_ec_HIST, max_cc_sent_ec_HIST = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(SIM_hist_complete, 730) # TODO - fix hardcoded param which may change
+
+                mean_heli_ben_sent_car_HIST, min_heli_ben_sent_car_HIST, max_heli_ben_sent_car_HIST = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(SIM_hist_complete, 730) # TODO - fix hardcoded param which may change
+
+
+                suboptimal_jobs_sim_string = f"""
+                The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
+
+                - **{mean_cc_sent_ec:.0f} critical care (CC)** jobs that would be sent an enhanced care (EC) resource (*{format_diff(mean_cc_sent_ec-mean_cc_sent_ec_HIST)}*), with an estimated range of {min_cc_sent_ec:.0f} to {max_cc_sent_ec:.0f}
+
+                - **{mean_heli_ben_sent_car:.0f} jobs that would benefit from a helicopter** that would be sent a car (*{format_diff(mean_heli_ben_sent_car-mean_heli_ben_sent_car_HIST)}*) with an estimated range of {min_heli_ben_sent_car:.0f} to {max_heli_ben_sent_car:.0f}
+                """
+
+                st.write(suboptimal_jobs_sim_string)
+
+                quarto_string += "## Suboptimal Resource Allocation to Jobs\n\n"
+                quarto_string += suboptimal_jobs_sim_string
+
+            with col_ec_cc_suboptimal_hist_sim:
+                suboptimal_jobs_hist_string = f"""
+                As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
+                However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
+
+                - **{mean_cc_sent_ec_HIST:.0f} critical care (CC)** jobs that would be sent an enhanced care (EC) resource, with an estimated range of {min_cc_sent_ec_HIST:.0f} to {max_cc_sent_ec_HIST:.0f}
+
+                - **{mean_heli_ben_sent_car_HIST:.0f} jobs that would benefit from a helicopter** that would be sent a car, with an estimated range of {min_heli_ben_sent_car_HIST:.0f} to {max_heli_ben_sent_car_HIST:.0f}
+                """
+                st.write(suboptimal_jobs_hist_string)
+
+                quarto_string += "## Suboptimal Resource Allocation to Jobs - Historical Comparison\n\n"
+                quarto_string += suboptimal_jobs_hist_string
+
             st.subheader("Resource Utilisation")
 
             quarto_string += "\n\n## Resource Utilisation"
@@ -366,7 +413,8 @@ if button_run_pressed:
                 params_path="data/run_params_used.csv",
                 service_path="data/service_dates.csv",
                 callsign_path="actual_data/callsign_registration_lookup.csv",
-                rota_path="actual_data/HEMS_ROTA.csv"
+                rota_path="actual_data/HEMS_ROTA.csv",
+                rota_times="actual_data/rota_start_end_months.csv"
             ))
 
             print(utilisation_df_overall)
@@ -432,7 +480,11 @@ if button_run_pressed:
             t1_col3, t1_col4 = st.columns(2)
 
         with tab2:
-            tab_2_1, tab_2_2, tab_2_3, tab_2_4 = st.tabs(["'Missed' Calls", "Resource Utilisation", "Split of Jobs by Callsign Group", "CC and EC Benefit"])
+            tab_2_1, tab_2_2, tab_2_3, tab_2_4, tab_2_5 = st.tabs(
+                ["'Missed' Calls", "Resource Utilisation",
+                 "Split of Jobs by Callsign Group", "CC and EC Benefit",
+                 "Resource Tasking"]
+                 )
 
             with tab_2_1:
                 @st.fragment
@@ -525,7 +577,8 @@ If the simulation is not using the default parameters, we would not expect the o
                 ))
 
                 st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_variation_plot(
-                    utilisation_df_per_run
+                    utilisation_df_per_run,
+                    historical_utilisation_df_summary
                 ))
 
                 with tab_2_3:
@@ -630,7 +683,32 @@ dataset.
 
                     plot_cc_ec_split()
 
+            with tab_2_5:
+                @st.fragment
+                def job_count_heatmap():
+                    normalise_heatmap_daily_jobs = st.toggle("Normalise by average daily jobs", False)
 
+                    fig_jobs_by_callsign_heatmap = _job_count_calculation.plot_job_count_heatmap(
+                        run_results=results_all_runs,
+                        normalise_per_day=normalise_heatmap_daily_jobs,
+                        simulated_days=st.session_state.sim_duration_input
+                        )
+
+                    st.plotly_chart(
+                        fig_jobs_by_callsign_heatmap
+                    )
+
+                    fig_jobs_by_callsign_heatmap_monthly = _job_count_calculation.plot_job_count_heatmap_monthly(
+                        run_results=results_all_runs,
+                        normalise_per_day=normalise_heatmap_daily_jobs,
+                        simulated_days=st.session_state.sim_duration_input
+                        )
+
+                    st.plotly_chart(
+                        fig_jobs_by_callsign_heatmap_monthly
+                    )
+
+                job_count_heatmap()
 
         with tab3:
 
@@ -960,7 +1038,8 @@ reflect the patterns of demand observed historically.
                                 params_path="data/run_params_used.csv",
                                 rota_path="actual_data/HEMS_ROTA.csv",
                                 service_path="data/service_dates.csv",
-                                callsign_path="actual_data/callsign_registration_lookup.csv"
+                                callsign_path="actual_data/callsign_registration_lookup.csv",
+                                rota_times="actual_data/rota_start_end_months.csv"
                                 )
 
                     plot_violin=st.toggle("Violin Plot?", value=False)

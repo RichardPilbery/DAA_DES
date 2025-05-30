@@ -186,11 +186,13 @@ class DistributionFitUtils():
         # Calculate probability of callsign being allocated to a job based on AMPDS card and hour of day
         # self.callsign_group_by_ampds_card_and_hour_probs()
         # self.callsign_group_by_ampds_card_probs()
-        self.callsign_group_by_care_category()
+        # self.callsign_group_by_care_category()
+        self.callsign_group()
 
         # Calculate probability of a particular vehicle type based on callsign group and month of year
         # self.vehicle_type_by_month_probs()
-        self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
+        self.vehicle_type_by_quarter_probs()
+        # self.vehicle_type_probs() # Similar to previous but without monthly stratification since ad hoc unavailability should account for this.
 
         # Calculate the patient outcome (conveyed, deceased, unknown)
         self.patient_outcome_by_care_category_and_quarter_probs()
@@ -243,7 +245,8 @@ class DistributionFitUtils():
 
         # Calculate proportions of ad hoc unavailability
         try:
-            self.ad_hoc_unavailability()
+            # self.ad_hoc_unavailability()
+            self.ad_hoc_unavailability(period_start="2022-08-01", period_end="2024-07-31")
         except FileNotFoundError:
             print("Couldn't find ad-hoc unavailability file")
 
@@ -747,33 +750,96 @@ class DistributionFitUtils():
 
         callsign_counts.to_csv('distribution_data/callsign_group_by_ampds_card_probs.csv', mode = "w+", index=False)
 
-    def callsign_group_by_care_category(self):
+    def callsign_group(self):
         """
-
             Calculates the probabilty of a specific callsign being allocated to
-            a call based on the care category
-
+            a call
         """
+        df = self.df.copy()
+
+        # Convert time fields to numeric
+        time_fields = [
+            "time_allocation", "time_mobile", "time_to_scene",
+            "time_on_scene", "time_to_hospital", "time_to_clear"
+        ]
+        for col in time_fields:
+            df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Calculate total job duration in minutes
+        df["job_duration_min"] = df[time_fields].sum(axis=1, skipna=True)
+
+        # Compute job start and end times
+        df["start_time"] = df["inc_date"]
+        df["end_time"] = df["start_time"] + pd.to_timedelta(df["job_duration_min"], unit="m")
+
+        # Sort jobs by start time
+        df = df.sort_values(by="start_time").reset_index(drop=True)
+
+        # Set to hold indices of jobs that overlap (but only the later-starting ones)
+        overlapping = set()
+
+        # Check for overlaps
+        for i in range(len(df)):
+            this_end = df.at[i, "end_time"]
+
+            # Compare only to later jobs
+            for j in range(i + 1, len(df)):
+                next_start = df.at[j, "start_time"]
+                if next_start >= this_end:
+                    break  # No more possible overlaps
+                # If it starts before i's job ends, it's overlapping
+                overlapping.add(j)
+
+        # Mark the overlaps in the dataframe
+        df["overlaps"] = df.index.isin(overlapping)
+
+        # Filter out overlapping jobs
+        df_no_overlap = df[~df["overlaps"]]
+
+        # We will use the ad-hoc unavailability to remove any instances where we already know one of
+        # the vehicles to be recorded as offline
+
+        data = df_no_overlap.copy()
+
+        # TODO: Ideally we'd also remove any instances where we know one of the helos to have been
+        # off for servicing if that data is available
+        ad_hoc = pd.read_csv("external_data/ad_hoc.csv", parse_dates=["offline", "online"])
+        ad_hoc["aircraft"] = ad_hoc["aircraft"].str.lower()
+
+        data["inc_date"] = pd.to_datetime(data["inc_date"], format="ISO8601")
+        data["vehicle"] = data["vehicle"].str.lower()
+
+        # Create a cross-join between data and ad_hoc
+        data['key'] = 1
+        ad_hoc['key'] = 1
+        merged = data.merge(ad_hoc, on='key')
+
+        # Keep rows where inc_date falls within the offline period
+        overlap = merged[(merged['inc_date'] >= merged['offline']) & (merged['inc_date'] <= merged['online'])]
+
+        # Filter out those rows from the original data
+        df_no_overlap = data[~data['inc_date'].isin(overlap['inc_date'])].drop(columns='key')
+
         callsign_df = (
-            self.df
+            df_no_overlap
             .assign(
                 helicopter_benefit=np.select(
                     [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y",
-                        self.df["hems_result"].isin([
+                        df_no_overlap["cc_benefit"] == "y",
+                        df_no_overlap["ec_benefit"] == "y",
+                        df_no_overlap["hems_result"].isin([
                             "Stand Down En Route",
                             "Landed but no patient contact",
                             "Stand Down Before Mobile"
                         ])
                     ],
                     ["y", "y", "n"],
-                    default=self.df["helicopter_benefit"]
+                    default=df_no_overlap["helicopter_benefit"]
                 ),
                 care_category=np.select(
                     [
-                        self.df["cc_benefit"] == "y",
-                        self.df["ec_benefit"] == "y"
+                        df_no_overlap["cc_benefit"] == "y",
+                        df_no_overlap["ec_benefit"] == "y"
                     ],
                     ["CC", "EC"],
                     default="REG"
@@ -783,12 +849,98 @@ class DistributionFitUtils():
 
         callsign_df = callsign_df[callsign_df['callsign_group'] != 'Other']
 
-        callsign_counts = callsign_df.groupby(['care_category', 'callsign_group']).size().reset_index(name='count')
+        callsign_counts = callsign_df.groupby(['callsign_group']).size().reset_index(name='count')
 
-        total_counts = callsign_counts.groupby(['care_category'])['count'].transform('sum')
+        total_counts = len(callsign_df)
         callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
 
-        callsign_counts.to_csv('distribution_data/callsign_group_by_care_category_probs.csv', mode = "w+", index=False)
+        callsign_counts.to_csv('distribution_data/callsign_group_probs.csv', mode = "w+", index=False)
+
+
+    # def callsign_group_by_care_category(self):
+    #     """
+
+    #         Calculates the probabilty of a specific callsign being allocated to
+    #         a call based on the care category
+
+    #     """
+    #     df = self.df.copy()
+
+    #     # Convert time fields to numeric
+    #     time_fields = [
+    #         "time_allocation", "time_mobile", "time_to_scene",
+    #         "time_on_scene", "time_to_hospital", "time_to_clear"
+    #     ]
+    #     for col in time_fields:
+    #         df[col] = pd.to_numeric(df[col], errors="coerce")
+
+    #     # Calculate total job duration in minutes
+    #     df["job_duration_min"] = df[time_fields].sum(axis=1, skipna=True)
+
+    #     # Compute job start and end times
+    #     df["start_time"] = df["inc_date"]
+    #     df["end_time"] = df["start_time"] + pd.to_timedelta(df["job_duration_min"], unit="m")
+
+    #     # Sort jobs by start time
+    #     df = df.sort_values(by="start_time").reset_index(drop=True)
+
+    #     # Set to hold indices of jobs that overlap (but only the later-starting ones)
+    #     overlapping = set()
+
+    #     # Check for overlaps
+    #     for i in range(len(df)):
+    #         this_end = df.at[i, "end_time"]
+
+    #         # Compare only to later jobs
+    #         for j in range(i + 1, len(df)):
+    #             next_start = df.at[j, "start_time"]
+    #             if next_start >= this_end:
+    #                 break  # No more possible overlaps
+    #             # If it starts before i's job ends, it's overlapping
+    #             overlapping.add(j)
+
+    #     # Mark the overlaps in the dataframe
+    #     df["overlaps"] = df.index.isin(overlapping)
+
+    #     # Filter out overlapping jobs
+    #     df_no_overlap = df[~df["overlaps"]]
+
+
+    #     callsign_df = (
+    #         df_no_overlap
+    #         .assign(
+    #             helicopter_benefit=np.select(
+    #                 [
+    #                     df_no_overlap["cc_benefit"] == "y",
+    #                     df_no_overlap["ec_benefit"] == "y",
+    #                     df_no_overlap["hems_result"].isin([
+    #                         "Stand Down En Route",
+    #                         "Landed but no patient contact",
+    #                         "Stand Down Before Mobile"
+    #                     ])
+    #                 ],
+    #                 ["y", "y", "n"],
+    #                 default=df_no_overlap["helicopter_benefit"]
+    #             ),
+    #             care_category=np.select(
+    #                 [
+    #                     df_no_overlap["cc_benefit"] == "y",
+    #                     df_no_overlap["ec_benefit"] == "y"
+    #                 ],
+    #                 ["CC", "EC"],
+    #                 default="REG"
+    #             )
+    #         )
+    #     )
+
+    #     callsign_df = callsign_df[callsign_df['callsign_group'] != 'Other']
+
+    #     callsign_counts = callsign_df.groupby(['care_category', 'callsign_group']).size().reset_index(name='count')
+
+    #     total_counts = callsign_counts.groupby(['care_category'])['count'].transform('sum')
+    #     callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+    #     callsign_counts.to_csv('distribution_data/callsign_group_by_care_category_probs.csv', mode = "w+", index=False)
 
     #========== ARCHIVED CODE ============ #
     # def vehicle_type_by_month_probs(self):
@@ -805,6 +957,54 @@ class DistributionFitUtils():
 
     #     callsign_counts.to_csv('distribution_data/vehicle_type_by_month_probs.csv', mode = "w+")
     #========== END ARCHIVED CODE ============ #
+    def vehicle_type_by_quarter_probs(self):
+        """
+
+            Calculates the probabilty of a car/helicopter being allocated to
+            a call based on the callsign group and quarter of the year
+
+            Quarter accounts for seasonal variation without being as affected by
+
+        """
+        data = self.df.copy()
+
+        # We will use the ad-hoc unavailability to remove any instances where we already know one of
+        # the vehicles to be recorded as offline
+
+        # TODO: Ideally we'd also remove any instances where we know one of the helos to have been
+        # off for servicing if that data is available
+        ad_hoc = pd.read_csv("external_data/ad_hoc.csv", parse_dates=["offline", "online"])
+        ad_hoc["aircraft"] = ad_hoc["aircraft"].str.lower()
+
+        data["inc_date"] = pd.to_datetime(data["inc_date"], format="ISO8601")
+        data["vehicle"] = data["vehicle"].str.lower()
+
+        # Create a cross-join between data and ad_hoc
+        data['key'] = 1
+        ad_hoc['key'] = 1
+        merged = data.merge(ad_hoc, on='key')
+
+        # Keep rows where inc_date falls within the offline period
+        overlap = merged[(merged['inc_date'] >= merged['offline']) & (merged['inc_date'] <= merged['online'])]
+
+        # Filter out those rows from the original data
+        filtered_data = data[~data['inc_date'].isin(overlap['inc_date'])].drop(columns='key')
+
+        # First, calculate overall props
+        callsign_counts = filtered_data.groupby(['callsign_group', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_probs.csv', mode = "w+")
+
+        # Then, redo by quarter
+        callsign_counts = filtered_data.groupby(['callsign_group', 'quarter', 'vehicle_type']).size().reset_index(name='count')
+
+        total_counts = callsign_counts.groupby(['callsign_group', 'quarter'])['count'].transform('sum')
+        callsign_counts['proportion'] = round(callsign_counts['count'] / total_counts, 4)
+
+        callsign_counts.to_csv('distribution_data/vehicle_type_by_quarter_probs.csv', mode = "w+")
 
     def vehicle_type_probs(self):
         """
@@ -976,10 +1176,27 @@ class DistributionFitUtils():
         all_counts.to_csv("historical_data/historical_jobs_per_day_per_callsign.csv", index=False)
 
     def historical_care_cat_counts(self):
+        """
+        Process historical incident data to categorize care types and compute hourly counts.
+
+        This method performs the following steps:
+        - Converts incident dates to datetime format.
+        - Extracts month start and hour from the incident date.
+        - Categorizes each incident into care categories based on benefit flags and attendance.
+        - Counts the number of incidents by hour and care category.
+        - Outputs these counts to a CSV file.
+        - Computes and writes the proportion of regular care jobs with a helicopter benefit
+        (excluding those not attended by a DAA resource) to a text file.
+
+        Outputs:
+        - CSV file: 'historical_data/historical_care_cat_counts.csv'
+        - Text file: 'distribution_data/proportion_jobs_heli_benefit.txt'
+        """
+
         df_historical = self.df
 
         df_historical['inc_date'] = pd.to_datetime(df_historical['inc_date'])
-
+        # Extract the first day of the month and the hour of each incident
         df_historical['month_start'] = df_historical.inc_date.dt.strftime("%Y-%m-01")
         df_historical['hour'] = df_historical.inc_date.dt.hour
 
@@ -996,27 +1213,78 @@ class DistributionFitUtils():
             'REG - helicopter benefit',
             'Unknown - DAA resource did not attend'
         ]
-
+        # Assign care category to each record
+        # If the case did not meet any of the criteria in 'conditions', it will default
+        # to being labelled as a 'regular/REG' case (i.e there was no benefit recorded)
         df_historical['care_category'] = np.select(conditions, choices, default='REG')
 
+        # Count occurrences grouped by hour and care category
         historical_value_counts_by_hour = (
             df_historical.value_counts(["hour", "care_category"])
             .reset_index(name="count")
             )
-
+        # Output to CSV for use in tests and visualisations
         (historical_value_counts_by_hour
          .sort_values(['hour', 'care_category'])
          .to_csv("historical_data/historical_care_cat_counts.csv"))
 
         # Also output the % of regular (not cc/ec) jobs with a helicopter benefit
+        # These are the regular jobs we will make an assumption follow different logic due to having an obvious expected
+        # patient benefit of having a helicopter allocated to them that we will have to assume is apparent at the time
+        # of the call being placed (such as the casualty being located in a remote location, or )
 
-        numerator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit"]["count"].sum()
+        numerator = (historical_value_counts_by_hour[
+            historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit"
+            ]["count"].sum())
 
-        denominator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] != "Unknown - DAA resource did not attend"]["count"].sum()
+        denominator = (historical_value_counts_by_hour[
+            (historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit") |
+            (historical_value_counts_by_hour["care_category"] == "REG")
+            ]["count"].sum())
 
         with open('distribution_data/proportion_jobs_heli_benefit.txt', 'w+') as heli_benefit_file:
             heli_benefit_file.write(json.dumps((numerator/denominator).round(4)))
-        heli_benefit_file.close()
+
+         # Count occurrences grouped by hour and care category
+        historical_value_counts_by_hour_cc_ec = (
+            df_historical.value_counts(["hour", "care_category", "helicopter_benefit"])
+            .reset_index(name="count")
+            )
+
+       # Output to CSV for use in tests and visualisations
+        # (historical_value_counts_by_hour_cc_ec
+        #  .sort_values(["hour", "care_category", "helicopter_benefit"])
+        #  .to_csv("historical_data/historical_care_cat_counts_cc_ec.csv"))
+
+
+        numerator_cc = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "CC") &
+                (historical_value_counts_by_hour_cc_ec["helicopter_benefit"] == "y")
+                ]["count"].sum())
+
+        denominator_cc = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "CC")
+                ]["count"].sum())
+
+        with open('distribution_data/proportion_jobs_heli_benefit_cc.txt', 'w+') as heli_benefit_file:
+            heli_benefit_file.write(json.dumps((numerator_cc/denominator_cc).round(4)))
+
+        numerator_ec = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "EC") &
+                (historical_value_counts_by_hour_cc_ec["helicopter_benefit"] == "y")
+                ]["count"].sum())
+
+        denominator_ec = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "EC")
+                ]["count"].sum())
+
+        with open('distribution_data/proportion_jobs_heli_benefit_ec.txt', 'w+') as heli_benefit_file:
+            heli_benefit_file.write(json.dumps((numerator_ec/denominator_ec).round(4)))
+
 
 
     def historical_monthly_totals(self):
@@ -1262,160 +1530,713 @@ class DistributionFitUtils():
         # 6. Write out to CSV
         df_long_sorted.to_csv("historical_data/historical_job_durations_breakdown.csv", index=False)
 
+    # ========== ARCHIVED CODE - v1 of calcualte_availability_row ======================== #
+    # def calculate_availability_row(self, row, rota_df, callsign_lookup_df, period_start, period_end):
+    #     """
+    #     Compute downtime overlap, rota-based scheduled time, and proportion for a given row.
+    #     Returns data tagged with bin, quarter, and downtime reason.
+    #     """
+
+    #     registration = row['aircraft'].lower()
+    #     downtime_start = pd.to_datetime(row['offline'], utc=True)
+    #     downtime_end = pd.to_datetime(row['online'], utc=True)
+    #     reason = row.get('reason', None)
+
+    #     hour = downtime_start.hour
+    #     if 0 <= hour <= 5:
+    #         six_hour_bin = '00-05'
+    #     elif 6 <= hour <= 11:
+    #         six_hour_bin = '06-11'
+    #     elif 12 <= hour <= 17:
+    #         six_hour_bin = '12-17'
+    #     else:
+    #         six_hour_bin = '18-23'
+
+    #     quarter = downtime_start.quarter
+
+    #     # Match callsign
+    #     match = callsign_lookup_df[callsign_lookup_df['registration'].str.lower() == registration]
+    #     if match.empty:
+    #         return {
+    #             'registration': registration,
+    #             'offline': downtime_start,
+    #             'online': downtime_end,
+    #             'six_hour_bin': six_hour_bin,
+    #             'quarter': quarter,
+    #             'total_offline': None,
+    #             'scheduled_minutes': None,
+    #             'reason': reason,
+    #             'proportion': None
+    #         }
+    #     callsign = match.iloc[0]['callsign']
+
+    #     rota_rows = rota_df[rota_df['callsign'] == callsign]
+    #     if rota_rows.empty:
+    #         return {
+    #             'registration': registration,
+    #             'offline': downtime_start,
+    #             'online': downtime_end,
+    #             'six_hour_bin': six_hour_bin,
+    #             'quarter': quarter,
+    #             'total_offline': None,
+    #             'scheduled_minutes': None,
+    #             'reason': reason,
+    #             'proportion': None
+    #         }
+
+    #     # Clip evaluation window to downtime period
+    #     eval_start = max(downtime_start.normalize(), pd.to_datetime(period_start, utc=True))
+    #     eval_end = min(downtime_end.normalize(), pd.to_datetime(period_end, utc=True))
+
+    #     total_scheduled_minutes = 0
+    #     total_overlap_minutes = 0
+
+    #     current_day = eval_start
+    #     while current_day <= eval_end:
+    #         month = current_day.month
+    #         season = 'summer' if month in [4, 5, 6, 7, 8, 9] else 'winter'
+
+    #         for _, rota in rota_rows.iterrows():
+    #             start_hour = rota[f'{season}_start']
+    #             end_hour = rota[f'{season}_end']
+
+    #             rota_start = current_day + timedelta(hours=start_hour)
+    #             rota_end = current_day + timedelta(hours=end_hour)
+    #             if end_hour <= start_hour:
+    #                 rota_end += timedelta(days=1)
+
+    #             # Count scheduled time regardless of overlap
+    #             scheduled_minutes = (rota_end - rota_start).total_seconds() / 60
+    #             total_scheduled_minutes += scheduled_minutes
+
+    #             # Count overlap only if intersecting with downtime
+    #             overlap_start = max(downtime_start, rota_start)
+    #             overlap_end = min(downtime_end, rota_end)
+    #             if overlap_end > overlap_start:
+    #                 overlap_minutes = (overlap_end - overlap_start).total_seconds() / 60
+    #                 total_overlap_minutes += overlap_minutes
+
+    #         current_day += timedelta(days=1)
+
+    #     if total_scheduled_minutes == 0:
+    #         proportion = None
+    #     else:
+    #         proportion = total_overlap_minutes / total_scheduled_minutes
+
+    #     return {
+    #         'registration': registration,
+    #         'offline': downtime_start,
+    #         'online': downtime_end,
+    #         'six_hour_bin': six_hour_bin,
+    #         'quarter': quarter,
+    #         'total_offline': total_overlap_minutes,
+    #         'scheduled_minutes': total_scheduled_minutes,
+    #         'reason': reason,
+    #         'proportion': proportion
+    #     }
 
 
-    def calculate_availability_row(self, row, rota_df, callsign_lookup_df):
+    # ============= ARCHIVED CODE - v2 of calculate_availability_row ======================= #
+    # def calculate_availability_row(self, row, rota_df, callsign_lookup_df):
+    #     """
+    #         Compute downtime overlap, rota-based scheduled time, and proportion for a given row.
+    #         Returns data tagged with bin, quarter, and downtime reason.
+    #     """
+
+    #     registration = row['aircraft'].lower()
+    #     downtime_start = pd.to_datetime(row['offline'], utc=True)
+    #     downtime_end = pd.to_datetime(row['online'], utc=True)
+    #     reason = row.get('reason', None)
+
+    #     hour = downtime_start.hour
+    #     if 0 <= hour <= 5:
+    #         six_hour_bin = '00-05'
+    #     elif 6 <= hour <= 11:
+    #         six_hour_bin = '06-11'
+    #     elif 12 <= hour <= 17:
+    #         six_hour_bin = '12-17'
+    #     else:
+    #         six_hour_bin = '18-23'
+
+    #     quarter = downtime_start.quarter
+
+    #     # Match callsign
+    #     match = callsign_lookup_df[callsign_lookup_df['registration'].str.lower() == registration]
+    #     if match.empty:
+    #         return {
+    #             'registration': registration,
+    #             'offline': downtime_start,
+    #             'online': downtime_end,
+    #             'six_hour_bin': six_hour_bin,
+    #             'quarter': quarter,
+    #             'total_offline': None,
+    #             'scheduled_minutes': None,
+    #             'reason': reason,
+    #             'proportion': None
+    #         }
+    #     callsign = match.iloc[0]['callsign']
+
+    #     rota_rows = rota_df[rota_df['callsign'] == callsign]
+    #     if rota_rows.empty:
+    #         return {
+    #             'registration': registration,
+    #             'offline': downtime_start,
+    #             'online': downtime_end,
+    #             'six_hour_bin': six_hour_bin,
+    #             'quarter': quarter,
+    #             'total_offline': None,
+    #             'scheduled_minutes': None,
+    #             'reason': reason,
+    #             'proportion': None
+    #         }
+
+    #     month = downtime_start.month
+    #     season = 'summer' if month in [4, 5, 6, 7, 8, 9] else 'winter'
+
+    #     total_scheduled_minutes = 0
+    #     total_overlap_minutes = 0
+
+    #     for _, rota in rota_rows.iterrows():
+    #         start_hour = rota[f'{season}_start']
+    #         end_hour = rota[f'{season}_end']
+
+    #         for base_day in [downtime_start.normalize() - timedelta(days=1),
+    #                         downtime_start.normalize(),
+    #                         downtime_start.normalize() + timedelta(days=1)]:
+
+    #             rota_start = base_day + timedelta(hours=start_hour)
+    #             rota_end = base_day + timedelta(hours=end_hour)
+    #             if end_hour <= start_hour:
+    #                 rota_end += timedelta(days=1)
+
+    #             overlap_start = max(downtime_start, rota_start)
+    #             overlap_end = min(downtime_end, rota_end)
+
+    #             if overlap_end > overlap_start:
+    #                 scheduled_minutes = (rota_end - rota_start).total_seconds() / 60
+    #                 overlap_minutes = (overlap_end - overlap_start).total_seconds() / 60
+
+    #                 total_scheduled_minutes += scheduled_minutes
+    #                 total_overlap_minutes += overlap_minutes
+
+    #     if total_scheduled_minutes == 0:
+    #         proportion = None
+    #     else:
+    #         proportion = total_overlap_minutes / total_scheduled_minutes
+
+    #     return {
+    #         'registration': registration,
+    #         'offline': downtime_start,
+    #         'online': downtime_end,
+    #         'six_hour_bin': six_hour_bin,
+    #         'quarter': quarter,
+    #         'total_offline': total_overlap_minutes,
+    #         'scheduled_minutes': total_scheduled_minutes,
+    #         'reason': reason,
+    #         'proportion': proportion
+    #     }
+
+    # ================ ARCHIVED CODE - ad-hoc unavailability calculation ================ #
+    # def ad_hoc_unavailability(self, period_start, period_end, include_debugging_cols=False):
+    #     """Process ad hoc unavailability records into a stratified probability table.
+
+    #     Calculates the probability of ad hoc unavailability and availability based
+    #     on historical data. The data is stratified by aircraft registration,
+    #     six-hour time bins, and calendar quarters. It ensures all standard
+    #     reasons ('available', 'crew', 'weather', 'aircraft') are present for
+    #     each combination. It filters out any registration/quarter/bin pairings
+    #     with little scheduled time, marking their probabilities as blank. It also adds
+    #     a count of the ad-hoc unavailability events considered for each probability calculation
+    #     and the total scheduled time for the resource in that quarter/time period that was part of
+    #     the calculations.
+
+    #     Returns
+    #     -------
+    #     None
+    #         This function does not return a value but saves the calculated
+    #         probabilities to 'distribution_data/ad_hoc_unavailability.csv'.
+    #         The CSV file includes columns for registration, six_hour_bin,
+    #         quarter, reason, probability, and count.
+
+    #     Notes
+    #     -----
+    #     This function relies on the following input files:
+    #     - 'external_data/ad_hoc.csv': Contains ad hoc unavailability records.
+    #     - 'actual_data/HEMS_ROTA.csv': Contains rota information.
+    #     - 'actual_data/callsign_registration_lookup.csv': Maps callsigns to registrations.
+    #     It also depends on the 'calculate_availability_row' method within the
+    #     same class. Ensure that the 'distribution_data' directory exists.
+    #     """
+    #     try:
+    #         # Load data
+    #         adhoc_df = pd.read_csv('external_data/ad_hoc.csv', parse_dates=['offline', 'online'])
+    #         adhoc_df = adhoc_df[['aircraft', 'offline', 'online', 'reason']]
+    #         rota_df = pd.read_csv("actual_data/HEMS_ROTA.csv")
+    #         callsign_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+
+    #         # Process each ad hoc record
+    #         results = adhoc_df.apply(
+    #             lambda row: self.calculate_availability_row(row, rota_df, callsign_lookup_df, period_start, period_end),
+    #             axis=1
+    #         )
+    #         final_df = pd.DataFrame(results.tolist())
+    #         final_df.to_csv("external_data/ad_hoc_intermediate.csv")
+
+    #         # Check if final_df is empty before proceeding
+    #         if final_df.empty:
+    #             print("No ad-hoc data processed, skipping file generation.")
+    #             return
+
+    #         # Define the full set of reasons expected
+    #         all_reasons = ['available', 'crew', 'weather', 'aircraft']
+
+    #         # --- Aggregate Data ---
+    #         # Calculate job count per registration, quarter, AND bin
+    #         unavailability_instance_counts = final_df.groupby(['registration', 'quarter', 'six_hour_bin']).size().reset_index(name='unavailability_instance_counts')
+
+    #         # Downtime by bin + quarter + reason (only for unavailability reasons)
+    #         grouped = final_df[final_df['reason'].isin(['crew', 'weather', 'aircraft'])]
+    #         grouped = grouped.groupby(['registration', 'six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
+
+    #         # Scheduled time by bin + quarter
+    #         scheduled_totals = final_df.groupby(['registration', 'six_hour_bin', 'quarter'])['scheduled_minutes'].sum().reset_index()
+    #         scheduled_totals = scheduled_totals.rename(columns={'scheduled_minutes': 'total_scheduled'})
+
+    #         # Merge job counts into scheduled totals
+    #         scheduled_totals = pd.merge(scheduled_totals, unavailability_instance_counts, on=['registration', 'quarter', 'six_hour_bin'], how='left')
+
+    #         # Calculate total downtime per bin + quarter (for 'available' calculation)
+    #         downtime_totals = grouped.groupby(['registration','six_hour_bin', 'quarter'])['total_offline'].sum().reset_index()
+    #         downtime_totals = downtime_totals.rename(columns={'total_offline': 'total_downtime'})
+
+    #         # --- Create Full Grid ---
+    #         # Get all unique combinations of registration, quarter, and bin
+    #         unique_bins = scheduled_totals[['registration', 'quarter', 'six_hour_bin']].drop_duplicates()
+
+    #         # Check for empty unique_bins
+    #         if unique_bins.empty:
+    #             print("No valid unique bins found, skipping file generation.")
+    #             return
+
+    #         # Create the full grid by crossing unique bins with all reasons
+    #         full_grid = unique_bins.assign(key=1).merge(pd.DataFrame({'reason': all_reasons, 'key': 1}), on='key').drop('key', axis=1)
+
+    #         # --- Merge Data into Full Grid ---
+    #         full_grid = pd.merge(full_grid, scheduled_totals, on=['registration', 'quarter', 'six_hour_bin'], how='left')
+    #         full_grid = pd.merge(full_grid, grouped, on=['registration', 'six_hour_bin', 'quarter', 'reason'], how='left')
+    #         full_grid = pd.merge(full_grid, downtime_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left')
+
+    #         # Fill NaNs created during merges
+    #         full_grid['total_offline'] = full_grid['total_offline'].fillna(0)
+    #         full_grid['total_downtime'] = full_grid['total_downtime'].fillna(0)
+    #         full_grid['unavailability_instance_counts'] = full_grid['unavailability_instance_counts'].fillna(0) # Fill job count with 0 for bins that might exist but have no jobs
+
+    #         # --- Calculate Probabilities ---
+    #         # Suppress division by zero warnings - we handle these next
+    #         with np.errstate(divide='ignore', invalid='ignore'):
+    #             prob_avail = (full_grid['total_scheduled'] - full_grid['total_downtime']) / full_grid['total_scheduled']
+    #             prob_unavail = full_grid['total_offline'] / full_grid['total_scheduled']
+
+    #             full_grid['probability'] = np.where(
+    #                 full_grid['reason'] == 'available',
+    #                 prob_avail,
+    #                 prob_unavail
+    #             )
+
+    #         # Handle NaN/Inf from division by zero, set them to 0.0 for now.
+    #         full_grid['probability'] = full_grid['probability'].replace([np.inf, -np.inf], np.nan).fillna(0.0)
+
+    #         # --- Apply Threshold and Blanking ---
+    #         # Condition for setting probability to blank
+    #         condition_for_blank = (full_grid['total_scheduled'] < 60 * 2 * 30 * 3 ) # If less than 2 hours per day in time period rotad, exclude
+
+    #         # Convert probability to object to allow blanks, then apply the condition
+    #         full_grid['probability'] = full_grid['probability'].astype(object)
+    #         full_grid.loc[condition_for_blank, 'probability'] = ''
+
+    #         # --- Finalize and Save ---
+    #         # Select and rename columns
+    #         if include_debugging_cols:
+    #             final_prob_df = full_grid[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability', 'unavailability_instance_counts', 'total_offline', 'total_scheduled']]
+    #             final_prob_df.rename(columns={"total_offine":"total_minutes_offline_for_reason", "total_scheduled": "total_minutes_rotad_availability_in_quarter_and_time_period"})
+    #         else:
+    #             final_prob_df = full_grid[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']]
+    #         # final_prob_df = final_prob_df.rename(columns={'job_count': 'count'})
+
+    #         # Sort and save
+    #         final_prob_df = final_prob_df.sort_values(by=['registration', 'quarter', 'six_hour_bin', 'reason']).reset_index(drop=True)
+    #         final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
+
+    #         print("Ad-hoc unavailability probability table generated successfully.")
+
+    #     except FileNotFoundError:
+    #         print("Couldn't generate ad-hoc unavailability due to missing file(s). "
+    #             "Please ensure 'external_data/ad_hoc.csv', "
+    #             "'actual_data/HEMS_ROTA.csv', and "
+    #             "'actual_data/callsign_registration_lookup.csv' exist.")
+    #         pass
+    #     except Exception as e:
+    #         print(f"An error occurred during ad-hoc unavailability processing: {e}")
+    #         pass
+
+    def ad_hoc_unavailability(self, period_start, period_end):
         """
-            Compute downtime overlap, rota-based scheduled time, and proportion for a given row.
-            Returns data tagged with bin, quarter, and downtime reason.
+        Calculate aircraft availability and unavailability probabilities based on scheduled rotas and ad-hoc downtime.
+
+        Args:
+            period_start (str/datetime): Start date for analysis period
+            period_end (str/datetime): End date for analysis period
+            include_debugging_cols (bool): Whether to include debugging columns in output (currently unused)
+
+        Returns:
+            None (saves results to CSV file)
         """
+        # Load and prepare ad-hoc downtime data
+        adhoc_df = pd.read_csv('external_data/ad_hoc.csv', parse_dates=['offline', 'online'])
+        adhoc_df = adhoc_df[['aircraft', 'offline', 'online', 'reason']]
+        # Load rota and callsign lookup data
+        rota_df = pd.read_csv("actual_data/HEMS_ROTA.csv")
+        callsign_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+        # Merge rota with callsign lookup to get registration numbers to allow matching with
+        # ad-hoc data, which uses registrations
+        full_rota_df = rota_df.merge(callsign_lookup_df, on="callsign")
 
-        registration = row['aircraft'].lower()
-        downtime_start = pd.to_datetime(row['offline'], utc=True)
-        downtime_end = pd.to_datetime(row['online'], utc=True)
-        reason = row.get('reason', None)
-
-        hour = downtime_start.hour
-        if 0 <= hour <= 5:
-            six_hour_bin = '00-05'
-        elif 6 <= hour <= 11:
-            six_hour_bin = '06-11'
-        elif 12 <= hour <= 17:
-            six_hour_bin = '12-17'
-        else:
-            six_hour_bin = '18-23'
-
-        quarter = downtime_start.quarter
-
-        # Match callsign
-        match = callsign_lookup_df[callsign_lookup_df['registration'].str.lower() == registration]
-        if match.empty:
-            return {
-                'registration': registration,
-                'offline': downtime_start,
-                'online': downtime_end,
-                'six_hour_bin': six_hour_bin,
-                'quarter': quarter,
-                'total_offline': None,
-                'scheduled_minutes': None,
-                'reason': reason,
-                'proportion': None
-            }
-        callsign = match.iloc[0]['callsign']
-
-        rota_rows = rota_df[rota_df['callsign'] == callsign]
-        if rota_rows.empty:
-            return {
-                'registration': registration,
-                'offline': downtime_start,
-                'online': downtime_end,
-                'six_hour_bin': six_hour_bin,
-                'quarter': quarter,
-                'total_offline': None,
-                'scheduled_minutes': None,
-                'reason': reason,
-                'proportion': None
-            }
-
-        month = downtime_start.month
-        season = 'summer' if month in [4, 5, 6, 7, 8, 9] else 'winter'
-
-        total_scheduled_minutes = 0
-        total_overlap_minutes = 0
-
-        for _, rota in rota_rows.iterrows():
-            start_hour = rota[f'{season}_start']
-            end_hour = rota[f'{season}_end']
-
-            for base_day in [downtime_start.normalize() - timedelta(days=1),
-                            downtime_start.normalize(),
-                            downtime_start.normalize() + timedelta(days=1)]:
-
-                rota_start = base_day + timedelta(hours=start_hour)
-                rota_end = base_day + timedelta(hours=end_hour)
-                if end_hour <= start_hour:
-                    rota_end += timedelta(days=1)
-
-                overlap_start = max(downtime_start, rota_start)
-                overlap_end = min(downtime_end, rota_end)
-
-                if overlap_end > overlap_start:
-                    scheduled_minutes = (rota_end - rota_start).total_seconds() / 60
-                    overlap_minutes = (overlap_end - overlap_start).total_seconds() / 60
-
-                    total_scheduled_minutes += scheduled_minutes
-                    total_overlap_minutes += overlap_minutes
-
-        if total_scheduled_minutes == 0:
-            proportion = None
-        else:
-            proportion = total_overlap_minutes / total_scheduled_minutes
-
-        return {
-            'registration': registration,
-            'offline': downtime_start,
-            'online': downtime_end,
-            'six_hour_bin': six_hour_bin,
-            'quarter': quarter,
-            'total_offline': total_overlap_minutes,
-            'scheduled_minutes': total_scheduled_minutes,
-            'reason': reason,
-            'proportion': proportion
+        # Define the hour bands mapping
+        HOUR_BANDS = {
+            '00-05': (0, 6),   # 00:00 to 05:59
+            '06-11': (6, 12),  # 06:00 to 11:59
+            '12-17': (12, 18), # 12:00 to 17:59
+            '18-23': (18, 24)  # 18:00 to 23:59
         }
 
-    def ad_hoc_unavailability(self):
-        """
-        Process ad hoc unavailability records into a stratified probability table
-        based on six-hour bin and quarterly calendar period.
-        """
-        try:
-            adhoc_df = pd.read_csv('external_data/ad_hoc.csv', parse_dates=['offline', 'online'])
-            adhoc_df = adhoc_df[['aircraft', 'offline', 'online', 'reason']]
+        # Create list of 6-hour bins
+        bins = ['00-05', '06-11', '12-17', '18-23']
 
-            rota_df = pd.read_csv("actual_data/HEMS_ROTA.csv")
-            callsign_lookup_df = pd.read_csv("actual_data/callsign_registration_lookup.csv")
+        def is_summer(date_obj, summer_start_month=4, summer_end_month=9):
+            """
+            Determine if a date falls in summer months (April-September).
 
-            results = adhoc_df.apply(
-                lambda row: self.calculate_availability_row(row, rota_df, callsign_lookup_df),
-                axis=1
+            Args:
+                date_obj: Date object to check
+
+            Returns:
+                bool: True if date is in summer months
+            """
+            return date_obj.month in [i for i in range(summer_start_month, summer_end_month+1)]
+
+        def check_month_is_summer(month, summer_start_month=4, summer_end_month=9):
+            """
+            Determine if a date falls in summer months (April-September).
+
+            Args:
+                month: Integer month
+
+            Returns:
+                str: 'summer' is in summer months, 'winter' if in winter months
+            """
+            return 'summer' if month in [i for i in range(summer_start_month, summer_end_month+1)] else 'winter'
+
+        def get_band_for_hour(hour):
+            """
+            Return the 6-hour band name for a given hour (0-23).
+
+            Args:
+                hour (int): Hour of day (0-23)
+
+            Returns:
+                str or None: Band name or None if hour is invalid
+            """
+            for band_name, (start, end) in HOUR_BANDS.items():
+                if start <= hour < end:
+                    return band_name
+            return None
+
+        def calculate_minutes_in_band(shift_start, shift_end, band_start, band_end):
+            """
+            Calculate how many minutes of a shift fall within a specific time band.
+
+            Args:
+                shift_start (float): Shift start time in hours (0-23.99)
+                shift_end (float): Shift end time in hours (0-23.99)
+                band_start (int): Band start hour
+                band_end (int): Band end hour
+
+            Returns:
+                int: Minutes of overlap between shift and band
+            """
+            # Find the overlap between shift and band
+            overlap_start = max(shift_start, band_start)
+            overlap_end = min(shift_end, band_end)
+
+            if overlap_start < overlap_end:
+                return int((overlap_end - overlap_start) * 60)  # Convert to minutes
+            return 0
+
+        # Create date range for analysis period
+        date_range = pd.date_range(start=period_start,
+                            end=period_end,
+                            freq='D')
+        daily_df = pd.DataFrame({'date': date_range})
+        daily_df['date'] = pd.to_datetime(daily_df['date'])
+
+    # Create MultiIndex from date and bins combinations to get all date/time combinations
+        multi_index = pd.MultiIndex.from_product(
+            [daily_df['date'], bins],
+            names=['date', 'six_hour_bin']
             )
-            final_df = pd.DataFrame(results.tolist())
 
-            #print(final_df)
+        # Convert MultiIndex to DataFrame and reset index
+        daily_df = multi_index.to_frame(index=False).reset_index(drop=True)
+        # Add quarter information for seasonal analysis
+        daily_df["quarter"] = daily_df.date.dt.quarter
 
-            # downtime by bin + quarter + reason
-            grouped = final_df.groupby(['registration', 'six_hour_bin', 'quarter', 'reason'])['total_offline'].sum().reset_index()
+        # Initialize availability columns for each aircraft registration
+        # Each column will store minutes of scheduled time per time band
+        for registration in full_rota_df['registration'].unique():
+            daily_df[registration] = 0 # Initialize with 0 minutes
 
-            # Scheduled time by bin + quarter (for calculating availability)
-            scheduled_totals = final_df.groupby(['registration','six_hour_bin', 'quarter'])['scheduled_minutes'].sum().reset_index()
-            scheduled_totals = scheduled_totals.rename(columns={'scheduled_minutes': 'total_scheduled'})
+        # Calculate scheduled availability for each date/time band combination
+        for _, row in daily_df.iterrows():
+            current_date = row['date']
+            current_band = row['six_hour_bin']
+            band_start, band_end = HOUR_BANDS[current_band]
 
-            # Merge downtime total
-            downtime_totals = grouped.groupby(['registration','six_hour_bin', 'quarter'])['total_offline'].sum().reset_index()
-            downtime_totals = downtime_totals.rename(columns={'total_offline': 'total_downtime'})
+            is_current_date_summer = is_summer(current_date)
 
-            # Calculate availability
-            availability_df = pd.merge(scheduled_totals, downtime_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left').fillna(0)
-            availability_df['reason'] = 'available'
-            availability_df['probability'] = (availability_df['total_scheduled'] - availability_df['total_downtime']) / availability_df['total_scheduled']
-            available_probs = availability_df[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']]
+            # Get the row index for updating the dataframe
+            row_idx = daily_df[(daily_df['date'] == current_date) &
+                            (daily_df['six_hour_bin'] == current_band)].index[0]
 
-            # Add unavailability reason probabilities
-            # Merge rota time into grouped
-            grouped = pd.merge(grouped, scheduled_totals, on=['registration', 'six_hour_bin', 'quarter'], how='left')
-            grouped['probability'] = grouped['total_offline'] / grouped['total_scheduled']
+            # Iterate through each resource's rota entry
+            for _, rota_entry in full_rota_df.iterrows():
+                registration = rota_entry['registration']
+                # Select appropriate start/end times based on season
+                start_hour_col = 'summer_start' if is_current_date_summer else 'winter_start'
+                end_hour_col = 'summer_end' if is_current_date_summer else 'winter_end'
+                start_hour = rota_entry[start_hour_col]
+                end_hour = rota_entry[end_hour_col]
 
-            # Combine everything
-            final_prob_df = pd.concat([
-                grouped[['registration', 'six_hour_bin', 'quarter', 'reason', 'probability']],
-                available_probs
-            ], ignore_index=True)
+                total_minutes_for_band = 0
 
-            final_prob_df = final_prob_df.sort_values(by=['registration', 'quarter', 'six_hour_bin', 'reason']).reset_index(drop=True)
-            final_prob_df.to_csv("distribution_data/ad_hoc_unavailability.csv", index=False)
-        except FileNotFoundError:
-            print("Couldn't generate ad-hoc unavailability due to missing file")
-            pass
+                if start_hour < end_hour:
+                    # Shift within same day
+                    total_minutes_for_band = calculate_minutes_in_band(
+                        start_hour, end_hour, band_start, band_end
+                    )
+                elif start_hour > end_hour:
+                    # Shift spans midnight - check both parts
+
+                    # Part 1: Today from start_hour to midnight
+                    if band_end <= 24:  # This band is today
+                        total_minutes_for_band += calculate_minutes_in_band(
+                            start_hour, 24, band_start, band_end
+                        )
+
+                    # Part 2: Tomorrow from midnight to end_hour
+                    # Need to check if this band is for tomorrow
+                    tomorrow = current_date + pd.Timedelta(days=1)
+                    tomorrow_rows = daily_df[daily_df['date'] == tomorrow]
+
+                    if not tomorrow_rows.empty and current_band in tomorrow_rows['six_hour_bin'].values:
+                        total_minutes_for_band += calculate_minutes_in_band(
+                            0, end_hour, band_start, band_end
+                        )
+
+                # Update the scheduled time for this aircraft in this time band
+                daily_df.loc[row_idx, registration] += total_minutes_for_band
+
+        # Aggregate scheduled availability by quarter, time band, and registration
+        available_time = (
+            daily_df.melt(id_vars=["date", "six_hour_bin", "quarter"], value_name="rota_time", var_name="registration")
+            .groupby(["quarter", "six_hour_bin", "registration"])[["rota_time"]]
+            .sum().reset_index()
+            )
+
+        def calculate_availability_row(row, rota_df, callsign_lookup_df):
+            """
+            Calculate downtime overlap with scheduled rota for a single downtime event.
+
+            Args:
+                row: DataFrame row containing downtime information
+                rota_df: DataFrame with rota schedules
+                callsign_lookup_df: DataFrame mapping callsigns to registrations
+
+            Returns:
+                dict: Dictionary containing processed availability data
+            """
+            # Extract downtime information
+            registration = row['aircraft'].lower()
+            downtime_start = pd.to_datetime(row['offline'], utc=True)
+            downtime_end = pd.to_datetime(row['online'], utc=True)
+            reason = row.get('reason', None)
+
+            # Determine which 6-hour bin this downtime starts in
+            hour = downtime_start.hour
+            if 0 <= hour <= 5:
+                six_hour_bin = '00-05'
+            elif 6 <= hour <= 11:
+                six_hour_bin = '06-11'
+            elif 12 <= hour <= 17:
+                six_hour_bin = '12-17'
+            else:
+                six_hour_bin = '18-23'
+
+            quarter = downtime_start.quarter
+
+            # Find the callsign for this registration
+            match = callsign_lookup_df[callsign_lookup_df['registration'].str.lower() == registration]
+
+            # No matching callsign found
+            if match.empty:
+                return {
+                    'registration': registration,
+                    'offline': downtime_start,
+                    'online': downtime_end,
+                    'six_hour_bin': six_hour_bin,
+                    'quarter': quarter,
+                    'total_offline': None,
+                    'reason': reason
+                }
+
+            callsign = match.iloc[0]['callsign']
+            # Find rota entries for this callsign
+            rota_rows = rota_df[rota_df['callsign'] == callsign]
+            if rota_rows.empty:
+                return {
+                    'registration': registration,
+                    'offline': downtime_start,
+                    'online': downtime_end,
+                    'six_hour_bin': six_hour_bin,
+                    'quarter': quarter,
+                    'total_offline': None,
+                    'reason': reason
+                }
+
+            # Determine season for appropriate rota times
+            month = downtime_start.month
+            season = check_month_is_summer(month)
+
+            total_overlap_minutes = 0
+
+            # Calculate overlap between downtime and scheduled rota times
+            for _, rota in rota_rows.iterrows():
+                start_hour = rota[f'{season}_start']
+                end_hour = rota[f'{season}_end']
+
+                # Check overlap across multiple days (yesterday, today, tomorrow)
+                # This handles shifts that span midnight
+                for base_day in [downtime_start.normalize() - timedelta(days=1),
+                                downtime_start.normalize(),
+                                downtime_start.normalize() + timedelta(days=1)]:
+
+                    rota_start = base_day + timedelta(hours=start_hour)
+                    rota_end = base_day + timedelta(hours=end_hour)
+
+                    # Handle shifts that cross midnight
+                    if end_hour <= start_hour:
+                        rota_end += timedelta(days=1)
+                    # Calculate overlap between downtime and this rota period
+                    overlap_start = max(downtime_start, rota_start)
+                    overlap_end = min(downtime_end, rota_end)
+
+                    if overlap_end > overlap_start:
+                        overlap_minutes = (overlap_end - overlap_start).total_seconds() / 60
+
+                        total_overlap_minutes += overlap_minutes
+
+            return {
+                'registration': registration,
+                'offline': downtime_start,
+                'online': downtime_end,
+                'six_hour_bin': six_hour_bin,
+                'quarter': quarter,
+                'total_offline': total_overlap_minutes,
+                'reason': reason
+            }
+
+        # Process all ad-hoc downtime events
+        results = adhoc_df.apply(
+                        lambda row: calculate_availability_row(
+                            row, rota_df, callsign_lookup_df),
+                        axis=1
+                    )
+
+        # Convert results to DataFrame and select relevant columns
+        unavailability_minutes_df = (
+            pd.DataFrame(results.tolist())
+            [["registration", "six_hour_bin", "quarter", "total_offline", "reason"]]
+            )
+
+        # Aggregate offline time by registration, time band, quarter, and reason
+        offline_durations = unavailability_minutes_df.groupby(
+            ["registration", "six_hour_bin", "quarter", "reason"]
+            )[["total_offline"]].sum().reset_index()
+
+        # Create complete combinations to ensure all possible categories are represented
+        # This prevents missing data issues in the final output
+        registrations = offline_durations['registration'].unique()
+        six_hour_bins = offline_durations['six_hour_bin'].unique()
+        quarters = offline_durations['quarter'].unique()
+        reasons = offline_durations['reason'].unique()
+
+        # Generate all possible combinations
+        all_combinations = list(itertools.product(registrations, six_hour_bins, quarters, reasons))
+
+        # Create complete dataframe with all combinations
+        complete_df = pd.DataFrame(
+            all_combinations,
+            columns=['registration', 'six_hour_bin', 'quarter', 'reason']
+            )
+
+        # Merge with original data to preserve existing values, fill missing with 0
+        offline_durations = complete_df.merge(
+            offline_durations,
+            on=['registration', 'six_hour_bin', 'quarter', 'reason'],
+            how='left'
+            )
+
+        # Fill NaN values with 0 (no downtime for those combinations)
+        offline_durations['total_offline'] = offline_durations['total_offline'].fillna(0.0)
+
+        # Sort for better readability
+        offline_durations = offline_durations.sort_values(
+            ['registration', 'six_hour_bin', 'quarter', 'reason']
+            ).reset_index(drop=True)
+
+        # Ensure consistent case for registration names
+        available_time["registration"] = available_time["registration"].str.lower()
+        offline_durations["registration"] = offline_durations["registration"].str.lower()
+
+        # Merge scheduled time with downtime data
+        ad_hoc = available_time.merge(offline_durations, on=["registration", "quarter", "six_hour_bin"])
+        ad_hoc["probability"] = ad_hoc["total_offline"] / ad_hoc["rota_time"]
+
+        # Calculate availability probability (1 - sum of all unavailability probabilities)
+        available_prop_df = ad_hoc.groupby(
+            ["quarter", "six_hour_bin", "registration", "rota_time"]
+            )[["probability"]].sum().reset_index()
+
+        available_prop_df["reason"] = "available"
+        available_prop_df["probability"] = 1 - available_prop_df["probability"]
+
+        # Combine unavailability and availability data
+        final_ad_hoc_df = (
+            pd.concat([ad_hoc, available_prop_df])
+            .sort_values(["quarter", "six_hour_bin", "registration", "reason"])
+            )
+
+        # Handle cases where there's no scheduled time (set probability to NaN)
+        final_ad_hoc_df["probability"] = final_ad_hoc_df.apply(
+            lambda x: np.nan if x["rota_time"]==0 else x["probability"],
+            axis=1
+            )
+
+        final_ad_hoc_df["probability"] = final_ad_hoc_df["probability"].round(5)
+
+        # Save results to CSV
+        final_ad_hoc_df[["registration", "six_hour_bin", "quarter", "reason", "probability"]].to_csv(
+            "distribution_data/ad_hoc_unavailability.csv", index=False
+            )
 
 
     def run_sim_on_historical_params(self):
@@ -1452,6 +2273,7 @@ class DistributionFitUtils():
 
         try:
             results_all_runs = pd.read_csv("data/run_results.csv")
+            results_all_runs.to_csv("historical_data/calculated/SIM_hist_params.csv", index=False)
             # # Also run the model to get some base-case outputs
             # resource_requests = (
             #     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]

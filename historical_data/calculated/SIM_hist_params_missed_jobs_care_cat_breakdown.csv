@@ -1,241 +1,241 @@
 ,care_cat,time_type,run_number,jobs,jobs_per_year
-0,CC,HEMS Resource Available,1,243,121.50000000000001
+0,CC,HEMS Resource Available,1,232,116.00000000000001
 1,CC,HEMS Resource Available,2,239,119.5
-2,CC,HEMS Resource Available,3,251,125.49999999999999
-3,CC,HEMS Resource Available,4,210,105.0
-4,CC,HEMS Resource Available,5,248,124.0
+2,CC,HEMS Resource Available,3,252,126.00000000000001
+3,CC,HEMS Resource Available,4,207,103.5
+4,CC,HEMS Resource Available,5,244,122.0
 5,CC,HEMS Resource Available,6,218,109.0
-6,CC,HEMS Resource Available,7,224,112.0
-7,CC,HEMS Resource Available,8,236,118.0
-8,CC,HEMS Resource Available,9,245,122.5
-9,CC,HEMS Resource Available,10,231,115.49999999999999
-10,CC,HEMS Resource Available,11,248,124.0
-11,CC,HEMS Resource Available,12,217,108.5
-12,CC,HEMS Resource Available,13,278,139.0
-13,CC,HEMS Resource Available,14,240,120.0
-14,CC,HEMS Resource Available,15,256,128.0
-15,CC,HEMS Resource Available,16,220,110.0
-16,CC,HEMS Resource Available,17,235,117.5
-17,CC,HEMS Resource Available,18,263,131.5
-18,CC,HEMS Resource Available,19,200,100.0
+6,CC,HEMS Resource Available,7,220,110.0
+7,CC,HEMS Resource Available,8,229,114.5
+8,CC,HEMS Resource Available,9,243,121.50000000000001
+9,CC,HEMS Resource Available,10,227,113.5
+10,CC,HEMS Resource Available,11,244,122.0
+11,CC,HEMS Resource Available,12,214,107.0
+12,CC,HEMS Resource Available,13,276,138.0
+13,CC,HEMS Resource Available,14,239,119.5
+14,CC,HEMS Resource Available,15,251,125.49999999999999
+15,CC,HEMS Resource Available,16,217,108.5
+16,CC,HEMS Resource Available,17,224,112.0
+17,CC,HEMS Resource Available,18,255,127.5
+18,CC,HEMS Resource Available,19,198,99.0
 19,CC,HEMS Resource Available,20,233,116.50000000000001
-20,CC,HEMS Resource Available,21,226,113.0
-21,CC,HEMS Resource Available,22,231,115.49999999999999
-22,CC,HEMS Resource Available,23,239,119.5
-23,CC,HEMS Resource Available,24,236,118.0
-24,CC,HEMS Resource Available,25,243,121.50000000000001
-25,CC,HEMS Resource Available,26,250,125.0
+20,CC,HEMS Resource Available,21,222,111.00000000000001
+21,CC,HEMS Resource Available,22,226,113.0
+22,CC,HEMS Resource Available,23,238,119.0
+23,CC,HEMS Resource Available,24,237,118.5
+24,CC,HEMS Resource Available,25,240,120.0
+25,CC,HEMS Resource Available,26,244,122.0
 26,CC,HEMS Resource Available,27,236,118.0
-27,CC,HEMS Resource Available,28,257,128.5
-28,CC,HEMS Resource Available,29,220,110.0
-29,CC,HEMS Resource Available,30,248,124.0
-30,CC,No Resource Available,1,27,13.5
+27,CC,HEMS Resource Available,28,256,128.0
+28,CC,HEMS Resource Available,29,211,105.49999999999999
+29,CC,HEMS Resource Available,30,241,120.49999999999999
+30,CC,No Resource Available,1,38,19.0
 31,CC,No Resource Available,2,29,14.500000000000002
-32,CC,No Resource Available,3,38,19.0
-33,CC,No Resource Available,4,31,15.5
-34,CC,No Resource Available,5,32,16.0
+32,CC,No Resource Available,3,37,18.5
+33,CC,No Resource Available,4,34,17.0
+34,CC,No Resource Available,5,36,18.0
 35,CC,No Resource Available,6,30,15.0
-36,CC,No Resource Available,7,30,15.0
-37,CC,No Resource Available,8,31,15.5
-38,CC,No Resource Available,9,21,10.5
-39,CC,No Resource Available,10,33,16.5
-40,CC,No Resource Available,11,36,18.0
-41,CC,No Resource Available,12,37,18.5
-42,CC,No Resource Available,13,37,18.5
-43,CC,No Resource Available,14,27,13.5
-44,CC,No Resource Available,15,35,17.5
-45,CC,No Resource Available,16,30,15.0
-46,CC,No Resource Available,17,32,16.0
-47,CC,No Resource Available,18,30,15.0
-48,CC,No Resource Available,19,33,16.5
+36,CC,No Resource Available,7,34,17.0
+37,CC,No Resource Available,8,38,19.0
+38,CC,No Resource Available,9,23,11.5
+39,CC,No Resource Available,10,37,18.5
+40,CC,No Resource Available,11,40,20.0
+41,CC,No Resource Available,12,40,20.0
+42,CC,No Resource Available,13,39,19.5
+43,CC,No Resource Available,14,28,14.0
+44,CC,No Resource Available,15,40,20.0
+45,CC,No Resource Available,16,33,16.5
+46,CC,No Resource Available,17,43,21.5
+47,CC,No Resource Available,18,38,19.0
+48,CC,No Resource Available,19,35,17.5
 49,CC,No Resource Available,20,28,14.0
-50,CC,No Resource Available,21,24,11.999999999999998
-51,CC,No Resource Available,22,39,19.5
-52,CC,No Resource Available,23,38,19.0
-53,CC,No Resource Available,24,40,20.0
-54,CC,No Resource Available,25,25,12.5
-55,CC,No Resource Available,26,30,15.0
+50,CC,No Resource Available,21,28,14.0
+51,CC,No Resource Available,22,44,22.0
+52,CC,No Resource Available,23,39,19.5
+53,CC,No Resource Available,24,39,19.5
+54,CC,No Resource Available,25,28,14.0
+55,CC,No Resource Available,26,36,18.0
 56,CC,No Resource Available,27,35,17.5
-57,CC,No Resource Available,28,27,13.5
-58,CC,No Resource Available,29,30,15.0
-59,CC,No Resource Available,30,29,14.500000000000002
-60,EC,HEMS Resource Available,1,463,231.5
-61,EC,HEMS Resource Available,2,436,218.0
-62,EC,HEMS Resource Available,3,447,223.5
-63,EC,HEMS Resource Available,4,456,228.0
-64,EC,HEMS Resource Available,5,481,240.5
-65,EC,HEMS Resource Available,6,507,253.5
-66,EC,HEMS Resource Available,7,501,250.5
-67,EC,HEMS Resource Available,8,463,231.5
-68,EC,HEMS Resource Available,9,479,239.5
-69,EC,HEMS Resource Available,10,446,223.00000000000003
-70,EC,HEMS Resource Available,11,466,233.00000000000003
-71,EC,HEMS Resource Available,12,503,251.5
-72,EC,HEMS Resource Available,13,452,226.0
-73,EC,HEMS Resource Available,14,495,247.50000000000003
-74,EC,HEMS Resource Available,15,494,247.0
-75,EC,HEMS Resource Available,16,450,225.0
+57,CC,No Resource Available,28,28,14.0
+58,CC,No Resource Available,29,39,19.5
+59,CC,No Resource Available,30,36,18.0
+60,EC,HEMS Resource Available,1,462,230.99999999999997
+61,EC,HEMS Resource Available,2,440,220.0
+62,EC,HEMS Resource Available,3,449,224.5
+63,EC,HEMS Resource Available,4,454,227.0
+64,EC,HEMS Resource Available,5,470,235.0
+65,EC,HEMS Resource Available,6,501,250.5
+66,EC,HEMS Resource Available,7,489,244.5
+67,EC,HEMS Resource Available,8,464,232.00000000000003
+68,EC,HEMS Resource Available,9,482,240.99999999999997
+69,EC,HEMS Resource Available,10,438,219.0
+70,EC,HEMS Resource Available,11,464,232.00000000000003
+71,EC,HEMS Resource Available,12,499,249.5
+72,EC,HEMS Resource Available,13,451,225.49999999999997
+73,EC,HEMS Resource Available,14,488,244.0
+74,EC,HEMS Resource Available,15,489,244.5
+75,EC,HEMS Resource Available,16,435,217.50000000000003
 76,EC,HEMS Resource Available,17,485,242.5
-77,EC,HEMS Resource Available,18,493,246.49999999999997
-78,EC,HEMS Resource Available,19,483,241.5
-79,EC,HEMS Resource Available,20,481,240.5
-80,EC,HEMS Resource Available,21,500,250.0
-81,EC,HEMS Resource Available,22,463,231.5
+77,EC,HEMS Resource Available,18,485,242.5
+78,EC,HEMS Resource Available,19,475,237.50000000000003
+79,EC,HEMS Resource Available,20,477,238.5
+80,EC,HEMS Resource Available,21,496,248.0
+81,EC,HEMS Resource Available,22,459,229.5
 82,EC,HEMS Resource Available,23,496,248.0
-83,EC,HEMS Resource Available,24,478,239.0
-84,EC,HEMS Resource Available,25,471,235.49999999999997
-85,EC,HEMS Resource Available,26,433,216.49999999999997
-86,EC,HEMS Resource Available,27,480,240.0
-87,EC,HEMS Resource Available,28,467,233.5
-88,EC,HEMS Resource Available,29,500,250.0
-89,EC,HEMS Resource Available,30,447,223.5
-90,EC,No Resource Available,1,72,36.0
-91,EC,No Resource Available,2,59,29.5
-92,EC,No Resource Available,3,87,43.5
-93,EC,No Resource Available,4,60,30.0
-94,EC,No Resource Available,5,62,31.0
-95,EC,No Resource Available,6,68,34.0
-96,EC,No Resource Available,7,69,34.5
-97,EC,No Resource Available,8,69,34.5
-98,EC,No Resource Available,9,69,34.5
-99,EC,No Resource Available,10,74,37.0
-100,EC,No Resource Available,11,65,32.5
-101,EC,No Resource Available,12,50,25.0
-102,EC,No Resource Available,13,66,33.0
-103,EC,No Resource Available,14,72,36.0
-104,EC,No Resource Available,15,80,40.0
-105,EC,No Resource Available,16,67,33.5
+83,EC,HEMS Resource Available,24,470,235.0
+84,EC,HEMS Resource Available,25,466,233.00000000000003
+85,EC,HEMS Resource Available,26,436,218.0
+86,EC,HEMS Resource Available,27,475,237.50000000000003
+87,EC,HEMS Resource Available,28,455,227.50000000000003
+88,EC,HEMS Resource Available,29,504,252.00000000000003
+89,EC,HEMS Resource Available,30,443,221.5
+90,EC,No Resource Available,1,73,36.5
+91,EC,No Resource Available,2,55,27.5
+92,EC,No Resource Available,3,85,42.5
+93,EC,No Resource Available,4,62,31.0
+94,EC,No Resource Available,5,73,36.5
+95,EC,No Resource Available,6,74,37.0
+96,EC,No Resource Available,7,81,40.5
+97,EC,No Resource Available,8,68,34.0
+98,EC,No Resource Available,9,66,33.0
+99,EC,No Resource Available,10,82,41.0
+100,EC,No Resource Available,11,67,33.5
+101,EC,No Resource Available,12,54,27.0
+102,EC,No Resource Available,13,67,33.5
+103,EC,No Resource Available,14,79,39.5
+104,EC,No Resource Available,15,85,42.5
+105,EC,No Resource Available,16,82,41.0
 106,EC,No Resource Available,17,68,34.0
-107,EC,No Resource Available,18,67,33.5
-108,EC,No Resource Available,19,58,29.000000000000004
-109,EC,No Resource Available,20,66,33.0
-110,EC,No Resource Available,21,63,31.500000000000004
-111,EC,No Resource Available,22,66,33.0
+107,EC,No Resource Available,18,75,37.5
+108,EC,No Resource Available,19,66,33.0
+109,EC,No Resource Available,20,70,35.0
+110,EC,No Resource Available,21,67,33.5
+111,EC,No Resource Available,22,70,35.0
 112,EC,No Resource Available,23,77,38.5
-113,EC,No Resource Available,24,69,34.5
-114,EC,No Resource Available,25,73,36.5
-115,EC,No Resource Available,26,67,33.5
-116,EC,No Resource Available,27,69,34.5
-117,EC,No Resource Available,28,60,30.0
-118,EC,No Resource Available,29,71,35.5
-119,EC,No Resource Available,30,65,32.5
-120,REG,HEMS Resource Available,1,3251,1625.5
-121,REG,HEMS Resource Available,2,3275,1637.5000000000002
-122,REG,HEMS Resource Available,3,3399,1699.5000000000002
-123,REG,HEMS Resource Available,4,3318,1659.0000000000002
-124,REG,HEMS Resource Available,5,3322,1660.9999999999998
-125,REG,HEMS Resource Available,6,3425,1712.5
-126,REG,HEMS Resource Available,7,3300,1650.0
-127,REG,HEMS Resource Available,8,3340,1669.9999999999998
-128,REG,HEMS Resource Available,9,3327,1663.5000000000002
-129,REG,HEMS Resource Available,10,3305,1652.5
-130,REG,HEMS Resource Available,11,3389,1694.5
-131,REG,HEMS Resource Available,12,3398,1699.0
-132,REG,HEMS Resource Available,13,3302,1651.0000000000002
-133,REG,HEMS Resource Available,14,3327,1663.5000000000002
-134,REG,HEMS Resource Available,15,3455,1727.4999999999998
-135,REG,HEMS Resource Available,16,3306,1653.0
-136,REG,HEMS Resource Available,17,3344,1672.0
-137,REG,HEMS Resource Available,18,3417,1708.5000000000002
-138,REG,HEMS Resource Available,19,3427,1713.5
-139,REG,HEMS Resource Available,20,3292,1646.0
-140,REG,HEMS Resource Available,21,3368,1684.0
-141,REG,HEMS Resource Available,22,3408,1704.0000000000002
-142,REG,HEMS Resource Available,23,3340,1669.9999999999998
-143,REG,HEMS Resource Available,24,3405,1702.5
-144,REG,HEMS Resource Available,25,3444,1722.0000000000002
-145,REG,HEMS Resource Available,26,3376,1687.9999999999998
-146,REG,HEMS Resource Available,27,3397,1698.5
-147,REG,HEMS Resource Available,28,3490,1745.0
-148,REG,HEMS Resource Available,29,3421,1710.4999999999998
-149,REG,HEMS Resource Available,30,3418,1709.0
-150,REG,No Resource Available,1,482,240.99999999999997
-151,REG,No Resource Available,2,469,234.5
-152,REG,No Resource Available,3,536,268.0
-153,REG,No Resource Available,4,499,249.5
-154,REG,No Resource Available,5,478,239.0
+113,EC,No Resource Available,24,77,38.5
+114,EC,No Resource Available,25,78,39.0
+115,EC,No Resource Available,26,64,32.0
+116,EC,No Resource Available,27,74,37.0
+117,EC,No Resource Available,28,72,36.0
+118,EC,No Resource Available,29,67,33.5
+119,EC,No Resource Available,30,69,34.5
+120,REG,HEMS Resource Available,1,3153,1576.4999999999998
+121,REG,HEMS Resource Available,2,3134,1567.0
+122,REG,HEMS Resource Available,3,3287,1643.5
+123,REG,HEMS Resource Available,4,3217,1608.5
+124,REG,HEMS Resource Available,5,3203,1601.5000000000002
+125,REG,HEMS Resource Available,6,3309,1654.5
+126,REG,HEMS Resource Available,7,3200,1600.0
+127,REG,HEMS Resource Available,8,3237,1618.5
+128,REG,HEMS Resource Available,9,3212,1606.0000000000002
+129,REG,HEMS Resource Available,10,3194,1597.0000000000002
+130,REG,HEMS Resource Available,11,3249,1624.5
+131,REG,HEMS Resource Available,12,3277,1638.4999999999998
+132,REG,HEMS Resource Available,13,3152,1576.0
+133,REG,HEMS Resource Available,14,3209,1604.5
+134,REG,HEMS Resource Available,15,3299,1649.5
+135,REG,HEMS Resource Available,16,3207,1603.4999999999998
+136,REG,HEMS Resource Available,17,3242,1621.0
+137,REG,HEMS Resource Available,18,3291,1645.5
+138,REG,HEMS Resource Available,19,3309,1654.5
+139,REG,HEMS Resource Available,20,3191,1595.5
+140,REG,HEMS Resource Available,21,3250,1624.9999999999998
+141,REG,HEMS Resource Available,22,3322,1660.9999999999998
+142,REG,HEMS Resource Available,23,3215,1607.5
+143,REG,HEMS Resource Available,24,3273,1636.5
+144,REG,HEMS Resource Available,25,3320,1660.0000000000002
+145,REG,HEMS Resource Available,26,3255,1627.5
+146,REG,HEMS Resource Available,27,3312,1656.0
+147,REG,HEMS Resource Available,28,3381,1690.5000000000002
+148,REG,HEMS Resource Available,29,3300,1650.0
+149,REG,HEMS Resource Available,30,3299,1649.5
+150,REG,No Resource Available,1,465,232.5
+151,REG,No Resource Available,2,483,241.5
+152,REG,No Resource Available,3,523,261.5
+153,REG,No Resource Available,4,485,242.5
+154,REG,No Resource Available,5,477,238.5
 155,REG,No Resource Available,6,479,239.5
-156,REG,No Resource Available,7,429,214.5
-157,REG,No Resource Available,8,494,247.0
-158,REG,No Resource Available,9,471,235.49999999999997
-159,REG,No Resource Available,10,475,237.50000000000003
-160,REG,No Resource Available,11,460,230.0
-161,REG,No Resource Available,12,464,232.00000000000003
-162,REG,No Resource Available,13,474,237.0
-163,REG,No Resource Available,14,466,233.00000000000003
-164,REG,No Resource Available,15,519,259.5
-165,REG,No Resource Available,16,464,232.00000000000003
-166,REG,No Resource Available,17,439,219.5
-167,REG,No Resource Available,18,511,255.49999999999997
-168,REG,No Resource Available,19,483,241.5
-169,REG,No Resource Available,20,460,230.0
-170,REG,No Resource Available,21,468,234.0
-171,REG,No Resource Available,22,468,234.0
-172,REG,No Resource Available,23,488,244.0
-173,REG,No Resource Available,24,468,234.0
-174,REG,No Resource Available,25,480,240.0
-175,REG,No Resource Available,26,445,222.5
-176,REG,No Resource Available,27,523,261.5
+156,REG,No Resource Available,7,415,207.50000000000003
+157,REG,No Resource Available,8,477,238.5
+158,REG,No Resource Available,9,479,239.5
+159,REG,No Resource Available,10,477,238.5
+160,REG,No Resource Available,11,454,227.0
+161,REG,No Resource Available,12,474,237.0
+162,REG,No Resource Available,13,501,250.5
+163,REG,No Resource Available,14,480,240.0
+164,REG,No Resource Available,15,535,267.5
+165,REG,No Resource Available,16,455,227.50000000000003
+166,REG,No Resource Available,17,420,210.0
+167,REG,No Resource Available,18,507,253.5
+168,REG,No Resource Available,19,487,243.5
+169,REG,No Resource Available,20,454,227.0
+170,REG,No Resource Available,21,471,235.49999999999997
+171,REG,No Resource Available,22,447,223.5
+172,REG,No Resource Available,23,492,246.0
+173,REG,No Resource Available,24,481,240.5
+174,REG,No Resource Available,25,488,244.0
+175,REG,No Resource Available,26,443,221.5
+176,REG,No Resource Available,27,500,250.0
 177,REG,No Resource Available,28,478,239.0
-178,REG,No Resource Available,29,467,233.5
-179,REG,No Resource Available,30,483,241.5
-180,REG - Helicopter Benefit,HEMS Resource Available,1,307,153.5
-181,REG - Helicopter Benefit,HEMS Resource Available,2,321,160.5
-182,REG - Helicopter Benefit,HEMS Resource Available,3,311,155.5
-183,REG - Helicopter Benefit,HEMS Resource Available,4,318,159.0
-184,REG - Helicopter Benefit,HEMS Resource Available,5,301,150.5
-185,REG - Helicopter Benefit,HEMS Resource Available,6,291,145.5
-186,REG - Helicopter Benefit,HEMS Resource Available,7,288,144.0
-187,REG - Helicopter Benefit,HEMS Resource Available,8,289,144.5
-188,REG - Helicopter Benefit,HEMS Resource Available,9,287,143.5
-189,REG - Helicopter Benefit,HEMS Resource Available,10,292,146.0
-190,REG - Helicopter Benefit,HEMS Resource Available,11,274,137.0
-191,REG - Helicopter Benefit,HEMS Resource Available,12,289,144.5
-192,REG - Helicopter Benefit,HEMS Resource Available,13,284,142.0
-193,REG - Helicopter Benefit,HEMS Resource Available,14,325,162.5
-194,REG - Helicopter Benefit,HEMS Resource Available,15,296,148.0
-195,REG - Helicopter Benefit,HEMS Resource Available,16,296,148.0
-196,REG - Helicopter Benefit,HEMS Resource Available,17,295,147.5
-197,REG - Helicopter Benefit,HEMS Resource Available,18,254,127.0
-198,REG - Helicopter Benefit,HEMS Resource Available,19,286,143.0
-199,REG - Helicopter Benefit,HEMS Resource Available,20,285,142.5
-200,REG - Helicopter Benefit,HEMS Resource Available,21,311,155.5
-201,REG - Helicopter Benefit,HEMS Resource Available,22,315,157.5
-202,REG - Helicopter Benefit,HEMS Resource Available,23,282,141.0
-203,REG - Helicopter Benefit,HEMS Resource Available,24,317,158.5
-204,REG - Helicopter Benefit,HEMS Resource Available,25,291,145.5
-205,REG - Helicopter Benefit,HEMS Resource Available,26,268,134.0
-206,REG - Helicopter Benefit,HEMS Resource Available,27,286,143.0
-207,REG - Helicopter Benefit,HEMS Resource Available,28,300,150.0
-208,REG - Helicopter Benefit,HEMS Resource Available,29,293,146.5
-209,REG - Helicopter Benefit,HEMS Resource Available,30,288,144.0
-210,REG - Helicopter Benefit,No Resource Available,1,206,103.0
-211,REG - Helicopter Benefit,No Resource Available,2,201,100.49999999999999
-212,REG - Helicopter Benefit,No Resource Available,3,232,116.00000000000001
-213,REG - Helicopter Benefit,No Resource Available,4,228,114.0
-214,REG - Helicopter Benefit,No Resource Available,5,208,104.0
-215,REG - Helicopter Benefit,No Resource Available,6,217,108.5
-216,REG - Helicopter Benefit,No Resource Available,7,214,107.0
-217,REG - Helicopter Benefit,No Resource Available,8,198,99.0
-218,REG - Helicopter Benefit,No Resource Available,9,210,105.0
-219,REG - Helicopter Benefit,No Resource Available,10,222,111.00000000000001
-220,REG - Helicopter Benefit,No Resource Available,11,228,114.0
-221,REG - Helicopter Benefit,No Resource Available,12,247,123.5
-222,REG - Helicopter Benefit,No Resource Available,13,197,98.5
-223,REG - Helicopter Benefit,No Resource Available,14,215,107.5
-224,REG - Helicopter Benefit,No Resource Available,15,258,129.0
-225,REG - Helicopter Benefit,No Resource Available,16,208,104.0
-226,REG - Helicopter Benefit,No Resource Available,17,217,108.5
-227,REG - Helicopter Benefit,No Resource Available,18,214,107.0
-228,REG - Helicopter Benefit,No Resource Available,19,220,110.0
-229,REG - Helicopter Benefit,No Resource Available,20,235,117.5
-230,REG - Helicopter Benefit,No Resource Available,21,222,111.00000000000001
-231,REG - Helicopter Benefit,No Resource Available,22,214,107.0
-232,REG - Helicopter Benefit,No Resource Available,23,206,103.0
-233,REG - Helicopter Benefit,No Resource Available,24,223,111.50000000000001
-234,REG - Helicopter Benefit,No Resource Available,25,225,112.5
-235,REG - Helicopter Benefit,No Resource Available,26,193,96.50000000000001
-236,REG - Helicopter Benefit,No Resource Available,27,197,98.5
-237,REG - Helicopter Benefit,No Resource Available,28,210,105.0
-238,REG - Helicopter Benefit,No Resource Available,29,217,108.5
-239,REG - Helicopter Benefit,No Resource Available,30,214,107.0
+178,REG,No Resource Available,29,475,237.50000000000003
+179,REG,No Resource Available,30,479,239.5
+180,REG - Helicopter Benefit,HEMS Resource Available,1,527,263.5
+181,REG - Helicopter Benefit,HEMS Resource Available,2,523,261.5
+182,REG - Helicopter Benefit,HEMS Resource Available,3,550,275.0
+183,REG - Helicopter Benefit,HEMS Resource Available,4,536,268.0
+184,REG - Helicopter Benefit,HEMS Resource Available,5,515,257.5
+185,REG - Helicopter Benefit,HEMS Resource Available,6,510,255.0
+186,REG - Helicopter Benefit,HEMS Resource Available,7,517,258.5
+187,REG - Helicopter Benefit,HEMS Resource Available,8,495,247.50000000000003
+188,REG - Helicopter Benefit,HEMS Resource Available,9,496,248.0
+189,REG - Helicopter Benefit,HEMS Resource Available,10,523,261.5
+190,REG - Helicopter Benefit,HEMS Resource Available,11,542,271.0
+191,REG - Helicopter Benefit,HEMS Resource Available,12,514,257.0
+192,REG - Helicopter Benefit,HEMS Resource Available,13,509,254.5
+193,REG - Helicopter Benefit,HEMS Resource Available,14,535,267.5
+194,REG - Helicopter Benefit,HEMS Resource Available,15,557,278.5
+195,REG - Helicopter Benefit,HEMS Resource Available,16,499,249.5
+196,REG - Helicopter Benefit,HEMS Resource Available,17,512,256.0
+197,REG - Helicopter Benefit,HEMS Resource Available,18,484,242.00000000000003
+198,REG - Helicopter Benefit,HEMS Resource Available,19,517,258.5
+199,REG - Helicopter Benefit,HEMS Resource Available,20,515,257.5
+200,REG - Helicopter Benefit,HEMS Resource Available,21,558,279.0
+201,REG - Helicopter Benefit,HEMS Resource Available,22,540,270.0
+202,REG - Helicopter Benefit,HEMS Resource Available,23,511,255.49999999999997
+203,REG - Helicopter Benefit,HEMS Resource Available,24,527,263.5
+204,REG - Helicopter Benefit,HEMS Resource Available,25,509,254.5
+205,REG - Helicopter Benefit,HEMS Resource Available,26,484,242.00000000000003
+206,REG - Helicopter Benefit,HEMS Resource Available,27,487,243.5
+207,REG - Helicopter Benefit,HEMS Resource Available,28,527,263.5
+208,REG - Helicopter Benefit,HEMS Resource Available,29,517,258.5
+209,REG - Helicopter Benefit,HEMS Resource Available,30,505,252.5
+210,REG - Helicopter Benefit,No Resource Available,1,101,50.49999999999999
+211,REG - Helicopter Benefit,No Resource Available,2,126,63.00000000000001
+212,REG - Helicopter Benefit,No Resource Available,3,118,59.0
+213,REG - Helicopter Benefit,No Resource Available,4,125,62.5
+214,REG - Helicopter Benefit,No Resource Available,5,114,57.0
+215,REG - Helicopter Benefit,No Resource Available,6,114,57.0
+216,REG - Helicopter Benefit,No Resource Available,7,99,49.5
+217,REG - Helicopter Benefit,No Resource Available,8,112,56.0
+218,REG - Helicopter Benefit,No Resource Available,9,108,54.0
+219,REG - Helicopter Benefit,No Resource Available,10,100,50.0
+220,REG - Helicopter Benefit,No Resource Available,11,106,52.99999999999999
+221,REG - Helicopter Benefit,No Resource Available,12,133,66.5
+222,REG - Helicopter Benefit,No Resource Available,13,95,47.5
+223,REG - Helicopter Benefit,No Resource Available,14,109,54.5
+224,REG - Helicopter Benefit,No Resource Available,15,137,68.5
+225,REG - Helicopter Benefit,No Resource Available,16,113,56.5
+226,REG - Helicopter Benefit,No Resource Available,17,121,60.50000000000001
+227,REG - Helicopter Benefit,No Resource Available,18,114,57.0
+228,REG - Helicopter Benefit,No Resource Available,19,103,51.5
+229,REG - Helicopter Benefit,No Resource Available,20,112,56.0
+230,REG - Helicopter Benefit,No Resource Available,21,90,45.0
+231,REG - Helicopter Benefit,No Resource Available,22,96,47.99999999999999
+232,REG - Helicopter Benefit,No Resource Available,23,98,49.0
+233,REG - Helicopter Benefit,No Resource Available,24,132,66.0
+234,REG - Helicopter Benefit,No Resource Available,25,123,61.5
+235,REG - Helicopter Benefit,No Resource Available,26,100,50.0
+236,REG - Helicopter Benefit,No Resource Available,27,104,52.0
+237,REG - Helicopter Benefit,No Resource Available,28,92,46.0
+238,REG - Helicopter Benefit,No Resource Available,29,106,52.99999999999999
+239,REG - Helicopter Benefit,No Resource Available,30,120,60.0
