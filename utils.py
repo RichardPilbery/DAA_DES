@@ -143,7 +143,9 @@ class Utils:
             "helicopter_benefit_from_reg",
             "hems_case",
             "ad_hoc_reason_selection",
-            "know_heli_benefit"
+            "know_heli_benefit",
+            "helicopter_benefit_from_cc",
+            "helicopter_benefit_from_ec",
         ]
         # Efficiently spawn substreams
         spawned = self.master_seed_sequence.spawn(len(module_keys))

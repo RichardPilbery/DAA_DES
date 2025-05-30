@@ -304,21 +304,37 @@ class DES_HEMS:
             pt.hems_pref_callsign_group = self.utils.callsign_group_selection()
             #self.debug(f"Callsign is {pt.hems_pref_callsign_group}")
 
-            # Some % of 'REG' calls have a helicopter benefit
+            # Some % of calls have a helicopter benefit
             # Default to y for all patients
-            # NOTE - this may not be strictly true! Some EC/CC may not have a direct heli benefit
-            helicopter_benefit = 'y'
+            helicopter_benefit = 'n'
+
             # Update for REG patients based on historically observed patterns
             with open("distribution_data/proportion_jobs_heli_benefit.txt", "r") as file:
-                expected_prop_heli_benefit_jobs = float(file.read().strip())
-
+                expected_prop_heli_benefit_jobs_reg = float(file.read().strip())
             if pt.hems_cc_or_ec == 'REG':
-                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= expected_prop_heli_benefit_jobs else 'n'
+                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_reg"].uniform(0, 1) <= expected_prop_heli_benefit_jobs_reg else 'n'
+
+            # Update for CC patients based on historically observed patterns
+            with open("distribution_data/proportion_jobs_heli_benefit_cc.txt", "r") as file:
+                expected_prop_heli_benefit_jobs_cc = float(file.read().strip())
+            if pt.hems_cc_or_ec == 'CC':
+                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_cc"].uniform(0, 1) <= expected_prop_heli_benefit_jobs_cc else 'n'
+
+            # Update for EC patients based on historically observed patterns
+            with open("distribution_data/proportion_jobs_heli_benefit_ec.txt", "r") as file:
+                expected_prop_heli_benefit_jobs_ec = float(file.read().strip())
+            if pt.hems_cc_or_ec == 'EC':
+                helicopter_benefit = 'y' if self.utils.rngs["helicopter_benefit_from_ec"].uniform(0, 1) <= expected_prop_heli_benefit_jobs_ec else 'n'
 
             # Following conversation with HT 21/5
             # Also count as having had a helicopter benefit if the patient is conveyed by HEMS
             # This is consistent with how things are done in the golden codes paper
             # https://static-content.springer.com/esm/art%3A10.1186%2Fs13049-023-01094-w/MediaObjects/13049_2023_1094_MOESM1_ESM.pdf
+            # while having not always been coded in the historic dataset
+            # (TODO: SR 30/5 I have commented this out for now and we should revisit this at some point -
+            # as we might be slightly overestimating heli benefit patients as a result? These need to be
+            # more closely/cleverly linked or just covered by the historic dataset instead)
+
             if pt.hems_result == "Patient Conveyed by HEMS":
                 helicopter_benefit = 'y'
 

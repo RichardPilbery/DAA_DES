@@ -1233,12 +1233,58 @@ class DistributionFitUtils():
         # patient benefit of having a helicopter allocated to them that we will have to assume is apparent at the time
         # of the call being placed (such as the casualty being located in a remote location, or )
 
-        numerator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit"]["count"].sum()
+        numerator = (historical_value_counts_by_hour[
+            historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit"
+            ]["count"].sum())
 
-        denominator = historical_value_counts_by_hour[historical_value_counts_by_hour["care_category"] != "Unknown - DAA resource did not attend"]["count"].sum()
+        denominator = (historical_value_counts_by_hour[
+            (historical_value_counts_by_hour["care_category"] == "REG - helicopter benefit") |
+            (historical_value_counts_by_hour["care_category"] == "REG")
+            ]["count"].sum())
 
         with open('distribution_data/proportion_jobs_heli_benefit.txt', 'w+') as heli_benefit_file:
             heli_benefit_file.write(json.dumps((numerator/denominator).round(4)))
+
+         # Count occurrences grouped by hour and care category
+        historical_value_counts_by_hour_cc_ec = (
+            df_historical.value_counts(["hour", "care_category", "helicopter_benefit"])
+            .reset_index(name="count")
+            )
+
+       # Output to CSV for use in tests and visualisations
+        # (historical_value_counts_by_hour_cc_ec
+        #  .sort_values(["hour", "care_category", "helicopter_benefit"])
+        #  .to_csv("historical_data/historical_care_cat_counts_cc_ec.csv"))
+
+
+        numerator_cc = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "CC") &
+                (historical_value_counts_by_hour_cc_ec["helicopter_benefit"] == "y")
+                ]["count"].sum())
+
+        denominator_cc = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "CC")
+                ]["count"].sum())
+
+        with open('distribution_data/proportion_jobs_heli_benefit_cc.txt', 'w+') as heli_benefit_file:
+            heli_benefit_file.write(json.dumps((numerator_cc/denominator_cc).round(4)))
+
+        numerator_ec = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "EC") &
+                (historical_value_counts_by_hour_cc_ec["helicopter_benefit"] == "y")
+                ]["count"].sum())
+
+        denominator_ec = (
+            historical_value_counts_by_hour_cc_ec[
+                (historical_value_counts_by_hour_cc_ec["care_category"] == "EC")
+                ]["count"].sum())
+
+        with open('distribution_data/proportion_jobs_heli_benefit_ec.txt', 'w+') as heli_benefit_file:
+            heli_benefit_file.write(json.dumps((numerator_ec/denominator_ec).round(4)))
+
 
 
     def historical_monthly_totals(self):
