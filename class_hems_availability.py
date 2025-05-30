@@ -831,7 +831,7 @@ class HEMSAvailability():
             # Assume 30% chance of knowing in advance that it's going to be a heli benefit case
             # when choosing to send a resource (and if you know that, don't fall back to
             # sending a car)
-            if helicopter_benefit == "y" and self.utilityClass.rngs["know_heli_benefit"].uniform(0, 1) <= 0.3:
+            if helicopter_benefit == "y" and self.utilityClass.rngs["know_heli_benefit"].uniform(0, 1) <= 0.5:
                 # Priority 1: CC-category helicopter (assumed most beneficial)
                     if h.vehicle_type == "helicopter" and h.category == "CC":
                         hems = h

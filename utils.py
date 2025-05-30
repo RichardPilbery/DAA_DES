@@ -146,6 +146,7 @@ class Utils:
             "know_heli_benefit",
             "helicopter_benefit_from_cc",
             "helicopter_benefit_from_ec",
+            "know_cc_ec_benefit",
         ]
         # Efficiently spawn substreams
         spawned = self.master_seed_sequence.spawn(len(module_keys))
