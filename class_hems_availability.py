@@ -828,17 +828,21 @@ class HEMSAvailability():
             # IF H70 available = SEND
             # ELSE H71 available = SEND
 
-            if helicopter_benefit == "y":
+            # Assume 30% chance of knowing in advance that it's going to be a heli benefit case
+            # when choosing to send a resource (and if you know that, don't fall back to
+            # sending a car)
+            if helicopter_benefit == "y" and self.utilityClass.rngs["know_heli_benefit"].uniform(0, 1) <= 0.3:
                 # Priority 1: CC-category helicopter (assumed most beneficial)
-                if h.vehicle_type == "helicopter" and h.category == "CC":
-                    hems = h
-                    preferred_lookup = ResourceAllocationReason.REG_HELI_BENEFIT_MATCH_CC_HELI
-                    break
-                # Priority 2: Any helicopter (less preferred than CC, hence priority = 2)
-                elif h.vehicle_type == "helicopter" and preferred > 2:
-                    hems = h
-                    preferred = 2
-                    preferred_lookup = ResourceAllocationReason.REG_HELI_BENEFIT_MATCH_EC_HELI
+                    if h.vehicle_type == "helicopter" and h.category == "CC":
+                        hems = h
+                        preferred_lookup = ResourceAllocationReason.REG_HELI_BENEFIT_MATCH_CC_HELI
+                        break
+                    # Priority 2: Any helicopter (less preferred than CC, hence priority = 2)
+                    elif h.vehicle_type == "helicopter" and preferred > 2:
+                        hems = h
+                        preferred = 2
+                        preferred_lookup = ResourceAllocationReason.REG_HELI_BENEFIT_MATCH_EC_HELI
+
 
                 # If no EC or CC helicopters are available, then:
                 # - hems remains None

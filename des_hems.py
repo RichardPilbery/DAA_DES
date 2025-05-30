@@ -335,12 +335,12 @@ class DES_HEMS:
             self.add_patient_result_row(pt, pt.hems_pref_callsign_group, "resource_preferred_resource_group")
             self.add_patient_result_row(pt, pt.hems_pref_vehicle_type, "resource_preferred_vehicle_type")
 
-            if pt.hems_cc_or_ec == 'REG':
-                # Separate (basically the old way of doing things)
-                # function to determine HEMS resource based on callsign group, vehicle type and yearly quarter
-                hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_regular_resource(pt)
-            else:
-                hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
+            # if pt.hems_cc_or_ec == 'REG':
+                # Separate function to determine HEMS resource based on the preferred callsign group
+                # (which is sampled from historical data), the preferred vehicle type
+            hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_regular_resource(pt)
+            # else:
+            #     hems_res_list: list[HEMS|None, str, HEMS|None] = yield self.hems_resources.allocate_resource(pt)
 
             self.debug(f"{pt.id} hems_res_list: {hems_res_list}")
 
