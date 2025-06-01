@@ -140,7 +140,7 @@ if button_run_pressed:
                         demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
                         activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
                         print_debug_messages=debug_messages,
-                        master_seed=st.session_state.master_seed
+                        random_seed=st.session_state.master_seed + run
                     )
 
                 results.append(
