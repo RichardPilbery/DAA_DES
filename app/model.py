@@ -370,7 +370,7 @@ if button_run_pressed:
 
                 mean_heli_ben_sent_car, min_heli_ben_sent_car, max_heli_ben_sent_car = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(results_all_runs, st.session_state.sim_duration_input)
 
-                SIM_hist_complete = pd.read_csv("historical_data/calculated/SIM_hist_params.csv")
+                # SIM_hist_complete = pd.read_csv("historical_data/calculated/SIM_hist_params.csv")
 
                 sim_hist_suboptimal_care_cat_summary = pd.read_csv("historical_data/calculated/SIM_hist_params_suboptimal_care_cat_sent_summary.csv")
                 sim_hist_suboptimal_vehicle_type_summary = pd.read_csv("historical_data/calculated/SIM_hist_params_suboptimal_vehicle_type_sent_summary.csv")
