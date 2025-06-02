@@ -2273,7 +2273,23 @@ class DistributionFitUtils():
 
         try:
             results_all_runs = pd.read_csv("data/run_results.csv")
-            results_all_runs.to_csv("historical_data/calculated/SIM_hist_params.csv", index=False)
+            # results_all_runs.to_csv("historical_data/calculated/SIM_hist_params.csv", index=False)
+
+            # save data of counts of suboptimal care category sent
+            counts_df = results_all_runs[results_all_runs["event_type"]=="resource_use"][["run_number", 'hems_res_category', "care_cat"]].value_counts().reset_index()
+
+            counts_df_summary = counts_df.groupby(["hems_res_category", "care_cat"])["count"].agg(["mean", "min", "max"]).reset_index()
+
+            counts_df_summary.to_csv("historical_data/calculated/SIM_hist_params_suboptimal_care_cat_sent_summary.csv")
+
+            # save data of counts of suboptimal vehicle type sent
+            counts_df = results_all_runs[results_all_runs["event_type"]=="resource_use"][["run_number", "vehicle_type", "heli_benefit"]].value_counts().reset_index()
+
+            counts_df_summary = counts_df.groupby(["vehicle_type", "heli_benefit"])["count"].agg(["mean", "min", "max"]).reset_index()
+
+            counts_df_summary.to_csv("historical_data/calculated/SIM_hist_params_suboptimal_vehicle_type_sent_summary.csv")
+
+
             # # Also run the model to get some base-case outputs
             # resource_requests = (
             #     results_all_runs[results_all_runs["event_type"] == "resource_request_outcome"]
