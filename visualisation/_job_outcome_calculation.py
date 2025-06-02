@@ -459,19 +459,27 @@ def plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown, what="breakdo
     return fig
 
 
-def get_prediction_cc_patients_sent_ec_resource(run_results, run_duration_days):
-    counts_df = run_results[run_results["event_type"]=="resource_use"][["run_number", 'hems_res_category', "care_cat"]].value_counts().reset_index()
+def get_prediction_cc_patients_sent_ec_resource(df, run_duration_days, summarised_df_provided=False):
 
-    counts_df_summary = counts_df.groupby(["hems_res_category", "care_cat"])["count"].agg(["mean", "min", "max"]).reset_index()
+    if not summarised_df_provided:
+        counts_df = df[df["event_type"]=="resource_use"][["run_number", 'hems_res_category', "care_cat"]].value_counts().reset_index()
+
+        counts_df_summary = counts_df.groupby(["hems_res_category", "care_cat"])["count"].agg(["mean", "min", "max"]).reset_index()
+    else:
+        counts_df_summary = df.copy()
 
     row_of_interest = counts_df_summary[(counts_df_summary["hems_res_category"]!="CC") & (counts_df_summary["care_cat"]=="CC")]
 
     return (row_of_interest["mean"].values[0]/run_duration_days)*365, (row_of_interest["min"].values[0]/run_duration_days)*365, (row_of_interest["max"].values[0]/run_duration_days)*365
 
-def get_prediction_heli_benefit_patients_sent_car(run_results, run_duration_days):
-    counts_df = run_results[run_results["event_type"]=="resource_use"][["run_number", "vehicle_type", "heli_benefit"]].value_counts().reset_index()
+def get_prediction_heli_benefit_patients_sent_car(df, run_duration_days, summarised_df_provided=False):
+    if not summarised_df_provided:
 
-    counts_df_summary = counts_df.groupby(["vehicle_type", "heli_benefit"])["count"].agg(["mean", "min", "max"]).reset_index()
+        counts_df = df[df["event_type"]=="resource_use"][["run_number", "vehicle_type", "heli_benefit"]].value_counts().reset_index()
+
+        counts_df_summary = counts_df.groupby(["vehicle_type", "heli_benefit"])["count"].agg(["mean", "min", "max"]).reset_index()
+    else:
+        counts_df_summary = df.copy()
 
     row_of_interest = counts_df_summary[(counts_df_summary["vehicle_type"]=="car") & (counts_df_summary["heli_benefit"]=="y")]
 

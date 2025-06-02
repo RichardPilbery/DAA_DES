@@ -1,0 +1,5 @@
+,vehicle_type,heli_benefit,mean,min,max
+0,car,n,1437.0666666666666,1371,1482
+1,car,y,131.0,110,153
+2,helicopter,n,2388.3333333333335,2284,2497
+3,helicopter,y,515.2666666666667,464,566

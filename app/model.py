@@ -372,9 +372,12 @@ if button_run_pressed:
 
                 SIM_hist_complete = pd.read_csv("historical_data/calculated/SIM_hist_params.csv")
 
-                mean_cc_sent_ec_HIST, min_cc_sent_ec_HIST, max_cc_sent_ec_HIST = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(SIM_hist_complete, 730) # TODO - fix hardcoded param which may change
+                sim_hist_suboptimal_care_cat_summary = pd.read_csv("historical_data/calculated/SIM_hist_params_suboptimal_care_cat_sent_summary.csv")
+                sim_hist_suboptimal_vehicle_type_summary = pd.read_csv("historical_data/calculated/SIM_hist_params_suboptimal_vehicle_type_sent_summary.csv")
 
-                mean_heli_ben_sent_car_HIST, min_heli_ben_sent_car_HIST, max_heli_ben_sent_car_HIST = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(SIM_hist_complete, 730) # TODO - fix hardcoded param which may change
+                mean_cc_sent_ec_HIST, min_cc_sent_ec_HIST, max_cc_sent_ec_HIST = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(sim_hist_suboptimal_care_cat_summary, 730, summarised_df_provided=True) # TODO - fix hardcoded param which may change
+
+                mean_heli_ben_sent_car_HIST, min_heli_ben_sent_car_HIST, max_heli_ben_sent_car_HIST = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(sim_hist_suboptimal_vehicle_type_summary, 730, summarised_df_provided=True) # TODO - fix hardcoded param which may change
 
 
                 suboptimal_jobs_sim_string = f"""
