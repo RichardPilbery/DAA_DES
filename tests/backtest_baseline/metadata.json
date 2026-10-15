@@ -1,0 +1,39 @@
+{
+    "scenario": {
+        "total_runs": 5,
+        "sim_duration_days": 730,
+        "warm_up_hours": 0,
+        "sim_start_date": "2023-01-01 08:00:00",
+        "master_seed": 42,
+        "demand_increase_percent": 1.0,
+        "activity_duration_multiplier": 1.0,
+        "amb_data": false
+    },
+    "input_files": {
+        "actual_data/HEMS_ROTA_DEFAULT.csv": "93a8225adc8379edb7831827b56db4e891ec74bce2edd6a095d2f7344f5e3f1f",
+        "actual_data/callsign_registration_lookup_DEFAULT.csv": "b01f5ed4a9c24a5be9543219bf02a5ae3a7012b3cae9f59fc956489fcf7284a5",
+        "actual_data/rota_start_end_months_DEFAULT.csv": "4c4347a691962b4fbb7e939775b3e3cd6db7c982f1e4648d071f62146d3e075e",
+        "actual_data/school_holidays_DEFAULT.csv": "017f77ff83bcd1d9fb81ebdd02d914cb07088f2d37a3162d1f80725e678b03b9",
+        "actual_data/service_history_DEFAULT.csv": "12aabdc6f6dfb87f0adfd28b1de364eff2cc4eb1b3460cc5489c1a95fe32bd37",
+        "actual_data/service_schedules_by_model_DEFAULT.csv": "7eaeff6647f21973a096465335038ee69f146a69778ca850649c506a954502fd",
+        "actual_data/upper_allowable_time_bounds_DEFAULT.csv": "74a4355932848655d4caf80a2a15c1acdb77cac4eca933401c18aa36ae63379a",
+        "distribution_data/activity_time_distributions.txt": "71084e140c85b1a0d0680e892db4890864cac1f94825e62cf0443f8dcb88f48b",
+        "distribution_data/ad_hoc_unavailability.csv": "3735ea62fbf3a421b856c43b1886b925241e56ef5226d7a35f860f2132c110ae",
+        "distribution_data/age_distributions.txt": "e45b009ba9f07561f6ef6ac305f71e9e8abe53e64edd758f45164fe7f4f1f9b9",
+        "distribution_data/callsign_group_probs.csv": "960bec13fa2399717a20118e6cb71fb40ab61ed0f0542bc7b523dcfe597dcaa0",
+        "distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv": "d8bcc44796701b016338960788791e2eb4fd785e9c2020372eab922691a50126",
+        "distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv": "bee3a84321978bb76f23e00988c05a5122b07e218a6e3b1cfbaf8eda5d1c1f2e",
+        "distribution_data/hour_by_ampds_card_probs.csv": "60e371bdf8b384377045ad9178dc75c3a68907eae9a0330f48a01c85281d0978",
+        "distribution_data/hourly_arrival_by_qtr_probs.csv": "c7e203d48e7ca1bbe25830b923a4c21e4d0a7f26c89946a0820cd74111c9a817",
+        "distribution_data/inc_per_day_distributions.txt": "f593e820deaa1159ae6385e966faa148c7e95290811fa4bf651231a194a090a8",
+        "distribution_data/inc_per_day_qtr_distributions.txt": "6300060ef573a326d737d4bef0e398dec5237c09c4c0d6200306a2d5302aa13d",
+        "distribution_data/inc_per_day_samples.json": "12eeea6bcfeb40b97058f3224c3e10bc8efa90d171144cd9d01c5d1de2ca73a3",
+        "distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv": "e6f54690b544f28d25278a8e38c21d56461479cbb8ef186797cc7b9ef73eefa2",
+        "distribution_data/proportion_jobs_heli_benefit.txt": "2c4216fcf7abda734d1c8f76efac8a494d3d86d1a24aba31dada8f5c06331335",
+        "distribution_data/proportion_jobs_heli_benefit_cc.txt": "dd5b6646a430610a81d942fb81e2de88a5801e563a07c5f5da7a1ac7bd90ac30",
+        "distribution_data/proportion_jobs_heli_benefit_ec.txt": "d3505a2fda8280c7c02e5fb07890b1a29e182173603613d0b1dbe37d70ecfbca",
+        "distribution_data/sex_by_ampds_card_probs.csv": "4e7bf939874869dffe3c66f2a2c072f9ceb677d5aa41d078e787a8bded444846",
+        "distribution_data/vehicle_type_by_quarter_probs.csv": "f0c7f88360952b794d9510ab80d529da4c8b632141296895403c35d8382de6af",
+        "distribution_data/vehicle_type_probs.csv": "a02a3a4fe26bd14073ee7b6fa5ff7fd3e41f0f8d52d9aee835bb40970dc2d426"
+    }
+}

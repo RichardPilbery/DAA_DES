@@ -19,6 +19,17 @@ from air_ambulance_des.des_parallel_process import (
 )
 from helpers import save_logs
 
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--update-backtest-baseline",
+        action="store_true",
+        default=False,
+        help="Overwrite the stored backtest results (tests/backtest_baseline) with the results of "
+        "this run, instead of comparing against them. Only use this when changes to the model's "
+        "results are expected.",
+    )
+
 ##############################################################################
 # Fixture - single run for tests where input parameters aren't being changed #
 ##############################################################################
