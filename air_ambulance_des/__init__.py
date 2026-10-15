@@ -15,6 +15,7 @@ from . import class_simulation_trial_results
 from . import des_hems
 from . import des_parallel_process
 from . import distribution_fit_utils
+from . import school_holidays
 from . import utils
 
 __all__ = [
@@ -28,6 +29,7 @@ __all__ = [
     "des_hems",
     "des_parallel_process",
     "distribution_fit_utils",
+    "school_holidays",
     "utils",
 ]
 

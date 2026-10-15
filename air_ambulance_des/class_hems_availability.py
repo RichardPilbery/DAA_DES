@@ -8,6 +8,7 @@ from numpy.random import SeedSequence
 from air_ambulance_des.class_patient import Patient
 from air_ambulance_des.utils import Utils
 from air_ambulance_des.class_hems import HEMS
+from air_ambulance_des.school_holidays import load_school_holidays
 
 import logging
 from enum import IntEnum
@@ -89,7 +90,7 @@ class HEMSAvailability:
         )
 
         # School holidays
-        self.school_holidays = pd.read_csv("actual_data/school_holidays.csv")
+        self.school_holidays = load_school_holidays("actual_data/school_holidays.csv")
 
         self.HEMS_resources_list = []
 
@@ -718,8 +719,8 @@ class HEMSAvailability:
 
         for index, row in self.school_holidays.iterrows():
             if self.do_ranges_overlap(
-                pd.to_datetime(row["start_date"]),
-                pd.to_datetime(row["end_date"]),
+                row["start_date"],
+                row["end_date"],
                 start_date,
                 end_date,
             ):

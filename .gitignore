@@ -239,3 +239,9 @@ historical_data/calculated/SIM_hist_params.csv
 app/inputs/~$parameter_template.xlsx
 
 _freeze/
+
+# Ignore a common folder name that is used for testing out features/changes
+test/
+
+# Ignore temporary excel files
+~$*.xlsx

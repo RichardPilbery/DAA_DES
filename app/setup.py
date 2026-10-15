@@ -26,6 +26,7 @@ from air_ambulance_des.utils import (
     MONTH_MAPPING,
     REVERSE_MONTH_MAPPING,
 )
+from air_ambulance_des.school_holidays import parse_school_holidays
 from _app_utils import (
     get_text,
     get_text_sheet,
@@ -180,13 +181,15 @@ if setup_type in [
             uploaded_file, sheet_name="school_holidays", dtype="str"
         )
 
-        school_holidays["start_date"] = school_holidays["start_date"].apply(
-            lambda x: try_date_format(x)
-        )
+        # Stop before any csvs are overwritten if the school holiday dates can't be used
+        try:
+            school_holidays = parse_school_holidays(school_holidays)
+        except ValueError as e:
+            st.error(f"There is a problem with the school holidays in this file. {e}")
+            st.stop()
 
-        school_holidays["end_date"] = school_holidays["end_date"].apply(
-            lambda x: try_date_format(x)
-        )
+        for column in ["start_date", "end_date"]:
+            school_holidays[column] = school_holidays[column].dt.strftime("%Y-%m-%d")
 
         additional_parameters = pd.read_excel(
             uploaded_file, sheet_name="additional_parameters"

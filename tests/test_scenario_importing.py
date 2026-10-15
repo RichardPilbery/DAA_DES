@@ -46,6 +46,8 @@ Implemented tests are listed below with a [x].
 
 [x] Selecting a predefined scenario overwrites the csvs in actual_data
 [x] Uploading a completed template overwrites the csvs in actual_data
+[x] Uploading a file with invalid school holiday dates shows an error and leaves the csvs in
+   actual_data unchanged
 [x] Resetting to defaults after an import restores the DEFAULT csvs
 [] Choosing to set parameters from the Excel template shows the file uploader, not the manual
    rota builder
@@ -387,6 +389,69 @@ def test_uploading_template_overwrites_csvs():
             assert not mismatched_csvs, (
                 f"[FAIL - SCENARIO IMPORTING - WEB APP] Uploading {path} did not overwrite: {mismatched_csvs}"
             )
+
+    finally:
+        restore_actual_data(backup_folder)
+
+
+@pytest.mark.scenarios
+@pytest.mark.parametrize(
+    "column, invalid_value",
+    [
+        # Ends before the holiday starts
+        ("end_date", pd.Timestamp(2000, 1, 1)),
+        ("start_date", "not a date"),
+    ],
+)
+def test_uploading_invalid_school_holidays_shows_error(tmp_path, column, invalid_value):
+    # Build an otherwise valid file from the template, so it stays in step with the template
+    parameter_file = read_parameter_file(TEMPLATE_PATH)
+    parameter_file["school_holidays"][column] = parameter_file["school_holidays"][
+        column
+    ].astype(object)
+    parameter_file["school_holidays"].loc[0, column] = invalid_value
+
+    invalid_file_path = tmp_path / "invalid_school_holidays.xlsx"
+
+    with pd.ExcelWriter(invalid_file_path) as writer:
+        for sheet_name, sheet in parameter_file.items():
+            sheet.to_excel(writer, sheet_name=sheet_name, index=False)
+
+    backup_folder = backup_actual_data()
+
+    try:
+        csvs_before = {
+            path: path.read_bytes() for path in Path("actual_data").glob("*.csv")
+        }
+
+        with patch("streamlit.file_uploader", return_value=str(invalid_file_path)):
+            at = AppTest.from_file(SETUP_PAGE_PATH, default_timeout=SETUP_PAGE_TIMEOUT)
+            at.run()
+
+            setup_type = at.radio[0]
+            setup_type.set_value(
+                next(
+                    option for option in setup_type.options if "Excel Template" in option
+                )
+            ).run()
+
+        assert not at.exception, (
+            f"[FAIL - SCENARIO IMPORTING - INVALID FILE] Error when uploading a file with {column} '{invalid_value}': {at.exception}"
+        )
+
+        assert any("school holidays" in error.value for error in at.error), (
+            f"[FAIL - SCENARIO IMPORTING - INVALID FILE] No error shown when uploading a file with {column} '{invalid_value}'"
+        )
+
+        changed_csvs = [
+            path.name
+            for path, contents in csvs_before.items()
+            if path.read_bytes() != contents
+        ]
+
+        assert not changed_csvs, (
+            f"[FAIL - SCENARIO IMPORTING - INVALID FILE] Uploading a file with {column} '{invalid_value}' overwrote: {changed_csvs}"
+        )
 
     finally:
         restore_actual_data(backup_folder)
