@@ -72,7 +72,7 @@ import sys
 
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from des_parallel_process import (
+from air_ambulance_des.des_parallel_process import (
     parallelProcessJoblib,
     collateRunResults,
     runSim,
