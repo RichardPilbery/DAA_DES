@@ -32,6 +32,10 @@ from _app_utils import (
     get_rota_month_strings,
 )
 
+SETUP_EXCEL = "Set parameters from Excel Template (recommended)"
+SETUP_SCENARIO = "Choose a predefined scenario"
+SETUP_MANUAL = "Set parameters manually"
+
 u = Utils()
 
 text_df = get_text_sheet("setup")
@@ -72,21 +76,23 @@ st.button(
 st.caption(get_text("reset_parameters_warning", text_df))
 
 
-st.info("You can either import")
+st.info(
+    "Several ways of defining the model parameters - such as helicopter and car rotas, care level available at different times, and more - are provided."
+)
 
 setup_type = st.radio(
-    "Choose how to set model parameters",
+    "Choose how to set model parameters:",
     [
-        "Set parameters from Excel Template",
-        "Choose a predefined scenario",
-        "Set parameters manually",
+        SETUP_EXCEL,
+        SETUP_SCENARIO,
+        SETUP_MANUAL,
     ],
 )
 
 st.divider()
 
 # MARK: Excel Template
-if setup_type == "Set parameters from Excel Template":
+if setup_type == SETUP_EXCEL:
     col_download, col_upload = st.columns([0.3, 0.7])
 
     @st.fragment
@@ -108,7 +114,7 @@ if setup_type == "Set parameters from Excel Template":
         )
 
 # MARK: Select Scenario
-elif setup_type == "Choose a predefined scenario":
+elif setup_type == SETUP_SCENARIO:
     scenario_files = {
         f.name: str(f.relative_to("scenarios"))
         for f in Path("scenarios").rglob("*.xlsx")
@@ -124,211 +130,206 @@ elif setup_type == "Choose a predefined scenario":
     if selected_scenario != "None":
         uploaded_file = f"scenarios/{scenario_files[selected_scenario]}"
 
-    if setup_type in [
-        "Set parameters from Excel Template",
-        "Choose a predefined scenario",
-    ]:
-        # If user has uploaded a file (the variable will return 'None' if the file uploader widget
-        # has not yet been interacted with)
-        if uploaded_file is not None:
-            # Go through each sheet of the template, reading them one by onee and assigning them
-            # to variables (which reflect how the related csvs are named in the data folder)
-            scenario_details = pd.read_excel(
-                uploaded_file, sheet_name="scenario_details"
-            )
+if setup_type in [
+    SETUP_EXCEL,
+    SETUP_SCENARIO,
+]:
+    # If user has uploaded a file (the variable will return 'None' if the file uploader widget
+    # has not yet been interacted with)
+    if uploaded_file is not None:
+        # Go through each sheet of the template, reading them one by onee and assigning them
+        # to variables (which reflect how the related csvs are named in the data folder)
+        scenario_details = pd.read_excel(uploaded_file, sheet_name="scenario_details")
 
-            callsign_registration_lookup = pd.read_excel(
-                uploaded_file, sheet_name="callsign_registration_lookup"
-            )
+        callsign_registration_lookup = pd.read_excel(
+            uploaded_file, sheet_name="callsign_registration_lookup"
+        )
 
-            hems_rota = pd.read_excel(uploaded_file, sheet_name="HEMS_ROTA")
+        hems_rota = pd.read_excel(uploaded_file, sheet_name="HEMS_ROTA")
 
-            service_schedules_by_model = pd.read_excel(
-                uploaded_file, sheet_name="service_schedules_by_model"
-            )
-            rota_start_end_months = pd.read_excel(
-                uploaded_file, sheet_name="rota_start_end_months"
-            )
+        service_schedules_by_model = pd.read_excel(
+            uploaded_file, sheet_name="service_schedules_by_model"
+        )
+        rota_start_end_months = pd.read_excel(
+            uploaded_file, sheet_name="rota_start_end_months"
+        )
 
-            service_history = pd.read_excel(
-                uploaded_file, sheet_name="service_history", dtype="str", na_values=0
-            )
+        service_history = pd.read_excel(
+            uploaded_file, sheet_name="service_history", dtype="str", na_values=0
+        )
 
-            def try_date_format(x):
-                try:
-                    return pd.to_datetime(x).strftime("%Y-%m-%d")
-                except:
-                    return x
+        def try_date_format(x):
+            try:
+                return pd.to_datetime(x).strftime("%Y-%m-%d")
+            except:
+                return x
 
-            service_history["last_service"] = service_history["last_service"].apply(
-                lambda x: try_date_format(x)
-            )
+        service_history["last_service"] = service_history["last_service"].apply(
+            lambda x: try_date_format(x)
+        )
 
-            upper_allowable_time_bounds = pd.read_excel(
-                uploaded_file, sheet_name="upper_allowable_time_bounds"
-            )
+        upper_allowable_time_bounds = pd.read_excel(
+            uploaded_file, sheet_name="upper_allowable_time_bounds"
+        )
 
-            school_holidays = pd.read_excel(
-                uploaded_file, sheet_name="school_holidays", dtype="str"
-            )
+        school_holidays = pd.read_excel(
+            uploaded_file, sheet_name="school_holidays", dtype="str"
+        )
 
-            school_holidays["start_date"] = school_holidays["start_date"].apply(
-                lambda x: try_date_format(x)
-            )
+        school_holidays["start_date"] = school_holidays["start_date"].apply(
+            lambda x: try_date_format(x)
+        )
 
-            school_holidays["end_date"] = school_holidays["end_date"].apply(
-                lambda x: try_date_format(x)
-            )
+        school_holidays["end_date"] = school_holidays["end_date"].apply(
+            lambda x: try_date_format(x)
+        )
 
-            additional_parameters = pd.read_excel(
-                uploaded_file, sheet_name="additional_parameters"
-            )
+        additional_parameters = pd.read_excel(
+            uploaded_file, sheet_name="additional_parameters"
+        )
 
-            # For each sheet from the template, overwrite the related csvs in the actual_data folder
-            # TODO: Consider whether the school holidays file needs to be added in to this
-            input_data_files = {
-                # This first file has a slightly different structure to allow for
-                "callsign_registration_lookup": callsign_registration_lookup.drop(
-                    columns=["vehicle_type", "callsign_group"]
-                ).copy(),
-                "HEMS_ROTA": hems_rota,
-                "service_schedules_by_model": service_schedules_by_model,
-                "rota_start_end_months": rota_start_end_months,
-                "service_history": service_history,
-                "upper_allowable_time_bounds": upper_allowable_time_bounds,
-                "school_holidays": school_holidays,
-            }
+        # For each sheet from the template, overwrite the related csvs in the actual_data folder
+        # TODO: Consider whether the school holidays file needs to be added in to this
+        input_data_files = {
+            # This first file has a slightly different structure to allow for
+            "callsign_registration_lookup": callsign_registration_lookup.drop(
+                columns=["vehicle_type", "callsign_group"]
+            ).copy(),
+            "HEMS_ROTA": hems_rota,
+            "service_schedules_by_model": service_schedules_by_model,
+            "rota_start_end_months": rota_start_end_months,
+            "service_history": service_history,
+            "upper_allowable_time_bounds": upper_allowable_time_bounds,
+            "school_holidays": school_holidays,
+        }
 
-            for name, df in input_data_files.items():
-                df.to_csv(f"actual_data/{name}.csv", index=False)
+        for name, df in input_data_files.items():
+            df.to_csv(f"actual_data/{name}.csv", index=False)
 
-            st.info(
-                "Here are your uploaded parameters. Please check these look correct, and update and reupload your parameter file if they are not.\n\n"
-                "When you are happy, click on the 'Run Simulation' button in the left-hand bar to move to the model running page."
-            )
+        st.info(
+            "Here are your uploaded parameters. Please check these look correct, and update and reupload your parameter file if they are not.\n\n"
+            "When you are happy, click on the 'Run Simulation' button in the left-hand bar to move to the model running page."
+        )
 
-            st.subheader(
-                f"**Scenario:** {scenario_details[scenario_details['what'] == 'scenario_name']['value'].values[0]}"
-            )
+        st.subheader(
+            f"**Scenario:** {scenario_details[scenario_details['what'] == 'scenario_name']['value'].values[0]}"
+        )
 
-            st.write(
-                f"**Description:** {scenario_details[scenario_details['what'] == 'scenario_description']['value'].values[0]}"
-            )
+        st.write(
+            f"**Description:** {scenario_details[scenario_details['what'] == 'scenario_description']['value'].values[0]}"
+        )
 
-            st.caption(
-                f"**Notes:** {scenario_details[scenario_details['what'] == 'scenario_notes']['value'].values[0]}"
-            )
+        st.caption(
+            f"**Notes:** {scenario_details[scenario_details['what'] == 'scenario_notes']['value'].values[0]}"
+        )
 
-            st.subheader("Available Resources")
+        st.subheader("Available Resources")
 
-            st.dataframe(callsign_registration_lookup, hide_index=True)
+        st.dataframe(callsign_registration_lookup, hide_index=True)
 
-            st.subheader("Rota")
+        st.subheader("Rota")
 
-            st.dataframe(hems_rota, hide_index=True)
+        st.dataframe(hems_rota, hide_index=True)
 
-            st.subheader("Service Schedules per model")
+        st.subheader("Service Schedules per model")
 
-            st.dataframe(service_schedules_by_model, hide_index=True)
+        st.dataframe(service_schedules_by_model, hide_index=True)
 
-            st.subheader("Summer and Winter Rota Start and End Months")
+        st.subheader("Summer and Winter Rota Start and End Months")
 
-            st.dataframe(rota_start_end_months, hide_index=True)
+        st.dataframe(rota_start_end_months, hide_index=True)
 
-            st.subheader("Servicing History")
+        st.subheader("Servicing History")
 
-            st.dataframe(
-                service_history,
-                hide_index=True,
-                column_config={
-                    "last_service": st.column_config.DateColumn(
-                        format="DD MMMM YYYY",
-                    ),
-                },
-            )
+        st.dataframe(
+            service_history,
+            hide_index=True,
+            column_config={
+                "last_service": st.column_config.DateColumn(
+                    format="DD MMMM YYYY",
+                ),
+            },
+        )
 
-            st.subheader("Minimum and Maximum Durations for Activities")
+        st.subheader("Minimum and Maximum Durations for Activities")
 
-            st.dataframe(upper_allowable_time_bounds, hide_index=True)
+        st.dataframe(upper_allowable_time_bounds, hide_index=True)
 
-            st.subheader("School Holidays")
+        st.subheader("School Holidays")
 
-            st.dataframe(
-                school_holidays,
-                hide_index=True,
-                column_config={
-                    "start_date": st.column_config.DateColumn(
-                        format="DD MMMM YYYY",
-                    ),
-                    "end_date": st.column_config.DateColumn(
-                        format="DD MMMM YYYY",
-                    ),
-                },
-            )
+        st.dataframe(
+            school_holidays,
+            hide_index=True,
+            column_config={
+                "start_date": st.column_config.DateColumn(
+                    format="DD MMMM YYYY",
+                ),
+                "end_date": st.column_config.DateColumn(
+                    format="DD MMMM YYYY",
+                ),
+            },
+        )
 
-            st.subheader("Additional Parameters")
+        st.subheader("Additional Parameters")
 
-            # To avoid warnings about mixed data types within a single columns,here we transpose the
-            # additional parameters dataframe to display it (so parameter names become columns, not rows)
-            st.dataframe(
-                additional_parameters.set_index("parameter").T, hide_index=True
-            )
+        # To avoid warnings about mixed data types within a single columns,here we transpose the
+        # additional parameters dataframe to display it (so parameter names become columns, not rows)
+        st.dataframe(additional_parameters.set_index("parameter").T, hide_index=True)
 
-            st.session_state.number_of_runs_input = additional_parameters[
-                additional_parameters["parameter"] == "number_of_runs"
+        st.session_state.number_of_runs_input = additional_parameters[
+            additional_parameters["parameter"] == "number_of_runs"
+        ]["value"].values[0]
+
+        st.session_state.sim_duration_input = additional_parameters[
+            additional_parameters["parameter"] == "simulation_duration_days"
+        ]["value"].values[0]
+
+        st.session_state.warm_up_duration = additional_parameters[
+            additional_parameters["parameter"] == "simulation_warm_up_duration_hours"
+        ]["value"].values[0]
+
+        st.session_state.sim_start_date_input = (
+            additional_parameters[
+                additional_parameters["parameter"] == "simulation_start_date"
+            ]["value"]
+            .values[0]
+            .strftime("%Y-%m-%d")
+        )
+
+        sim_start_time_input = additional_parameters[
+            additional_parameters["parameter"] == "simulation_start_time"
+        ]["value"].values[0]
+
+        st.session_state.sim_start_time_input = pd.to_datetime(
+            f"{st.session_state.sim_start_date_input} {sim_start_time_input}"
+        ).strftime("%H:%M")
+
+        st.session_state.master_seed = additional_parameters[
+            additional_parameters["parameter"] == "master_random_seed"
+        ]["value"].values[0]
+
+        st.session_state.activity_duration_multiplier = float(
+            additional_parameters[
+                additional_parameters["parameter"] == "activity_duration_multiplier"
             ]["value"].values[0]
+        )
 
-            st.session_state.sim_duration_input = additional_parameters[
-                additional_parameters["parameter"] == "simulation_duration_days"
-            ]["value"].values[0]
-
-            st.session_state.warm_up_duration = additional_parameters[
-                additional_parameters["parameter"]
-                == "simulation_warm_up_duration_hours"
-            ]["value"].values[0]
-
-            st.session_state.sim_start_date_input = (
-                additional_parameters[
-                    additional_parameters["parameter"] == "simulation_start_date"
-                ]["value"]
-                .values[0]
-                .strftime("%Y-%m-%d")
-            )
-
-            sim_start_time_input = additional_parameters[
-                additional_parameters["parameter"] == "simulation_start_time"
-            ]["value"].values[0]
-
-            st.session_state.sim_start_time_input = pd.to_datetime(
-                f"{st.session_state.sim_start_date_input} {sim_start_time_input}"
-            ).strftime("%H:%M")
-
-            st.session_state.master_seed = additional_parameters[
-                additional_parameters["parameter"] == "master_random_seed"
-            ]["value"].values[0]
-
-            st.session_state.activity_duration_multiplier = float(
-                additional_parameters[
-                    additional_parameters["parameter"] == "activity_duration_multiplier"
-                ]["value"].values[0]
-            )
-
-            # Add a button to move to the model running page if parameter setup to the user's liking
-            with stylable_container(
-                css_styles=f"""
-                                button {{
-                                        background-color: {COLORSCHEME["teal"]};
-                                        color: white;
-                                        border-color: white;
-                                    }}
-                                    """,
-                key="teal_buttons",
+        # Add a button to move to the model running page if parameter setup to the user's liking
+        with stylable_container(
+            css_styles=f"""
+                            button {{
+                                    background-color: {COLORSCHEME["teal"]};
+                                    color: white;
+                                    border-color: white;
+                                }}
+                                """,
+            key="teal_buttons",
+        ):
+            if st.button(
+                "Happy with your parameters?\n\nClick here to go to the model page.",
+                icon=":material/play_circle:",
             ):
-                if st.button(
-                    "Happy with your parameters?\n\nClick here to go to the model page.",
-                    icon=":material/play_circle:",
-                ):
-                    st.switch_page("model.py")
+                st.switch_page("model.py")
 
 # MARK: Build manually
 else:
@@ -682,9 +683,11 @@ else:
             # For simplicity, let's assume it's present or use a simplified model-based inference
             callsign_registration_lookup_df["vehicle_type"] = (
                 callsign_registration_lookup_df["model"].apply(
-                    lambda x: "helicopter"
-                    if isinstance(x, str) and "Airbus" in x or "H1" in x
-                    else "car"  # Simplified
+                    lambda x: (
+                        "helicopter"
+                        if isinstance(x, str) and "Airbus" in x or "H1" in x
+                        else "car"
+                    )  # Simplified
                 )
             )
 
