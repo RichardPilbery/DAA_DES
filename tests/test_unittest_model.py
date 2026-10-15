@@ -36,7 +36,7 @@ Implemented tests are listed below with a [x].
 [] All patients who arrive outside of the warm-up period have an entry in the results dataframe
 [x] Number of arrivals increase if parameter adjusted
 [x] Number of arrivals decrease if parameter adjusted
-[x] No activity generated or model fails to complete run if number of arrivals is 0
+[x] Model completes a run with no activity generated if number of arrivals is 0
 
 ## Sensible Resource Use
 
@@ -318,24 +318,19 @@ def test_arrivals_decrease_if_demand_param_decrease():
 def test_output_when_no_demand():
     removeExistingResults(remove_run_results_csv=True)
 
-    try:
-        results_df_1 = runSim(
-            run=1,
-            total_runs=1,
-            sim_duration=60 * 24 * 7 * 2,  # run for 2 weeks
-            warm_up_time=0,
-            sim_start_date=datetime.strptime(
-                "2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"
-            ),
-            amb_data=False,
-            demand_increase_percent=0,
-        ).reset_index()
+    results_df_1 = runSim(
+        run=1,
+        total_runs=1,
+        sim_duration=60 * 24 * 7 * 2,  # run for 2 weeks
+        warm_up_time=0,
+        sim_start_date=datetime.strptime("2023-01-01 05:00:00", "%Y-%m-%d %H:%M:%S"),
+        amb_data=False,
+        demand_increase_percent=0,
+    ).reset_index()
 
-        assert len(results_df_1) == 0
-
-    except Exception:
-        # Any exception is allowed
-        pass
+    assert len(results_df_1) == 0, (
+        f"[FAIL - DEMAND PARAMETER] {len(results_df_1)} rows of results when demand is 0"
+    )
 
 
 @pytest.mark.warmup

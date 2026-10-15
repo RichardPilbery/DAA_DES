@@ -293,10 +293,10 @@ class DES_HEMS:
                     self.utils.date_time_of_call(self.sim_start_date, self.env.now)
                 )
                 next_day = current_dt.floor("d") + pd.Timedelta(days=1)
-                self.debug("next day is {next_day}")
+                self.debug(f"next day is {next_day}")
                 yield self.env.timeout(
                     math.ceil(
-                        pd.to_timedelta(next_hr - current_dt).total_seconds() / 60
+                        pd.to_timedelta(next_day - current_dt).total_seconds() / 60
                     )
                 )
 
