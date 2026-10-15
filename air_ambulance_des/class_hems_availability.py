@@ -13,6 +13,10 @@ from air_ambulance_des.school_holidays import load_school_holidays
 import logging
 from enum import IntEnum
 
+# Probability that, for a REG job where a helicopter is beneficial, this is known in advance
+# when choosing which resource to send
+PROB_HELI_BENEFIT_KNOWN = 0.5
+
 
 class ResourceAllocationReason(IntEnum):
     NONE_AVAILABLE = 0
@@ -883,6 +887,17 @@ class HEMSAvailability:
         helicopter_benefit = (
             pt.hems_helicopter_benefit
         )  # "y" if helicopter has clinical benefit
+
+        # Decide once per patient whether it is known in advance that a helicopter will be
+        # beneficial when choosing which resource to send (with probability
+        # PROB_HELI_BENEFIT_KNOWN). If it is known, only helicopters are considered, so a car
+        # is never sent instead.
+        heli_benefit_known = (
+            helicopter_benefit == "y"
+            and self.utilityClass.rngs["know_heli_benefit"].uniform(0, 1)
+            <= PROB_HELI_BENEFIT_KNOWN
+        )
+
         # Iterate through all HEMS resources stored
         for h in self.store.items:
             if (
@@ -920,14 +935,7 @@ class HEMSAvailability:
             # Resources allocated in following order:
             # IF H70 available = SEND
             # ELSE H71 available = SEND
-
-            # Assume 30% chance of knowing in advance that it's going to be a heli benefit case
-            # when choosing to send a resource (and if you know that, don't fall back to
-            # sending a car)
-            if (
-                helicopter_benefit == "y"
-                and self.utilityClass.rngs["know_heli_benefit"].uniform(0, 1) <= 0.5
-            ):
+            if heli_benefit_known:
                 # Priority 1: CC-category helicopter (assumed most beneficial)
                 if h.vehicle_type == "helicopter" and h.category == "CC":
                     hems = h
