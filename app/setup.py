@@ -97,8 +97,12 @@ if setup_type == SETUP_EXCEL:
 
     @st.fragment
     def download_template():
+        template_path = Path(__file__).parent / "inputs" / "parameter_template.xlsx"
         st.download_button(
-            "Download file template", data="inputs/parameter_template.xlsx"
+            "Download file template",
+            data=template_path.read_bytes(),
+            file_name="parameter_template.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
 
     with col_download:
