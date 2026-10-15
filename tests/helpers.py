@@ -5,6 +5,8 @@ import numpy as np
 from scipy.stats import chi2_contingency, chi2
 import shutil
 import os
+import pandas as pd
+import tempfile
 
 
 def fail_with_message(message: str):
@@ -132,3 +134,25 @@ def save_logs(output_path, log_location="log.txt", output_folder="tests/test_log
             print(f"Warning: Failed to remove {full_output_path} — {e}")
 
     shutil.copyfile(log_location, full_output_path)
+
+
+def read_parameter_file(path):
+    """Read every sheet of a parameter template or scenario file into a dictionary of dataframes."""
+    # openpyxl warns that it can't read the data validation dropdowns used in the
+    # template, which doesn't affect the values read in
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        return pd.read_excel(path, sheet_name=None)
+
+
+def backup_actual_data(actual_data_folder="actual_data"):
+    """Copy the actual_data folder somewhere temporary so tests that overwrite its csvs can restore it."""
+    backup_folder = os.path.join(tempfile.mkdtemp(), "actual_data")
+    shutil.copytree(actual_data_folder, backup_folder)
+    return backup_folder
+
+
+def restore_actual_data(backup_folder, actual_data_folder="actual_data"):
+    """Restore the actual_data folder from a backup created by backup_actual_data()."""
+    shutil.copytree(backup_folder, actual_data_folder, dirs_exist_ok=True)
+    shutil.rmtree(os.path.dirname(backup_folder), ignore_errors=True)
