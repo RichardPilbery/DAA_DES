@@ -4,7 +4,7 @@ title: "Overview"
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

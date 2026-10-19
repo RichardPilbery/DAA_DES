@@ -18,19 +18,21 @@ website:
         text: Home
       - href: reference/index.qmd
         text: Reference
-      - text: Tutorial
+      - text: Tutorials
         menu:
-          - text: Intermediate
+          - text: Intermediate Coder
             href: tutorial/intermediate/index.qmd
-          - text: Contributor
+          - text: Confident Coder
             href: tutorial/advanced-contributor/index.qmd
           - text: Decision-makers
             href: tutorial/stakeholder-decision-maker/index.qmd
           - text: Domain experts
             href: tutorial/stakeholder-domain-expert/index.qmd
+          - text: General public
+            href: tutorial/stakeholder-public/index.qmd
   sidebar:
     - id: tutorial-intermediate
-      title: Tutorial (Intermediate)
+      title: Tutorial (Intermediate Coder)
       style: docked
       contents:
         - tutorial/intermediate/index.qmd
@@ -44,7 +46,7 @@ website:
         - tutorial/intermediate/08_distribution_fitting.qmd
         - tutorial/intermediate/glossary.qmd
     - id: tutorial-advanced-contributor
-      title: Tutorial (Contributor)
+      title: Tutorial (Confident Coder)
       style: docked
       contents:
         - tutorial/advanced-contributor/index.qmd
@@ -80,6 +82,16 @@ website:
         - tutorial/stakeholder-domain-expert/reading-results.qmd
         - tutorial/stakeholder-domain-expert/assumptions-limits.qmd
         - tutorial/stakeholder-domain-expert/glossary.qmd
+    - id: tutorial-stakeholder-public
+      title: Tutorial (General public)
+      style: docked
+      contents:
+        - tutorial/stakeholder-public/index.qmd
+        - tutorial/stakeholder-public/what-it-does.qmd
+        - tutorial/stakeholder-public/your-data.qmd
+        - tutorial/stakeholder-public/reading-results.qmd
+        - tutorial/stakeholder-public/assumptions-limits.qmd
+        - tutorial/stakeholder-public/glossary.qmd
 
 # tell quarto to read the generated sidebar
 metadata-files:

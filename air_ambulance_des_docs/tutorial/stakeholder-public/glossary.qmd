@@ -1,0 +1,79 @@
+---
+title: "Glossary"
+description: "Plain-language meanings of the terms used in this guide."
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/glossary.qmd){.btn .btn-sm .btn-outline-primary} [General public](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+the call simulator
+:   The part that creates each day's made-up calls and patients and plays out each job step by step.
+
+callsign
+:   The radio name of a vehicle on duty.
+
+callsign group
+:   A helicopter and a car that share one crew; only one of the pair can be out at a time.
+
+critical care (CC)
+:   The highest level of pre-hospital care the service provides; the model uses three levels of care, and this is the highest.
+
+demand
+:   How many calls come in.
+
+the dispatch rules
+:   The part that decides which vehicle, if any, goes to each call. Developers call this HEMSAvailability allocation methods.
+
+dispatcher
+:   The person who decides which vehicle to send to a call.
+
+the fleet and rota model
+:   The part that represents each helicopter and car, its shift hours and its servicing dates. Developers call this HEMS and HEMSAvailability.
+
+helicopter benefit
+:   Whether a patient would gain from a helicopter rather than a car, for example for speed or access.
+
+the historical data preparer
+:   An occasional, separate step that turns real job records into the patterns and summaries the model uses. Developers call this DistributionFitUtils.
+
+issue list
+:   The project's public list of known problems and open questions, kept on GitHub, where anyone can read or report an issue. Developers call this GitHub issues.
+
+learned patterns (fitted distributions)
+:   A summary of how things usually happen in the past records, for example how long crews usually spend at the scene. The model picks values from this summary when it makes up a job.
+
+missed job
+:   A call for which no air ambulance vehicle was free and suitable at the time, so none was sent.
+
+the pattern sampler
+:   The part that holds patterns learned from past jobs and draws realistic values from them. Developers call this Utils.
+
+the results and comparison tool
+:   The part that turns run records into figures and charts and compares them with real past performance. Developers call this TrialResults, SimulationInputs and HistoricResults.
+
+rota
+:   The table of which vehicles are on shift (working) at which hours, with separate summer and winter hours.
+
+run (replication)
+:   One complete play-through of the simulated period. The model does many runs, each with different random chances, and averages them.
+
+the run manager
+:   The part that repeats the model many times with different random chances and combines the results.
+
+scenario
+:   A set of settings (rota, fleet, servicing, demand) to test.
+
+servicing
+:   Planned maintenance that takes an aircraft out of use for several weeks.
+
+simulation
+:   A computer model that imitates a real service over time, so that changes can be tried out safely.
+
+utilisation
+:   The share of a vehicle's on-shift hours spent on jobs.
+
+the web app
+:   The set of web pages where users choose a scenario, run the model and view the results. Developers call this the Streamlit app.

@@ -1,0 +1,70 @@
+---
+title: "Overview"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- This is a computer model that imitates how Devon Air Ambulance's helicopters and critical care cars respond to emergency calls. Planners use it to try out changes safely on a computer.
+- It does not send real helicopters, it does not handle real 999 calls, and it makes no decisions about any patient.
+- It uses made-up calls, built from patterns in two years of real job records (2023 and 2024).
+- Some of its results still differ from the real figures. See "Known issues" below.
+:::
+
+## What this is
+
+Imagine a very detailed board game. Each day, pretend emergency calls arrive. The game decides which helicopter or car, if any, goes to each one. It then writes down what happened.
+
+That is what this model does, on a computer. Experts call it a [simulation](glossary.qmd).
+
+The calls are made up. But they follow the same patterns as real calls: how many arrive each day, at what times, what kind they are, and how long each stage of a job takes.
+
+Planners can then ask "what if?" questions. What if shifts were longer? What if there were an extra car? What if a different aircraft were used? The model shows what might happen, before anyone tries it for real.
+
+## What it produces
+
+- Estimates of how many calls would be missed because no suitable helicopter or car was free.
+- How busy each vehicle and crew would be.
+- A side-by-side look at how these figures compare with what really happened in 2023 and 2024.
+
+You see these in a web app. You can also download a report, if the right free publishing tool is installed.
+
+## The journey from records to results
+
+```{mermaid}
+%%| label: fig-overview-journey
+%%| fig-cap: "The short version"
+flowchart LR
+  A[Past job records] --> B[Patterns]
+  B --> C[Made-up calls]
+  C --> D[Rules choose a vehicle]
+  D --> E[Results]
+```
+
+[What it does](what-it-does.qmd) shows the longer version. The model has eight working parts, all explained in the [glossary](glossary.qmd): the historical data preparer, the pattern sampler, the call simulator, the fleet and rota model, the dispatch rules, the run manager, the results and comparison tool, and the web app.
+
+## Who made it, and how to try it
+
+The authors are Sammi Rosser, Richard Pilbery and Hannah Trebilcock. The model's instructions are published openly, so anyone can read them. There is also a public demonstration copy that you can try in a web browser. An outside company hosts it, and it does fewer runs, so its results are rougher.
+
+If you have questions, the project keeps a public list of known problems and questions, called the [issue list](glossary.qmd). It is on the project's page on a code-sharing website. Anyone can read it or add to it.
+
+## Known issues
+
+Some results still differ from the real figures. [Assumptions and limits](assumptions-limits.qmd) gives the plain-language list. Open issues change over time, so the live list may differ from that summary.
+
+## How to use this guide
+
+| Page | The question it answers |
+|---|---|
+| [What it does](what-it-does.qmd) | What problem does it solve, and what does it produce? |
+| [Your data](your-data.qmd) | What information does it use, and where does it go? |
+| [Reading results](reading-results.qmd) | How should you read the results, and what is easy to get wrong? |
+| [Assumptions and limits](assumptions-limits.qmd) | What does it take for granted, and where can it be wrong? |
+| [Glossary](glossary.qmd) | What do the terms mean? |
+
+This guide describes what the code does and assumes. Where the code does not show something, the guide says so. It makes no claim about legal or regulatory matters.

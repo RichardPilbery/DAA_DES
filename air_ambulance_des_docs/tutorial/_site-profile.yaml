@@ -1,29 +1,34 @@
 docs_dir: air_ambulance_des_docs     # relative to the target repo (C:/DAAT/DAA_DES)
 project_type: website
 section_dir: tutorial
-git_tracked: true                    # _quarto.yml is tracked and currently unmodified (the tutorial wiring is committed)
+git_tracked: true                    # _quarto.yml is tracked and unmodified relative to HEAD (tutorial wiring is committed)
 existing_tutorial: true
 
 navigation:
-  pattern: multi-sidebar             # website.sidebar in _quarto.yml is a LIST (two tutorial items) merged with the _sidebar.yml list via metadata-files
+  pattern: multi-sidebar             # website.sidebar in _quarto.yml is a LIST (four tutorial items) merged with the _sidebar.yml list via metadata-files
   details: |
-    Refresh mode: section folder is not a blocker. Tutorial is already wired into _quarto.yml as a multi-audience tutorial
-    (intermediate, advanced-contributor). website.navbar.left has Home, Reference and a "Tutorial" dropdown menu (lines 15-26).
-    website.sidebar is a list in _quarto.yml itself (lines 27-55) holding two items, ids tutorial-intermediate and
-    tutorial-advanced-contributor (both style: docked). The "reference" and "dummy-sidebar" sidebars come from the
-    quartodoc-generated _sidebar.yml (git-ignored) via top-level metadata-files (lines 57-59). Do not edit _sidebar.yml or quartodoc.sidebar.
-    The tutorial sidebars are in _quarto.yml, not in a metadata file. _quarto.yml is unmodified relative to git HEAD.
-    The old single "tutorial" sidebar and the navbar item "tutorial/index.qmd" no longer exist. tutorial/index.qmd still exists on disk
-    but is NOT referenced from navigation (menu points to intermediate/index.qmd and advanced-contributor/index.qmd).
-    intermediate/ and advanced-contributor/ each hold 10 files (index, 01-08, glossary), matching the sidebar lists.
-    Links into tutorial/ from OUTSIDE the section (Grep over repo excluding tutorial/, reference/, _extensions/): none in hand-written
-    pages; only the _quarto.yml lines quoted below.
+    Refresh mode: section folder is not a blocker. The tutorial is already wired into _quarto.yml as a four-audience tutorial
+    (intermediate, advanced-contributor, stakeholder-decision-maker, stakeholder-domain-expert).
+    website.navbar.left has Home, Reference and a "Tutorial" dropdown menu (lines 21-30) with four entries.
+    website.sidebar (line 31) is a list in _quarto.yml itself (lines 32-82) holding four items, ids tutorial-intermediate,
+    tutorial-advanced-contributor, tutorial-stakeholder-decision-maker, tutorial-stakeholder-domain-expert (all style: docked).
+    The "reference" and other sidebars come from the quartodoc-generated _sidebar.yml (git-ignored) via top-level
+    metadata-files (lines 84-86). Do not edit _sidebar.yml or quartodoc.sidebar.
+    The tutorial sidebars are in _quarto.yml, not in a metadata file.
+    tutorial/index.qmd still exists on disk but is NOT referenced from navigation (the menu points at each audience's index.qmd).
+    Audience folders: intermediate/ and advanced-contributor/ hold 10 files each (index, 01-08, glossary); stakeholder-decision-maker/
+    holds 8 (index, what-it-does, how-it-works, assumptions-limits, risks, keeping-it-running, questions-to-ask, glossary);
+    stakeholder-domain-expert/ holds 7 (index, what-it-does, how-it-works, how-decisions-are-made, reading-results, assumptions-limits, glossary).
+    The sidebar lists match the files on disk.
+    Links into tutorial/ from OUTSIDE the section (Grep over the repo excluding tutorial/, reference/, _extensions/, docs_quarto/):
+    none in hand-written pages; only the _quarto.yml lines quoted below.
     Other facts: project.output-dir is ../docs_quarto; pre-render script sync_docs.py regenerates readme.qmd, licence.qmd,
     code_of_conduct.qmd, STARS.qmd, STRESS_DES.qmd (all git-ignored) and never touches tutorial/.
-    _quarto.yml.pre-tutorial.bak exists in the docs dir (untouched). The tutorial dir also holds _backup-pre-add-audience/, _styles/, _work/.
+    _quarto.yml.pre-tutorial.bak exists in the docs dir (untouched). tutorial/ also holds _backup-pre-add-audience/, _styles/, _work/ and
+    top-level _evidence.yaml, _generation.json, _outline.yaml, _plain-outline.yaml, _site-profile.yaml.
   tutorial_entries:
     - kind: navbar item (dropdown menu "Tutorial") in website.navbar.left
-      lines: "21-26"
+      lines: "21-30"
       text: |
         21:      - text: Tutorial
         22:        menu:
@@ -31,41 +36,74 @@ navigation:
         24:            href: tutorial/intermediate/index.qmd
         25:          - text: Contributor
         26:            href: tutorial/advanced-contributor/index.qmd
+        27:          - text: Decision-makers
+        28:            href: tutorial/stakeholder-decision-maker/index.qmd
+        29:          - text: Domain experts
+        30:            href: tutorial/stakeholder-domain-expert/index.qmd
     - kind: sidebar (id tutorial-intermediate), in _quarto.yml itself
-      lines: "28-41"
+      lines: "32-45"
       text: |
-        28:    - id: tutorial-intermediate
-        29:      title: Tutorial (Intermediate)
-        30:      style: docked
-        31:      contents:
-        32:        - tutorial/intermediate/index.qmd
-        33:        - tutorial/intermediate/01_streamlit_app_and_scenario_parameters.qmd
-        34:        - tutorial/intermediate/02_simulation_runs_and_replications.qmd
-        35:        - tutorial/intermediate/03_sampling_distributions_and_random_streams.qmd
-        36:        - tutorial/intermediate/04_calls_and_patient_journeys.qmd
-        37:        - tutorial/intermediate/05_hems_resources_and_servicing.qmd
-        38:        - tutorial/intermediate/06_resource_allocation.qmd
-        39:        - tutorial/intermediate/07_trial_results_and_historic_comparison.qmd
-        40:        - tutorial/intermediate/08_distribution_fitting.qmd
-        41:        - tutorial/intermediate/glossary.qmd
+        32:    - id: tutorial-intermediate
+        33:      title: Tutorial (Intermediate)
+        34:      style: docked
+        35:      contents:
+        36:        - tutorial/intermediate/index.qmd
+        37:        - tutorial/intermediate/01_streamlit_app_and_scenario_parameters.qmd
+        38:        - tutorial/intermediate/02_simulation_runs_and_replications.qmd
+        39:        - tutorial/intermediate/03_sampling_distributions_and_random_streams.qmd
+        40:        - tutorial/intermediate/04_calls_and_patient_journeys.qmd
+        41:        - tutorial/intermediate/05_hems_resources_and_servicing.qmd
+        42:        - tutorial/intermediate/06_resource_allocation.qmd
+        43:        - tutorial/intermediate/07_trial_results_and_historic_comparison.qmd
+        44:        - tutorial/intermediate/08_distribution_fitting.qmd
+        45:        - tutorial/intermediate/glossary.qmd
     - kind: sidebar (id tutorial-advanced-contributor), in _quarto.yml itself
-      lines: "42-55"
+      lines: "46-59"
       text: |
-        42:    - id: tutorial-advanced-contributor
-        43:      title: Tutorial (Contributor)
-        44:      style: docked
-        45:      contents:
-        46:        - tutorial/advanced-contributor/index.qmd
-        47:        - tutorial/advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd
-        48:        - tutorial/advanced-contributor/02_simulation_runs_and_replications.qmd
-        49:        - tutorial/advanced-contributor/03_sampling_distributions_and_random_streams.qmd
-        50:        - tutorial/advanced-contributor/04_calls_and_patient_journeys.qmd
-        51:        - tutorial/advanced-contributor/05_hems_resources_and_servicing.qmd
-        52:        - tutorial/advanced-contributor/06_resource_allocation.qmd
-        53:        - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
-        54:        - tutorial/advanced-contributor/08_distribution_fitting.qmd
-        55:        - tutorial/advanced-contributor/glossary.qmd
-      note: "The parent key 'sidebar:' is line 27 (shared with the reference sidebars; do not edit it). Indentation: 2 spaces per level; sidebar list items at 4 spaces, contents items at 8 spaces with '- '."
+        46:    - id: tutorial-advanced-contributor
+        47:      title: Tutorial (Contributor)
+        48:      style: docked
+        49:      contents:
+        50:        - tutorial/advanced-contributor/index.qmd
+        51:        - tutorial/advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd
+        52:        - tutorial/advanced-contributor/02_simulation_runs_and_replications.qmd
+        53:        - tutorial/advanced-contributor/03_sampling_distributions_and_random_streams.qmd
+        54:        - tutorial/advanced-contributor/04_calls_and_patient_journeys.qmd
+        55:        - tutorial/advanced-contributor/05_hems_resources_and_servicing.qmd
+        56:        - tutorial/advanced-contributor/06_resource_allocation.qmd
+        57:        - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
+        58:        - tutorial/advanced-contributor/08_distribution_fitting.qmd
+        59:        - tutorial/advanced-contributor/glossary.qmd
+    - kind: sidebar (id tutorial-stakeholder-decision-maker), in _quarto.yml itself
+      lines: "60-71"
+      text: |
+        60:    - id: tutorial-stakeholder-decision-maker
+        61:      title: Tutorial (Decision-makers)
+        62:      style: docked
+        63:      contents:
+        64:        - tutorial/stakeholder-decision-maker/index.qmd
+        65:        - tutorial/stakeholder-decision-maker/what-it-does.qmd
+        66:        - tutorial/stakeholder-decision-maker/how-it-works.qmd
+        67:        - tutorial/stakeholder-decision-maker/assumptions-limits.qmd
+        68:        - tutorial/stakeholder-decision-maker/risks.qmd
+        69:        - tutorial/stakeholder-decision-maker/keeping-it-running.qmd
+        70:        - tutorial/stakeholder-decision-maker/questions-to-ask.qmd
+        71:        - tutorial/stakeholder-decision-maker/glossary.qmd
+    - kind: sidebar (id tutorial-stakeholder-domain-expert), in _quarto.yml itself
+      lines: "72-82"
+      text: |
+        72:    - id: tutorial-stakeholder-domain-expert
+        73:      title: Tutorial (Domain experts)
+        74:      style: docked
+        75:      contents:
+        76:        - tutorial/stakeholder-domain-expert/index.qmd
+        77:        - tutorial/stakeholder-domain-expert/what-it-does.qmd
+        78:        - tutorial/stakeholder-domain-expert/how-it-works.qmd
+        79:        - tutorial/stakeholder-domain-expert/how-decisions-are-made.qmd
+        80:        - tutorial/stakeholder-domain-expert/reading-results.qmd
+        81:        - tutorial/stakeholder-domain-expert/assumptions-limits.qmd
+        82:        - tutorial/stakeholder-domain-expert/glossary.qmd
+      note: "The parent key 'sidebar:' is line 31 (shared with the reference sidebars; do not edit it). Indentation: 2 spaces per level; sidebar list items at 4 spaces, contents items at 8 spaces with '- '. Line 83 is blank, line 84 is a comment, metadata-files at 85-86."
   insertion_plan: "n/a (tutorial already present)"
 
 existing_pages:                      # hand-written pages in the docs dir (excluding reference/, _-prefixed, tutorial/)

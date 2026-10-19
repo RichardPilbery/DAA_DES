@@ -5,7 +5,7 @@ description: "Plain-language meanings of the terms used in this guide."
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [General public](../stakeholder-public/glossary.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

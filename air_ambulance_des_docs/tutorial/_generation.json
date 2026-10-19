@@ -58,6 +58,12 @@
       "preset": "stakeholder-domain-expert",
       "folder": "stakeholder-domain-expert",
       "kind": "stakeholder"
+    },
+    {
+      "slug": "stakeholder-public",
+      "preset": "stakeholder-public",
+      "folder": "stakeholder-public",
+      "kind": "stakeholder"
     }
   ],
   "args": {
@@ -5531,6 +5537,2088 @@
           "blob": null
         }
       ]
+    },
+    {
+      "audience": "stakeholder-public",
+      "id": "overview",
+      "filename": "index.qmd",
+      "files": [
+        {
+          "path": "README.md",
+          "blob": "ab5898bf9b1ad87d7f1fb0fccbda4f30e7ec8a06"
+        },
+        {
+          "path": "actual_data/HEMS_ROTA_DEFAULT.csv",
+          "blob": "5bff3564d6394d59f1f5cf1eebdc01d3385d70b9"
+        },
+        {
+          "path": "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120",
+          "blob": null
+        },
+        {
+          "path": "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18, 891-952",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:516-529, 902-914",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:532-540, 917-925",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:432-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:464-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:545-559, 574-698",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:95-97, 200-211",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
+        },
+        {
+          "path": "app/_app_utils.py:83-140; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/_state_control.py:9-50; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:160-161; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:177 versus air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:226-240, 277-291",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:114, 145-214",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:198-214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py:61-67, 74-121",
+          "blob": null
+        },
+        {
+          "path": "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "scenarios/ folder; app/setup.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:131-133, 198-200",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md",
+          "blob": null
+        }
+      ]
+    },
+    {
+      "audience": "stakeholder-public",
+      "id": "what-it-does",
+      "filename": "what-it-does.qmd",
+      "files": [
+        {
+          "path": "README.md",
+          "blob": "ab5898bf9b1ad87d7f1fb0fccbda4f30e7ec8a06"
+        },
+        {
+          "path": "actual_data/HEMS_ROTA_DEFAULT.csv",
+          "blob": "5bff3564d6394d59f1f5cf1eebdc01d3385d70b9"
+        },
+        {
+          "path": "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120",
+          "blob": null
+        },
+        {
+          "path": "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18, 891-952",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:516-529, 902-914",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:532-540, 917-925",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:432-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:464-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:545-559, 574-698",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:95-97, 200-211",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
+        },
+        {
+          "path": "app/_app_utils.py:83-140; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/_state_control.py:9-50; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:160-161; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:177 versus air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:226-240, 277-291",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:114, 145-214",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:198-214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py:61-67, 74-121",
+          "blob": null
+        },
+        {
+          "path": "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "scenarios/ folder; app/setup.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:131-133, 198-200",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md",
+          "blob": null
+        }
+      ]
+    },
+    {
+      "audience": "stakeholder-public",
+      "id": "your-data",
+      "filename": "your-data.qmd",
+      "files": [
+        {
+          "path": "README.md",
+          "blob": "ab5898bf9b1ad87d7f1fb0fccbda4f30e7ec8a06"
+        },
+        {
+          "path": "actual_data/HEMS_ROTA_DEFAULT.csv",
+          "blob": "5bff3564d6394d59f1f5cf1eebdc01d3385d70b9"
+        },
+        {
+          "path": "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120",
+          "blob": null
+        },
+        {
+          "path": "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18, 891-952",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:516-529, 902-914",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:532-540, 917-925",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:432-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:464-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:545-559, 574-698",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:95-97, 200-211",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
+        },
+        {
+          "path": "app/_app_utils.py:83-140; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/_state_control.py:9-50; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:160-161; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:177 versus air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:226-240, 277-291",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:114, 145-214",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:198-214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py:61-67, 74-121",
+          "blob": null
+        },
+        {
+          "path": "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "scenarios/ folder; app/setup.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:131-133, 198-200",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md",
+          "blob": null
+        }
+      ]
+    },
+    {
+      "audience": "stakeholder-public",
+      "id": "reading-results",
+      "filename": "reading-results.qmd",
+      "files": [
+        {
+          "path": "README.md",
+          "blob": "ab5898bf9b1ad87d7f1fb0fccbda4f30e7ec8a06"
+        },
+        {
+          "path": "actual_data/HEMS_ROTA_DEFAULT.csv",
+          "blob": "5bff3564d6394d59f1f5cf1eebdc01d3385d70b9"
+        },
+        {
+          "path": "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120",
+          "blob": null
+        },
+        {
+          "path": "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18, 891-952",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:516-529, 902-914",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:532-540, 917-925",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:432-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:464-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:545-559, 574-698",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:95-97, 200-211",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
+        },
+        {
+          "path": "app/_app_utils.py:83-140; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/_state_control.py:9-50; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:160-161; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:177 versus air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:226-240, 277-291",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:114, 145-214",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:198-214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py:61-67, 74-121",
+          "blob": null
+        },
+        {
+          "path": "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "scenarios/ folder; app/setup.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:131-133, 198-200",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md",
+          "blob": null
+        }
+      ]
+    },
+    {
+      "audience": "stakeholder-public",
+      "id": "assumptions-limits",
+      "filename": "assumptions-limits.qmd",
+      "files": [
+        {
+          "path": "README.md",
+          "blob": "ab5898bf9b1ad87d7f1fb0fccbda4f30e7ec8a06"
+        },
+        {
+          "path": "actual_data/HEMS_ROTA_DEFAULT.csv",
+          "blob": "5bff3564d6394d59f1f5cf1eebdc01d3385d70b9"
+        },
+        {
+          "path": "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120",
+          "blob": null
+        },
+        {
+          "path": "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18, 891-952",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:516-529, 902-914",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:532-540, 917-925",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:432-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:464-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:545-559, 574-698",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:95-97, 200-211",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
+        },
+        {
+          "path": "app/_app_utils.py:83-140; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/_state_control.py:9-50; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:160-161; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:177 versus air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:226-240, 277-291",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:114, 145-214",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:198-214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py:61-67, 74-121",
+          "blob": null
+        },
+        {
+          "path": "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "scenarios/ folder; app/setup.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:131-133, 198-200",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md",
+          "blob": null
+        }
+      ]
+    },
+    {
+      "audience": "stakeholder-public",
+      "id": "glossary",
+      "filename": "glossary.qmd",
+      "files": [
+        {
+          "path": "README.md",
+          "blob": "ab5898bf9b1ad87d7f1fb0fccbda4f30e7ec8a06"
+        },
+        {
+          "path": "actual_data/HEMS_ROTA_DEFAULT.csv",
+          "blob": "5bff3564d6394d59f1f5cf1eebdc01d3385d70b9"
+        },
+        {
+          "path": "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120",
+          "blob": null
+        },
+        {
+          "path": "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18, 891-952",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:516-529, 902-914",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:532-540, 917-925",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:432-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:464-466, 492-497",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:545-559, 574-698",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/des_parallel_process.py:95-97, 200-211",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688",
+          "blob": null
+        },
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
+        },
+        {
+          "path": "app/_app_utils.py:83-140; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/_state_control.py:9-50; app/model.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:160-161; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:177 versus air_ambulance_des/des_parallel_process.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:226-240, 277-291",
+          "blob": null
+        },
+        {
+          "path": "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py",
+          "blob": null
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:114, 145-214",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:198-214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py",
+          "blob": null
+        },
+        {
+          "path": "app/setup.py:214; app/_state_control.py:61-67, 74-121",
+          "blob": null
+        },
+        {
+          "path": "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py",
+          "blob": null
+        },
+        {
+          "path": "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py",
+          "blob": null
+        },
+        {
+          "path": "scenarios/ folder; app/setup.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:131-133, 198-200",
+          "blob": null
+        },
+        {
+          "path": "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py",
+          "blob": null
+        },
+        {
+          "path": "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md",
+          "blob": null
+        }
+      ]
     }
   ],
   "history": [
@@ -5566,6 +7654,19 @@
         "stakeholder-domain-expert"
       ],
       "note": "added stakeholder-domain-expert (add)"
+    },
+    {
+      "at": "2026-10-19T14:24:25Z",
+      "plugin": "2.0.0",
+      "action": "audiences changed",
+      "audiences": [
+        "intermediate",
+        "advanced-contributor",
+        "stakeholder-decision-maker",
+        "stakeholder-domain-expert",
+        "stakeholder-public"
+      ],
+      "note": "added stakeholder-public (add)"
     }
   ]
 }

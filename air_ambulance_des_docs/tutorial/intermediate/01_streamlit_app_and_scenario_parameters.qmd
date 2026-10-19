@@ -8,7 +8,7 @@ aliases:
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate Coder](01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Confident Coder](../advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

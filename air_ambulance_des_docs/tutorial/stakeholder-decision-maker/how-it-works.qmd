@@ -4,7 +4,7 @@ title: "How it works"
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](how-it-works.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Domain experts](../stakeholder-domain-expert/how-it-works.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](how-it-works.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Domain experts](../stakeholder-domain-expert/how-it-works.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

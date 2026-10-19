@@ -1,0 +1,67 @@
+---
+title: "What it does"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/what-it-does.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/what-it-does.qmd){.btn .btn-sm .btn-outline-primary} [General public](what-it-does.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- It is a planning tool. It imitates how Devon Air Ambulance helicopters and critical care cars respond to emergency calls, so planners can try out changes on a computer first.
+- It learns from two years of real job records (2023 and 2024), then makes up calls and pretend patients that follow the same patterns.
+- It shows you estimates: how many calls might be missed, and how busy each vehicle is. It sets these beside what really happened.
+- It does not send real helicopters, take real 999 calls or make choices about real patients.
+:::
+
+## The problem it helps with
+
+Planners often ask "what if?" questions. What if crews worked longer shifts? What if there was one more car? What if a different aircraft was used? Trying these out for real would be costly and risky. This model lets planners test them on a computer instead.
+
+## What it does, step by step
+
+Think of a flight simulator. A pilot can practise without leaving the ground. This model does the same for the service as a whole.
+
+```{mermaid}
+%%| label: fig-what-it-does-journey
+%%| fig-cap: "From past records to results"
+flowchart LR
+  A[Past job records] --> B[Patterns learned]
+  B --> C[Made-up calls and patients]
+  C --> D[Simple rules pick a helicopter or car]
+  D --> E[Repeat many times and average]
+  E --> F[Results beside real figures]
+```
+
+1. **It learns patterns.** From the 2023 and 2024 records it works out how many calls come in each day, at what times, of what kind, and how long each stage of a job takes.
+2. **It makes up calls.** For each simulated day it creates calls and pretend patients that follow those patterns.
+3. **It follows simple rules.** For each call, the [dispatch rules](glossary.qmd) decide which helicopter or car, if any, would go. A vehicle must be on shift, not being [serviced](glossary.qmd) (away for planned maintenance), and not already busy.
+4. **It plays out the job.** The job moves through stages: sent, travelling, at the scene, taken to hospital, back ready. Each stage takes a time drawn from the learned patterns.
+5. **It repeats and averages.** Luck plays a part, so the model plays out the whole period many times, each with different chances, and averages the answers. Each repeat is called a run. [Reading results](reading-results.qmd) gives the usual number of runs.
+
+## What you see
+
+In the web app, a user:
+
+- chooses a scenario on a setup page. They can change settings, such as how many days to simulate and how busy the service is;
+- or picks a ready-made scenario;
+- or uploads a spreadsheet that lists shift times ([rotas](glossary.qmd)), vehicles and servicing;
+- starts the model;
+- reads a results page with estimates of missed jobs and how busy each vehicle is, plus charts beside real past figures;
+- can watch an optional animation, and can download a report if the extra publishing tool is installed.
+
+## A worked example
+
+Say a planner wants to know what a 24-hour rota would change. They load the ready-made scenario for 24-hour running. They run the usual rota and note the results, then run the 24-hour scenario and compare the two sets of figures themselves. The app does not yet show two scenarios side by side. The comparison shows whether fewer calls were missed, and how much busier the vehicles became. The planner also checks the comparison with 2023 and 2024, to see how well the model matches the real service before trusting the difference.
+
+This guide gives no answer, because it depends on the settings chosen and on chance. An invented example of an answer would be: "missed calls fell from about 40 to about 30 a year, and the helicopters were busier."
+
+## What it does not do
+
+- **No live use.** It does not dispatch aircraft and does not handle real calls.
+- **No maps or distances.** Where an incident happens does not change the travel time. Times come from past averages.
+- **No ordinary ambulances.** Every call is treated as an air ambulance case.
+- **No waiting list.** If no suitable vehicle is free at that moment, the call is recorded as missed. In the model it is assumed to go to another service.
+
+To see how to read the numbers, go to [reading results](reading-results.qmd). To see what it does with personal information, go to [your data](your-data.qmd). Unfamiliar words are explained in the [glossary](glossary.qmd).

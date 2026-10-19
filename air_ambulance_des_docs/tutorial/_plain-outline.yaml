@@ -412,6 +412,12 @@ glossary:
   - term: annualised figure
     definition: A count converted to a per-year rate by dividing by the run length in days and multiplying by 365.
 
+  - term: made-up (synthetic) patients
+    definition: Pretend patients the model creates from past patterns, with an age and sex but no name or address; they are not real people.
+  - term: issue list
+    definition: The project's public list of known problems and open questions, kept on GitHub, where anyone can read or report an issue.
+    technical_name: GitHub issues
+
 pages:
   stakeholder-decision-maker:
     - page: overview
@@ -600,4 +606,77 @@ pages:
       uses: [assumptions, decision_points, evidence.issues, evidence.markers]
     - page: glossary
       focus: Every plain component name and unavoidable term used on these pages, including the HEMS and statistical terms, with technical names for talking to developers.
+      uses: [glossary]
+  stakeholder-public:
+    - page: overview
+      focus: >
+        In everyday words: a computer model, built for planning, that imitates how Devon Air
+        Ambulance's helicopters and critical care cars respond to emergency calls, so planners can
+        try out changes (longer shifts, another car, a different aircraft) safely on a computer. It
+        is not used to send real helicopters, does not handle real 999 calls and does not make
+        decisions about any patient. Who made it (the authors listed in the project's citation file,
+        with the project's issue list as the place to ask questions) and that it is open source
+        (GPL-3.0) and has a public demonstration copy anyone can try in a browser. Simple picture of
+        the journey: past records turn into patterns, patterns into made-up calls, calls into
+        results. Keep the eight parts to one short sentence each, or a small diagram.
+      uses: [plain_summary, components, relationships, data_flows.external, dependencies, evidence.project_signals]
+    - page: what-it-does
+      focus: >
+        What it does with information, step by step in plain terms: it learns patterns from two years
+        (2023-2024) of past job records (how many calls a day, at what times, what kind, how long
+        each stage takes); it creates made-up calls and pretend patients from those patterns; it
+        follows simple rules to decide which helicopter or car, if any, would go; it repeats this
+        many times and averages. What a user sees: a setup page, a results page with missed-job
+        estimates and how busy each vehicle is, charts beside real past figures, and an optional
+        downloadable report. One short worked example in real-world terms (for instance, what
+        changes in the results when a 24-hour rota scenario is chosen). Say clearly what it does
+        not do: no live dispatch, no maps or distances, no ordinary land ambulances.
+      uses: [plain_summary, data_flows.inputs, data_flows.stages, data_flows.outputs, components.streamlit_app, components.des_hems_model, components.resource_allocation, components.trial_results]
+    - page: your-data
+      focus: >
+        Plainly and without guessing. If you use the web app: it does not ask for your name, email
+        or any personal details; you only choose settings or upload a filled-in scenario
+        spreadsheet, which is written over the model's shared settings files and is not kept per
+        person (no sign-in or analytics is visible in the code). The web app does load fonts, icons
+        and an image from outside websites, and the hosted demonstration runs on an outside service
+        (Streamlit Community Cloud). About patients: the patients inside the model are made up, with
+        an age and sex drawn from patterns but no name, address or location (postcode fields exist
+        but are never filled in). The patterns were built, as a separate occasional step, from real
+        Devon Air Ambulance job records that include patients' age and sex alongside incident date,
+        time, type of call and outcome; that extract is kept in a folder deliberately left out of
+        the published project and is not shipped with it. What is saved: run results and settings as
+        files in the project's results folder, mostly replaced on the next run, with one file added
+        to every run; how long files are kept beyond that, and who may access the real records, is
+        not determined from the code. Point readers to the project's issue list or authors with
+        questions about the underlying records.
+      uses: [data_flows.personal_data, data_flows.inputs, data_flows.storage, data_flows.external, assumptions, components.distribution_fitting]
+    - page: reading-results
+      focus: >
+        What to keep in mind when looking at the results. Figures are averages over many pretend
+        runs (12 on a local computer, 5 on the public demonstration by default), not a forecast of a
+        particular day or year; small differences between options may just be chance. A "missed job"
+        in the model means no suitable helicopter or car was free at the moment of the call; it does
+        not mean the patient got no help (the call is assumed to go to another service) and it is
+        not quite the same as "missed" in the real records. "Utilisation" means the share of a
+        vehicle's shift time spent on jobs, and may read low for aircraft that were away being
+        serviced. The comparison with real 2023-2024 figures shows how close the model gets; some
+        of the "real" comparison figures, and the range shown beside missed jobs, come from the
+        model run on the past rotas rather than real records. The public demonstration and a local
+        copy can give slightly different numbers for the same settings.
+      uses: [data_flows.outputs, decision_points, assumptions, components.trial_results]
+    - page: assumptions-limits
+      focus: >
+        A short, plain list of what the model takes for granted: future demand looks like 2023-2024,
+        changed only by one overall percentage; no geography, so where an incident is does not
+        affect travel time; calls are never held waiting; cars are always assumed available, while
+        helicopters can be grounded at short notice (weather, crew, aircraft) using past rates; some
+        rules are fixed estimates rather than learned from data (such as a 50% chance the
+        dispatcher knows what care is needed in advance); rules are built around the current named
+        aircraft and callsigns; school holiday dates only run to the end of 2027. Note that the
+        developers run automated checks against real past figures, and that known problems and open
+        questions are listed publicly on the project's issue list. Close with who to ask: the
+        project's issue list or its authors.
+      uses: [assumptions, decision_points, evidence.issues, evidence.tests, evidence.project_signals]
+    - page: glossary
+      focus: Every plain component name and everyday or unavoidable term used on these pages, kept short and jargon-free, with technical names only for readers who want to contact the developers.
       uses: [glossary]

@@ -1,0 +1,76 @@
+---
+title: "What it assumes, and where it can be wrong"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/assumptions-limits.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/assumptions-limits.qmd){.btn .btn-sm .btn-outline-primary} [General public](assumptions-limits.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- Every model simplifies real life. This one takes some things for granted, and you should know what they are.
+- The biggest ones: future demand looks like 2023 and 2024, there are no maps or distances, and calls are never left waiting.
+- Some rules are fixed estimates, not learned from data.
+- Known problems are listed in public. The developers also have test programmes that compare it with real past figures.
+:::
+
+## Why this page matters
+
+A model is a simplified copy of the real thing. That is what makes it useful. It also means the model can be wrong in ways that are easy to miss. This page lists what the model takes for granted. For how to read the numbers it gives you, see [reading results](reading-results.qmd). For the big picture, see [what it does](what-it-does.qmd).
+
+## What the model takes for granted
+
+**The future looks like the recent past.** The call simulator builds its made-up calls from two years of real records (2023 and 2024). You can scale demand up or down with one overall percentage. Nothing else about demand changes. The model does not adjust for the seasons beyond what the old records already show.
+
+**Where an incident happens makes no difference.** The model has no maps, no distances and no base locations. Instead, it assumes that calls will be spread across the area in much the same way as in previous years, and uses past averages for travel times. This means it cannot answer questions that depend on that pattern changing. For example, it cannot tell you what would happen if a base were moved, because the pattern it relies on would no longer hold. Postcode and location fields exist, but they are never filled in.
+
+**Calls are never held waiting.** If no suitable helicopter or car is free at that moment, the call counts as missed. The model assumes it goes to another service. It does not model any queue.
+
+**Cars are always available, helicopters are not.** Helicopters can be grounded at short notice, for reasons such as weather or crew. The model uses past rates for this. Cars are assumed to be always ready. Also, each call gets a fresh chance of "grounded". Bad weather does not last from one call to the next.
+
+**Some rules are educated guesses.** The model guesses that, half the time, the person taking the call (the dispatcher) knows in advance what level of care is needed, and half the time knows whether a helicopter would help. These two 50% figures were not worked out from data.
+
+**The same vehicle is preferred for every kind of call.** Which vehicle is sent first does not change with the type of call, the time of day or the season.
+
+**Jobs carry on past the end of a shift.** There is no handover or early stand-down.
+
+## Built around today's fleet
+
+Some rules are written for today's specific helicopters and cars. A very different fleet may not behave as you would expect. The model plans aircraft servicing around school holidays, and its built-in list of holiday dates stops at the end of 2027.
+
+## Known problems
+
+The developers have listed a number of open questions in public. In plain terms, they include:
+
+- Some results still differ from the real figures, and the team is tracking down why.
+- The split of jobs between the two main crew teams is slightly off from history.
+- The rules for choosing a vehicle are under review. Distance is not considered when sending a car.
+- In some cases a car is sent when the data gives no obvious reason.
+- Servicing is hard to schedule in some set-ups. In the worst case, a run may stop and never finish.
+- The charts of how busy vehicles are can break in some set-ups where a helicopter and car pairing is removed from the fleet.
+- Busy-ness figures for aircraft being serviced may read too low.
+- Two people using the same copy at once could overwrite each other's settings.
+
+## What gives some comfort
+
+The developers have written a set of test programmes. They compare the model's output with the real 2023 and 2024 figures, and check basic rules, such as a vehicle never being sent while off shift. Someone has to start these tests; they do not run on their own after every change. No test checks how the busy-ness figure is worked out.
+
+## Who to ask
+
+The project's public issue list is the place to read about known problems, ask a question or report one. You can also contact the authors named in the project.
+
+::: {.callout-note collapse="true" title="For the technical team"}
+- [Open issue: Tracking down discrepancies in metrics vs historical data](https://github.com/RichardPilbery/DAA_DES/issues/165)
+- [Open issue: Revisiting Resource Allocation Logic](https://github.com/RichardPilbery/DAA_DES/issues/238)
+- [Open issue: Allocation of jobs between callsign group 70 + 71 slightly off from historical patterns](https://github.com/RichardPilbery/DAA_DES/issues/178)
+- [Open issue: Instances where car sent when ad-hoc unavailability spreadsheet does not provide obvious reason](https://github.com/RichardPilbery/DAA_DES/issues/241)
+- [Open issue: Further consideration of how to account for distance in decision to send a car](https://github.com/RichardPilbery/DAA_DES/issues/243)
+- [Open issue: Update assumptions around % of REG jobs that have a helicopter benefit](https://github.com/RichardPilbery/DAA_DES/issues/205)
+- [Open issue: Model hangs indefinitely if servicing schedule can't be resolved](https://github.com/RichardPilbery/DAA_DES/issues/233)
+- [Open issue: Utilisation breakdown plot breaks when one helicopter/car pairing removed](https://github.com/RichardPilbery/DAA_DES/issues/217)
+- [Open issue: Write formal tests for utilisation denominator calculation function(s)](https://github.com/RichardPilbery/DAA_DES/issues/176)
+- [Open issue: Test handling of changed csvs in hosted deployment](https://github.com/RichardPilbery/DAA_DES/issues/101)
+:::
+
+For the meaning of any term, see the [glossary](glossary.qmd).
