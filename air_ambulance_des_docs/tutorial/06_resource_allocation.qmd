@@ -1,0 +1,192 @@
+---
+title: "Chapter 6: Resource Allocation"
+description: "How HEMSAvailability chooses a primary and secondary resource for each patient, records the reason, and releases them afterwards."
+toc: true
+---
+
+In [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd) we saw how each helicopter and car becomes a `HEMS` object, and how those objects sit in a SimPy `FilterStore` that the daily servicing check keeps up to date. This chapter is about what happens when a patient turns up and something has to be picked out of that store.
+
+## The problem: who goes to this patient? {#sec-resource-allocation-problem}
+
+Take one concrete case. It is 10:00 in June. A call comes in that the model has classed as critical care (`CC`). H70, the critical care helicopter (aircraft `g-daas`), is out on another job, which also makes its group-mate CC70 ineligible, because callsign group 70 is already active. H71 (an enhanced care helicopter) and CC72 (an enhanced care car) are on shift and idle. Which of these goes, and how do we explain the choice afterwards? (The callsigns are those in the shipped rota, `actual_data/HEMS_ROTA.csv`, described in the previous chapter.)
+
+The answer lives in [HEMSAvailability](../reference/class_hems_availability.HEMSAvailability.qmd), the same class that built the store in the previous chapter. Its job here is to:
+
+1. rank the resources that are currently eligible,
+2. take the best one out of the store (the **primary** resource), and optionally a second one from the same crew, such as the car that shares a helicopter's callsign group (the **secondary** resource; see the bug note below on whether it can ever be found),
+3. return a text reason describing why that resource was chosen, and
+4. put everything back when the job ends.
+
+If nothing is eligible, the patient is a **missed call**: the allocation comes back as `None`, and the journey in [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) records "No Resource Available" instead of sending a HEMS crew.
+
+::: {.column-margin}
+**Missed call**: a job where allocation returned no HEMS resource, so the journey logs "No HEMS available" and "No Resource Available" rather than any HEMS activity.
+:::
+
+## Key concepts {#sec-resource-allocation-concepts}
+
+### Two allocation routes
+
+The model has two routes, because real dispatchers sometimes know what a job needs and sometimes do not. In `generate_patient`, a CC or EC patient only takes the first route half of the time; everyone else (all REG patients, and the other half of CC/EC) takes the second.
+
+As seen in [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd#sec-calls-and-patient-journeys-generate-patient), `generate_patient` makes this choice, using the `know_cc_ec_benefit` draw from one of the named random streams described in [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd). Both routes are SimPy events, so the `yield` pauses the patient until the allocation process has finished, and the result is a three-item list: primary resource, reason text, secondary resource.
+
+| Route | Method | Ranks resources by |
+|---|---|---|
+| Care need known (CC or EC patients, half of the time) | [allocate_resource()](../reference/class_hems_availability.HEMSAvailability.qmd) | care category and vehicle type match |
+| Everything else | [allocate_regular_resource()](../reference/class_hems_availability.HEMSAvailability.qmd) | preferred callsign group, preferred vehicle type and helicopter benefit |
+
+::: {.column-margin}
+**Preferred callsign group / vehicle type**: values sampled for each patient from historical data in `generate_patient` (`pt.hems_pref_callsign_group`, `pt.hems_pref_vehicle_type`). They express what historically tended to be sent, not what is available now.
+:::
+
+### The reason enum
+
+Every outcome has a name. [ResourceAllocationReason](../reference/class_hems_availability.ResourceAllocationReason.qmd) is an `IntEnum`, and a parallel `LOOKUP_LIST` in `HEMSAvailability.__init__` maps each value to the text that ends up in the event log. For example, `MATCH_PREFERRED_CARE_CAT_HELI` (1) means the first-choice resource, a helicopter of the right care category, was free, while `CC_MATCH_EC_HELI` (3) means a critical care patient got an enhanced care helicopter because no better match was free.
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=21 end-line=35 filename="air_ambulance_des/class_hems_availability.py:21-35" include-hash="3032a4e4c15e"}
+```
+
+Values 1 to 6 belong to the care-category route and 7 to 13 to the regular route. (Value 11 is defined but the code that used it is commented out.) The text is written to the event log as a `resource_preferred_outcome` row, which is how the results classes in [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd) can later break down why each job was served the way it was.
+
+### Active sets: not sending a crew twice
+
+A helicopter and a car in the same callsign group share a crew, and one aircraft can fly under two callsigns (the H70/H71 swap from the previous chapter). `HEMSAvailability` therefore keeps three sets: `active_callsign_groups`, `active_registrations` and `active_callsigns`. Ranking skips anything whose group or registration is in a set, and allocation additionally refuses a primary whose callsign is in `active_callsigns`, even if the `in_use` flag has not yet been set.
+
+::: {.column-margin}
+**Active callsign groups**: the set of crews currently out on a job. Resources are added when allocated and removed in `return_resource()`.
+:::
+
+## How a decision is made {#sec-resource-allocation-flow}
+
+@fig-resource-allocation-flow shows the shape of the decision. Both routes share the same first step: filter out anything that cannot go.
+
+```{mermaid}
+%%| label: fig-resource-allocation-flow
+%%| fig-cap: "The two allocation routes and what they share"
+flowchart TD
+    P[Patient needs a resource] --> Q{CC or EC and<br/>care need known?}
+    Q -- yes --> A[allocate_resource]
+    Q -- no --> B[allocate_regular_resource]
+    A --> C[preferred_resource_available]
+    B --> D[preferred_regular_group_available]
+    C --> F[Filter: idle, on shift,<br/>not serviced, not active]
+    D --> F
+    F --> G[Ad hoc check for helicopters]
+    G --> H[Rank remaining candidates]
+    H --> I{Candidate found?}
+    I -- no --> N[Return None plus reason]
+    I -- yes --> J[Take primary from store]
+    J --> K[Try for secondary from same group]
+    K --> R[Return primary, reason, secondary]
+```
+
+### The sequence of events
+
+@fig-resource-allocation-sequence follows our 10:00 case through the code.
+
+```{mermaid}
+%%| label: fig-resource-allocation-sequence
+%%| fig-cap: "One CC patient being allocated and later released"
+sequenceDiagram
+    participant DH as DES_HEMS
+    participant HA as HEMSAvailability
+    participant ST as FilterStore
+    participant UT as Utils
+    DH->>HA: allocate_resource(pt)
+    HA->>HA: preferred_resource_available(pt)
+    loop each item in store
+        HA->>UT: sample_ad_hoc_reason (helicopters only)
+        UT-->>HA: available or a reason
+    end
+    HA->>ST: get(primary)
+    ST-->>HA: primary
+    HA->>ST: get(secondary)
+    HA-->>DH: primary, reason text, secondary
+    Note over DH: patient_journey runs
+    DH->>HA: return_resource(primary, secondary)
+    HA->>ST: put(primary)
+```
+
+## Under the hood: ranking the candidates {#sec-resource-allocation-ranking}
+
+### Care-category route
+
+`preferred_resource_available()` walks `self.store.items` (only resources currently *in* the store, so anything in the service store is already out of the picture). The first part is a filter.
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=516 end-line=546 filename="air_ambulance_des/class_hems_availability.py:516-546" include-hash="7e157c7200c2"}
+```
+
+A resource is skipped if it is in use, being serviced, off shift for `pt.hour` and `pt.month`, or if its callsign group or registration is already active. Cars are always treated as available. Helicopters then get one more test: `Utils.sample_ad_hoc_reason()` (see [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd)) draws a reason such as weather from the historical ad hoc unavailability rates for that hour, quarter and registration. Anything other than `"available"` removes that helicopter for this patient only.
+
+What survives is ranked.
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=548 end-line=592 filename="air_ambulance_des/class_hems_availability.py:548-592" include-hash="2f923ca7a268"}
+```
+
+Lower priority numbers win. An exact category match on a helicopter is priority 1 and returns immediately. Otherwise the loop keeps the best so far: same category car (2), then a helicopter from the *other* care category (3), then a car from the other category (4). For our 10:00 CC patient this means: H70 is busy and CC70 shares its group (both filtered out). H71 and CC72 are both category EC, so for a CC patient H71, an EC helicopter, is priority 3 and CC72, an EC car, is priority 4. H71 wins, with the reason "HEMS CC case EC helicopter available". Note that only CC and EC patients can be handled here: the fallbacks are written for those two categories, which is why REG patients use the other route.
+
+### Regular route
+
+`preferred_regular_group_available()` uses the same filter, but ranks differently. Before the loop it makes a one-off decision per patient.
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=891 end-line=899 filename="air_ambulance_des/class_hems_availability.py:891-899" include-hash="9374ae3c1722"}
+```
+
+If the patient has a helicopter benefit, there is still only a 50% chance (`PROB_HELI_BENEFIT_KNOWN`) that the dispatcher knows about it up front. That draw uses the `know_heli_benefit` stream. Then the ranking:
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=933 end-line=989 filename="air_ambulance_des/class_hems_availability.py:933-989" include-hash="047c50aed599"}
+```
+
+When the benefit is known, only helicopters are considered, CC before any other. Otherwise the order is:
+
+1. preferred group *and* vehicle type (immediate `break`),
+2. any helicopter,
+3. preferred group only,
+4. any free resource.
+
+For example, take a REG patient with preferred group 70 and vehicle type car, and no helicopter benefit. If H70 is busy and CC70 is therefore ineligible too, no resource matches both, so H71 (a free helicopter) wins at step 2. This is why a REG job can still send a helicopter when no helicopter benefit was flagged; the `REG_NO_HELI_BENEFIT_VEHICLE` branch ranks helicopters ahead of a group-only match.
+
+## Under the hood: claiming and releasing {#sec-resource-allocation-claiming}
+
+::: {.callout-note collapse="true" title="Refresher: SimPy store gets with a timeout"}
+`store.get(filter)` returns an event that succeeds when an item matching the filter is available. Yielding `get_event | env.timeout(0.1)` waits for whichever happens first. If the timeout wins, the `get` has not succeeded, and the `with` block cancels the pending request on exit.
+:::
+
+The ranking functions only *choose*; they do not take anything from the store. That is done by `allocate_resource()` (and its twin `allocate_regular_resource()`, which differs only in calling the other ranking function and in debug text).
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=600 end-line=678 filename="air_ambulance_des/class_hems_availability.py:600-678" include-hash="6e95a3d83865"}
+```
+
+The method creates an event and starts a nested `process()` generator, so the caller can simply `yield` the event. Inside, a few things matter.
+
+- **Early outs.** If nothing was ranked, or the chosen resource's group, registration or callsign is already active, the event succeeds immediately with `[None, reason, None]`.
+- **Claim before waiting.** The three active sets are updated *before* the `yield`, so another patient processed in the same simulated instant cannot grab the same crew.
+- **Short timeout.** The `store.get(lambda r: r == primary)` races against `env.timeout(0.1)`. If the get does not complete, the sets are rolled back and the patient gets `None`.
+- **Patient fields.** On success, the patient is stamped with `hems_callsign_group`, `hems_vehicle_type` and `hems_category`, which `patient_journey` later logs.
+
+::: {.callout-warning title="Possible bug: the secondary resource may never be found"}
+The secondary `get` requires `r.callsign_group not in self.active_callsign_groups`, and it also requires `r.callsign_group == pt.hems_callsign_group`. The primary's group was added to `active_callsign_groups` a few lines earlier, so no resource can satisfy both conditions, and `secondary` is always `None` (the logged `hems_res_list` values in `tests/test_logs/` also always end in `None`). No test in `tests/` covers a secondary resource. The wait for the impossible secondary also always runs to its 0.1-minute timeout, so each successful allocation delays the start of `patient_journey` by 0.1 simulated minutes. If you rely on secondary resources in results, check this before trusting them.
+:::
+
+### Releasing
+
+When the journey ends, the `finally` block in `patient_journey` hands the resources back, and this is true even if the journey raised an error.
+
+```{.python include="../../air_ambulance_des/des_hems.py" start-line=712 end-line=721 filename="air_ambulance_des/des_hems.py:712-721" include-hash="4aa8cd5712f7"}
+```
+
+[return_resource()](../reference/class_hems_availability.HEMSAvailability.qmd) does the inverse of the claim.
+
+```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=680 end-line=700 filename="air_ambulance_des/class_hems_availability.py:680-700" include-hash="2895947b9b94"}
+```
+
+It clears `in_use`, discards the group, registration and callsign from the active sets, and `put`s the object back into the same `FilterStore`, making it visible to the next patient. The same is done for the secondary, if there is one.
+
+`current_store_status()` is a small debugging helper: given an hour and month it lists each item in the main store (or the service store) with its category and whether it is on shift. It is called from the servicing check when debug messages are on.
+
+## Conclusion {#sec-resource-allocation-conclusion}
+
+Allocation is a two-step process: a ranking method picks the best eligible resource and a reason, and an allocation process claims it from the `FilterStore`, guarded by the active sets. CC and EC patients (when the care need is known) rank by category and vehicle type; everyone else ranks by preferred callsign group, vehicle type and helicopter benefit. The reason is logged for every job, and `return_resource()` releases everything when the journey ends.
+
+Next, in [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd), we will see how the event log these decisions leave behind is turned into utilisation figures, missed-job percentages and comparisons with historical data.

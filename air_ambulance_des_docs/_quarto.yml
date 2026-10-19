@@ -12,6 +12,28 @@ filters:
 website:
   title: "Air Ambulance Simulation"
   description: "Documentation for the vidigi pathway animation package"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: reference/index.qmd
+        text: Reference
+      - href: tutorial/index.qmd
+        text: Tutorial
+  sidebar:
+    - id: tutorial
+      title: Tutorial
+      contents:
+        - tutorial/index.qmd
+        - tutorial/01_streamlit_app_and_scenario_parameters.qmd
+        - tutorial/02_simulation_runs_and_replications.qmd
+        - tutorial/03_sampling_distributions_and_random_streams.qmd
+        - tutorial/04_calls_and_patient_journeys.qmd
+        - tutorial/05_hems_resources_and_servicing.qmd
+        - tutorial/06_resource_allocation.qmd
+        - tutorial/07_trial_results_and_historic_comparison.qmd
+        - tutorial/08_distribution_fitting.qmd
+        - tutorial/glossary.qmd
 
 # tell quarto to read the generated sidebar
 metadata-files:

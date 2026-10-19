@@ -1,0 +1,292 @@
+{
+  "schema": 2,
+  "plugin": {
+    "name": "codebase-tutorial",
+    "version": "2.0.0"
+  },
+  "generated_at": "2026-10-19T10:08:04Z",
+  "source": {
+    "repo_url": "https://github.com/RichardPilbery/DAA_DES",
+    "commit": "967933d9a7774b711fe57d4ad838e50ebedde3a7",
+    "short": "967933d",
+    "branch": "main",
+    "commit_date": "2026-10-19T10:22:30+01:00",
+    "dirty": true,
+    "dirty_files": [
+      "air_ambulance_des_docs/.gitignore",
+      "air_ambulance_des_docs/_quarto.yml",
+      "app/outputs/.gitkeep",
+      "CLAUDE.md",
+      "air_ambulance_des_docs/_extensions/",
+      "air_ambulance_des_docs/_quarto.yml.pre-tutorial.bak",
+      "air_ambulance_des_docs/tutorial/"
+    ],
+    "commit_url": "https://github.com/RichardPilbery/DAA_DES/commit/967933d9a7774b711fe57d4ad838e50ebedde3a7"
+  },
+  "project_name": "DAA_DES",
+  "mode": "integration",
+  "docs": "air_ambulance_des_docs",
+  "section": "tutorial",
+  "format": "website",
+  "language": "English",
+  "theme": null,
+  "extensions": [
+    "include-code-files",
+    "code-line-style",
+    "code-window",
+    "value-box"
+  ],
+  "source_base_url": "none",
+  "audiences": [
+    {
+      "slug": "intermediate",
+      "preset": "intermediate",
+      "folder": ".",
+      "kind": "chapters"
+    }
+  ],
+  "args": {
+    "max_abstractions": 8,
+    "critique": "on",
+    "learning": "off",
+    "briefing": "none",
+    "budget": "standard"
+  },
+  "chapters": [
+    {
+      "id": "streamlit_app",
+      "name": "Streamlit App and Scenario Parameters",
+      "filename": "01_streamlit_app_and_scenario_parameters.qmd",
+      "files": [
+        {
+          "path": "app/app.py",
+          "blob": "a944598b379860cf6820aef8e44d535a9809d6af"
+        },
+        {
+          "path": "app/_state_control.py",
+          "blob": "b82b214b76e4f09439912cad0bcf5c1819c97821"
+        },
+        {
+          "path": "app/setup.py",
+          "blob": "b10a03e65f7da5bb36048e572b3f04ef248ce28e"
+        },
+        {
+          "path": "app/model.py",
+          "blob": "77f14ae306d7cfe6ea8d50e5790e6842523143ba"
+        },
+        {
+          "path": "app/_app_utils.py",
+          "blob": "8d11633990a4d1c842c15d4757ca9b0542eeee05"
+        },
+        {
+          "path": "app/inputs/README.md",
+          "blob": "79292226756b372a4ce758001e083cd48c35953d"
+        }
+      ],
+      "tests": [
+        {
+          "path": "tests/test_scenario_importing.py",
+          "blob": "936c2853295b4257687d6e180202b36ffc0cdd49"
+        }
+      ]
+    },
+    {
+      "id": "simulation_runner",
+      "name": "Simulation Runs and Replications",
+      "filename": "02_simulation_runs_and_replications.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/des_parallel_process.py",
+          "blob": "b72bbccb3685528b4d251c71b5f6e4db629f9a44"
+        },
+        {
+          "path": "run_parallel_process.py",
+          "blob": "94d36515962594f40f7141c3c32fbd2a56012e3a"
+        },
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        }
+      ],
+      "tests": [
+        {
+          "path": "tests/test_unittest_model.py",
+          "blob": "feffa5209a148186b3f9bfe43336ab0e666efd12"
+        },
+        {
+          "path": "tests/test_reproducibility.py",
+          "blob": "37741eb23c15896b11f3dfe1bf9f9c41b488171b"
+        },
+        {
+          "path": "tests/test_backtest.py",
+          "blob": "979849dda727e12679d2a57adc5d7e86f905e4eb"
+        },
+        {
+          "path": "tests/conftest.py",
+          "blob": "fe30304b83b713782e953a4ff021153333030f66"
+        }
+      ]
+    },
+    {
+      "id": "sampling_utils",
+      "name": "Sampling Distributions and Random Streams",
+      "filename": "03_sampling_distributions_and_random_streams.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/utils.py",
+          "blob": "4f9315becece940b1648ff2f100ecf240d424801"
+        }
+      ],
+      "tests": [
+        {
+          "path": "tests/test_reproducibility.py",
+          "blob": "37741eb23c15896b11f3dfe1bf9f9c41b488171b"
+        },
+        {
+          "path": "tests/test_against_reality.py",
+          "blob": "c3e3f3781c72aff4092dfb008ac36eb10e54fdb1"
+        },
+        {
+          "path": "tests/test_backtest.py",
+          "blob": "979849dda727e12679d2a57adc5d7e86f905e4eb"
+        },
+        {
+          "path": "tests/test_resource_allocation.py",
+          "blob": "0aed48e1824cbbe669219fc47a0500f71f8e797f"
+        }
+      ]
+    },
+    {
+      "id": "des_hems_model",
+      "name": "Calls and Patient Journeys",
+      "filename": "04_calls_and_patient_journeys.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/des_hems.py",
+          "blob": "00a65251bf63eeae5a4b5b8f732980caf0f92ef6"
+        },
+        {
+          "path": "air_ambulance_des/class_patient.py",
+          "blob": "5d696bc1732b701a7b8b5b5ba407ac0086b5de07"
+        }
+      ],
+      "tests": [
+        {
+          "path": "tests/test_call_generation.py",
+          "blob": "1140337215a6988df2f43f90439552173f4f8213"
+        },
+        {
+          "path": "tests/test_unittest_model.py",
+          "blob": "feffa5209a148186b3f9bfe43336ab0e666efd12"
+        },
+        {
+          "path": "tests/test_against_condition_changes.py",
+          "blob": "97687f37514133706e2073d15701d35d9f44782c"
+        },
+        {
+          "path": "tests/test_against_reality.py",
+          "blob": "c3e3f3781c72aff4092dfb008ac36eb10e54fdb1"
+        }
+      ]
+    },
+    {
+      "id": "hems_resources",
+      "name": "HEMS Resources and Servicing",
+      "filename": "05_hems_resources_and_servicing.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/class_ambulance.py",
+          "blob": "0aa01676536e6384859d53d4531103cd4fb8be27"
+        },
+        {
+          "path": "air_ambulance_des/class_hems.py",
+          "blob": "f3aa13a69b306dfae1beb05c78b5821556ab98de"
+        },
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        },
+        {
+          "path": "air_ambulance_des/school_holidays.py",
+          "blob": "788f6c86e2a333b0324e6e7373ec275b9a2965f9"
+        }
+      ],
+      "tests": [
+        {
+          "path": "tests/test_unittest_model.py",
+          "blob": "feffa5209a148186b3f9bfe43336ab0e666efd12"
+        },
+        {
+          "path": "tests/test_school_holidays.py",
+          "blob": "be57d12fc04f31854898a04963026b37c43cb38c"
+        },
+        {
+          "path": "tests/test_against_condition_changes.py",
+          "blob": "97687f37514133706e2073d15701d35d9f44782c"
+        }
+      ]
+    },
+    {
+      "id": "resource_allocation",
+      "name": "Resource Allocation",
+      "filename": "06_resource_allocation.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/class_hems_availability.py",
+          "blob": "ad25e99b909e3b4b3bcff3f936c7cc1f2678e7af"
+        }
+      ],
+      "tests": [
+        {
+          "path": "tests/test_resource_allocation.py",
+          "blob": "0aed48e1824cbbe669219fc47a0500f71f8e797f"
+        },
+        {
+          "path": "tests/test_unittest_model.py",
+          "blob": "feffa5209a148186b3f9bfe43336ab0e666efd12"
+        }
+      ]
+    },
+    {
+      "id": "trial_results",
+      "name": "Trial Results and Historic Comparison",
+      "filename": "07_trial_results_and_historic_comparison.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/class_simulation_trial_results.py",
+          "blob": "6c358b1e40d740b40826a4db7f30f23c557f1b22"
+        },
+        {
+          "path": "air_ambulance_des/class_simulation_inputs.py",
+          "blob": "821c63b2ae3298f85cce3539acfd80ea592b1a74"
+        },
+        {
+          "path": "air_ambulance_des/class_historic_results.py",
+          "blob": "29f46dce76e961fefd961c3bef4c6a8bf39c414c"
+        },
+        {
+          "path": "air_ambulance_des/_processing_functions.py",
+          "blob": "82bded5c8e28b7f4cdd59c33a1f5f483d3d3434f"
+        }
+      ],
+      "tests": []
+    },
+    {
+      "id": "distribution_fitting",
+      "name": "Distribution Fitting",
+      "filename": "08_distribution_fitting.qmd",
+      "files": [
+        {
+          "path": "air_ambulance_des/distribution_fit_utils.py",
+          "blob": "ba8c5816a72691bc717d9fe08a5b7bc6ffda64f3"
+        },
+        {
+          "path": "run_dist_fit_utils.py",
+          "blob": "2a3d1c84ef92534bef661719cb928b36fa2c921c"
+        }
+      ],
+      "tests": []
+    }
+  ],
+  "pages": []
+}

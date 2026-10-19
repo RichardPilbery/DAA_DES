@@ -1,0 +1,496 @@
+project_name: DAA_DES
+
+summary: |
+  **DAA_DES** is a *discrete event simulation* of Devon Air Ambulance helicopter emergency medical
+  service (HEMS) operations. It is built on **SimPy** and packaged as `air_ambulance_des`, with a
+  **Streamlit web app** in `app/` for setting parameters, running the model and viewing results.
+  Each simulation run generates daily emergency calls, samples patient characteristics from
+  *distributions fitted to historical job data*, tries to allocate a helicopter or car according to
+  rotas, servicing schedules and *care category* priorities, and records every step in an
+  **event log**. Many seeded **replications** run in parallel, and the combined results are
+  summarised and set against **historical data** so that scenarios (different rotas, demand or job
+  durations) can be compared with current performance.
+
+abstractions:
+  - id: streamlit_app
+    name: Streamlit App and Scenario Parameters
+    description: |
+      The Streamlit multipage app in `app/` is the main user entry point. `app.py` registers the
+      pages and calls `setup_state()`, which fills `st.session_state` from `DEFAULT_INPUTS`
+      (number of runs, duration, start date, demand multiplier, master seed). The setup page
+      accepts an Excel parameter template, a predefined scenario from `scenarios/`, or manual
+      edits, and writes each sheet over the matching CSV in `actual_data/` (rota, callsign lookup,
+      servicing rules, school holidays, time bounds). `reset_to_defaults()` restores those CSVs from
+      their `_DEFAULT` copies. The model page passes session-state values to the run functions,
+      then builds result objects and renders tabs of plots and an optional Quarto report.
+    files:
+      - app/app.py
+      - app/_state_control.py
+      - app/setup.py
+      - app/model.py
+      - app/_app_utils.py
+      - app/inputs/README.md
+    key_symbols:
+      - DEFAULT_INPUTS
+      - setup_state()
+      - reset_to_defaults()
+      - input_data_files
+      - SETUP_EXCEL
+      - SETUP_SCENARIO
+      - generate_quarto_report()
+      - air_ambulance_des.school_holidays.parse_school_holidays
+    tests:
+      - tests/test_scenario_importing.py
+
+  - id: simulation_runner
+    name: Simulation Runs and Replications
+    description: |
+      `des_parallel_process` is the package's run API. `runSim()` builds one `DES_HEMS` model for a
+      given run number and seed, calls `run()`, and returns that run's results DataFrame; on the
+      first run it also calls `write_run_params()` to record the run settings in
+      `run_params_used.csv`. `parallelProcessJoblib()` derives one independent seed per replication
+      from a master seed with `numpy.random.SeedSequence.spawn` and runs `runSim` across CPU cores
+      with joblib. Each run writes `output_run_N.csv`, and `collateRunResults()` merges these into
+      `data/run_results.csv`. Durations are in simulated minutes, and a warm-up period can be
+      excluded from the results. `run_parallel_process.py` is a command-line equivalent of the
+      app's run button.
+    files:
+      - air_ambulance_des/des_parallel_process.py
+      - run_parallel_process.py
+      - air_ambulance_des/des_hems.py
+    key_symbols:
+      - air_ambulance_des.des_parallel_process.runSim
+      - air_ambulance_des.des_parallel_process.parallelProcessJoblib
+      - air_ambulance_des.des_parallel_process.collateRunResults
+      - air_ambulance_des.des_parallel_process.write_run_params
+      - air_ambulance_des.des_parallel_process.removeExistingResults
+      - air_ambulance_des.des_hems.DES_HEMS.run
+      - air_ambulance_des.des_hems.DES_HEMS.write_run_results
+      - air_ambulance_des.des_hems.DES_HEMS.write_all_results
+    tests:
+      - tests/test_unittest_model.py
+      - tests/test_reproducibility.py
+      - tests/test_backtest.py
+      - tests/conftest.py
+
+  - id: sampling_utils
+    name: Sampling Distributions and Random Streams
+    description: |
+      `Utils` loads the fitted inputs from `distribution_data/` (hourly arrival profiles,
+      AMPDS-card probabilities, care category, vehicle type, patient outcome and HEMS result
+      tables, age and activity-time distributions, daily call-count samples) plus time bounds from
+      `actual_data/`. `setup_seeds()` spawns one named `numpy` generator per sampling purpose
+      (`rngs["calls_per_day"]`, `rngs["ampds_code_selection"]` and so on) from the run's seed, so
+      changing one part of the model does not shift the random numbers used elsewhere.
+      `build_seeded_distributions()` wraps each activity-time fit in a `SeededDistribution`.
+      Selection methods such as `ampds_code_selection()`, `care_category_selection()`,
+      `activity_time()` and `sample_ad_hoc_reason()` return a single sampled value. `Utils` also
+      holds folder and file constants.
+    files:
+      - air_ambulance_des/utils.py
+    key_symbols:
+      - air_ambulance_des.utils.Utils
+      - air_ambulance_des.utils.Utils.setup_seeds
+      - air_ambulance_des.utils.Utils.rngs
+      - air_ambulance_des.utils.Utils.build_seeded_distributions
+      - air_ambulance_des.utils.SeededDistribution
+      - air_ambulance_des.utils.Utils.activity_time
+      - air_ambulance_des.utils.Utils.inc_per_day_samples
+      - air_ambulance_des.utils.Utils.date_time_of_call
+      - air_ambulance_des.utils.Utils.sample_ad_hoc_reason
+      - air_ambulance_des.utils.Utils.RESULTS_FOLDER
+      - air_ambulance_des.utils.Utils.DISTRIBUTION_FOLDER
+    tests:
+      - tests/test_reproducibility.py
+      - tests/test_against_reality.py
+      - tests/test_backtest.py
+      - tests/test_resource_allocation.py
+
+  - id: des_hems_model
+    name: Calls and Patient Journeys
+    description: |
+      `DES_HEMS` holds the SimPy environment for one run. `generate_calls()` is the arrival
+      process: at the start of each simulated day it samples the number of calls (scaled by the
+      demand multiplier), spreads them over hours with `calls_per_hour()`, and triggers the daily
+      servicing check. Each call becomes a `Patient` in `generate_patient()`, which samples AMPDS
+      card, age, sex, care category (CC, EC or REG), patient outcome, helicopter benefit and
+      preferred callsign group and vehicle type, then requests a resource. `patient_journey()`
+      advances through allocation, mobile, on-scene, to-hospital and clear stages using sampled
+      activity times, and returns the resource in a `finally` block. `add_patient_result_row()`
+      appends one event-log row per step, skipping rows during the warm-up period.
+    files:
+      - air_ambulance_des/des_hems.py
+      - air_ambulance_des/class_patient.py
+    key_symbols:
+      - air_ambulance_des.des_hems.DES_HEMS
+      - air_ambulance_des.des_hems.DES_HEMS.generate_calls
+      - air_ambulance_des.des_hems.DES_HEMS.calls_per_hour
+      - air_ambulance_des.des_hems.DES_HEMS.generate_patient
+      - air_ambulance_des.des_hems.DES_HEMS.patient_journey
+      - air_ambulance_des.des_hems.DES_HEMS.add_patient_result_row
+      - air_ambulance_des.class_patient.Patient
+      - event_type
+      - time_type
+    tests:
+      - tests/test_call_generation.py
+      - tests/test_unittest_model.py
+      - tests/test_against_condition_changes.py
+      - tests/test_against_reality.py
+
+  - id: hems_resources
+    name: HEMS Resources and Servicing
+    description: |
+      Each helicopter or car is a `HEMS` object, a subclass of the generic `Ambulance` responder,
+      with a callsign, callsign group, registration, vehicle type, care category and summer and
+      winter shift hours. `hems_resource_on_shift()` checks the rota for a given hour and month,
+      and `unavailable_due_to_service()` checks the resource's servicing schedule.
+      `HEMSAvailability.prep_HEMS_resources()` reads `HEMS_ROTA.csv`, the callsign/registration
+      lookup and servicing rules, and calculates future service dates with
+      `find_next_service_date()`, which avoids school holidays and overlaps with other aircraft.
+      Resources are held in a SimPy `FilterStore`. `daily_servicing_check()` moves resources
+      between the main store and a separate service store, and switches the shared aircraft
+      between callsigns H70 and H71.
+    files:
+      - air_ambulance_des/class_ambulance.py
+      - air_ambulance_des/class_hems.py
+      - air_ambulance_des/class_hems_availability.py
+      - air_ambulance_des/school_holidays.py
+    key_symbols:
+      - air_ambulance_des.class_ambulance.Ambulance
+      - air_ambulance_des.class_hems.HEMS
+      - air_ambulance_des.class_hems.HEMS.hems_resource_on_shift
+      - air_ambulance_des.class_hems.HEMS.unavailable_due_to_service
+      - air_ambulance_des.class_hems.HEMS.service_check
+      - air_ambulance_des.class_hems_availability.HEMSAvailability
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.prep_HEMS_resources
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.populate_store
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.daily_servicing_check
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.find_next_service_date
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.add_hems
+      - air_ambulance_des.school_holidays.load_school_holidays
+    tests:
+      - tests/test_unittest_model.py
+      - tests/test_school_holidays.py
+      - tests/test_against_condition_changes.py
+
+  - id: resource_allocation
+    name: Resource Allocation
+    description: |
+      `HEMSAvailability` decides which resource, if any, attends each patient. CC and EC patients
+      for whom the care need is known go through `allocate_resource()`, which uses
+      `preferred_resource_available()` to rank on-shift, unserviced, idle resources by care-category
+      and vehicle-type match. Other patients go through `allocate_regular_resource()` and
+      `preferred_regular_group_available()`, which use the preferred callsign group, vehicle type
+      and helicopter benefit. Helicopters are also tested for ad hoc unavailability, such as
+      weather. Both methods return a SimPy event that resolves to a primary resource, a
+      `ResourceAllocationReason` text, and an optional secondary resource from the same callsign
+      group. Sets of active callsign groups, registrations and callsigns stop a crew or vehicle
+      being sent twice. `return_resource()` releases them.
+    files:
+      - air_ambulance_des/class_hems_availability.py
+    key_symbols:
+      - air_ambulance_des.class_hems_availability.ResourceAllocationReason
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.allocate_resource
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.allocate_regular_resource
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.preferred_resource_available
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.preferred_regular_group_available
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.return_resource
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.current_store_status
+      - air_ambulance_des.class_hems_availability.PROB_HELI_BENEFIT_KNOWN
+    tests:
+      - tests/test_resource_allocation.py
+      - tests/test_unittest_model.py
+
+  - id: trial_results
+    name: Trial Results and Historic Comparison
+    description: |
+      After the runs finish, three classes turn CSV files into metrics and Plotly figures.
+      `SimulationInputs` loads the run parameters and the rota, servicing and callsign files used.
+      `TrialResults` takes the combined event log (`run_results.csv`) and daily availability data,
+      and in its constructor derives job counts, per-run call counts, event durations,
+      theoretical available hours and utilisation tables. Its `get_*`, `PLOT_*` and `display_*`
+      methods provide missed-job percentages, utilisation summaries and call-pattern plots.
+      `HistoricResults` loads the aggregated `historical_data/` files, including a simulated
+      baseline using historic rotas, so that the app can show simulated results beside observed
+      ones. The `graceful_methods` decorator wraps every method so that an error shows a message
+      instead of stopping the app.
+    files:
+      - air_ambulance_des/class_simulation_trial_results.py
+      - air_ambulance_des/class_simulation_inputs.py
+      - air_ambulance_des/class_historic_results.py
+      - air_ambulance_des/_processing_functions.py
+    key_symbols:
+      - air_ambulance_des.class_simulation_trial_results.TrialResults
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.make_job_count_df
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.calculate_available_hours
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.get_perc_unattended_string_normalised
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.PLOT_SIMULATION_utilisation_summary
+      - air_ambulance_des.class_simulation_inputs.SimulationInputs
+      - air_ambulance_des.class_historic_results.HistoricResults
+      - air_ambulance_des._processing_functions.graceful_methods
+    tests: []
+
+  - id: distribution_fitting
+    name: Distribution Fitting
+    description: |
+      `DistributionFitUtils` is an offline pipeline, run through `run_dist_fit_utils.py`, that
+      turns a cleaned job-level historical extract into the files the simulation and the results
+      pages read. `import_and_wrangle()` adds date and time columns, clears the output folders, and
+      calls one method per input: probability tables (for example `hour_by_ampds_card_probs()` and
+      `vehicle_type_by_quarter_probs()`), best-fit continuous distributions chosen with `Fitter` in
+      `getBestFit()` (activity times, ages), daily call-count samples, and ad hoc unavailability
+      rates. These go to `distribution_data/`. The `historical_*` methods write aggregated
+      observed totals to `historical_data/`, and `run_sim_on_historical_params()` runs the model with
+      historic rotas to produce a baseline for comparison.
+    files:
+      - air_ambulance_des/distribution_fit_utils.py
+      - run_dist_fit_utils.py
+    key_symbols:
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.import_and_wrangle
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.getBestFit
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.activity_time_distributions
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.incidents_per_day_samples
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hourly_arrival_by_qtr_probs
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.ad_hoc_unavailability
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.run_sim_on_historical_params
+    tests: []
+
+relationships:
+  - from: streamlit_app
+    to: simulation_runner
+    label: Launches runs
+  - from: streamlit_app
+    to: hems_resources
+    label: Writes rota and servicing CSVs
+  - from: streamlit_app
+    to: trial_results
+    label: Displays outputs of
+  - from: simulation_runner
+    to: des_hems_model
+    label: Creates and runs
+  - from: simulation_runner
+    to: trial_results
+    label: Writes run_results.csv for
+  - from: des_hems_model
+    to: sampling_utils
+    label: Samples calls and times from
+  - from: des_hems_model
+    to: hems_resources
+    label: Triggers daily servicing check
+  - from: des_hems_model
+    to: resource_allocation
+    label: Requests and returns resources
+  - from: resource_allocation
+    to: hems_resources
+    label: Selects from store of
+  - from: resource_allocation
+    to: sampling_utils
+    label: Samples ad hoc unavailability
+  - from: distribution_fitting
+    to: sampling_utils
+    label: Writes distribution files for
+  - from: distribution_fitting
+    to: trial_results
+    label: Writes historical data for
+  - from: distribution_fitting
+    to: simulation_runner
+    label: Runs historical baseline via
+
+chapter_order:
+  - id: streamlit_app
+    filename: 01_streamlit_app_and_scenario_parameters.qmd
+    xref: sec-streamlit-app-and-scenario-parameters
+    one_line_summary: How the web app collects parameters, writes them to actual_data, and triggers a run.
+    introduces:
+      - Streamlit app
+      - session state defaults
+      - parameter template
+      - predefined scenario
+      - actual_data folder
+      - DEFAULT parameter files
+      - reset to defaults
+    builds_on: []
+    related_pages:
+      - index.qmd
+      - readme.qmd
+    api_refs:
+      - air_ambulance_des.des_parallel_process.parallelProcessJoblib
+      - air_ambulance_des.des_parallel_process.runSim
+  - id: simulation_runner
+    filename: 02_simulation_runs_and_replications.qmd
+    xref: sec-simulation-runs-and-replications
+    one_line_summary: How runSim and parallelProcessJoblib run seeded replications and collate their output files.
+    introduces:
+      - replication
+      - master seed
+      - per-run seed
+      - simulation time in minutes
+      - warm-up period
+      - run_results.csv
+      - run_params_used.csv
+      - results collation
+    builds_on: [streamlit_app]
+    related_pages:
+      - readme.qmd
+    api_refs:
+      - air_ambulance_des.des_parallel_process.runSim
+      - air_ambulance_des.des_parallel_process.parallelProcessJoblib
+      - air_ambulance_des.des_parallel_process.collateRunResults
+      - air_ambulance_des.des_parallel_process.write_run_params
+      - air_ambulance_des.des_hems.DES_HEMS
+      - air_ambulance_des.des_hems.DES_HEMS.run
+      - air_ambulance_des.des_hems.DES_HEMS.write_run_results
+      - air_ambulance_des.des_hems.DES_HEMS.write_all_results
+  - id: sampling_utils
+    filename: 03_sampling_distributions_and_random_streams.qmd
+    xref: sec-sampling-distributions-and-random-streams
+    one_line_summary: How Utils loads the fitted distributions and samples from them with named, independently seeded random streams.
+    introduces:
+      - Utils
+      - distribution_data folder
+      - named random stream
+      - SeedSequence spawning
+      - SeededDistribution
+      - activity time
+      - upper allowable time bounds
+      - ad hoc unavailability
+    builds_on: [simulation_runner]
+    related_pages: []
+    api_refs: []
+  - id: des_hems_model
+    filename: 04_calls_and_patient_journeys.qmd
+    xref: sec-calls-and-patient-journeys
+    one_line_summary: How DES_HEMS generates daily calls, creates patients and moves each one through the stages of a job while writing the event log.
+    introduces:
+      - SimPy environment
+      - call generator
+      - calls per day
+      - hourly arrival profile
+      - Patient
+      - AMPDS card
+      - care category
+      - helicopter benefit
+      - patient outcome
+      - HEMS result
+      - patient journey
+      - event log
+      - event_type
+      - time_type
+    builds_on: [simulation_runner, sampling_utils]
+    related_pages:
+      - readme.qmd
+    api_refs:
+      - air_ambulance_des.des_hems.DES_HEMS
+      - air_ambulance_des.des_hems.DES_HEMS.generate_calls
+      - air_ambulance_des.des_hems.DES_HEMS.calls_per_hour
+      - air_ambulance_des.des_hems.DES_HEMS.predetermine_call_arrival
+      - air_ambulance_des.des_hems.DES_HEMS.patient_journey
+      - air_ambulance_des.des_hems.DES_HEMS.add_patient_result_row
+      - air_ambulance_des.des_hems.DES_HEMS.store_patient_results
+      - air_ambulance_des.class_patient.Patient
+  - id: hems_resources
+    filename: 05_hems_resources_and_servicing.qmd
+    xref: sec-hems-resources-and-servicing
+    one_line_summary: How helicopters and cars are modelled, built from the rota files, scheduled for servicing and kept in a SimPy FilterStore.
+    introduces:
+      - HEMS resource
+      - Ambulance
+      - callsign
+      - callsign group
+      - registration
+      - vehicle type
+      - HEMS rota
+      - summer and winter shift hours
+      - servicing schedule
+      - service store
+      - school holidays
+      - FilterStore
+    builds_on: [streamlit_app, sampling_utils, des_hems_model]
+    related_pages: []
+    api_refs:
+      - air_ambulance_des.class_ambulance.Ambulance
+      - air_ambulance_des.class_hems.HEMS
+      - air_ambulance_des.class_hems.HEMS.hems_resource_on_shift
+      - air_ambulance_des.class_hems.HEMS.unavailable_due_to_service
+      - air_ambulance_des.class_hems_availability.HEMSAvailability
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.prep_HEMS_resources
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.populate_store
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.daily_servicing_check
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.find_next_service_date
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.is_during_school_holidays
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.is_other_resource_being_serviced
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.do_ranges_overlap
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.add_hems
+  - id: resource_allocation
+    filename: 06_resource_allocation.qmd
+    xref: sec-resource-allocation
+    one_line_summary: How HEMSAvailability chooses a primary and secondary resource for each patient, records the reason, and releases them afterwards.
+    introduces:
+      - resource allocation
+      - ResourceAllocationReason
+      - preferred callsign group
+      - preferred vehicle type
+      - primary and secondary resource
+      - active callsign groups
+      - missed call
+    builds_on: [sampling_utils, des_hems_model, hems_resources]
+    related_pages: []
+    api_refs:
+      - air_ambulance_des.class_hems_availability.ResourceAllocationReason
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.allocate_resource
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.allocate_regular_resource
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.preferred_resource_available
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.preferred_regular_group_available
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.return_resource
+      - air_ambulance_des.class_hems_availability.HEMSAvailability.current_store_status
+  - id: trial_results
+    filename: 07_trial_results_and_historic_comparison.qmd
+    xref: sec-trial-results-and-historic-comparison
+    one_line_summary: How SimulationInputs, TrialResults and HistoricResults turn the event log and historical data into metrics and plots.
+    introduces:
+      - TrialResults
+      - SimulationInputs
+      - HistoricResults
+      - historical_data folder
+      - utilisation
+      - missed jobs
+      - theoretical available hours
+      - graceful_methods
+    builds_on: [streamlit_app, simulation_runner, des_hems_model, hems_resources, resource_allocation]
+    related_pages: []
+    api_refs:
+      - air_ambulance_des.class_simulation_inputs.SimulationInputs
+      - air_ambulance_des.class_simulation_trial_results.TrialResults
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.make_job_count_df
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.calculate_available_hours
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.get_calls_per_run
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.get_perc_unattended_string_normalised
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.PLOT_SIMULATION_utilisation_summary
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.make_SIMULATION_utilisation_headline_figure
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.display_vehicle_utilisation_metric
+      - air_ambulance_des.class_simulation_trial_results.TrialResults.PLOT_hourly_call_counts
+  - id: distribution_fitting
+    filename: 08_distribution_fitting.qmd
+    xref: sec-distribution-fitting
+    one_line_summary: How DistributionFitUtils turns historical job data into the distribution and historical-data files the rest of the system reads.
+    introduces:
+      - DistributionFitUtils
+      - distribution fitting pipeline
+      - best-fit distribution
+      - incidents per day samples
+      - historical aggregates
+      - simulated historical baseline
+    builds_on: [simulation_runner, sampling_utils, des_hems_model, trial_results]
+    related_pages: []
+    api_refs:
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.import_and_wrangle
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.getBestFit
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.activity_time_distributions
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.incidents_per_day_samples
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hourly_arrival_by_qtr_probs
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hour_by_ampds_card_probs
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.ad_hoc_unavailability
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_totals
+      - air_ambulance_des.distribution_fit_utils.DistributionFitUtils.upper_allowable_time_bounds

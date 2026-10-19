@@ -12,3 +12,5 @@ STRESS_DES.qmd
 
 _sidebar.yml
 objects.json
+
+**/*.quarto_ipynb
