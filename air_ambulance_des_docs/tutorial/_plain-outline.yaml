@@ -197,6 +197,50 @@ decision_points:
     evidence: "app/model.py:281-287"
   - plain: "Automated checks compare model output with historical data and warn or fail when distributions differ by more than set amounts (for example 10% warn and 20% fail for some comparisons)"
     evidence: "tests/test_against_reality.py:131-133, 198-200"
+  - plain: "Daily call numbers are drawn from a pool of real daily counts from 2023-2024 for the same quarter, with 2024 days given slightly more weight (each real 2024 day appears 11 times in the pool, each 2023 day 10 times). Pool averages: about 6.8 calls a day in January-March (range 2-19), 7.6 in April-June (2-25), 7.6 in July-September (1-18) and 6.6 in October-December (1-14)"
+    evidence: "air_ambulance_des/distribution_fit_utils.py:580-645; distribution_data/inc_per_day_samples.json; air_ambulance_des/utils.py:652-671"
+  - plain: "Each day's calls are shared out across the hours of the day using the real hourly pattern for that quarter; within each hour, calls are placed one after another at random minutes"
+    evidence: "air_ambulance_des/des_hems.py:126-161, 250-284; distribution_data/hourly_arrival_by_qtr_probs.csv"
+  - plain: "Each call's type (AMPDS card) is drawn from the real mix of call types for that hour of the day; the patient's sex and age are then drawn from the real pattern for that call type"
+    evidence: "air_ambulance_des/utils.py:289-301, 536-578; distribution_data/hour_by_ampds_card_probs.csv; distribution_data/sex_by_ampds_card_probs.csv; distribution_data/age_distributions.txt"
+  - plain: "Care category is drawn from the real share for that call type; for example, for AMPDS card 09 about 7% critical care, 17% enhanced care and 76% regular. In the real records a job counts as critical care if a critical care benefit was recorded, otherwise enhanced care if an enhanced care benefit was recorded, otherwise regular"
+    evidence: "air_ambulance_des/utils.py:325-341; distribution_data/enhanced_or_critical_care_by_ampds_card_probs.csv; air_ambulance_des/distribution_fit_utils.py:647-684"
+  - plain: "Patient outcome is drawn from the real mix for that care category and quarter, before any vehicle is chosen"
+    evidence: "air_ambulance_des/des_hems.py:330; air_ambulance_des/utils.py:509-533; distribution_data/patient_outcome_by_care_category_and_quarter_probs.csv"
+  - plain: "Each call is given a preferred crew group with the same odds for every call, whatever its type, care category or time: group 70 about 73%, group 71 about 15%, group 72 about 12%. These odds were learned only from past jobs that did not overlap another job and when no aircraft was recorded offline, to reflect who would be sent if everything was free"
+    evidence: "air_ambulance_des/utils.py:373-385; distribution_data/callsign_group_probs.csv; air_ambulance_des/distribution_fit_utils.py:928-1050"
+  - plain: "Each call is given a preferred vehicle type from its preferred crew group and the quarter: for group 70 a helicopter about 66% of the time in January-March, 83% in April-June, 77% in July-September and 60% in October-December; for group 71 about 72%, 73%, 81% and 58%; group 72 is always a car"
+    evidence: "air_ambulance_des/des_hems.py:418-420; air_ambulance_des/utils.py:400-417; distribution_data/vehicle_type_by_quarter_probs.csv"
+  - plain: "Once a vehicle is assigned, the job's result (stood down, landed but no patient contact, patient treated but not conveyed by HEMS, conveyed by HEMS, or conveyed by land with HEMS) is drawn from the real mix for that patient outcome, quarter, vehicle type, crew group and time of day (day is 07:00-18:59, night is the rest)"
+    evidence: "air_ambulance_des/des_hems.py:519-526; air_ambulance_des/utils.py:445-507; distribution_data/hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs.csv"
+  - plain: "The job's result decides which stages happen: a stood-down job has allocation, mobilising and clearing only; 'landed but no patient contact' and 'treated but not conveyed' jobs have no travel to hospital; conveyed jobs have every stage"
+    evidence: "air_ambulance_des/des_hems.py:545-559, 574-698"
+  - plain: "Each stage time is drawn by vehicle type (helicopter or car) and stage, and redrawn until it falls within set limits (allocation 0-119 minutes, mobilising 0-29, travel to scene 1-59, on scene 1-119, travel to hospital 1-139, clearing 1-89). Every stage time is then multiplied by the job-duration setting (default 1.0)"
+    evidence: "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-607; air_ambulance_des/des_hems.py:579-698; app/_state_control.py:31"
+  - plain: "A vehicle counts as on shift if the call's clock hour is at or after its start hour and before its end hour; overnight shifts wrap round midnight, so a 19:00-02:00 shift covers calls from 19:00 to 01:59. This is checked only when a call arrives"
+    evidence: "air_ambulance_des/utils.py:303-323; air_ambulance_des/class_hems.py:107-120; air_ambulance_des/class_hems_availability.py:516-529"
+  - plain: "When a vehicle is sent, the other vehicle in the same crew group with the same care level, if on shift, is taken out of use too until the job is cleared, so one crew is never in two places"
+    evidence: "air_ambulance_des/class_hems_availability.py:648-668, 680-700, 1055-1075"
+  - plain: "Short-notice unavailability is drawn afresh for each helicopter every time it is considered for a call, with the reasons aircraft, crew or weather. The rates are the share of rostered time each aircraft was recorded offline between August 2022 and July 2024, by quarter and six-hour band (00:00-05:59, 06:00-11:59, 12:00-17:59, 18:00-23:59). Example for January-March, 06:00-11:59: G-DAAS available about 90% (crew 5%, weather 4%, aircraft 1%); G-DAAN available about 82% (weather 17%). Where data are missing, averages from other time bands or other aircraft are used; if there are none, the helicopter is treated as available"
+    evidence: "air_ambulance_des/utils.py:957-1050; distribution_data/ad_hoc_unavailability.csv; air_ambulance_des/distribution_fit_utils.py:300-303, 2297-2688"
+  - plain: "Servicing dates: starting from the last service (G-DAAS 4 January 2022, G-DAAN 20 March 2022), the next service is due one interval later (8 months for the H145, 12 for the EC135), counted from the previous service start. If the due date falls in January (from the 2nd), the service moves to 2 January provided that is clear of school holidays; due dates in other months are kept. The start is then moved back a day at a time until the whole 3-week service is clear of school holidays and of other aircraft's services. A 4-week overrun buffer setting exists but does not appear to affect the dates. Cars are not serviced"
+    evidence: "actual_data/service_history_DEFAULT.csv; actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55-56, 245-285, 749-793"
+  - plain: "Vehicles are moved in and out of servicing once a day, at the first moment of each simulated day; a vehicle is out from its service start date to its service end date inclusive"
+    evidence: "air_ambulance_des/des_hems.py:244-248; air_ambulance_des/class_hems_availability.py:130-200; air_ambulance_des/class_hems.py:91-105"
+  - plain: "When G-DAAN takes over the H70 callsign during G-DAAS's servicing, it appears to keep its own H71 shift hours and enhanced care level, so in that period no helicopter is rostered as critical care or for the 19:00-02:00 shift"
+    evidence: "air_ambulance_des/class_hems.py:72-86; air_ambulance_des/class_hems_availability.py:139-160, 299-325; actual_data/HEMS_ROTA_DEFAULT.csv; actual_data/callsign_registration_lookup_DEFAULT.csv"
+  - plain: "Missed jobs are calls for which no vehicle was assigned. Yearly figures are the count divided by the number of runs and by the run length in days, multiplied by 365"
+    evidence: "air_ambulance_des/class_simulation_trial_results.py:2250-2404"
+  - plain: "Utilisation for each vehicle is the time from being assigned to a job until clear, divided by its rostered hours from the summer and winter rota. Rostered hours are not reduced for servicing or short-notice unavailability, and the paired vehicle taken out of use alongside it is not counted as busy"
+    evidence: "air_ambulance_des/class_simulation_trial_results.py:279-422, 424-585; air_ambulance_des/des_hems.py:537, 719"
+  - plain: "The historical missed-job rate is the share of real 2023-2024 calls where no Devon Air Ambulance resource was recorded as attending. Because care category is only known for attended jobs, the historical missed figures by care category and the 'suboptimal allocation' comparisons come from the model run on the historic rotas, not from real records"
+    evidence: "air_ambulance_des/distribution_fit_utils.py:1827-1871; air_ambulance_des/class_historic_results.py:484-520, 603-650; app/model.py:399-408, 451-460"
+  - plain: "On the results summary, the 'estimated range' printed beside each simulated missed-job figure (critical care, enhanced care, regular) is taken from the historic-rota model run, not from the scenario being tested"
+    evidence: "app/model.py:382-392"
+  - plain: "Checks against real data run the model on the historic rotas (10 runs of 4 years). Average comparisons (monthly calls, job durations) fail when the difference is statistically significant (p below 0.05) and the effect size (Cohen's d) is above 0.5, and warn above 0.2. Distribution comparisons (daily calls, total job durations) warn when the KS statistic is above 0.1 and fail when significant and above 0.2. Job splits by crew group and callsign fail if any group's share differs from history by more than 10 percentage points and warn from 5; a chi-squared test with Cramer's V also fails when significant and V is 0.3 or more"
+    evidence: "tests/test_against_reality.py:90-229, 310-313, 709-834; tests/helpers.py:32-123; tests/conftest.py:71-80"
+  - plain: "Other automated checks: vehicles never respond off shift or while being serviced; the same vehicle or crew group is never sent to two jobs at once; a known helicopter benefit never gets a car; adding a helicopter or car, or lengthening hours, answers more calls in every one of 10 one-year runs (and the reverse); more demand gives more calls; days with no calls are handled; school holidays are read as UK dates, none longer than 7 weeks and averaging 1-3 weeks; and a fixed 5-run, 730-day scenario with seed 42 must reproduce a stored baseline exactly"
+    evidence: "tests/test_unittest_model.py:236-316, 416-1000; tests/test_resource_allocation.py:81-122; tests/test_against_condition_changes.py:1-43, 68-160; tests/test_call_generation.py:1-30; tests/test_school_holidays.py:54-56, 192-220; tests/README.md:70-87"
 
 assumptions:
   - plain: "Assumes future demand looks like 2023-2024 demand, adjusted only by a single overall percentage; seasonal demand adjustment is switched off"
@@ -227,6 +271,22 @@ assumptions:
     evidence: "app/model.py:177 versus air_ambulance_des/des_parallel_process.py:296-298"
   - plain: "Times are tracked in minutes of simulated time from the chosen start date"
     evidence: "app/model.py:160-161; air_ambulance_des/des_hems.py:206"
+  - plain: "Within an hour, if the random gaps between calls add up to 59 minutes, any remaining calls for that hour are not created, so very busy hours may be slightly under-filled"
+    evidence: "air_ambulance_des/des_hems.py:250-271"
+  - plain: "Stage-time patterns were fitted separately for each job result, but the model looks them up by vehicle type and stage only, so it appears to use one result's pattern for every job (currently 'landed but no patient contact' for most stages and 'conveyed by land with HEMS' for travel to hospital), rather than matching times to the job's result"
+    evidence: "air_ambulance_des/utils.py:588, 933-953; distribution_data/activity_time_distributions.txt; air_ambulance_des/distribution_fit_utils.py:350-417"
+  - plain: "Short-notice unavailability does not last: it is a fresh draw for each call, so a helicopter grounded by weather for one call can be available for the next call minutes later"
+    evidence: "air_ambulance_des/class_hems_availability.py:531-546, 916-931; air_ambulance_des/utils.py:957-1050"
+  - plain: "The short-notice unavailability rates were worked out treating summer as April-September, while the default rota treats summer as April-October"
+    evidence: "air_ambulance_des/distribution_fit_utils.py:2332-2360; actual_data/rota_start_end_months_DEFAULT.csv"
+  - plain: "A job that starts near the end of a shift carries on to completion; there is no handover or early stand-down at shift end"
+    evidence: "air_ambulance_des/class_hems.py:107-120 (on-shift checked only at allocation); air_ambulance_des/des_hems.py:574-721"
+  - plain: "Rostered hours used for utilisation are not reduced when an aircraft is being serviced, although the description of that calculation says servicing is taken into account, so utilisation for serviced aircraft may be understated"
+    evidence: "air_ambulance_des/class_simulation_trial_results.py:279-422 (servicing dates read at 302-315 but not subtracted)"
+  - plain: "The preferred crew group does not depend on call type, care category, time of day or season"
+    evidence: "air_ambulance_des/utils.py:373-385"
+  - plain: "A 'missed' job means something slightly different in the model (no suitable vehicle free at that moment) and in the real records (no Devon Air Ambulance resource recorded as attending, for any reason)"
+    evidence: "air_ambulance_des/des_hems.py:492-497; air_ambulance_des/distribution_fit_utils.py:1832-1836"
 
 dependencies:
   - plain: "Python, the programming language the whole model is written in"
@@ -321,6 +381,36 @@ glossary:
     definition: A copy of the web app running on an outside service, reachable in a browser without installing anything.
   - term: automated tests
     definition: Checks, run on request by the developers, that confirm the model still behaves as expected.
+  - term: HEMS
+    definition: Helicopter emergency medical service; in this model, any Devon Air Ambulance helicopter or critical care car.
+  - term: preferred crew group and vehicle type
+    definition: The crew group and vehicle the model assumes would be sent to a call if everything were free, drawn from past patterns before the dispatch rules check what is actually available.
+  - term: HEMS result
+    definition: What happened once a vehicle was sent, such as stood down, landed but no patient contact, treated but not conveyed, conveyed by HEMS or conveyed by land with HEMS.
+  - term: stand down
+    definition: A job cancelled after the vehicle was assigned and before it reached the scene.
+  - term: patient outcome
+    definition: The recorded outcome for the patient (for example deceased), drawn from past patterns for the care category and quarter.
+  - term: job stages
+    definition: The steps of a simulated job - allocation, mobilising, travel to scene, on scene, travel to hospital and clearing - each with its own drawn time.
+  - term: quarter
+    definition: A three-month part of the year (January-March, April-June, July-September, October-December), used to vary many of the learned patterns by season.
+  - term: demand percentage
+    definition: A single setting that scales every day's number of calls up or down (100% means the same as 2023-2024).
+  - term: job-duration multiplier
+    definition: A single setting that stretches or shrinks every stage time of every job (1.0 means unchanged).
+  - term: statistically significant (p-value)
+    definition: A test result showing a difference is unlikely to be down to chance alone; the checks here use a cut-off of 0.05.
+  - term: effect size (Cohen's d)
+    definition: How large a difference between two averages is, relative to their spread; 0.2 is usually called small and 0.5 medium.
+  - term: KS statistic
+    definition: The largest gap between two cumulative distributions; 0.1 means the shares below some value differ by up to 10 percentage points.
+  - term: chi-squared test and Cramer's V
+    definition: A test of whether two sets of category counts (such as jobs per callsign) differ, and a 0-to-1 measure of how strongly they differ.
+  - term: backtest
+    definition: An automated check that a fixed scenario still gives exactly the same results as a stored earlier run, to catch unintended changes.
+  - term: annualised figure
+    definition: A count converted to a per-year rate by dividing by the run length in days and multiplying by 365.
 
 pages:
   stakeholder-decision-maker:
@@ -393,4 +483,121 @@ pages:
       uses: [assumptions, decision_points, dependencies, data_flows.personal_data, evidence.issues, evidence.project_signals]
     - page: glossary
       focus: Every plain component name and unavoidable term used on these pages, with technical names for talking to developers.
+      uses: [glossary]
+  stakeholder-domain-expert:
+    - page: overview
+      focus: >
+        What the model is in HEMS terms: a planning simulation of Devon Air Ambulance helicopter and
+        critical care car tasking, built from 2023-2024 job records, not a live dispatch or
+        clinical decision tool. Who it is for (clinicians, operational managers, service analysts)
+        and how to use this guide: start with how-decisions-are-made to sanity-check the rules
+        against your own experience. Plain system diagram of the eight parts. Project signals in
+        one line (version 1.0.0, single active contributor, automated checks exist but are run by
+        hand). Known-issues note, reworded: open questions about differences from historical
+        figures, the crew group 70/71 split, the dispatch logic being under review, and servicing
+        scheduling.
+      uses: [plain_summary, components, relationships, evidence.project_signals, evidence.issues]
+    - page: what-it-does
+      focus: >
+        The operational questions it can test (rota hours, number and type of aircraft and cars,
+        servicing intervals, overall demand, job lengths) and what it gives back: missed jobs
+        overall and by care category, critical care jobs sent an enhanced care resource,
+        helicopter-benefit jobs sent a car, utilisation per callsign, call patterns by hour, day
+        and month, job stage times and HEMS results, each beside 2023-2024 figures. Inputs a
+        domain expert recognises: the rota table with summer and winter hours, callsign and
+        registration list, servicing intervals and last service dates, school holidays, allowed
+        stage-time limits. Worked example: the default rota (H70/CC70 07:00-19:00 critical care
+        and 19:00-02:00 enhanced care; H71/CC71; CC72 08:00-18:00) against the extended critical
+        care cover scenario. State clearly what it does not model: locations, distances and
+        bases, ordinary ambulance response, queued or held calls, handovers.
+      uses: [plain_summary, data_flows.inputs, data_flows.outputs, components.streamlit_app, components.trial_results, decision_points]
+    - page: how-it-works
+      focus: >
+        The life of one simulated call, in dispatch language: the day's call count, the call's
+        hour and AMPDS card, age and sex, care category and patient outcome, preferred crew group
+        and vehicle, the dispatch rules choosing a vehicle (or recording a missed job), the HEMS
+        result, then the job stages to clear. Then where the patterns come from (the historical
+        data preparer and the pattern sampler), how the fleet and rota model handles shifts,
+        summer and winter hours and servicing, and how the run manager repeats runs. Flowchart of
+        at most eight boxes, then one short section per part. Explain random runs briefly as
+        repeated plausible years, not predictions of a specific day.
+      uses: [components, relationships, data_flows.stages, decision_points]
+    - page: how-decisions-are-made
+      focus: >
+        The core page; thorough and in domain terms, with real values in tables. Group as follows.
+        (1) Call demand: daily counts drawn from real 2023-2024 days by quarter (2024 weighted
+        1.1), quarterly averages 6.6-7.6 a day, scaled by the demand percentage and rounded down;
+        spread by the hourly pattern for the quarter; seasonal demand adjustment switched off.
+        (2) The patient: AMPDS card by hour, age (redrawn above 115) and sex by card, care category
+        by card with the CC-then-EC-then-regular rule used on the real records, patient outcome by
+        care category and quarter, helicopter benefit shares (about 15% regular, 38% critical
+        care, 10% enhanced care), and the helicopter-benefit rule for conveyed patients that
+        appears to have no effect. (3) Preferred crew group (70 73%, 71 15%, 72 12%) and preferred
+        vehicle by group and quarter. (4) Dispatch: the 50% chance that a critical or enhanced care
+        need is known in advance and the care-matching order; the 50% chance a helicopter benefit
+        is known for regular jobs and the helicopter-only rule (critical care helicopter first, no
+        car if none); the regular-job order; the eligibility rules (on shift by clock hour, not
+        being serviced, not busy, crew group free); the paired vehicle being stood down with it;
+        no queueing. (5) Short-notice unavailability: per-call draw for helicopters only, rates by
+        aircraft, quarter and six-hour band, with the January-March morning example and fallbacks.
+        (6) Rota and seasons: default rota table, summer April-October, overnight shifts wrapping
+        midnight, jobs running past shift end. (7) Servicing: intervals (H145 8 months, EC135 12
+        months, 3 weeks), last service dates, the January rule as it actually works, moving back
+        day by day for school holidays (default list to end of 2027) and other services, the
+        unused 4-week buffer, the possible hang, G-DAAN taking the H70 callsign while keeping its
+        own hours and enhanced care level. (8) Job stages and results: HEMS result by outcome,
+        quarter, vehicle, crew group and day (07:00-18:59) or night; which stages each result
+        has; stage-time limits; the job-duration multiplier; the stage-time patterns not matched
+        to the job's result. (9) Defaults: run length, runs, seed, warm-up. Then "How to check it
+        yourself": compare the default rota and stage-time limits with your own knowledge, check
+        daily call averages by quarter, look at the helicopter/car split for group 70 by quarter,
+        and use the comparison tab against 2023-2024. Close with the automated checks, in plain
+        terms with their thresholds: comparison with reality (Cohen's d 0.2 warn / 0.5 fail; KS
+        0.1 / 0.2; crew group and callsign shares 5 / 10 percentage points), behaviour checks
+        (no off-shift or in-service responses, no double-tasking, a known helicopter benefit
+        never gets a car, more vehicles or longer hours answer more calls), school holiday
+        plausibility, and the exact backtest. Note that the checks are run by hand, not
+        automatically on every change, and that no check covers the utilisation calculation.
+      uses: [decision_points, assumptions, components.des_hems_model, components.resource_allocation, components.hems_resources, components.sampling_utils, components.distribution_fitting, evidence.tests, evidence.repo_docs]
+    - page: reading-results
+      focus: >
+        How to read each output and the common misreadings. All headline figures are averages
+        across runs (12 locally, 5 on the hosted site by default); look at the spread, not just the
+        average, and use enough runs. Missed jobs mean no suitable vehicle free at the moment of
+        the call, annualised by dividing by run length and multiplying by 365; this is not the
+        same as the real-records definition (no Devon Air Ambulance resource recorded as
+        attending). The historical comparison for missed jobs by care category and for suboptimal
+        allocation comes from the model run on historic rotas, not real records, and the
+        'estimated range' beside the simulated missed-job figures is taken from that historic run,
+        not the scenario. Utilisation is time from assignment to clear over rostered hours, not
+        reduced for servicing or short-notice unavailability, and the paired vehicle stood down
+        with it is not counted; it may be understated for serviced aircraft and can break when a
+        vehicle pairing is removed. Stage times are not matched to the job's result. Small
+        differences between scenarios may be within run-to-run variation; hosted and local results
+        can differ slightly for the same settings. Suggest reading the comparison tab first to
+        judge how well the baseline matches 2023-2024 before trusting scenario differences.
+      uses: [data_flows.outputs, decision_points, assumptions, components.trial_results, evidence.issues]
+    - page: assumptions-limits
+      focus: >
+        In domain terms, separating what the code does from what it assumes. Demand mirrors
+        2023-2024 with one overall percentage; no geography, distances or base locations, so
+        travel times come from past averages; no ordinary ambulance modelling and no queueing of
+        calls; cars never unavailable at short notice; helicopter unavailability is a fresh draw
+        per call rather than a lasting period (weather does not persist), and its rates used
+        April-September as summer while the rota uses April-October; fixed 50% guesses about what
+        the dispatcher knows; preferred crew group the same for all calls; jobs carry on past
+        shift end; busy hours may be slightly under-filled; stage-time patterns not matched to job
+        result; the helicopter-benefit rule for conveyed patients appears to have no effect;
+        G-DAAN covering H70 keeps its own hours and care level; rules tied to the named aircraft
+        and callsigns; servicing January preference narrower than it sounds, the overrun buffer
+        unused and a possible hang; school holidays only to end of 2027; utilisation ignores
+        servicing. Known open questions from the issue list, reworded: metric differences from
+        history, crew group 70/71 split slightly off, allocation logic under review, cars sent
+        when the unavailability data shows no obvious reason, distance not considered when sending
+        a car, the share of regular jobs with helicopter benefit, 'conveyed' outcomes for cars,
+        servicing intervals with two H145s, forcing winter servicing, and periods of extreme
+        unavailability. Close with the technical-team callout linking those issues.
+      uses: [assumptions, decision_points, evidence.issues, evidence.markers]
+    - page: glossary
+      focus: Every plain component name and unavoidable term used on these pages, including the HEMS and statistical terms, with technical names for talking to developers.
       uses: [glossary]

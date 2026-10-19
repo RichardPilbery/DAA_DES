@@ -4,7 +4,7 @@ title: "What it does"
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](what-it-does.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](what-it-does.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Domain experts](../stakeholder-domain-expert/what-it-does.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -62,7 +62,7 @@ The figures are averages over many random runs. They show a likely direction and
 
 - **It does not dispatch real aircraft.** It is for planning, not live operations.
 - **It ignores geography.** Travel times come from past averages, not from where an incident is.
-- **It does not model ordinary ambulance cases.** Every call is treated as an air ambulance case.
+- **It does not model ordinary ambulance cases.** Every call is treated as an air ambulance case. That is reasonable here: the demand comes from jobs recorded by the HEMS desk, including jobs reviewed afterwards that arrived while no HEMS vehicle was staffed. It is not an estimate of every emergency where a helicopter might go.
 - **It does not queue missed calls.** If nothing suitable is free when a call arrives, the call counts as missed.
 - **It does not predict a changing future by itself.** Demand follows 2023 to 2024 patterns, scaled by one overall percentage.
 

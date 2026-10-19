@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -181,6 +181,10 @@ If a change to sampling is meant to alter results, `tests/README.md` describes `
 - The large block of commented-out methods and `# ARCHIVED CODE` suggests the sampling tables were reworked more than once; the live versions are the quarter-stratified ones. This is a reading of the code only.
 
 ## Limitations and open questions {#sec-sampling-distributions-and-random-streams-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 - Issue [#183](https://github.com/RichardPilbery/DAA_DES/issues/183) (open as of 2026-10-19): add tests to quantify how much the random seed matters.
 - Issue [#241](https://github.com/RichardPilbery/DAA_DES/issues/241) (open as of 2026-10-19): a car is sometimes sent when the ad hoc unavailability spreadsheet gives no obvious reason, which touches the sampling fallbacks above.

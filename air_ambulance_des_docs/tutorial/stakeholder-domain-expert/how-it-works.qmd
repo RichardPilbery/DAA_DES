@@ -1,0 +1,87 @@
+---
+title: "How it works"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/how-it-works.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](how-it-works.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- Each made-up call follows one path: call count, hour and call type, patient, preferred crew and vehicle, dispatch, result and job stages.
+- The model has eight parts. Seven run every time you test a scenario. The eighth, the historical data preparer, runs only when the learned patterns are refreshed from real job records.
+- The web app collects your scenario. The run manager then plays out the chosen period many times, each time with different random chances, and averages the results.
+- In each play-through, the call simulator creates made-up calls. The dispatch rules either send a vehicle or record a missed job. Calls are never held in a queue.
+- The results and comparison tool sets the averaged results beside the real 2023 and 2024 figures.
+:::
+
+## The life of one simulated call
+
+Each made-up call follows the same path. Each step is drawn from patterns learned from Devon Air Ambulance's 2023 and 2024 job records.
+
+1. **The day's call count.** The simulator draws a number from real daily counts for the same quarter of the year, then scales it by the demand percentage.
+2. **The hour and call type.** The day's calls are spread across the hours using the real hourly pattern. Each call gets an AMPDS card (the call-type code from the 999 call handler, such as card 09) drawn from the real mix for its hour.
+3. **The patient.** Age and sex are drawn for that card. Care category (critical care, enhanced care or regular) and patient outcome follow, and so does whether a helicopter would help.
+4. **The preferred crew and vehicle.** Each call is given the crew group and vehicle type the model assumes would go if everything were free.
+5. **Dispatch.** The dispatch rules look for a suitable vehicle at that moment. If none is free, the call is recorded as missed.
+6. **The HEMS result.** If a vehicle is sent, the result is drawn: stood down, landed with no patient contact, treated but not conveyed, conveyed by HEMS, or conveyed by land with HEMS.
+7. **The job stages.** The job moves through allocation, mobilising, travel to scene, on scene, travel to hospital and clearing. The result decides which stages happen. Each stage has a drawn duration, and every step is written down.
+
+The exact values at each step are on [how decisions are made](how-decisions-are-made.qmd).
+
+## The eight parts
+
+```{mermaid}
+%%| label: fig-how-it-works-parts
+%%| fig-cap: "The eight parts of the model and how they connect"
+flowchart LR
+  P[Historical data preparer] -->|supplies patterns| S[Pattern sampler]
+  P -->|supplies real figures| R[Results and comparison tool]
+  W[Web app] -->|starts| M[Run manager]
+  W -->|sets rota and servicing| F[Fleet and rota model]
+  M -->|runs many copies of| C[Call simulator]
+  C -->|draws calls and timings| S
+  C -->|asks for a vehicle| D[Dispatch rules]
+  D -->|chooses from| F
+  M -->|hands over combined results| R
+  R -->|displays in| W
+```
+
+@fig-how-it-works-parts shows how the parts connect. The sections below take them in turn.
+
+### The web app
+
+This is where you set a scenario: run length, start date and time, warm-up length, demand percentage, job-duration multiplier, rota, vehicles and servicing. You can choose a ready-made scenario, such as 24-hour running or extended critical care cover, or upload a filled-in Excel template. The web app then starts the model and shows the results. A downloadable report is optional and needs a separate publishing tool.
+
+### The run manager
+
+One play-through is only one plausible version of the period. It is not a prediction of a particular day. The run manager repeats the play-through, each time with different random chances, and combines the runs. By default it does 12 runs on a local computer and 5 on the public demonstration site. Local runs happen side by side. Hosted runs happen one after another. The master random seed (42 by default) fixes the chances, so the same settings give the same results again on the same installation.
+
+### The call simulator
+
+This creates the day's calls and patients, and moves each job through its stages. It writes down every step, and all results are calculated from that record. Every call is treated as an air ambulance case. The alternative path for ordinary ambulance cases is only a placeholder. This is a reasonable simplification. The demand the model draws on is the demand recorded by the HEMS desk, including jobs that came in during hours when no HEMS vehicle was staffed and were reviewed afterwards. It is not an estimate of every emergency where a helicopter might have been sent, so there is no separate group of ordinary ambulance cases to model.
+
+### The pattern sampler
+
+This holds the learned patterns and draws values from them on request. These cover daily call counts, call timing, call types, age, sex, care category, outcomes, stage durations, and the past rate of short-notice helicopter unavailability.
+
+### The fleet and rota model
+
+This represents each helicopter and car. It holds their summer and winter shift hours and their planned servicing dates. Once a day, at the start of each simulated day, vehicles are moved in or out of servicing. Whether a vehicle is on shift is checked when a call arrives.
+
+### The dispatch rules
+
+These decide which vehicle, if any, goes to each call, and record why. A vehicle must be on shift and not in servicing. It must not already be busy, and its [crew group](glossary.qmd) must not be out on another job. A vehicle can be free while its crew is out on the paired vehicle, so both checks are needed. Helicopters can also be unavailable at short notice, which is drawn afresh each time one is considered. The order in which vehicles are tried depends on the care category and what the dispatcher is assumed to know. It is set out on [how decisions are made](how-decisions-are-made.qmd).
+
+### The results and comparison tool
+
+This turns the recorded steps into missed-job figures, utilisation for each vehicle and charts. It sets them beside the real figures. Headline figures are averaged across all runs. Some of the "historical" comparisons come from the model run on the historic rotas rather than from real records. [Reading results](reading-results.qmd) explains which ones.
+
+### The historical data preparer
+
+This is a separate, occasional step. It reads the real job records and produces the learned patterns and historical summaries the other parts use. The job records themselves are not shared with the model's published files. Before refreshing the patterns, someone should check the new records for gaps and errors, because the model does not check them for you.
+
+## Where to go next
+
+For what the model assumes and where it differs from reality, see [assumptions and limits](assumptions-limits.qmd). For terms used here, see the [glossary](glossary.qmd).

@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -174,6 +174,10 @@ Inferred:
 - The extra year on `sim_end_date` is explained by its own comment: dates can be walked back into the previous year.
 
 ## Limitations and open questions {#sec-hems-resources-and-servicing-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 There are no `TODO`/`FIXME` markers in these files. Open issues, as of 2026-10-19:
 

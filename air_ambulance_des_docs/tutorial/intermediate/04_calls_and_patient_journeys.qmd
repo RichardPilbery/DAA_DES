@@ -8,7 +8,7 @@ aliases:
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -160,7 +160,7 @@ If the primary resource is `None`, the journey is almost empty:
 ```{.python include="../../../air_ambulance_des/des_hems.py" start-line=489 end-line=497 filename="air_ambulance_des/des_hems.py:489-497" include-hash="9b933f47c553"}
 ```
 
-Two rows are logged (`queue` with "No HEMS available", and `resource_request_outcome` with "No Resource Available"). Every later stage is guarded by `hems_case and hems_avail` (`hems_case` is true for jobs the model treats as HEMS jobs, normally all of them, and `hems_avail` is true when a vehicle was allocated), so nothing else is added except the final `depart` row. These are the rows that later chapters count as missed jobs.
+Two rows are logged (`queue` with "No HEMS available", and `resource_request_outcome` with "No Resource Available"). Every later stage is guarded by `hems_case and hems_avail` (`hems_case` is true for jobs the model treats as HEMS jobs, normally all of them, which is reasonable because the demand being modelled is what the HEMS desk recorded, including jobs reviewed afterwards that arrived while no vehicle was staffed, not an estimate of every emergency a helicopter might attend; and `hems_avail` is true when a vehicle was allocated), so nothing else is added except the final `depart` row. These are the rows that later chapters count as missed jobs.
 
 ### With a vehicle: HEMS result and stage shortcuts
 
@@ -244,6 +244,10 @@ sequenceDiagram
 ```
 
 Read it top to bottom: the generator decides how many calls to make and starts one `generate_patient` process per call. Each of these samples the patient, logs, waits for the allocation to resolve, then starts a `patient_journey`. The journey consumes the simulated minutes, logs each stage, and returns the vehicle.
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. When you meet a simplification in this chapter (such as treating every call as a HEMS job, or drawing daily call counts from past days), ask whether it is reasonable for the questions the model is meant to answer, not whether it is a perfect reflection of reality.
+:::
 
 ## Conclusion {#sec-calls-and-patient-journeys-conclusion}
 

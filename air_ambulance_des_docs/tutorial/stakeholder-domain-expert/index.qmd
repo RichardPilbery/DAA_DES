@@ -1,0 +1,91 @@
+---
+title: "Overview"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- This is a planning simulation of how Devon Air Ambulance helicopters and critical care cars are tasked to emergency calls. It is built from 2023 and 2024 job records. It is not a live dispatch tool and not a clinical decision tool.
+- It is for clinicians, operational managers and service analysts who want to test rota, fleet, servicing and demand changes before trying them for real.
+- You know tasking better than the software does. Use this guide to check its rules against your own experience, starting with [how decisions are made](how-decisions-are-made.qmd).
+- Some results still differ from the historical figures, and the team is investigating. See the known issues below.
+:::
+
+## What this is
+
+The model creates a stream of made-up emergency calls. It bases them on patterns in two years of real job records. It then plays out what would happen to those calls under the rota, fleet and servicing plan that you choose.
+
+It produces estimates of:
+
+- how many jobs are missed because no suitable vehicle is free;
+- how busy each vehicle and crew is;
+- how these figures compare with what happened in 2023 and 2024.
+
+You see the results in a web app. A downloadable report is also available. It needs a separate free publishing tool to be installed.
+
+The model repeats the simulated period many times, each time with different random chances. Each repeat is a plausible version of the period, not a prediction of a particular day. The results are averages across the repeats. [How it works](how-it-works.qmd) explains this further.
+
+## At a glance
+
+::: {.value-box-row columns="3"}
+::: {.value-box value="2 years" title="Of real job records behind it" icon="calendar" color="bg-teal"}
+2023 and 2024
+:::
+::: {.value-box value="730 days" title="Default run length" icon="clock" color="bg-blue"}
+Starting 1 January 2023
+:::
+::: {.value-box value="v1.0.0" title="Latest release" icon="tag" color="bg-amber"}
+Released 30 May 2025
+:::
+:::
+
+## The journey of one call
+
+Each made-up call follows this path. The [how it works](how-it-works.qmd) page describes it step by step and shows the eight software parts behind it.
+
+```{mermaid}
+%%| label: fig-overview-call-journey
+%%| fig-cap: "The journey of one simulated call"
+flowchart LR
+  A[Call arrives] --> B[Patient and care level drawn]
+  B --> C[Preferred crew and vehicle]
+  C --> D[Dispatch rules check what is free]
+  D --> E[Vehicle sent or job missed]
+  E --> F[Job stages]
+```
+
+## Project signals
+
+The model is maintained by a single developer and the code is open for anyone to inspect. The developers check it against 2023 and 2024 records and run a set of tests by hand before releases (see [how decisions are made](how-decisions-are-made.qmd), section 10). Nobody else currently reviews each change.
+
+## Known issues
+
+We checked the project's public list of reported problems and requests (issue states as of 19 October 2026). Several open ones matter if you are judging whether the model reflects reality:
+
+- **Differences from history.** Some headline figures do not yet match the 2023 and 2024 figures closely. The team is still tracking down why.
+- **Crew group 70 and 71 split.** The share of jobs given to crew group 70 or 71 (the helicopter and car that share one crew, such as H70 and CC70) is slightly off from the historical pattern.
+- **Dispatch logic.** The rules for choosing a vehicle are under review, including how solo cars and backup cars are treated and how the logic is explained.
+- **Servicing scheduling.** In some set-ups the model cannot find a free servicing slot and the run freezes, so no results appear.
+
+Open issues change over time, so check the live list for newer states. [Assumptions and limits](assumptions-limits.qmd) puts these in context.
+
+## How to use this guide
+
+To try the model yourself, ask your analyst team to install the app locally, or use the public demonstration site if your team has the address (it runs fewer repeats, so results are rougher).
+
+If you only have time for one page, read [how decisions are made](how-decisions-are-made.qmd). It lists the rules, thresholds and default values that the model applies, and how to check each against your own knowledge.
+
+| Page | The question it answers |
+|---|---|
+| [What it does](what-it-does.qmd) | Which operational questions can it test, and what does it give back? |
+| [How it works](how-it-works.qmd) | How does one simulated call move through the model? |
+| [How decisions are made](how-decisions-are-made.qmd) | What rules and values does it apply, and how can you check them? |
+| [Reading results](reading-results.qmd) | How should you read each output, and what are the common misreadings? |
+| [Assumptions and limits](assumptions-limits.qmd) | What does it assume, and where does it differ from reality? |
+| [Glossary](glossary.qmd) | What do the terms mean? |
+
+This guide describes what the code does and assumes. Where the code does not show something, the guide says so. It makes no claim about legal, regulatory or clinical suitability.

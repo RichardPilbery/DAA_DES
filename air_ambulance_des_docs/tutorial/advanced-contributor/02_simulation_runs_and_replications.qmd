@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -166,6 +166,10 @@ pytest -m backtest                     # compares a fixed scenario with the stor
 - **Wrapping the integer seed in a new `SeedSequence` inside `DES_HEMS`.** Inferred: it lets `runSim` stay a simple integer interface while the model still gets independent child streams.
 
 ## Limitations and open questions {#sec-simulation-runs-and-replications-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 - `des_hems.py:778`: `TODO - Improve error handling here` (the swallowed `KeyError`).
 - `write_run_params` carries the `SR NOTE` about linking parameter and results files with an identifier.

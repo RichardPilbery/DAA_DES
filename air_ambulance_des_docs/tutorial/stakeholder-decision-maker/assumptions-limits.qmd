@@ -4,7 +4,7 @@ title: "Assumptions and limits"
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](assumptions-limits.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](assumptions-limits.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Domain experts](../stakeholder-domain-expert/assumptions-limits.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -17,12 +17,18 @@ title: "Assumptions and limits"
 
 Every model simplifies reality. This page sets out what this one assumes, where it can be wrong, and what is known not to work yet. For how the parts fit together, see [how it works](how-it-works.qmd). For what could go wrong as a result, see [risks](risks.qmd).
 
+::: {.callout-important title="Why every model needs assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer.
+
+So the question is not whether each assumption below is a perfect reflection of reality, because none will be. The question is whether the assumptions and simplifications are reasonable for the questions you want to ask of the model. For a decision-maker, that means asking whether anything listed here would change the answer to the decision you are weighing. The [questions to ask](questions-to-ask.qmd) can help.
+:::
+
 ## What the model assumes
 
 ### About demand
 
 - **The future looks like the past.** Calls are drawn from real daily counts from 2023 and 2024, for the same quarter of the year. One overall percentage scales them up or down.
-- **Every call is an air ambulance case.** The model has no separate handling of ordinary ambulance cases.
+- **Every call is an air ambulance case.** The model has no separate handling of ordinary ambulance cases. This is reasonable because the demand comes from jobs recorded by the HEMS desk, including jobs reviewed afterwards that arrived while no HEMS vehicle was staffed. It is not an estimate of every emergency where a helicopter might go.
 
 ### About place and travel
 

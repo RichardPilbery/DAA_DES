@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -209,6 +209,10 @@ The second command comes from `tests/README.md`, which lists scenario importing 
 - Keeping `_DEFAULT` copies beside each working CSV, rather than regenerating from the template, suggests the aim was a reset that needs no spreadsheet parsing.
 
 ## Limitations and open questions {#sec-streamlit-app-and-scenario-parameters-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 - Hosted deployment problems: [#130](https://github.com/RichardPilbery/DAA_DES/issues/130), [#262](https://github.com/RichardPilbery/DAA_DES/issues/262) and [#101](https://github.com/RichardPilbery/DAA_DES/issues/101).
 - Scenario comparison inside the app is not built: [#56](https://github.com/RichardPilbery/DAA_DES/issues/56). This is the open work behind the placeholder `set_scenario_*` functions.

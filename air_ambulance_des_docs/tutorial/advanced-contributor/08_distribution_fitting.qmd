@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/08_distribution_fitting.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](08_distribution_fitting.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/08_distribution_fitting.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](08_distribution_fitting.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -156,6 +156,10 @@ To run it, from the repo root: `python run_dist_fit_utils.py`. The README says t
 - **A baseline run lives here (inferred).** It needs the freshly fitted files and the historic rotas, and it is only meaningful just after a refit, which is presumably why it sits beside the fitting rather than in the app.
 
 ## Limitations and open questions {#sec-distribution-fitting-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 The `TODO` markers in the module:
 

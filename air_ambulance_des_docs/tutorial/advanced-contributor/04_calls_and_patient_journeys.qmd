@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -90,7 +90,7 @@ Key attributes sampled here:
 
 The first event-log row, `("arrival", "arrival_departure")`, is written before any resource logic, so every patient has an arrival row even if nothing is sent.
 
-Next, if `amb_data` is true the code flips a coin on whether the case is HEMS or ambulance. Otherwise `hems_case = 1`. For HEMS cases it samples the preferred callsign group, the helicopter benefit flag and the preferred vehicle type, logging each as its own row. Then comes the branch that decides the allocation path:
+Next, if `amb_data` is true the code flips a coin on whether the case is HEMS or ambulance. Otherwise `hems_case = 1`, which is the normal case and a fair one: the demand pool is built from jobs recorded by the HEMS desk, including jobs reviewed afterwards that arrived while no vehicle was staffed, so it is not an estimate of every emergency a helicopter might attend, and there is no non-HEMS population to split off. For HEMS cases it samples the preferred callsign group, the helicopter benefit flag and the preferred vehicle type, logging each as its own row. Then comes the branch that decides the allocation path:
 
 ```{.python include="../../../air_ambulance_des/des_hems.py" start-line=432 end-line=466 dedent=4 filename="air_ambulance_des/des_hems.py:432-466" code-line-style="focus:1-6" include-hash="290095060f61"}
 ```
@@ -216,6 +216,10 @@ Run everything with `pytest` from the repository root. `README.md` documents mar
 - **Per-purpose random streams.** The streams `calls_per_hour`, `call_iat`, `know_cc_ec_benefit` and the three `helicopter_benefit_from_*` streams keep each draw independent; see [Chapter 3](03_sampling_distributions_and_random_streams.qmd).
 
 ## Limitations and open questions {#sec-calls-and-patient-journeys-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 - TODO at `des_hems.py:338`: logic to decide ambulance versus HEMS case is missing.
 - TODO at `des_hems.py:404`: helicopter benefit may be slightly overestimated; see the sharp edge above.

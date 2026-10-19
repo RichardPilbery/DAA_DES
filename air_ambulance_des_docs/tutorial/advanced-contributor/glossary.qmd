@@ -5,7 +5,7 @@ toc: false
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/glossary.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/glossary.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

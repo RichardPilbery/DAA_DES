@@ -1,0 +1,82 @@
+---
+title: "What it does"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/what-it-does.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](what-it-does.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- It is a planning simulation of Devon Air Ambulance helicopter and critical care car tasking. You change the rota, fleet, servicing plan, overall demand or job lengths, and it estimates the effect on missed jobs and on how busy each callsign is.
+- Its made-up calls are drawn from patterns in real 2023 and 2024 job records. Its results appear beside the 2023 and 2024 figures.
+- It is not a live dispatch tool. It has no locations, distances or bases, no ordinary ambulance response, no queued calls and no handovers.
+:::
+
+## The question it answers
+
+Rota and fleet changes are costly and hard to reverse. This model lets you ask "what if" on screen first. What if the critical care helicopter flew longer hours? What if an extra car were on shift? What if the servicing interval changed, or one aircraft type replaced another?
+
+It is a **simulation**: a computer model that imitates the service over time. It creates a stream of made-up calls from patterns in the real records, sends vehicles to them using its [dispatch rules](how-decisions-are-made.qmd), and writes down every step of every job. All figures are calculated from that record.
+
+It is for clinicians, operational managers and service analysts. Using it needs no programming. Refreshing the learned patterns from new job records is a separate technical task.
+
+## What you can change
+
+In [the web app](how-it-works.qmd), you can choose a ready-made scenario or upload a filled-in Excel template. The inputs will be familiar:
+
+- **The rota.** Which callsigns are on shift at which hours, with separate summer and winter hours, and the care level (critical care or enhanced care) of each shift.
+- **The fleet.** The callsign and registration list, so you can add or remove a helicopter or car.
+- **Servicing.** The servicing interval for each aircraft type, and the date of each aircraft's last service.
+- **School holidays and seasons.** The holiday dates that servicing avoids, and which months count as summer.
+- **Stage-time limits.** The allowed range for each job stage.
+- **Run settings.** The run length (default 730 days from 1 January 2023), the number of runs, a warm-up period (an initial stretch left out of the results, so the system starts from a normal busy state rather than empty; default none), an overall demand percentage (default 100%) and a job-duration multiplier (stretches or shrinks every stage time, for example 1.1 for ten per cent longer jobs; default 1.0). See the [glossary](glossary.qmd).
+
+Ready-made scenarios include:
+
+| Scenario | What changes from the default rota |
+|---|---|
+| 24 hour running | H70 and CC70 are available around the clock, all year, keeping their existing critical care and enhanced care times. |
+| 24 hour CC running | As above, but H70 and CC70 are crewed by a critical care team at all times. |
+| Extended CC Coverage | The enhanced care period for H70 and CC70 (19:00 to 02:00) becomes critical care. |
+| Two EC 145 | H71, an EC135, is replaced by a second EC145 (H145) helicopter. |
+
+Each run uses different random chances, and the results are averaged. The default is 12 runs on a local computer and 5 on the public demonstration site.
+
+## What you get back
+
+Results appear on screen in tabs. You can also download an HTML report, which needs a separate free publishing tool (Quarto) to be installed. The model also saves its step-by-step record and the settings used to the project's results folder.
+
+| Output | What it shows |
+|---|---|
+| Missed jobs | Calls where no suitable vehicle was free, overall and by care category (critical care, enhanced care, regular). |
+| Allocation comparisons | Critical care jobs sent an enhanced care resource, and helicopter-benefit jobs sent a car. |
+| Utilisation | For each callsign, the share of its rostered hours spent on jobs. |
+| Call patterns | Calls by hour, day and month. |
+| Job times and results | Time in each job stage, and the HEMS result of each job (for example stood down or conveyed). |
+| Comparison with history | The model's figures beside the real 2023 and 2024 figures. |
+
+An optional animation and further charts are also available. How to read each figure, and the common misreadings, are on [reading the results](reading-results.qmd).
+
+## A worked example
+
+The default rota has helicopter H70 and car CC70 on shift 07:00 to 19:00 as critical care, then 19:00 to 02:00 as enhanced care. H71 and CC71 run 07:00 to 19:00 in summer and 07:00 to 17:00 in winter. Car CC72 runs 08:00 to 18:00.
+
+A planner asks whether extending critical care cover would reduce missed jobs.
+
+1. They run the default rota and note the missed jobs by care category and each callsign's utilisation.
+2. They load the "Extended CC Coverage" scenario (the 19:00 to 02:00 shift for H70 and CC70 becomes critical care) and run it with the same settings, including the same master seed (the starting number that fixes the random chances).
+3. They compare the two sets of figures, and check the default run against the 2023 and 2024 comparison tab to see how well the baseline matches history.
+
+A lower missed-job figure in the second run is a reason to look closer, not proof. The figures are averages of random runs, so small differences may be within run-to-run variation. Whether a difference is large enough to act on is a judgement for the people who know the service.
+
+## What it does not model
+
+- **Locations, distances and bases.** Travel times come from past averages, not from where the incident is.
+- **Ordinary ambulance response.** Every call is treated as an air ambulance case. The alternative path is a placeholder. This is reasonable. The demand the model draws on is the demand recorded by the HEMS desk, including jobs that came in during hours when no HEMS vehicle was staffed and were reviewed afterwards. It is not an estimate of every emergency where a helicopter might have been sent, so there is no separate group of ordinary ambulance cases to model.
+- **Queued or held calls.** If nothing suitable is free when a call arrives, the call is recorded as missed.
+- **Handovers.** A job that starts near the end of a shift carries on to completion.
+- **Changes in demand by itself.** Demand follows the 2023 and 2024 patterns, scaled by one overall percentage.
+
+These and other limits are set out on [assumptions and limits](assumptions-limits.qmd). Unfamiliar terms are in the [glossary](glossary.qmd).

@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 
@@ -155,6 +155,10 @@ The app wires all of this together like so:
 **Inferred.** The state of the code suggests the refactor is unfinished. Markers say "NOT YET CONVERTED TO OO" (line 2407) and "convert to use historical class" (line 2741), and a few methods take `historical_results_obj` or `historical_data_class` as an argument instead of using `self.historical_data`. The decorator presumably exists so that one broken plot cannot take down a results page with a dozen tabs; the cost is the silent `None` behaviour above. Computing everything in `__init__` presumably trades construction time for cheap plot calls, since Streamlit reruns the script on every interaction. No commit or doc states either reason.
 
 ## Limitations and open questions {#sec-trial-results-and-historic-comparison-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
 
 TODO markers in `class_simulation_trial_results.py`:
 
