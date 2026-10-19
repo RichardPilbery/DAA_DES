@@ -87,7 +87,7 @@ def generate_quarto_report(run_quarto_check=False):
     """
     print("Trying to generate a downloadable quarto report")
     output_dir = os.path.join(os.getcwd(), "app/outputs")
-    qmd_filename = "app/air_ambulance_des_output.qmd"
+    qmd_filename = "app/air_ambulance_simulation_output.qmd"
     qmd_path = os.path.join(os.getcwd(), qmd_filename)
     print(f"Trying to find quarto template in {qmd_path}")
     html_filename = os.path.basename(qmd_filename).replace(".qmd", ".html")
