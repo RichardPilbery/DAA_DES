@@ -339,21 +339,37 @@ To update the published version of this documentation, run `quarto publish`. Ple
 
 #### Tutorials (AI-generated, then hand-edited)
 
-The tutorials in `air_ambulance_des_docs/tutorial/` are written for five audiences (Intermediate Coder, Confident Coder, Decision-makers, Domain experts and General public), one folder per audience. They were generated with the Claude Code [`codebase-tutorial`](https://github.com/Bergam0t/codebase-tutorial) plugin and then edited by hand. They are rendered with the rest of the quarto documentation (see above), but `quarto render` only rebuilds the HTML. It does not regenerate the tutorial text.
+The tutorials in `air_ambulance_des_docs/tutorial/` are written for five audiences (Intermediate Coder, Confident Coder, Decision-makers, Domain experts and General public), one folder per audience. They were generated with the Claude Code plugin [codebase-tutorial](https://github.com/Bergam0t/tutorial-codebase-knowledge-claude-code-skill) and then edited by hand. They are rendered with the rest of the quarto documentation (see above), but `quarto render` only rebuilds the HTML. It does not regenerate the tutorial text.
 
-The folder also holds the generation records the plugin uses to keep the tutorials up to date: `_generation.json` (the commit and source files each page was based on), `_outline.yaml`, `_evidence.yaml`, `_plain-outline.yaml` and `_styles/`. Do not delete these, and do not rename the audience folders, as the plugin finds each audience by its folder name.
+The folder also holds the generation records the plugin uses to keep the tutorials up to date: `_generation.json` (the commit, and a hash of the source files each page was based on), `_outline.yaml`, `_evidence.yaml`, `_plain-outline.yaml`, `_site-profile.yaml` and `_styles/`. Do not delete these, and do not rename the audience folders, as the plugin finds each audience by its folder name.
 
-To bring the tutorials up to date after the code changes, run these from the root of the repository in Claude Code:
+**Setting up the plugin** (once, inside a Claude Code session, for just this repository or for all your projects, as you prefer; it needs Python 3.9+, `git`, Quarto, and optionally the GitHub CLI `gh` for citing open issues):
 
-- `/codebase-tutorial:update` regenerates only the pages whose source files have changed.
-- `/codebase-tutorial:add-audience` adds a further audience, reusing the stored analysis.
+```
+/plugin marketplace add Bergam0t/tutorial-codebase-knowledge-claude-code-skill
+/plugin install codebase-tutorial@bergam0t
+```
 
-Check the changes with `git diff` before committing, then run `quartodoc build` and `quarto render` in `air_ambulance_des_docs` as above.
+**Checking whether the tutorials are out of date** (no AI, no cost). Run this from the root of the repository, replacing `<plugin>` with the folder where the plugin's files are located on your machine:
+
+```
+python <plugin>/skills/write/scripts/check_tutorial.py --repo . --tutorial air_ambulance_des_docs/tutorial
+```
+
+This lists which pages depend on source files that have changed since they were written, and also checks that code snippets and links are still valid.
+
+**Updating the tutorials after the code changes.** Run these from the root of the repository, in Claude Code:
+
+- `/codebase-tutorial:update tutorial=air_ambulance_des_docs/tutorial` rewrites only the pages whose source files have changed, using the options recorded when the tutorials were first generated. Add `dry_run` to see what is stale and how much work an update would involve, without changing anything. If the changes add or remove a component, the update stops and recommends a full `/codebase-tutorial:write` run instead, which would regenerate everything.
+- `/codebase-tutorial:add-audience audience=<name> tutorial=air_ambulance_des_docs/tutorial` adds a further audience (for example `stakeholder-product-owner`), reusing the stored analysis. It checks the existing pages are up to date first, and asks you to run `/codebase-tutorial:update` if they are not.
+
+Neither command commits anything. Check the changes with `git diff`, then run `quartodoc build` and `quarto render` in `air_ambulance_des_docs` as above. See the plugin's README for all the options.
 
 **Things to be aware of when regenerating:**
 
 - Regenerated pages **overwrite hand edits** to those pages. Review the diff and re-apply any edits you want to keep.
-- The audience button names ("Intermediate Coder", "Confident Coder" and so on) are not stored in the generation record. The plugin resets them to its defaults when it refreshes the audience switcher, so check the switcher and the navigation in `air_ambulance_des_docs/_quarto.yml` afterwards.
-- The pages are AI-written. Have someone who knows the model check changes to the 'Decision-makers', 'Domain experts' and 'General public' pages, particularly the statements about data, assumptions and limitations.
+- The audience button names ("Intermediate Coder", "Confident Coder" and so on) are not stored in the generation record. The plugin resets them to its defaults when it refreshes the audience switcher, so check the switcher on the pages and the navigation in `air_ambulance_des_docs/_quarto.yml` afterwards.
+- The pages are AI-written. Have someone who knows the model well check changes, particularly to the 'Decision-makers', 'Domain experts' and 'General public' pages, and particularly the statements about data, assumptions and limitations.
 
-**Warning: do not regenerate the tutorials while patient-level data is stored in `external_data/`.** Files in that folder are ignored by git, but they are still on disk, and the plugin's agents read the repository's working folder directly, so they could open and quote them. Before running either command, move any patient-level or other sensitive files out of `external_data/` (and anything else in the repository folder), and put them back afterwards. Never commit them.
+> [!WARNING]
+> **Warning: do not regenerate the tutorials while patient-level data is stored in `external_data/`.** Files in that folder are ignored by git, but they are still on disk, and the plugin's agents read the repository's working folder directly, so they could open and quote them. Before running either command, move any patient-level or other sensitive files out of `external_data/` (and anything else in the repository folder), and put them back afterwards. Never commit them.
