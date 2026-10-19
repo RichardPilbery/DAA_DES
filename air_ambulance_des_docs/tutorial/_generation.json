@@ -4,24 +4,20 @@
     "name": "codebase-tutorial",
     "version": "2.0.0"
   },
-  "generated_at": "2026-10-19T10:08:04Z",
+  "generated_at": "2026-10-19T11:04:33Z",
   "source": {
     "repo_url": "https://github.com/RichardPilbery/DAA_DES",
-    "commit": "967933d9a7774b711fe57d4ad838e50ebedde3a7",
-    "short": "967933d",
+    "commit": "5e73694f97d56092944f0b432a98759a088a9f22",
+    "short": "5e73694",
     "branch": "main",
-    "commit_date": "2026-10-19T10:22:30+01:00",
+    "commit_date": "2026-10-19T11:53:42+01:00",
     "dirty": true,
     "dirty_files": [
-      "air_ambulance_des_docs/.gitignore",
-      "air_ambulance_des_docs/_quarto.yml",
       "app/outputs/.gitkeep",
       "CLAUDE.md",
-      "air_ambulance_des_docs/_extensions/",
-      "air_ambulance_des_docs/_quarto.yml.pre-tutorial.bak",
-      "air_ambulance_des_docs/tutorial/"
+      "air_ambulance_des_docs/tutorial/_work/"
     ],
-    "commit_url": "https://github.com/RichardPilbery/DAA_DES/commit/967933d9a7774b711fe57d4ad838e50ebedde3a7"
+    "commit_url": "https://github.com/RichardPilbery/DAA_DES/commit/5e73694f97d56092944f0b432a98759a088a9f22"
   },
   "project_name": "DAA_DES",
   "mode": "integration",
@@ -41,8 +37,15 @@
     {
       "slug": "intermediate",
       "preset": "intermediate",
-      "folder": ".",
+      "folder": "intermediate",
       "kind": "chapters"
+    },
+    {
+      "slug": "advanced-contributor",
+      "preset": "advanced-contributor",
+      "folder": "advanced-contributor",
+      "kind": "chapters",
+      "structure": "tailored"
     }
   ],
   "args": {
@@ -76,7 +79,7 @@
         },
         {
           "path": "app/_app_utils.py",
-          "blob": "8d11633990a4d1c842c15d4757ca9b0542eeee05"
+          "blob": "6b832ccdaa97d7ff34a56024b0b282b2e819c9aa"
         },
         {
           "path": "app/inputs/README.md",
@@ -288,5 +291,17 @@
       "tests": []
     }
   ],
-  "pages": []
+  "pages": [],
+  "history": [
+    {
+      "at": "2026-10-19T11:24:31Z",
+      "plugin": "2.0.0",
+      "action": "audiences changed",
+      "audiences": [
+        "intermediate",
+        "advanced-contributor"
+      ],
+      "note": "added advanced-contributor (convert)"
+    }
+  ]
 }

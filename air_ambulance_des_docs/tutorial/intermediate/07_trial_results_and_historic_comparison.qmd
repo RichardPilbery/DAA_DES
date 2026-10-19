@@ -2,7 +2,15 @@
 title: "Chapter 7: Trial Results and Historic Comparison"
 description: "How SimulationInputs, TrialResults and HistoricResults turn the event log and historical data into metrics and plots."
 toc: true
+aliases:
+  - "../07_trial_results_and_historic_comparison.html"
 ---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
 
 In [Resource Allocation](06_resource_allocation.qmd) we saw how each call ends up with a primary resource, a secondary resource or, sometimes, nothing at all. Every one of those decisions has been written to the event log. This chapter is about what happens afterwards: how the replications' combined output is turned into the numbers and charts a user sees in the Streamlit app, and how those are set beside what really happened.
 
@@ -26,13 +34,13 @@ The raw material is a very long table: `data/run_results.csv`, one row per event
 **Missed job**: a call for which no resource was available to attend, recorded in the event log as a `resource_request_outcome` event whose `time_type` is `No Resource Available`.
 :::
 
-`SimulationInputs` and `TrialResults` are in the API reference ([SimulationInputs](../reference/class_simulation_inputs.SimulationInputs.qmd), [TrialResults](../reference/class_simulation_trial_results.TrialResults.qmd)). `HistoricResults` is not in the reference inventory, so it is written as `HistoricResults` here and described from the source.
+`SimulationInputs` and `TrialResults` are in the API reference ([SimulationInputs](../../reference/class_simulation_inputs.SimulationInputs.qmd), [TrialResults](../../reference/class_simulation_trial_results.TrialResults.qmd)). `HistoricResults` is not in the reference inventory, so it is written as `HistoricResults` here and described from the source.
 
 ## How the app wires the three together {#sec-trial-results-and-historic-comparison-wiring}
 
 Once the runs have finished and `collateRunResults()` has written `data/run_results.csv`, the model page builds the three objects in order. `TrialResults` receives the other two as arguments.
 
-```{.python include="../../app/model.py" start-line=245 end-line=274 filename="app/model.py:245-274" code-line-style="hi:2-4,10-15,19-24" include-hash="53ffd3913c3d"}
+```{.python include="../../../app/model.py" start-line=245 end-line=274 filename="app/model.py:245-274" code-line-style="hi:2-4,10-15,19-24" include-hash="53ffd3913c3d"}
 ```
 
 The highlighted lines are the three constructions. Two details are worth noticing:
@@ -44,7 +52,7 @@ The highlighted lines are the three constructions. Two details are worth noticin
 
 Results depend on the inputs that produced them, and the user may have edited the rota CSVs on the setup page ([Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd)). `SimulationInputs` simply loads the five files into DataFrames so that `TrialResults` can read them later.
 
-```{.python include="../../air_ambulance_des/class_simulation_inputs.py" start-line=5 end-line=22 filename="air_ambulance_des/class_simulation_inputs.py:5-22" code-line-style="hi:6-12" include-hash="8d4a36a4195a"}
+```{.python include="../../../air_ambulance_des/class_simulation_inputs.py" start-line=5 end-line=22 filename="air_ambulance_des/class_simulation_inputs.py:5-22" code-line-style="hi:6-12" include-hash="8d4a36a4195a"}
 ```
 
 Run parameters (`run_params_used.csv`, written by `write_run_params()`) and servicing dates come from the `data/` folder, because they are outputs of the run. The rota, callsign lookup and rota start/end months come from `actual_data/`, which is where the setup page writes them (see [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd) for how the model reads the same files). The highlighted lines show that split: lines 6 and 8 use the `data/` folder, the others use `actual_data/`. The class has no methods of its own beyond `__init__`; it is a plain bundle of DataFrames.
@@ -53,7 +61,7 @@ Run parameters (`run_params_used.csv`, written by `write_run_params()`) and serv
 
 `SimulationInputs`, `TrialResults` and `HistoricResults` are all decorated with `@graceful_methods`, from `air_ambulance_des/_processing_functions.py`. A results page calls hundreds of plotting methods; one failing on an unusual scenario should not blank the whole page.
 
-```{.python include="../../air_ambulance_des/_processing_functions.py" start-line=40 end-line=74 filename="air_ambulance_des/_processing_functions.py:40-74" code-line-style="hi:7,13,25-27,29,30" include-hash="b33d253be733"}
+```{.python include="../../../air_ambulance_des/_processing_functions.py" start-line=40 end-line=74 filename="air_ambulance_des/_processing_functions.py:40-74" code-line-style="hi:7,13,25-27,29,30" include-hash="b33d253be733"}
 ```
 
 The decorator walks the class `__dict__` and replaces every callable whose name does not start with two underscores with a wrapper that catches any `Exception`. Inside Streamlit the wrapper shows an `st.error` box naming the method; outside Streamlit it prints. In both cases it then returns `None`.
@@ -64,7 +72,7 @@ That last point matters when you read or debug the code. `__init__` itself is sk
 
 `TrialResults` does most of its work in the constructor. It stores the arguments, creates empty placeholder attributes, and then calls a fixed sequence of methods that fill the placeholders, in three stages: preparing the log, counting calls, and working out utilisation. The next subsections cover the calls, available-hours and utilisation steps; the others are plumbing. The `get_*` and `PLOT_*` methods used by the app afterwards mostly just slice and plot those ready-made tables.
 
-```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=197 end-line=231 filename="air_ambulance_des/class_simulation_trial_results.py:197-231" code-line-style="hi:2,4,6,8,10,12-13,15,17,32,34-35" include-hash="e419bac16006"}
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=197 end-line=231 filename="air_ambulance_des/class_simulation_trial_results.py:197-231" code-line-style="hi:2,4,6,8,10,12-13,15,17,32,34-35" include-hash="e419bac16006"}
 ```
 
 Reading down the highlighted calls:
@@ -100,7 +108,7 @@ flowchart LR
 
 The event log has many rows per patient: arrival, resource request, mobile, on scene and so on. Details such as `hems_result`, `outcome`, `vehicle_type` and `callsign` are only known at a later stage, so they are blank on the arrival row. `make_job_count_df()` back-fills them within each `(P_ID, run_number)` group, then keeps only the arrival rows.
 
-```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=604 end-line=631 filename="air_ambulance_des/class_simulation_trial_results.py:604-631" code-line-style="hi:1-3,24-26" include-hash="b35f9f960544"}
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=604 end-line=631 filename="air_ambulance_des/class_simulation_trial_results.py:604-631" code-line-style="hi:1-3,24-26" include-hash="b35f9f960544"}
 ```
 
 `bfill()` fills each blank from the next non-blank value in the same group, so the arrival row ends up carrying the final outcome. Rows with `time_type == "arrival"` become `call_df`, which is also saved to `data/call_df.csv`. A patient who never got a resource keeps an empty `callsign`, and that emptiness is what `get_UNATTENDED_calls_per_run()` counts.
@@ -109,7 +117,7 @@ The event log has many rows per patient: arrival, resource request, mobile, on s
 
 Utilisation is "time in use divided by time it could have been in use", so the model needs a denominator. `calculate_available_hours()` builds it from the rota rather than from the event log. For every day between the end of the warm-up period and the end of the simulation, and for every callsign, it works out how many minutes the rota says that resource is on shift, using summer or winter hours depending on the month.
 
-```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=328 end-line=368 filename="air_ambulance_des/class_simulation_trial_results.py:328-368" code-line-style="hi:9-10,18-20,23-35" include-hash="06ad2ee1382f"}
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=328 end-line=368 filename="air_ambulance_des/class_simulation_trial_results.py:328-368" code-line-style="hi:9-10,18-20,23-35" include-hash="06ad2ee1382f"}
 ```
 
 A shift that stays within one day contributes `(end - start) * 60` minutes. A shift that crosses midnight contributes the evening part to today and adds the morning part (`end_hour * 60`) to tomorrow's total, if tomorrow is inside the date range.
@@ -122,7 +130,7 @@ The method also writes three CSV files that the app reads back, with a consequen
 
 `make_utilisation_model_dataframe()` pivots the `resource_use` and `resource_use_end` events into one row per call, with a start and end timestamp. Missing ends are filled with the simulation end date (the call was still running when the model stopped) and missing starts with the end of the warm-up. Durations are then summed and divided by the available minutes.
 
-```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=491 end-line=506 filename="air_ambulance_des/class_simulation_trial_results.py:491-506" code-line-style="hi:1-3,6-8,11-14" include-hash="5973c854db0f"}
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=491 end-line=506 filename="air_ambulance_des/class_simulation_trial_results.py:491-506" code-line-style="hi:1-3,6-8,11-14" include-hash="5973c854db0f"}
 ```
 
 `utilisation_df_per_run` has a row per run, vehicle and callsign. The same pattern, summed across runs and divided by `n_runs`, gives `utilisation_df_overall`, which is what the headline figures use. A third table groups by callsign group, where a helicopter and its backup car share an identifier (see [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd)).
@@ -133,7 +141,7 @@ Methods such as `make_SIMULATION_utilisation_headline_figure()` filter `utilisat
 
 A missed job is counted from `resource_request_outcome` rows, the ones written by the allocation code in [Resource Allocation](06_resource_allocation.qmd). `get_perc_unattended_string_normalised()` is the version the summary page uses: it scales counts to a per-year figure so that scenarios of different lengths are comparable.
 
-```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=2304 end-line=2322 filename="air_ambulance_des/class_simulation_trial_results.py:2304-2322" code-line-style="hi:11-15,16-19" include-hash="cd8fdf7a3c83"}
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=2304 end-line=2322 filename="air_ambulance_des/class_simulation_trial_results.py:2304-2322" code-line-style="hi:11-15,16-19" include-hash="cd8fdf7a3c83"}
 ```
 
 Dividing the totals by `n_runs` gives an average per replication, and dividing by `sim_duration_days` then multiplying by 365 turns that into a yearly rate. The method returns a three-item tuple: the yearly call volume, a short "x of y (z%)" string, and an explanatory sentence. On any error it returns `(2500, "Error", "Error")`, so a wrong-looking `2500` is a clue that the `try` block failed.
@@ -188,7 +196,7 @@ A few observations from reading the code, useful if you are extending it:
 
 - **Silent failures.** Because of `graceful_methods`, a bug in a rarely used method returns `None`. For example, `get_AVERAGE_calls_per_run()` calls `self.get_calls_per_run(self.call_df)`, but `get_calls_per_run()` takes no argument, so the call raises a `TypeError`, which the wrapper turns into a printed message and a `None`.
 
-  ```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=656 end-line=667 filename="air_ambulance_des/class_simulation_trial_results.py:656-667" include-hash="4e6bd12b1f50"}
+  ```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=656 end-line=667 filename="air_ambulance_des/class_simulation_trial_results.py:656-667" include-hash="4e6bd12b1f50"}
   ```
 
   The same pattern appears in `get_AVERAGE_UNATTENDED_calls_per_run()`. The summary page uses the `get_perc_unattended_*` methods instead, so this does not affect the main figures.
@@ -200,7 +208,7 @@ At the end, `calculate_available_hours()` writes `data/daily_availability.csv`, 
 
 The effect is limited. The utilisation maths uses `total_avail_minutes`, which is computed fresh inside the constructor. Only `PLOT_daily_availability()` draws from the argument that was passed in, so that one plot can show the previous scenario's rota hours.
 
-```{.python include="../../air_ambulance_des/class_simulation_trial_results.py" start-line=4360 end-line=4366 filename="air_ambulance_des/class_simulation_trial_results.py:4360-4366" include-hash="c5c681cadb12"}
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=4360 end-line=4366 filename="air_ambulance_des/class_simulation_trial_results.py:4360-4366" include-hash="c5c681cadb12"}
 ```
 :::
 

@@ -1,0 +1,176 @@
+---
+title: "Chapter 8: Distribution Fitting"
+description: "The offline pipeline that turns a job-level historical extract into the distribution_data and historical_data files the simulation and the results pages read."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/08_distribution_fitting.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](08_distribution_fitting.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+[Chapter 7](07_trial_results_and_historic_comparison.qmd) read `historical_data/` as if it had always been there. This chapter is about the script that writes it.
+
+## What it is {#sec-distribution-fitting-what-it-is}
+
+[`DistributionFitUtils`](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) is an offline batch pipeline. It takes one input, a cleaned job-level CSV (one row per historical HEMS job), and writes two kinds of output:
+
+- `distribution_data/`: fitted distributions and probability tables that the simulation samples from. They are loaded once by `Utils` (see [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd)).
+- `historical_data/`: aggregated observed totals, which [`TrialResults`](07_trial_results_and_historic_comparison.qmd) and the historic comparison pages plot against simulated output.
+
+It is not part of a simulation run. Nothing in `DES_HEMS` calls it; the app and the replications only ever read what it last wrote. You run it when you have new historical data (the concrete use case: refitting after a new year of jobs arrives), and the entry point is the five-line script `run_dist_fit_utils.py`.
+
+The contract callers rely on:
+
+- **Input**: a CSV with the columns the methods index into directly (`inc_date`, `ampds_card`, `vehicle_type`, `hems_result`, `time_*` and so on). Nothing validates them.
+- **Output**: files at fixed relative paths. Names and column layouts are an API, because `Utils` reads them by name.
+- **Side effects**: it deletes everything in both output folders first, and a few methods also write to `actual_data/`.
+
+```{mermaid}
+%%| label: fig-distribution-fitting-flow
+%%| fig-cap: "Where DistributionFitUtils sits: it feeds the files the model and results pages read"
+flowchart LR
+    raw["external_data/ job-level CSV"] --> dfu["DistributionFitUtils"]
+    adhoc["external_data/ad_hoc.csv"] --> dfu
+    bounds["actual_data/upper_allowable_time_bounds.csv"] --> dfu
+    dfu --> dist["distribution_data/"]
+    dfu --> hist["historical_data/"]
+    dfu --> sh["actual_data/school_holidays.csv"]
+    dist --> utils["Utils (sampling)"]
+    hist --> tr["TrialResults / HistoricResults"]
+    dfu -. "run_sim_on_historical_params" .-> sim["parallelProcessJoblib"]
+```
+
+## How it works {#sec-distribution-fitting-how-it-works}
+
+### The entry point
+
+The whole script is a constructor call and two method calls.
+
+```{.python include="../../../run_dist_fit_utils.py" start-line=1 end-line=10 filename="run_dist_fit_utils.py:1-10" code-line-style="focus:9-10" include-hash="a16d54cb319d"}
+```
+
+Paths are relative to the current working directory, so run it from the repo root. The input filename is hard-coded; edit the script to point at a different extract.
+
+### Importing and sequencing
+
+`import_and_wrangle()` is the orchestrator. It loads the CSV, derives time columns (`hour`, `day_of_week`, `month`, `quarter`, `first_day_of_month`), reads the manual time bounds, wipes the output folders, and then calls one method per output file in a fixed order.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=204 end-line=232 filename="air_ambulance_des/distribution_fit_utils.py:204-232" code-line-style="focus:9-10" include-hash="6cfe3ce87da0"}
+```
+
+The `removeExistingResults` calls delete every `*.*` file directly in those folders. If a later method crashes, you are left with a half-populated `distribution_data/` and the simulation will fail to load. After that block come the probability tables (enhanced and critical care, HEMS result, callsign group, vehicle type, patient outcome), then `school_holidays()` if requested, then the `historical_*` family, then `ad_hoc_unavailability(...)`.
+
+Several methods are commented out under "ARCHIVED CODE" banners, and `vehicle_type_probs` is commented out of the sequence even though a method of that name still exists. Commit `899dbe2` ("Archive some distribution data that is no longer in use") is probably related to these banners (inferred; the commit message talks about data, not code).
+
+### Picking a best-fit distribution
+
+All continuous fitting goes through one helper.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=142 end-line=163 filename="air_ambulance_des/distribution_fit_utils.py:142-163" code-line-style="hi:14,hi:20" include-hash="e6e5b28d3ec4"}
+```
+
+`Fitter` is the class from the third-party `fitter` package (`from fitter import Fitter, get_common_distributions`, line 10 of `distribution_fit_utils.py`), so its error measure and distribution names are that package's. It tries each candidate, ranks them by its default error measure, and `get_best()` returns a one-entry dict mapping the scipy distribution name to its parameters. An empty series returns `{}`, which is written to disk as-is, so a stratum with no data produces an empty fit rather than an error. The `TODO` at line 149 records that nobody has pinned down exactly how `Fitter` ranks candidates.
+
+Callers pass `self.sim_tools_distr_plus`, a hard-coded list of 20 names set in `__init__` (lines 104-125). The comment there says it was hard-coded on 16-04-2025 "to make setup for random number generation more robust", and the `get_common_distributions()` default in the signature (also from `fitter`) is now effectively unused. Inference: the list is restricted to distributions that the sampling code in [chapter 3](03_sampling_distributions_and_random_streams.qmd) knows how to construct, since a fitted name the sampler can't build would only fail at run time.
+
+### Stratified time fits
+
+`activity_time_distributions()` is the main use of `getBestFit`. It loops over HEMS result, time type and vehicle type, filters to the allowed range from `actual_data/upper_allowable_time_bounds.csv`, and fits.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=376 end-line=416 filename="air_ambulance_des/distribution_fit_utils.py:376-416" code-line-style="focus:11-26" include-hash="a521624025fe"}
+```
+
+The `time_on_scene` branch drops the `hems_result` filter, because there is almost no data for results other than "conveyed" (the comment at lines 387-389 says so). Every other time is stratified by result and vehicle type. Each record carries `n`, the sample size, which is the only signal downstream of how thin a stratum was. The list is dumped as JSON text into `activity_time_distributions.txt`, and `Utils` reads it back with `ast.literal_eval` (`air_ambulance_des/utils.py:142-154`), so the file must remain a Python-literal-compatible structure.
+
+### Call volumes and arrival hours
+
+Daily call counts are fitted per season and per quarter in `incidents_per_day()`, with year weights applied by repeating rows.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=517 end-line=521 filename="air_ambulance_des/distribution_fit_utils.py:517-521" code-line-style="hi:4" include-hash="17d37e9a1c41"}
+```
+
+`incidents_per_day_samples()` builds a second, empirical version of the same data (a list of daily counts per season and `Q1`-`Q4`), and uses different default weights.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=612 end-line=614 filename="air_ambulance_des/distribution_fit_utils.py:612-614" code-line-style="hi:3" include-hash="40204f8d3d4c"}
+```
+
+The two methods therefore weight 2024 differently (4.0 against 1.1), and both hard-code the years 2023 and 2024. See the sharp edges below.
+
+Hourly arrivals are the simplest kind of output: a group-by, a proportion within each quarter, and a CSV.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=863 end-line=873 filename="air_ambulance_des/distribution_fit_utils.py:863-873" code-line-style="focus:5-6" include-hash="224910e226f8"}
+```
+
+Most of the `*_probs` methods follow this shape: count, divide by a stratum total, round, write. The rounding (3 or 4 decimal places) is applied to the stored proportions, so rows may not sum to exactly 1.
+
+### Callsign group and ad hoc unavailability
+
+Two methods are not simple counts. `callsign_group()` first removes overlapping jobs (any job that starts before an earlier job's computed end time, using the sum of the `time_*` columns) and then removes jobs that fall inside ad hoc downtime read from `external_data/ad_hoc.csv`, so the probabilities reflect choices made when everything was available. Commits `7fa1a27` and `5cdd3b8` document this: the first computes callsign probabilities without care category stratification from instances with no other resource tasked, the second removes jobs allocated during ad hoc unavailability. The overlap check is a nested loop over every job, which is the slowest non-fitting step.
+
+`ad_hoc_unavailability(period_start, period_end)` joins the rota to the callsign lookup, splits shifts into four six-hour bands, and writes per-aircraft, per-band, per-quarter, per-reason probabilities to `distribution_data/ad_hoc_unavailability.csv`. This is what the [resource allocation](06_resource_allocation.qmd) code samples from when it decides an aircraft was unexpectedly off. The call in `import_and_wrangle` hard-codes the period 2022-08-01 to 2024-07-31.
+
+### The historical baseline run
+
+The last method is different in kind: it runs the simulation.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=2712 end-line=2730 filename="air_ambulance_des/distribution_fit_utils.py:2712-2730" code-line-style="focus:4-5,15" include-hash="9d2e86919ec8"}
+```
+
+Before this block (lines 2692-2710) it overwrites the live `actual_data/` rota, callsign lookup, service history and service schedule files with the `tests/rotas_historic/HISTORIC_*` versions. It then runs 30 replications of two simulated years through [`parallelProcessJoblib`](../../reference/des_parallel_process.parallelProcessJoblib.qmd) with no warm-up and `amb_data=False`, and collates the results (see [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd)). The remainder summarises how often a sub-optimal care category or vehicle type was sent, as mean/min/max across runs, into `historical_data/calculated/SIM_hist_params_suboptimal_*_summary.csv`. Those are the files the historic comparison in [chapter 7](07_trial_results_and_historic_comparison.qmd) reads for the "what historic rotas would have done" baseline. The commit "Summarised data used for calculating suboptimal resource allocation" (`2540486`) is the documented origin.
+
+## Extending this {#sec-distribution-fitting-extending-this}
+
+There are no automated tests for this module. `tests/` has no file that exercises `DistributionFitUtils`. The nearest checks are indirect: `tests/test_backtest.py` and `tests/test_against_reality.py` run the simulation on whatever distribution files are present, so a bad refit shows up there rather than here. See `tests/README.md` for the pytest commands. Treat any change here as untested and compare the regenerated files by hand (a `git diff` on `distribution_data/` is the practical check).
+
+Typical changes:
+
+- **Add a new probability table.** Write a method that follows the count/divide/round/write shape of `hourly_arrival_by_qtr_probs`, call it from `import_and_wrangle` before the `historical_*` block, then add a read for the new file in `Utils.__init__` (`air_ambulance_des/utils.py`, alongside lines 80-175) and use it in the sampling code. The pipeline wipes the folder, so a table that nothing writes simply vanishes on the next refit.
+- **Add a new activity time or HEMS result.** Add an entry to `self.times_to_fit` in `__init__` (lines 55-102). Make sure `upper_allowable_time_bounds.csv` has a row for that time (the lookup uses `.iloc[0]` and raises `IndexError` if it is missing), and that the simulation code in `des_hems.py` consumes the new key.
+- **Allow another distribution.** Add its name to `sim_tools_distr_plus` (lines 104-125), and check that the sampling side can construct it.
+- **Add an aggregated historical output.** Add a `historical_*` method, call it in the block at lines 285-296, and read the file from `TrialResults` or `HistoricResults`. Document the columns in `historical_data/README.md`.
+- **Change the data source.** Edit `run_dist_fit_utils.py`, and the hard-coded `external_data/ad_hoc.csv` and the ad hoc period in `import_and_wrangle`.
+
+Conventions: output paths are plain strings relative to the repo root (not `Utils.DISTRIBUTION_FOLDER`, though the wipe step uses the `Utils` constants), CSV writes use `mode="w+"`, and fitted distributions are written as JSON text files with a `.txt` extension.
+
+To run it, from the repo root: `python run_dist_fit_utils.py`. The README says the required input format is not currently documented, and that the committed `distribution_data/` lets the rest of the app run without raw data.
+
+## Sharp edges {#sec-distribution-fitting-sharp-edges}
+
+- **Destructive and non-atomic.** Both output folders are emptied before anything is written (lines 212-213). A failure mid-run leaves partial output. Commit the folders before refitting so you can restore them.
+- **Overwrites live inputs.** `run_sim_on_historical_params` replaces four files in `actual_data/` with the historic versions. Any rota edited through the app is lost. `school_holidays()` also rewrites `actual_data/school_holidays.csv`.
+- **Hard-coded years and periods.** `incidents_per_day` and `incidents_per_day_samples` only weight 2023 and 2024; other years get weight 1.0 through `.fillna(1.0)`. The ad hoc period is fixed in `import_and_wrangle`.
+- **Inconsistent weights.** `incidents_per_day` uses 4.0 for 2024 with a comment that says "10% more weight". The sampling version uses 1.1. The comment and the number disagree and the two methods differ. Which is intended is not documented, so confirm with the maintainers before changing either. In `incidents_per_day` 2024 rows are repeated 40 times against 10 for 2023 (weight x 10, rounded).
+- **Silent data problems.** Missing file handling in `import_and_wrangle` prints a message and then carries on to index an empty DataFrame, which raises a `KeyError` on `inc_date`. The TODO at line 172 notes that there is no column checking at all. Empty strata give `{}` fits, not errors.
+- **Relative paths.** Reads and writes assume the repo root as the working directory. The module imports `Utils` and `des_parallel_process` as top-level modules (`from utils import Utils`). This works only because importing the `air_ambulance_des` package runs `sys.path.append(...)` in `class_simulation_trial_results.py:98`; importing the module standalone from another directory would fail.
+- **Fitting cost.** `Fitter` is given `timeout=60` per call and `activity_time_distributions` makes one call for every combination of result, time type and vehicle type, so a full run is slow. Parallelising the fits is the obvious improvement, but nothing has been done on it.
+- **Unused helpers.** `upper_allowable_time_bounds()` only prints a quartile table and writes nothing; the bounds are read from the CSV instead. The comment at lines 199-203 explains that this is so values can be edited in the front end (documented in the code comment).
+
+## Design notes {#sec-distribution-fitting-design-notes}
+
+- **Offline and file-based.** Documented (`README.md`): the committed `distribution_data/` lets the app run without raw job-level data. Inferred: this is why the pipeline is kept out of `DES_HEMS`, which simply reads plain CSV and JSON-text files.
+- **Probability tables are stratified by what the model samples (inferred).** Each table's grouping keys match the lookups made during a patient journey, for example quarter and hour for arrival, AMPDS card for care category.
+- **Callsign group probabilities are deliberately conditioned (documented).** Commits `7fa1a27` and `5cdd3b8` explain removal of stratification, overlapping jobs and ad hoc downtime. Helicopter benefit is calculated per care category (commit `0915eaa`).
+- **Time bounds moved to a manual CSV.** Documented (code comment, lines 199-203): this replaces an upper-quartile rule so values can be edited in the front end. Documented (commit `387af74`): whole rows are no longer dropped when a single time is missing. Nothing states why a CSV rather than a setting was chosen.
+- **A baseline run lives here (inferred).** It needs the freshly fitted files and the historic rotas, and it is only meaningful just after a refit, which is presumably why it sits beside the fitting rather than in the app.
+
+## Limitations and open questions {#sec-distribution-fitting-limitations}
+
+The `TODO` markers in the module:
+
+- `distribution_fit_utils.py:20`: "Important fix for rerunning with new input data" (a commented-out visualisation import).
+- `:149`: determine how `Fitter` works out the best fit.
+- `:172`: add logic to check the imported CSV.
+- `:313`: whether the AMPDS card by hour table should also be stratified by quarter.
+- `:985` (repeated at `:1165`): remove jobs where a helicopter is known to be off for servicing.
+- `:1254`: the probability calculation functions could probably be refactored into one.
+- `:2737`: save the parameters used for the historical run.
+
+Related open issues, as of 2026-10-19: [#187](https://github.com/RichardPilbery/DAA_DES/issues/187) (car/helicopter split within callsign groups), [#205](https://github.com/RichardPilbery/DAA_DES/issues/205) (assumed share of REG jobs with a helicopter benefit) and [#165](https://github.com/RichardPilbery/DAA_DES/issues/165) (discrepancies between simulated and historical metrics).
+
+Check the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state.
+
+## Conclusion
+
+Nothing follows this chapter. If you changed an output file here, check the consumers in [Chapter 3](03_sampling_distributions_and_random_streams.qmd) and [Chapter 7](07_trial_results_and_historic_comparison.qmd); the [glossary](glossary.qmd) covers the shared terms.

@@ -1,0 +1,174 @@
+---
+title: "Chapter 7: Trial Results and Historic Comparison"
+description: "How SimulationInputs, TrialResults and HistoricResults turn the event log and the historical data files into metrics and plots, and where that code is fragile."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](07_trial_results_and_historic_comparison.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+[Resource Allocation](06_resource_allocation.qmd) ended with the event log recording who was sent to each call, or that nobody was. This chapter covers what reads that log afterwards.
+
+## What it is {#sec-trial-results-and-historic-comparison-what-it-is}
+
+Three classes in `air_ambulance_des/` turn files on disk into numbers and Plotly figures. [`SimulationInputs`](../../reference/class_simulation_inputs.SimulationInputs.qmd) loads the parameters, rota, servicing and callsign files that the run used. [`TrialResults`](../../reference/class_simulation_trial_results.TrialResults.qmd) takes the combined event log (`data/run_results.csv`, see [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd)) and does all its derivation in the constructor. `HistoricResults` loads the aggregated files in `historical_data/` plus a pre-computed simulated baseline that uses historic rotas. All three are wrapped by `graceful_methods`, which swallows exceptions.
+
+Callers can rely on this much, and no more: construct `TrialResults(...)` once with the run's `run_results` frame and every derived DataFrame attribute exists afterwards (`call_df`, `utilisation_df_overall`, `missed_jobs_per_run_care_cat_summary`, and so on), possibly as `None` if its step failed (see `graceful_methods` below). Plot methods return a Plotly figure or `None`. The `PLOT_*`, `get_*` and `display_*` methods read from those attributes. The main caller is the results page in `app/model.py`, which uses it to show missed jobs, utilisation and comparisons with history (@fig-trial-results-flow). Nothing here feeds back into the simulation.
+
+```{mermaid}
+%%| label: fig-trial-results-flow
+%%| fig-cap: "Files in, objects in the middle, figures out"
+flowchart LR
+  RR[data/run_results.csv] --> TR[TrialResults]
+  RP[data/run_params_used.csv<br>actual_data rota files] --> SI[SimulationInputs]
+  SI --> TR
+  DA[data/daily_availability.csv] --> TR
+  HD[historical_data/ and<br>tests/rotas_historic] --> HR[HistoricResults]
+  HR -->|passed into plot methods| TR
+  TR --> APP[app/model.py tabs and report]
+  HR --> APP
+```
+
+The use case I will follow throughout is the "Missed Jobs" and utilisation panels: what fraction of calls found no resource (for example, `get_perc_unattended_string_normalised` returns a string such as `"2 of 480 (< 0.1%)"` when the fraction is under 1%), and how busy each callsign was compared with history.
+
+## How it works {#sec-trial-results-and-historic-comparison-how-it-works}
+
+### The error-swallowing decorator
+
+Everything below sits under `graceful_methods`, so read this first.
+
+```{.python include="../../../air_ambulance_des/_processing_functions.py" start-line=40 end-line=74 filename="air_ambulance_des/_processing_functions.py:40-74" code-line-style="hi:5-6,focus:9-21" include-hash="b33d253be733"}
+```
+
+It rebinds every callable in `cls.__dict__` whose name does not start with `__`. Any exception becomes either `st.error(...)` (if `streamlit.runtime.exists()`) or a `print`, and the method returns `None`. Three consequences that matter when you debug:
+
+- `__init__` is **not** wrapped (it starts with `__`), but every method it calls is. A failing step in a constructor therefore leaves the attribute at its `None` placeholder and carries on.
+- The wrapper is not decorated with `functools.wraps`, so wrapped methods lose their docstrings and `__name__` (the name in the message comes from the closure variable `fn`).
+- There is no traceback in this variant. The sibling `graceful` function in the same file does print one, but it is not applied to these classes.
+
+### SimulationInputs
+
+```{.python include="../../../air_ambulance_des/class_simulation_inputs.py" start-line=5 end-line=22 filename="air_ambulance_des/class_simulation_inputs.py:5-22" code-line-style="hi:10-13" include-hash="8d4a36a4195a"}
+```
+
+It is a bag of five DataFrames. Note the split: the parameters and `service_dates.csv` come from `data_folder_path` (outputs of the run), whereas the rota, callsign lookup and rota month bounds come from `actual_data_folder_path` (inputs, see [Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd)). Because `__init__` is unwrapped, a missing file raises `FileNotFoundError` straight out.
+
+### TrialResults: the constructor is the pipeline
+
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=197 end-line=231 filename="air_ambulance_des/class_simulation_trial_results.py:197-231" code-line-style="focus:2-11" include-hash="e419bac16006"}
+```
+
+The order matters because each step reads attributes set by an earlier one. `make_job_count_df` needs `enhance_run_results`; `make_utilisation_model_dataframe` needs `total_avail_minutes` from `calculate_available_hours`. Nothing enforces this.
+
+`make_job_count_df` collapses the event log to one row per patient per run. Since `hems_result`, `outcome`, `vehicle_type`, `callsign` and `registration` are only filled on later events (see [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd)), it back-fills them within each `(P_ID, run_number)` group and then keeps only the `arrival` row:
+
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=621 end-line=631 filename="air_ambulance_des/class_simulation_trial_results.py:621-631" code-line-style="hi:7-8" include-hash="ff3c4121c8b9"}
+```
+
+A call with no resource has no callsign anywhere in its rows, so the back-fill leaves NaN. `get_UNATTENDED_calls_per_run` relies on that, and the TODO above flags the open question of what to do with these NaNs. Note the side effect: `call_df` is written to `data/call_df.csv`, a path relative to the current working directory.
+
+### Theoretical available hours: the utilisation denominator
+
+Utilisation is time in use divided by time the resource was rostered. `calculate_available_hours` builds the denominator by walking every day from `warm_up_end_date` to `sim_end_date` and adding each rota line's minutes, using the summer or winter columns depending on the month bounds from `rota_start_end_months.csv`.
+
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=345 end-line=368 filename="air_ambulance_des/class_simulation_trial_results.py:345-368" dedent=8 code-line-style="focus:7-16" include-hash="f4411acb06fa"}
+```
+
+An overnight shift (start after end) credits `24 - start` hours to today and `end` hours to the next day, which is why the loop indexes `date_idx + 1`. The final day's overnight spill is dropped. Equal start and end hours credit zero minutes.
+
+The docstring says servicing is taken into account, and `service_df` is loaded and merged with the callsign lookup, but a search of the method finds no later use of it: the minutes are computed from the rota alone. Treat the denominator as "rostered minutes", not "rostered minus servicing".
+
+The method then writes three files as side effects (`data/daily_availability.csv`, `data/monthly_availability.csv`, `data/daily_availability_summary.csv`), again relative to the working directory.
+
+### Utilisation
+
+`make_utilisation_model_dataframe` pivots the `resource_use` and `resource_use_end` events to one row per use, fills missing ends with the sim end date and missing starts with the warm-up end, then sums minutes per callsign.
+
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=563 end-line=580 filename="air_ambulance_des/class_simulation_trial_results.py:563-580" dedent=8 code-line-style="hi:5-7,hi:12-14" include-hash="f0ef853a79a7"}
+```
+
+Per-run durations are summed over runs, divided by `n_runs`, then divided by the single-run availability. The code comment elsewhere says availability is assumed identical across runs, which holds because the rota is fixed for a trial.
+
+### Missed jobs
+
+Missed jobs are defined by `event_type == "resource_request_outcome"` rows whose `time_type` is `"No Resource Available"`. The normalised string annualises both counts using `sim_duration_days`:
+
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=2304 end-line=2322 filename="air_ambulance_des/class_simulation_trial_results.py:2304-2322" dedent=8 code-line-style="focus:10-19" include-hash="cd8fdf7a3c83"}
+```
+
+`get_missed_call_df` does the same grouped by `care_cat` and `time_type`, recoding `REG` with `heli_benefit == "y"` to `"REG - Helicopter Benefit"`, and produces the per-run breakdown and the min/mean/max summary the plots use. There is also a second, older route, `get_UNATTENDED_calls_per_run`, that counts NaN callsigns instead. The two should agree but are computed from different columns.
+
+### Comparing with history
+
+`HistoricResults.__init__` is a long run of "set `None`, then call the loader" pairs, each loader a `pd.read_csv` on `historical_data/<name>.csv` or `historical_data/calculated/<name>.csv`. The `calculated/` files are the simulated baseline produced by the offline pipeline in [Distribution Fitting](08_distribution_fitting.qmd). The constructor comment explains the purpose: some quantities (such as patients who would have benefited from enhanced care but did not get it) cannot be observed, so they are simulated with historic rotas.
+
+```{.python include="../../../air_ambulance_des/class_historic_results.py" start-line=73 end-line=94 filename="air_ambulance_des/class_historic_results.py:73-94" code-line-style="hi:4-5,hi:15-17" include-hash="e8ebe9733c8c"}
+```
+
+`TrialResults` never imports `HistoricResults`. The historical object is passed into the plot method that needs it, which then reaches into its attributes:
+
+```{.python include="../../../air_ambulance_des/class_simulation_trial_results.py" start-line=2649 end-line=2660 filename="air_ambulance_des/class_simulation_trial_results.py:2649-2660" dedent=8 code-line-style="hi:3-5" include-hash="63ee01631366"}
+```
+
+`PLOT_SIMULATION_utilisation_summary` draws the simulated bars, then, for each callsign that also appears in `historical_utilisation_df_summary`, overlays a min-to-max rectangle and a dotted mean line. That summary is built in `make_RWC_utilisation_dataframe` (RWC is not expanded anywhere in the code; it presumably means "real-world comparison", i.e. built from historic data), which recomputes theoretical availability per month from the historic rota files in the same way as above.
+
+The app wires all of this together like so:
+
+```{.python include="../../../app/model.py" start-line=245 end-line=275 filename="app/model.py:245-275" dedent=8 code-line-style="hi:21-26" include-hash="9c7ccd931a98"}
+```
+
+## Extending this {#sec-trial-results-and-historic-comparison-extending-this}
+
+**Add a metric or plot.** Add a method to `TrialResults` (it is wrapped automatically, since the decorator walks `cls.__dict__`). If it needs a derived table, build it in a `make_*`/`get_*` method and call that from the constructor sequence at lines 197-231, after anything it reads. Name plot methods `PLOT_*` and text/Streamlit helpers `display_*` or `get_*` to match the convention. Then call it from the relevant tab in `app/model.py`.
+
+**Add a historical comparison.** Add a `get_historical_<name>` loader to `HistoricResults`, initialise the attribute to `None` in `__init__` just before calling it, and make sure the CSV is written by `DistributionFitUtils` (the `historical_*` methods, see [Distribution Fitting](08_distribution_fitting.qmd)). If you add a `calculated/` file it must also be produced by `run_sim_on_historical_params`. Pass the `HistoricResults` instance into your plot method as the existing plots do.
+
+**Add an input file to SimulationInputs.** Add the path and `pd.read_csv` in `__init__`, and make sure whichever stage writes it (the run in [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd) or the setup page) does so before the results page runs.
+
+**Change what counts as a missed job.** The definition is repeated: `get_perc_unattended_string`, `get_perc_unattended_string_normalised`, `get_missed_call_df`, `get_UNATTENDED_calls_per_run` and the historical equivalents all filter independently. Change them together, and check the event strings against those emitted in [Resource Allocation](06_resource_allocation.qmd).
+
+**Tests.** This abstraction has no tests. None of `tests/` imports `TrialResults`, `HistoricResults` or `SimulationInputs`. The repo documents `pytest` from the project root (and `pytest -m <marker>` for subsets; see `tests/README.md`), which will at least confirm the simulation still produces an event log these classes can read, but it will not exercise this code. For a change here, build a small `run_results` DataFrame by hand, construct `TrialResults` in a script run from the repo root, and check the derived attributes. The working directory matters because of the relative `data/` paths.
+
+## Sharp edges {#sec-trial-results-and-historic-comparison-sharp-edges}
+
+- **Silent `None`.** Any exception in a wrapped method yields `None` plus a printed message (or a Streamlit error box). `get_AVERAGE_calls_per_run` is a live example: it calls `self.get_calls_per_run(self.call_df)`, but `get_calls_per_run` takes no argument, so the call raises `TypeError` and the method always returns `None`.
+- **Constructor continues after failures.** Because `__init__` calls wrapped methods, a failure in, say, `calculate_available_hours` leaves `total_avail_minutes` as `None` and the utilisation step then fails in turn. The first printed message is the real cause.
+- **Working-directory coupling.** `TrialResults` writes `data/call_df.csv`, `data/daily_availability.csv`, `data/monthly_availability.csv` and `data/daily_availability_summary.csv`. `HistoricResults` writes `historical_data/calculated/theoretical_availability_historical.csv`. All are relative paths, so the code only works when started from the repo root (as the app is).
+- **Stale availability input.** `app/model.py` reads `data/daily_availability.csv` and passes it in as `daily_availability_data`, but `calculate_available_hours` later in the constructor overwrites that same file. The `daily_availability_df` used by `PLOT_daily_availability` therefore comes from whatever was on disk before this run, which may be a previous scenario's. This follows from the call order and is not documented.
+- **Hard-coded summer in the historic path.** In `HistoricResults.make_RWC_utilisation_dataframe`, the nested `is_summer` ignores its argument, reads `current_date` from the enclosing loop, and hard-codes months 4 to 9 (`class_historic_results.py:324-325`). `TrialResults` instead takes the bounds from `rota_start_end_months.csv`. If you change the summer months, the simulated side follows and the historic side does not.
+- **Mismatched message.** In `get_perc_unattended_string` (`class_simulation_trial_results.py:2278-2279`) and `get_perc_unattended_string_normalised` (`:2324-2327`), the test `< 0.01` (1%) prints "(< 0.1%)". The string should read "(< 1%)".
+- **Vehicle-grouping assumption.** `make_SIMULATION_utilisation_headline_figure` classes a callsign group with one member as "solo car" and with two as "helicopter backup car", and says in a comment that this may not hold forever.
+- **Cost.** `calculate_available_hours` and its historic twin loop over days times rota rows with `.loc` writes. Long simulations with many rota lines are slow, and this runs on every results-page build.
+- **Dependence on the Streamlit runtime.** `_processing_functions.py` imports `streamlit` at module level, so even headless use of these classes needs it installed.
+
+## Design notes {#sec-trial-results-and-historic-comparison-design-notes}
+
+**Documented.**
+
+- Refactor to class-based results: commit `8b393b5` (2025-10-07) is described as a major interim refactor to `TrialResults` and `HistoricResults`. Commit `0704f3d` restored the first page of output and five follow-ups restored the remaining plots one tab at a time. Commit `7ae9c47` improved the layout and clarity of the historic class.
+- Daily availability data flow: commit `3039d72` changed how daily availability data enters the app and `TrialResults`, and `81982cc` made sure it is assigned to a class attribute.
+- Streamlit Cloud indexing bug: commits `cfa31e0` and `a7684b9`.
+
+**Inferred.** The state of the code suggests the refactor is unfinished. Markers say "NOT YET CONVERTED TO OO" (line 2407) and "convert to use historical class" (line 2741), and a few methods take `historical_results_obj` or `historical_data_class` as an argument instead of using `self.historical_data`. The decorator presumably exists so that one broken plot cannot take down a results page with a dozen tabs; the cost is the silent `None` behaviour above. Computing everything in `__init__` presumably trades construction time for cheap plot calls, since Streamlit reruns the script on every interaction. No commit or doc states either reason.
+
+## Limitations and open questions {#sec-trial-results-and-historic-comparison-limitations}
+
+TODO markers in `class_simulation_trial_results.py`:
+
+- Line 471 (repeated near the end of the file): add a check that missing resource-use start/end times are only back-filled for calls at the edges of the model, not for errors elsewhere.
+- Line 621: decide what to do with columns that remain NA after back-filling.
+- Lines 931 and 1180: pull historical data from the historical class rather than elsewhere.
+- Line 2226: confirm the difference between `run_results` and `event_log_df`.
+- Line 2407: a block of plot code not yet converted to the object-oriented layout.
+- Line 2741: convert to use the historical class.
+
+Issues open as of 2026-10-19: [#217](https://github.com/RichardPilbery/DAA_DES/issues/217) (utilisation breakdown plot breaks when one helicopter/car pairing is removed), [#215](https://github.com/RichardPilbery/DAA_DES/issues/215) (car utilisation metrics break when one car is removed), [#176](https://github.com/RichardPilbery/DAA_DES/issues/176) (no formal tests for the utilisation denominator), [#165](https://github.com/RichardPilbery/DAA_DES/issues/165) (discrepancies between metrics and historical data) and [#244](https://github.com/RichardPilbery/DAA_DES/issues/244) (a copyable summary table of key metrics).
+
+See the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state.
+
+## Conclusion
+
+Next, in [Distribution Fitting](08_distribution_fitting.qmd), we look at the offline pipeline that writes the `historical_data/` files these classes read.

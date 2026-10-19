@@ -2,7 +2,15 @@
 title: "Chapter 5: HEMS Resources and Servicing"
 description: "How helicopters and cars are modelled, built from the rota files, scheduled for servicing and kept in a SimPy FilterStore."
 toc: true
+aliases:
+  - "../05_hems_resources_and_servicing.html"
 ---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
 
 In [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) we saw `DES_HEMS` turn each daily call into a `Patient` and ask for a resource, and we saw it trigger a "daily servicing check" at the start of every simulated day. This chapter looks at the other side of that request: what a resource *is*, where the list of resources comes from, and how the model keeps unavailable ones out of reach.
 
@@ -26,14 +34,14 @@ We will follow one helicopter, `g-daas`, through all three. The answers live in 
 
 ### Ambulance and HEMS
 
-[Ambulance](../reference/class_ambulance.Ambulance.qmd) is the generic "something that responds to an incident". It holds a type, a callsign and a handful of timestamp placeholders for the stages of a job.
+[Ambulance](../../reference/class_ambulance.Ambulance.qmd) is the generic "something that responds to an incident". It holds a type, a callsign and a handful of timestamp placeholders for the stages of a job.
 
-```{.python include="../../air_ambulance_des/class_ambulance.py" start-line=16 end-line=28 filename="air_ambulance_des/class_ambulance.py:16-28" include-hash="aa7ecca71219"}
+```{.python include="../../../air_ambulance_des/class_ambulance.py" start-line=16 end-line=28 filename="air_ambulance_des/class_ambulance.py:16-28" include-hash="aa7ecca71219"}
 ```
 
-It is deliberately thin. All the interesting behaviour lives in its subclass [HEMS](../reference/class_hems.HEMS.qmd), which adds the attributes the allocation logic needs:
+It is deliberately thin. All the interesting behaviour lives in its subclass [HEMS](../../reference/class_hems.HEMS.qmd), which adds the attributes the allocation logic needs:
 
-```{.python include="../../air_ambulance_des/class_hems.py" start-line=15 end-line=69 filename="air_ambulance_des/class_hems.py:15-69" code-line-style="dim:34-49" include-hash="d7c1a3ed6526"}
+```{.python include="../../../air_ambulance_des/class_hems.py" start-line=15 end-line=69 filename="air_ambulance_des/class_hems.py:15-69" code-line-style="dim:34-49" include-hash="d7c1a3ed6526"}
 ```
 
 The attributes worth knowing:
@@ -60,10 +68,10 @@ servicing schedule
 
 The shift check is a pure function of the hour and the month.
 
-```{.python include="../../air_ambulance_des/class_hems.py" start-line=107 end-line=120 filename="air_ambulance_des/class_hems.py:107-120" code-line-style="hi:11-14" include-hash="796c15ba7507"}
+```{.python include="../../../air_ambulance_des/class_hems.py" start-line=107 end-line=120 filename="air_ambulance_des/class_hems.py:107-120" code-line-style="hi:11-14" include-hash="796c15ba7507"}
 ```
 
-[`hems_resource_on_shift`](../reference/class_hems.HEMS.qmd) picks the summer or winter hours depending on the month (highlighted), then asks `Utils.is_time_in_range` whether the hour falls inside them. That helper copes with shifts that cross midnight: in `utils.py` it returns `start <= current < end` when `start <= end`, and `current >= start or current < end` otherwise. This matters because the `H70` enhanced-care row in the rota runs from 19 to 2.
+[`hems_resource_on_shift`](../../reference/class_hems.HEMS.qmd) picks the summer or winter hours depending on the month (highlighted), then asks `Utils.is_time_in_range` whether the hour falls inside them. That helper copes with shifts that cross midnight: in `utils.py` it returns `start <= current < end` when `start <= end`, and `current >= start or current < end` otherwise. This matters because the `H70` enhanced-care row in the rota runs from 19 to 2.
 
 ### The rota: one row per role, not per vehicle
 
@@ -81,13 +89,13 @@ The shipped file also has rows for `H71` (an enhanced care helicopter) and `CC72
 
 ## Building the resources {#sec-hems-resources-and-servicing-building}
 
-[HEMSAvailability](../reference/class_hems_availability.HEMSAvailability.qmd) is the class that owns all of this. It is created once per run by `DES_HEMS` and is where the two SimPy stores live.
+[HEMSAvailability](../../reference/class_hems_availability.HEMSAvailability.qmd) is the class that owns all of this. It is created once per run by `DES_HEMS` and is where the two SimPy stores live.
 
 ::: {.callout-note collapse="true" title="Refresher: SimPy FilterStore"}
 A SimPy `Store` is a queue of Python objects: `put(item)` adds one and `get()` removes one, waiting (in simulated time) if none is available. A `FilterStore` adds a `get(filter)` variant that takes the first item for which the filter function returns true. Both `put` and `get` return events, so inside a process you write `item = yield store.get(...)`.
 :::
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=99 end-line=123 filename="air_ambulance_des/class_hems_availability.py:99-123" code-line-style="hi:9-12,dim:1-8" include-hash="4c026167d1c1"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=99 end-line=123 filename="air_ambulance_des/class_hems_availability.py:99-123" code-line-style="hi:9-12,dim:1-8" include-hash="4c026167d1c1"}
 ```
 
 Two stores are created. `store` holds resources that are in the base and may be dispatched. `serviceStore` is the **service store**: a holding area for anything currently in the workshop. Moving a resource between them is how the model takes it out of circulation, with no extra "is it serviced?" test needed on the hot path of allocation (though `being_serviced` is still checked, as a second line of defence).
@@ -96,9 +104,9 @@ The constructor then calls `prep_HEMS_resources()` to build the objects and `pop
 
 ### Reading the rota and servicing files
 
-[`prep_HEMS_resources`](../reference/class_hems_availability.HEMSAvailability.qmd) starts by joining three small tables:
+[`prep_HEMS_resources`](../../reference/class_hems_availability.HEMSAvailability.qmd) starts by joining three small tables:
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=229 end-line=241 filename="air_ambulance_des/class_hems_availability.py:229-241" include-hash="e9e3420aa51f"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=229 end-line=241 filename="air_ambulance_des/class_hems_availability.py:229-241" include-hash="e9e3420aa51f"}
 ```
 
 - `service_schedules_by_model.csv` says how often each aircraft *model* is serviced (`service_schedule_months`) and for how many weeks (`service_duration_weeks`).
@@ -111,7 +119,7 @@ The result is one row per registration with everything needed to project its fut
 
 For each registration with a known last service, the method walks forward in time until it passes the simulation end date, asking `find_next_service_date` for each next slot.
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=245 end-line=288 filename="air_ambulance_des/class_hems_availability.py:245-288" code-line-style="hi:17-22" include-hash="10cf025c3578"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=245 end-line=288 filename="air_ambulance_des/class_hems_availability.py:245-288" code-line-style="hi:17-22" include-hash="10cf025c3578"}
 ```
 
 The highlighted call is the heart of it. Each result is appended three ways: to `schedule` (every registration, which becomes the DataFrame written to `data/service_dates.csv`), to `service_dates` (a list shared across *all* resources, so later aircraft can avoid earlier ones), and to `current_resource_service_dates`. The `end_date` computed just before the call (which uses the servicing buffer) is overwritten by the call's return value.
@@ -120,17 +128,17 @@ The loop's bound is `self.sim_end_date`, which the constructor sets to the simul
 
 ### Choosing a date: `find_next_service_date`
 
-[`find_next_service_date`](../reference/class_hems_availability.HEMSAvailability.qmd) starts from "last service plus the interval", then prefers a configured month if that is possible, then nudges earlier until the slot is legal.
+[`find_next_service_date`](../../reference/class_hems_availability.HEMSAvailability.qmd) starts from "last service plus the interval", then prefers a configured month if that is possible, then nudges earlier until the slot is legal.
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=749 end-line=779 filename="air_ambulance_des/class_hems_availability.py:749-779" code-line-style="hi:14-31" include-hash="923f912c3db3"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=749 end-line=779 filename="air_ambulance_des/class_hems_availability.py:749-779" code-line-style="hi:14-31" include-hash="923f912c3db3"}
 ```
 
 The preferred date is the 2nd of `servicing_preferred_month` (January by default) in the year the service falls due. If the service is due after that month, the preferred date rolls to the next year. The preferred date is only used if it is on or before the due date and does not clash with school holidays; it is never later than the due date, so an aircraft is never serviced late.
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=781 end-line=793 filename="air_ambulance_des/class_hems_availability.py:781-793" include-hash="288a93ffd08b"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=781 end-line=793 filename="air_ambulance_des/class_hems_availability.py:781-793" include-hash="288a93ffd08b"}
 ```
 
-The loop is simple and a little brutal: while the proposed window overlaps a school holiday ([`is_during_school_holidays`](../reference/class_hems_availability.HEMSAvailability.qmd)) or another resource's service ([`is_other_resource_being_serviced`](../reference/class_hems_availability.HEMSAvailability.qmd)), move the start one day earlier and try again. Both helpers rely on [`do_ranges_overlap`](../reference/class_hems_availability.HEMSAvailability.qmd), which is the standard interval test `max(start1, start2) <= min(end1, end2)`.
+The loop is simple and a little brutal: while the proposed window overlaps a school holiday ([`is_during_school_holidays`](../../reference/class_hems_availability.HEMSAvailability.qmd)) or another resource's service ([`is_other_resource_being_serviced`](../../reference/class_hems_availability.HEMSAvailability.qmd)), move the start one day earlier and try again. Both helpers rely on [`do_ranges_overlap`](../../reference/class_hems_availability.HEMSAvailability.qmd), which is the standard interval test `max(start1, start2) <= min(end1, end2)`.
 
 ::: {.callout-tip}
 **School holidays** are loaded in the constructor with `load_school_holidays("actual_data/school_holidays.csv")` from `school_holidays.py`. The function accepts UK dates (`dd/mm/yyyy`, as in the shipped CSV) or ISO dates (as written by the app when you import a template), trying UK format first, and raises a `ValueError` if a holiday ends before it starts. Servicing is steered away from these periods by the search loop above.
@@ -140,7 +148,7 @@ The loop is simple and a little brutal: while the proposed window overlaps a sch
 
 With the service dates in a DataFrame, the rota is read and merged with the servicing information, and each row becomes a resource:
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=299 end-line=325 filename="air_ambulance_des/class_hems_availability.py:299-325" code-line-style="hi:4" include-hash="9f84b7239d62"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=299 end-line=325 filename="air_ambulance_des/class_hems_availability.py:299-325" code-line-style="hi:4" include-hash="9f84b7239d62"}
 ```
 
 The merge on `callsign` and `vehicle_type` is what attaches a registration and a model to each rota row. Each resource gets only its own registration's slice of the servicing table (`s`). Finally `populate_store` simply calls `self.store.put(h)` for every object in `HEMS_resources_list`.
@@ -167,7 +175,7 @@ flowchart LR
 
 Schedules are fixed up front, but the stores only change when the check runs. `DES_HEMS.generate_calls` runs it once at the start of every simulated day:
 
-```{.python include="../../air_ambulance_des/des_hems.py" start-line=245 end-line=248 filename="air_ambulance_des/des_hems.py:245-248" include-hash="63f4821e25c1"}
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=245 end-line=248 filename="air_ambulance_des/des_hems.py:245-248" include-hash="63f4821e25c1"}
 ```
 
 Because `daily_servicing_check` is a generator containing `yield` statements, it must be wrapped in `env.process` and yielded, which blocks the call generator until the shuffling is done. @fig-hems-resources-and-servicing-check shows what happens inside.
@@ -200,17 +208,17 @@ sequenceDiagram
 
 The first half of the method decides who is coming back:
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=139 end-line=173 filename="air_ambulance_des/class_hems_availability.py:139-173" code-line-style="hi:3-7,hi:12-16" include-hash="d2b3e22475eb"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=139 end-line=173 filename="air_ambulance_des/class_hems_availability.py:139-173" code-line-style="hi:3-7,hi:12-16" include-hash="d2b3e22475eb"}
 ```
 
 It first looks for the resource registered as `g-daas` and asks whether it is in service today, storing the answer as `GDAAS_service`. Then it builds a list of `(category, registration)` pairs from `serviceStore` whose `service_check` is now false (note the `not`). It collects the pairs first and moves them afterwards, because changing a store while iterating over its `items` would be unsafe. Each move is a `get` with a filter on category and registration, followed by a `put` on the main store. Filtering on both is necessary because of the two-objects-per-airframe point made earlier.
 
 The second half is the mirror image:
 
-```{.python include="../../air_ambulance_des/class_hems_availability.py" start-line=175 end-line=198 filename="air_ambulance_des/class_hems_availability.py:175-198" include-hash="4290373776ce"}
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=175 end-line=198 filename="air_ambulance_des/class_hems_availability.py:175-198" include-hash="4290373776ce"}
 ```
 
-Anything in `store` for which `service_check` returns true is taken out and placed in `serviceStore`. Further down, the method only logs status through [`current_store_status`](../reference/class_hems_availability.HEMSAvailability.qmd), which is a debugging helper.
+Anything in `store` for which `service_check` returns true is taken out and placed in `serviceStore`. Further down, the method only logs status through [`current_store_status`](../../reference/class_hems_availability.HEMSAvailability.qmd), which is a debugging helper.
 
 ### The shared aircraft: H70 and H71
 
@@ -223,12 +231,12 @@ Devon has two helicopters, but the rota only knows two callsigns, H70 and H71. W
 
 The code is at `class_hems.py:71-89`:
 
-```{.python include="../../air_ambulance_des/class_hems.py" start-line=71 end-line=89 filename="air_ambulance_des/class_hems.py:71-89" code-line-style="hi:2-13" include-hash="ca437507dfcd"}
+```{.python include="../../../air_ambulance_des/class_hems.py" start-line=71 end-line=89 filename="air_ambulance_des/class_hems.py:71-89" code-line-style="hi:2-13" include-hash="ca437507dfcd"}
 ```
 
-When `g-daas` is in for servicing (`GDAAS_service` true), `g-daan` takes over as `H70`; when `g-daas` returns, it reverts to `H71`. Either way, the method ends by returning [`unavailable_due_to_service`](../reference/class_hems.HEMS.qmd), which scans the resource's own service windows:
+When `g-daas` is in for servicing (`GDAAS_service` true), `g-daan` takes over as `H70`; when `g-daas` returns, it reverts to `H71`. Either way, the method ends by returning [`unavailable_due_to_service`](../../reference/class_hems.HEMS.qmd), which scans the resource's own service windows:
 
-```{.python include="../../air_ambulance_des/class_hems.py" start-line=91 end-line=105 filename="air_ambulance_des/class_hems.py:91-105" code-line-style="hi:8-12" include-hash="e929656f0f91"}
+```{.python include="../../../air_ambulance_des/class_hems.py" start-line=91 end-line=105 filename="air_ambulance_des/class_hems.py:91-105" code-line-style="hi:8-12" include-hash="e929656f0f91"}
 ```
 
 That is the only place `being_serviced` is set: it is true if `current_dt` lies inside any `[service_start_date, service_end_date]` window. Because it is a linear scan of a short table once a day per resource, its cost is negligible.

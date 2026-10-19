@@ -1,0 +1,190 @@
+---
+title: "Chapter 5: HEMS Resources and Servicing"
+description: "How helicopters and cars are modelled as HEMS objects, built from the rota and servicing CSVs, scheduled around school holidays and shuffled between a SimPy FilterStore and a service store."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+[Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) ended with a patient asking for a resource. This chapter is about the things being asked for.
+
+## What it is {#sec-hems-resources-and-servicing-what-it-is}
+
+Every helicopter or car in the model is a [`HEMS`](../../reference/class_hems.HEMS.qmd) object, a subclass of the (very thin) [`Ambulance`](../../reference/class_ambulance.Ambulance.qmd). A `HEMS` carries its identity (`callsign`, `callsign_group`, `registration`, `vehicle_type`, `category`), its summer and winter shift hours, and a pre-computed servicing schedule. [`HEMSAvailability`](../../reference/class_hems_availability.HEMSAvailability.qmd) builds all of them from CSVs in `actual_data/` (the files the app rewrites, see [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)), holds them in a SimPy `FilterStore`, and once a simulated day moves them to and from a second store while they are in the workshop.
+
+The contract callers rely on:
+
+- `HEMSAvailability(...)` is fully populated on return: `store` holds every resource, `serviceStore` is empty until the first daily check.
+- A resource that is `in_use` (out on a job) is *not in the store*. Anything iterating `store.items` only ever sees idle resources.
+- `hems_resource_on_shift(hour, month)` and `unavailable_due_to_service(dt)` are pure lookups; the second also sets `being_serviced` as a side effect.
+
+The use case running through the chapter: the service has two helicopters but wants the callsign H70 always crewed. When H70's usual aircraft, `g-daas` (the H145), is in the workshop, the second aircraft, `g-daan` (the EC135), flies as H70 instead of its usual H71. The model has to know, each simulated day, who is H70 and who is in the workshop. Who is allowed to be sent where, once resources exist, is [Chapter 6](06_resource_allocation.qmd). `DES_HEMS` constructs the availability object ([Chapter 4](04_calls_and_patient_journeys.qmd)) and triggers the daily check from `generate_calls`.
+
+## How it works {#sec-hems-resources-and-servicing-how-it-works}
+
+@fig-hems-resources-lifecycle shows the whole life of a resource: built once, then bounced between the stores.
+
+```{mermaid}
+%%| label: fig-hems-resources-lifecycle
+%%| fig-cap: "Where a HEMS object lives during a run"
+stateDiagram-v2
+    [*] --> store: prep_HEMS_resources + populate_store
+    store --> serviceStore: daily check, service_check is True
+    serviceStore --> store: daily check, service_check is False
+    store --> OutOnJob: allocate_resource / allocate_regular_resource (store.get)
+    OutOnJob --> store: return_resource (store.put)
+```
+
+### The HEMS object
+
+```{.python include="../../../air_ambulance_des/class_hems.py" start-line=15 end-line=69 dedent=4 filename="air_ambulance_des/class_hems.py:15-69" code-line-style="focus:34-49" include-hash="d7c1a3ed6526"}
+```
+
+The shift hours arrive as constructor arguments, but the *definition of summer* does not: lines 48-63 (the block under "Read in the summer months from a file") read `actual_data/rota_start_end_months.csv` every time a `HEMS` is built, relative to the current working directory. The default file says April to October. Each object also carries `being_serviced` and `in_use` flags, and note that `Ambulance.__init__` sets a default `callsign` that the subclass immediately overwrites.
+
+The three methods that matter at run time:
+
+```{.python include="../../../air_ambulance_des/class_hems.py" start-line=71 end-line=120 dedent=4 filename="air_ambulance_des/class_hems.py:71-120" code-line-style="focus:2-13,hi:19" include-hash="0da98892615e"}
+```
+
+`service_check` is the daily-check entry point. For `g-daan` it also rewrites the aircraft's identity: H70/group 70 when `g-daas` is in service, otherwise H71/group 71 (and it clears `in_use` in that branch). It then returns `unavailable_due_to_service`, a linear scan of the resource's own schedule that treats the window as inclusive at both ends. `hems_resource_on_shift` picks summer or winter hours by month and delegates to `Utils.is_time_in_range`; the comment there warns that changing the summer definition also means editing `write_run_params()` in `des_parallel_process.py`.
+
+### Building the resources
+
+The constructor of `HEMSAvailability` creates both `FilterStore`s and calls the preparation methods:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=96 end-line=123 dedent=8 filename="air_ambulance_des/class_hems_availability.py:96-123" code-line-style="hi:13,hi:15,hi:18" include-hash="fef8e5db732e"}
+```
+
+`sim_end_date` is the sim end plus a year, because service dates are walked backwards and can land in the previous year. The three `active_*` sets are used by allocation ([Chapter 6](06_resource_allocation.qmd)). Lines 108 and 110 create the two stores; line 113 (`self.prep_HEMS_resources()`) builds the schedules.
+
+[`prep_HEMS_resources`](../../reference/class_hems_availability.HEMSAvailability.qmd) first merges three CSVs into one table: `service_schedules_by_model.csv` (interval in months, duration in weeks), `callsign_registration_lookup.csv` (which registration is which callsign and model) and `service_history.csv` (last service date). It then walks each aircraft forward from its last service until it passes `sim_end_date`:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=245 end-line=288 dedent=8 filename="air_ambulance_des/class_hems_availability.py:245-288" code-line-style="hi:17,focus:26-38" include-hash="10cf025c3578"}
+```
+
+The shared `service_dates` list (the `service_dates.append(...)` call at lines 270-282 adds to it) accumulates the windows of *every* resource processed so far; that is what lets `find_next_service_date` keep aircraft out of the workshop simultaneously. Order therefore matters: the first row in the merged table gets first pick of dates. Cars have `last_service` of 0, which `na_values=0` turns into NaN, so they take the `else` branch with a `None` window. The `end_date` computed at the top of the loop (with the buffer weeks) is immediately overwritten by the `find_next_service_date` call at line 261, so only the second value is ever used.
+
+Then each `HEMS_ROTA.csv` row is merged with the servicing table on `callsign` and `vehicle_type` and turned into an object:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=299 end-line=325 dedent=8 filename="air_ambulance_des/class_hems_availability.py:299-325" include-hash="9f84b7239d62"}
+```
+
+Each rota row becomes one `HEMS`. `H70` appears twice in the rota (a CC row and an EC row, with different hours) but shares a registration, so both objects get the same servicing slice. `populate_store` then simply `put`s each object into `store`.
+
+### Finding a service date
+
+[`find_next_service_date`](../../reference/class_hems_availability.HEMSAvailability.qmd) is the scheduling core:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=762 end-line=793 dedent=8 filename="air_ambulance_des/class_hems_availability.py:762-793" code-line-style="focus:20-30,hi:26" include-hash="4de1bb5f8d55"}
+```
+
+The due date is `last_service + interval_months`. If the preferred date (day 2 of `servicing_preferred_month` in the due year) is on or before the due date and clear of school holidays, it replaces the due date. Then the `while True` loop steps one day *earlier* (line 787) until the window clears both school holidays ([`is_during_school_holidays`](../../reference/class_hems_availability.HEMSAvailability.qmd)) and every window already in `service_dates` ([`is_other_resource_being_serviced`](../../reference/class_hems_availability.HEMSAvailability.qmd)), both built on [`do_ranges_overlap`](../../reference/class_hems_availability.HEMSAvailability.qmd). Services therefore only ever move earlier than due, never later.
+
+School holidays come from `load_school_holidays("actual_data/school_holidays.csv")`, called in the `HEMSAvailability` constructor. It reads the CSV and passes it through `parse_school_holidays`, which converts both columns to timestamps (UK day-first strings and ISO strings are both accepted, per `tests/test_school_holidays.py`) and raises `ValueError` if any holiday ends before it starts.
+
+### The daily servicing check
+
+`DES_HEMS.generate_calls` runs this on the first hour of each simulated day:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=245 end-line=248 dedent=16 filename="air_ambulance_des/des_hems.py:245-248" include-hash="63f4821e25c1"}
+```
+
+The method is a generator, so it is run as a SimPy process and the day's calls wait for it. It works in three passes:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=139 end-line=198 dedent=8 filename="air_ambulance_des/class_hems_availability.py:139-198" code-line-style="focus:1-7,hi:15,focus:38-42" include-hash="c30a47efb49d"}
+```
+
+1. Ask the `g-daas` object whether it is in service today. That boolean (`GDAAS_service`) is passed to every `service_check`, which is how `g-daan` learns whether to be H70 or H71.
+2. Return from `serviceStore` to `store` everything whose `service_check` is now *False* (note the `not` at line 153). A `get` with a lambda filter on category and registration pulls the exact object out, then `store.put`.
+3. Send to `serviceStore` everything in `store` whose `service_check` is *True* (lines 176-180), using the same get/put pattern.
+
+Because only `store.items` are checked, a resource out on a job is skipped and cannot be taken for service until it comes back and a later daily check finds it. The `g-daan` fix-up loop between the two passes ("Attempted fix for gap after return from H70 duties", in the source) forces idle `g-daan` objects back to H71 when `g-daas` is not in service.
+
+```{mermaid}
+%%| label: fig-hems-resources-daily-check
+%%| fig-cap: "Daily servicing check, as called from the call generator"
+sequenceDiagram
+    participant GC as generate_calls
+    participant HA as HEMSAvailability
+    participant H as HEMS objects
+    participant SS as serviceStore
+    participant S as store
+    GC->>HA: env.process(daily_servicing_check)
+    HA->>H: g-daas.unavailable_due_to_service(dt)
+    HA->>H: service_check(dt, GDAAS_service) for serviceStore items
+    HA->>SS: get, then S.put (returns)
+    HA->>H: service_check(dt, GDAAS_service) for store items
+    HA->>S: get, then SS.put (departures)
+    HA-->>GC: process ends, calls generated
+```
+
+## Extending this {#sec-hems-resources-and-servicing-extending-this}
+
+**Add or change a vehicle.** No code change is needed for the common cases: edit `actual_data/HEMS_ROTA.csv` (one row per callsign/category/shift pattern), `callsign_registration_lookup.csv` and, for aircraft, `service_schedules_by_model.csv` and `service_history.csv`. The app already writes these files ([Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)). `HEMSAvailability.add_hems` is an empty stub marked "future function" in its docstring, so it is not an extension point yet.
+
+**Change what "summer" means.** `rota_start_end_months.csv` is read in `HEMS.__init__`. The comment in `hems_resource_on_shift` says `write_run_params()` in `des_parallel_process.py` must change too, otherwise `run_params_used.csv` will misreport what ran.
+
+**Change the scheduling rules.** The knobs are `servicing_overlap_allowed`, `servicing_buffer_weeks` and `servicing_preferred_month` on `HEMSAvailability.__init__`, but `DES_HEMS` constructs it without them, so the defaults (`False`, 4, 1) always apply. Two things to know before relying on them: `servicing_overlap_allowed` is stored but never read in the code shown above, and the buffer attribute is spelled `serviing_buffer_weeks`. Changes to servicing also affect the availability figures used for utilisation in [Chapter 7](07_trial_results_and_historic_comparison.qmd), so re-check those.
+
+**Add another swap like g-daan/g-daas.** The swap is hard-coded by registration string in two places (`daily_servicing_check` and `HEMS.service_check`), plus the fix-up loop. A general mechanism does not exist.
+
+Tests (see `tests/README.md`):
+
+- `tests/test_school_holidays.py` (quick): date parsing, `ValueError` on inverted holidays, and plausibility of the holidays in every parameter file.
+- `tests/test_unittest_model.py`: includes `test_no_response_during_off_shift_times` and `test_no_response_during_service`, which check that nothing is allocated off shift or in service.
+- `tests/test_against_condition_changes.py`: behaviour under changed conditions.
+
+```{.bash .illustrative filename="Example usage (see tests/README.md)"}
+pytest tests/test_school_holidays.py
+pytest tests/test_unittest_model.py -k "service or shift"
+```
+
+Run from the repository root (the tests and the model both use relative `actual_data/` paths). Conventions: CSV column names are read by string key (`row["summer_start"]` and so on), so a renamed column fails with a `KeyError` when the model is built.
+
+## Sharp edges {#sec-hems-resources-and-servicing-sharp-edges}
+
+- **The constructor's servicing check is a no-op.** `HEMSAvailability.__init__` calls `self.daily_servicing_check(...)` (line 123) without wrapping it in `env.process`. The method contains `yield`, so the call only creates a generator that is never run. In practice the first day's check from `generate_calls` does the job, because `new_day` starts at 1900-01-01. This reading comes from the code, not from a documented decision.
+- **The search for a service date has no exit.** The `while True` in `find_next_service_date` only steps backwards. If every earlier day collides, or the school holiday data is unusable, it never returns; this matches open issue [#233](https://github.com/RichardPilbery/DAA_DES/issues/233) (open as of 2026-10-19), "Model hangs indefinitely if servicing schedule can't be resolved". In a parallel run that hangs one worker.
+- **Process-wide state in files.** `prep_HEMS_resources` writes `data/service_dates.csv` on every pass of the row loop, so concurrent replications overwrite one another's copy. The content should be identical across seeds (nothing in scheduling is random), but treat it as a debugging artefact rather than an output.
+- **Working directory matters.** Every CSV path is relative. Run from the repository root.
+- **`in_use` is reset in two places and not always.** `service_check` clears it for `g-daan` only in the "not in service" branch; `return_resource` clears it otherwise ([Chapter 6](06_resource_allocation.qmd)).
+- **Cost.** `unavailable_due_to_service` uses `iterrows`, and `is_during_school_holidays` loops over every holiday row for each candidate day. It only matters at setup and in the daily check, but a long backwards search multiplies it.
+- **Busy resources defer servicing.** A resource on a job at the day boundary is not in `store.items`, so entry to the workshop is delayed to a later daily check (derived from how `FilterStore` removes items; no test in `tests/` exercises it).
+
+## Design notes {#sec-hems-resources-and-servicing-design-notes}
+
+Documented, from the project's commit history:
+
+- `Ambulance` was added first (`5ba60b0`, 2024-09-13) as the generic responder that `HEMS` inherits from.
+- Servicing was scheduled around school holidays and a preferred month in `3242c69` (2025-02-13), and separated from the rota file in `ba0f813` (2025-03-21), which is why servicing has its own three CSVs.
+- The `g-daan` to H70 re-allocation was corrected in `d9a0e58` (2025-04-04), after a first attempt (`be8e91d`) was noted as not working.
+- The daily check was refactored in `b08d224` and a fix for simultaneous allocation of the same resource landed in `8f42554` (both 2025-04-24); the `active_*` sets in this chapter's constructor are part of that story.
+- Rota start/end checks moved from quarters to selected months in `7b88b4a` (2025-05-21), explaining why `HEMS` reads month numbers.
+- School holiday parsing was made more robust in `cfefa7e` (2026-10-15), which is when `school_holidays.py` appears in history.
+
+Inferred:
+
+- Two stores rather than a flag on each resource: the code suggests this keeps allocation's `store.get` filters free of servicing logic, since an aircraft in the workshop is simply not there.
+- Scheduling in advance for the whole horizon, rather than checking servicing as the run proceeds, presumably so the placement can avoid collisions across aircraft, which requires seeing everyone's windows.
+- The extra year on `sim_end_date` is explained by its own comment: dates can be walked back into the previous year.
+
+## Limitations and open questions {#sec-hems-resources-and-servicing-limitations}
+
+There are no `TODO`/`FIXME` markers in these files. Open issues, as of 2026-10-19:
+
+- [#233](https://github.com/RichardPilbery/DAA_DES/issues/233): the model hangs if the servicing schedule can't be resolved.
+- [#220](https://github.com/RichardPilbery/DAA_DES/issues/220): how to force winter servicing when a helicopter has time off.
+- [#266](https://github.com/RichardPilbery/DAA_DES/issues/266): whether the H145/H135 service interval assumptions hold with two H145s.
+- [#92](https://github.com/RichardPilbery/DAA_DES/issues/92) and [#143](https://github.com/RichardPilbery/DAA_DES/issues/143): servicing overruns and the "changing helicopter model" scenario are under-documented.
+- [#60](https://github.com/RichardPilbery/DAA_DES/issues/60): a decision is pending on periods of extreme unavailability.
+
+Check the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state.
+
+## Conclusion
+
+With resources built and shuffled between stores, [Resource Allocation](06_resource_allocation.qmd) shows how `HEMSAvailability` picks one for each patient and releases it afterwards.

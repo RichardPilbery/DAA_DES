@@ -1,0 +1,188 @@
+---
+title: "Chapter 6: Resource Allocation"
+description: "How HEMSAvailability picks a primary and secondary resource for each patient, records why, and releases them afterwards."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/06_resource_allocation.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](06_resource_allocation.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+[Chapter 5](05_hems_resources_and_servicing.qmd) ended with the `FilterStore` full of `HEMS` objects and the daily servicing check shuffling them in and out. This chapter is about the other consumer of that store: the code that takes a resource out for a patient.
+
+## What it is {#sec-resource-allocation-what-it-is}
+
+Resource allocation is the part of [`HEMSAvailability`](../../reference/class_hems_availability.HEMSAvailability.qmd) that answers one question per patient: which vehicle, if any, goes to this job? The input is a `Patient` (see [Chapter 4](04_calls_and_patient_journeys.qmd)) with its care category, hour, month, preferred callsign group, preferred vehicle type and helicopter benefit already sampled. The output is a SimPy event that resolves to a three-element list: `[primary, reason_text, secondary]`. `primary` is a `HEMS` or `None`, `reason_text` is a string from `LOOKUP_LIST` keyed by [`ResourceAllocationReason`](../../reference/class_hems_availability.ResourceAllocationReason.qmd), and `secondary` is a second `HEMS` from the same callsign group or `None`.
+
+::: {.column-margin}
+**Missed call**: a patient for whom allocation returned `None`. The model still runs a `patient_journey` for them, but no HEMS resource is used.
+:::
+
+The invariants callers rely on:
+
+- A resource handed out has `in_use = True` and its callsign group, registration and callsign are in the three `active_*` sets until `return_resource` is called.
+- `None` as the primary is a normal result, not an error. [`DES_HEMS`](../../reference/des_hems.DES_HEMS.qmd) turns it into a missed call.
+- The reason text is always a valid index into `LOOKUP_LIST`, including for `None`.
+
+A concrete case: a CC call at 10:00 in January where the H70 CC helicopter is out on another job. H71 (EC, 07-17 in winter) is on shift, so allocation falls through to it, reports a reason code (`CC_MATCH_EC_HELI`, listed below), and `patient_journey` runs with that vehicle. This path is only taken for about half of CC calls (the `0.5` draw below). The collaborators are the `HEMS` objects and rota checks from [Chapter 5](05_hems_resources_and_servicing.qmd), the ad hoc unavailability sampling from [Chapter 3](03_sampling_distributions_and_random_streams.qmd), and the caller in `DES_HEMS`.
+
+## How it works {#sec-resource-allocation-how-it-works}
+
+### Two entry points, chosen by the caller
+
+The routing decision lives in `DES_HEMS`, not in `HEMSAvailability`:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=432 end-line=443 filename="air_ambulance_des/des_hems.py:432-443" code-line-style="focus:1-3" include-hash="450f07fb46e3"}
+```
+
+Only CC and EC patients can reach `allocate_resource`, and then only half the time: the `0.5` is a literal here, drawn from the `know_cc_ec_benefit` stream. Everyone else, including the other half of CC/EC patients, goes through `allocate_regular_resource`, which uses the sampled preferred callsign group and vehicle type.
+
+### The reason codes
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=16 end-line=35 filename="air_ambulance_des/class_hems_availability.py:16-35" include-hash="3fdc2de2cc9f"}
+```
+
+`ResourceAllocationReason` is an `IntEnum` whose values are used as list indices into `HEMSAvailability.LOOKUP_LIST` (set in `__init__`, lines 60-75), via `resource_allocation_lookup()`. The enum and the list must stay in step by hand. Codes 1-6 belong to the CC/EC path, 7-8 and 9-13 to the REG path. `OTHER_VEHICLE_TYPE` (11) is no longer produced: the only code that used it is commented out in `allocate_regular_resource`.
+
+### Choosing for CC and EC: `preferred_resource_available`
+
+This method scans `self.store.items` and does not take anything out of the store. First a hard filter, then an ad hoc check, then a priority ranking.
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=516 end-line=598 filename="air_ambulance_des/class_hems_availability.py:516-598" code-line-style="focus:3-13,67-73" include-hash="7dd056a3ddaf"}
+```
+
+The filter drops any unit that is in use, being serviced, off shift for `pt.hour` and `pt.month`, or whose callsign group or registration is in the active sets. Cars skip the ad hoc check; helicopters call `Utils.sample_ad_hoc_reason(pt.hour, pt.qtr, h.registration)` and are skipped unless it returns `"available"`. Note the mixed time keys: shifts use month, ad hoc rates use quarter.
+
+Ranking is 1 (right category, helicopter), 2 (right category, car), then 3 and 4 for the other category (helicopter, then car). Only a strict `<` replaces the current best, so ties go to whichever unit comes first in `store.items`. Priority 1 returns immediately. Anything else means the whole store is scanned, and every helicopter in it consumes an ad hoc draw.
+
+### Choosing for REG: `preferred_regular_group_available`
+
+Same filter and ad hoc check, then a branch on whether a helicopter benefit is "known" (the module constant `PROB_HELI_BENEFIT_KNOWN`, line 18). This method is also used for CC/EC patients who miss the 0.5 draw, so they can be subject to the same helicopter-benefit logic. That decision is drawn once per patient, before the loop:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=891 end-line=899 filename="air_ambulance_des/class_hems_availability.py:891-899" include-hash="9374ae3c1722"}
+```
+
+Both conditions matter: `helicopter_benefit == "y"` is short-circuited first, so patients without a benefit never consume a draw from `know_heli_benefit`. Then the branches:
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=938 end-line=989 filename="air_ambulance_des/class_hems_availability.py:938-989" code-line-style="focus:1-2,22-23" include-hash="8080f061a628"}
+```
+
+If the benefit is known, only helicopters can be chosen (CC helicopter first, then any), so a car is never sent in its place. If not, the order is preferred group and vehicle (immediate `break`), any helicopter, preferred group only, then anything free. The unused result for a known benefit with no helicopter free is `NONE_AVAILABLE`.
+
+### Claiming: `allocate_resource` and `allocate_regular_resource`
+
+Both wrap the scan in a SimPy process and return the event.
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=600 end-line=678 filename="air_ambulance_des/class_hems_availability.py:600-678" code-line-style="focus:32-34,70-76" include-hash="6e95a3d83865"}
+```
+
+The sequence after a candidate is found:
+
+1. Re-check the three active sets (lines 619-629). Nothing yields between scan and re-check, so in this single-threaded SimPy process these guards look redundant. The code suggests they were added defensively (inferred).
+2. Add group, registration and callsign to the active sets before yielding. This is the claim.
+3. `store.get(lambda r: r == primary)` raced against `env.timeout(0.1)`, so a lost race costs 0.1 minutes; the separate secondary search uses its own 0.1-minute timeout (see Sharp edges). On success set `in_use` and copy group, vehicle type and category onto the patient.
+4. Look for a secondary, then `resource_event.succeed([primary, reason, secondary])`.
+5. If the claim lost the race, roll the three sets back and return `None`.
+
+`allocate_regular_resource` (lines 1002-1086) is a line-for-line copy of this body that calls `preferred_regular_group_available` instead. @fig-resource-allocation-flow shows the shared shape.
+
+```{mermaid}
+%%| label: fig-resource-allocation-flow
+%%| fig-cap: "Allocation path for one patient"
+flowchart TD
+    A[DES_HEMS.generate_patient] --> B{CC or EC and draw <= 0.5}
+    B -- yes --> C[allocate_resource]
+    B -- no --> D[allocate_regular_resource]
+    C --> E[preferred_resource_available]
+    D --> F[preferred_regular_group_available]
+    E --> G{candidate found}
+    F --> G
+    G -- no --> H[succeed with None]
+    G -- yes --> I[add to active sets]
+    I --> J[store.get primary or timeout 0.1]
+    J -- timed out --> K[roll back sets, None]
+    J -- got it --> L[try secondary]
+    L --> M[succeed with primary, reason, secondary]
+    H --> N[missed call: patient_journey with None]
+    K --> N
+    M --> O[patient_journey with resources]
+```
+
+### Releasing
+
+`DES_HEMS.patient_journey` returns resources from a `finally` block, so they come back even if the journey raises:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=712 end-line=721 filename="air_ambulance_des/des_hems.py:712-721" include-hash="4aa8cd5712f7"}
+```
+
+```{.python include="../../../air_ambulance_des/class_hems_availability.py" start-line=680 end-line=700 filename="air_ambulance_des/class_hems_availability.py:680-700" code-line-style="focus:7-10" include-hash="2895947b9b94"}
+```
+
+`return_resource` is the mirror image of the claim: clear `in_use`, discard from the three sets, `put` back into `store`. If the resource has become due for service meanwhile, the next `daily_servicing_check` moves it ([Chapter 5](05_hems_resources_and_servicing.qmd)). Everything downstream, such as utilisation and missed-job counts in [Chapter 7](07_trial_results_and_historic_comparison.qmd), reads the `resource_preferred_outcome` event that stores the reason text.
+
+## Extending this {#sec-resource-allocation-extending-this}
+
+**Add a new allocation reason.** Add a member to `ResourceAllocationReason` and a string at the matching index of `LOOKUP_LIST`. Append rather than renumber: the values are indices and, as far as the repo shows, the text is what lands in the event log, so renaming strings will change downstream groupings (inferred; check the consumers in [Chapter 7](07_trial_results_and_historic_comparison.qmd) before editing text).
+
+**Change a priority order.** Edit the `if/elif` chains in `preferred_resource_available` (CC/EC) or `preferred_regular_group_available` (REG). Keep the `continue`-filter at the top of the loop intact: it is the only place that enforces "not in use, not in service, on shift, group and registration not active".
+
+**Change how often each path is used.** The CC/EC split is the literal `0.5` at `des_hems.py:434`. The helicopter-benefit probability is `PROB_HELI_BENEFIT_KNOWN` at `class_hems_availability.py:18`.
+
+**Change claiming or secondary behaviour.** `allocate_resource` and `allocate_regular_resource` are duplicates, so make every change twice (or, better, factor out the shared body; nothing in the repo prevents it).
+
+**Add new resources.** `add_hems()` is a stub. In practice a new vehicle is a new row in the rota and lookup CSVs read by `prep_HEMS_resources` ([Chapter 5](05_hems_resources_and_servicing.qmd)). Allocation code then sees it automatically, but the hierarchy hard-codes categories `"CC"` and `"EC"` and vehicle types `"helicopter"` and `"car"`. Open issue [#211](https://github.com/RichardPilbery/DAA_DES/issues/211) discusses making this flexible (open as of 2026-10-19).
+
+**Tests.**
+
+- `tests/test_resource_allocation.py` calls `preferred_regular_group_available` directly, with `sample_ad_hoc_reason` and the `know_heli_benefit` stream mocked. It covers: one draw per patient, no car when a benefit is known and no helicopter is free, and the preferred unit being sent when it is not known. There are no direct tests yet for `allocate_resource` or the CC/EC ranking.
+- `tests/test_unittest_model.py` checks resource behaviour over full runs.
+
+Run with `pytest tests/test_resource_allocation.py`, or `pytest -m resources` for the tagged resource tests (documented in the README testing section).
+
+## Sharp edges {#sec-resource-allocation-sharp-edges}
+
+::: {.callout-warning title="The secondary resource can never be allocated as written"}
+The claim step adds `primary.callsign_group` to `active_callsign_groups` (line 631). The secondary filter then requires `r.callsign_group == pt.hems_callsign_group` (the same group) and `r.callsign_group not in self.active_callsign_groups`. Those can't both hold, so `secondary` is always `None`. The commented-out `add` lines at 644-646 suggest the claim used to happen after the secondary search, which would have made the filter satisfiable (inferred). If you rely on the secondary slot, verify it before building on it.
+:::
+
+- **Fixed cost of 0.1 minutes.** The secondary search yields on `secondary_request | env.timeout(0.1)`. With no match, the timeout fires, so every successful allocation advances the clock by 0.1 simulated minutes before the journey starts (follows from the code).
+- **Tie-breaking depends on store order.** `FilterStore.put` appends, so after a few jobs the order of `store.items` differs from the rota order. Equal-priority candidates are resolved by that order, which is history-dependent.
+- **RNG draws depend on scan breadth.** Each helicopter that passes the filter consumes an ad hoc draw. A change that alters how many candidates are scanned (an early `break`, a new filter) shifts the ad hoc stream for all later patients, even if the allocation outcome is identical. See the named streams in [Chapter 3](03_sampling_distributions_and_random_streams.qmd).
+- **Cars never sample unavailability.** Documented, not accidental (commit `c705e99`, issue #170). Issue [#241](https://github.com/RichardPilbery/DAA_DES/issues/241) reports cars sent when the ad hoc data gives no obvious reason.
+- **Labels are coarser than the logic.** `REG_HELI_BENEFIT_MATCH_EC_HELI` is assigned to *any* non-CC helicopter in the known-benefit branch, not only EC ones.
+- **State lives in four places.** `in_use`, three `active_*` sets and the store contents must agree. Only `allocate_*` and `return_resource` should touch the sets. The `g-daan` callsign switch in `daily_servicing_check` rewrites `callsign` and `callsign_group` on items in the store; the sets are keyed on those values, so don't change them for a resource that is out on a job.
+- **Dead code.** Large commented-out copies of both `preferred_*` methods and `resource_allocation_lookup` remain in the file. Edit the live versions (lines 492 and 862).
+- **Debug output is opt-in.** `current_store_status` and the `debug()` calls only log when `print_debug_messages` is true, and use `logging.debug`, so turn on both logging and the flag.
+
+## Design notes {#sec-resource-allocation-design-notes}
+
+**Documented.**
+
+- The class was rewritten around lookups that are easier to follow, with comments added afterwards (commits `b476b8d`, `ac98121`).
+- The active sets exist to stop a crew or vehicle being allocated twice: a fix for simultaneous allocation of the same resource (commit `8f42554`, with `c210f81` reporting no overlap and unit tests passing).
+- Ad hoc unavailability sampling for helicopters arrived in commit `96d6f97`; cars were excluded in `c705e99` (issue #170).
+- Helicopter benefit is not always known in advance, and the logic was changed to use the regular allocation path (commit `9b559c2`). The timing of that check was later adjusted and tests added (commit `2bd23f9`).
+- The preferred callsign group is derived without care category stratification, using only cases where no other resource was tasked (commit `7fa1a27`); the "other" callsign group check was removed (commit `a10d45f`).
+
+**Inferred.**
+
+- Returning a list `[resource, reason, secondary]` rather than a richer object looks like a legacy of the original tuple-style code; callers index it positionally (`hems_res_list[0]`, `[1]`, `[2]`).
+- Using an event plus an inner process, rather than a plain generator, lets `DES_HEMS` `yield` the result in one line while the method can still take its own timeouts.
+
+## Limitations and open questions {#sec-resource-allocation-limitations}
+
+No TODO/FIXME markers exist in this file. Open issues, as of 2026-10-19:
+
+- [#238](https://github.com/RichardPilbery/DAA_DES/issues/238): revisiting the allocation logic itself.
+- [#178](https://github.com/RichardPilbery/DAA_DES/issues/178): allocation between callsign groups 70 and 71 differs slightly from history.
+- [#211](https://github.com/RichardPilbery/DAA_DES/issues/211): solo versus backup cars, and flexibility for added resources.
+- [#243](https://github.com/RichardPilbery/DAA_DES/issues/243): allocation ignores distance when deciding whether to send a car.
+- [#84](https://github.com/RichardPilbery/DAA_DES/issues/84): allocation logic should be more prominent in the model logic diagram.
+
+See the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state.
+
+## Conclusion
+
+Next, in [Chapter 7](07_trial_results_and_historic_comparison.qmd), we follow the event log that allocation feeds into, and see how `TrialResults` turns it into utilisation and missed-job metrics.

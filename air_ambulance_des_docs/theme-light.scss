@@ -4,6 +4,11 @@
 $sidebar-bg: #00205B;  // Background color
 $sidebar-fg: #ffffff;
 
+// Navbar matches the sidebar
+$navbar-bg: $sidebar-bg;
+$navbar-fg: $sidebar-fg;
+$navbar-hover-color: $sidebar-fg;
+
 $body-bg: #e2f1f2;
 $code-block-bg: #b5eff1;
 $link-color: #D50032;

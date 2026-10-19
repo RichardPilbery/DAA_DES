@@ -18,22 +18,41 @@ website:
         text: Home
       - href: reference/index.qmd
         text: Reference
-      - href: tutorial/index.qmd
-        text: Tutorial
+      - text: Tutorial
+        menu:
+          - text: Intermediate
+            href: tutorial/intermediate/index.qmd
+          - text: Contributor
+            href: tutorial/advanced-contributor/index.qmd
   sidebar:
-    - id: tutorial
-      title: Tutorial
+    - id: tutorial-intermediate
+      title: Tutorial (Intermediate)
+      style: docked
       contents:
-        - tutorial/index.qmd
-        - tutorial/01_streamlit_app_and_scenario_parameters.qmd
-        - tutorial/02_simulation_runs_and_replications.qmd
-        - tutorial/03_sampling_distributions_and_random_streams.qmd
-        - tutorial/04_calls_and_patient_journeys.qmd
-        - tutorial/05_hems_resources_and_servicing.qmd
-        - tutorial/06_resource_allocation.qmd
-        - tutorial/07_trial_results_and_historic_comparison.qmd
-        - tutorial/08_distribution_fitting.qmd
-        - tutorial/glossary.qmd
+        - tutorial/intermediate/index.qmd
+        - tutorial/intermediate/01_streamlit_app_and_scenario_parameters.qmd
+        - tutorial/intermediate/02_simulation_runs_and_replications.qmd
+        - tutorial/intermediate/03_sampling_distributions_and_random_streams.qmd
+        - tutorial/intermediate/04_calls_and_patient_journeys.qmd
+        - tutorial/intermediate/05_hems_resources_and_servicing.qmd
+        - tutorial/intermediate/06_resource_allocation.qmd
+        - tutorial/intermediate/07_trial_results_and_historic_comparison.qmd
+        - tutorial/intermediate/08_distribution_fitting.qmd
+        - tutorial/intermediate/glossary.qmd
+    - id: tutorial-advanced-contributor
+      title: Tutorial (Contributor)
+      style: docked
+      contents:
+        - tutorial/advanced-contributor/index.qmd
+        - tutorial/advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd
+        - tutorial/advanced-contributor/02_simulation_runs_and_replications.qmd
+        - tutorial/advanced-contributor/03_sampling_distributions_and_random_streams.qmd
+        - tutorial/advanced-contributor/04_calls_and_patient_journeys.qmd
+        - tutorial/advanced-contributor/05_hems_resources_and_servicing.qmd
+        - tutorial/advanced-contributor/06_resource_allocation.qmd
+        - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
+        - tutorial/advanced-contributor/08_distribution_fitting.qmd
+        - tutorial/advanced-contributor/glossary.qmd
 
 # tell quarto to read the generated sidebar
 metadata-files:

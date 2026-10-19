@@ -2,7 +2,15 @@
 title: "Chapter 2: Simulation Runs and Replications"
 description: "How runSim and parallelProcessJoblib run seeded replications of the air ambulance model and collate their output files."
 toc: true
+aliases:
+  - "../02_simulation_runs_and_replications.html"
 ---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
 
 In [Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd) we saw the app gather a scenario (number of runs, duration, start date, demand multiplier, master seed) and then call into the package to run it. This chapter looks at what is on the other end of that call: the functions in `air_ambulance_des/des_parallel_process.py` that turn those numbers into many independent runs of the model and a single results file.
 
@@ -26,11 +34,11 @@ Four functions do the work, plus the model's own `run()` method:
 
 | Piece | Role |
 |---|---|
-| [parallelProcessJoblib](../reference/des_parallel_process.parallelProcessJoblib.qmd) | Derives per-run seeds and fans the runs out across cores |
-| [runSim](../reference/des_parallel_process.runSim.qmd) | Builds and runs one [DES_HEMS](../reference/des_hems.DES_HEMS.qmd) model, returns its results |
-| [write_run_params](../reference/des_parallel_process.write_run_params.qmd) | Records the settings used, once, in `run_params_used.csv` |
-| [collateRunResults](../reference/des_parallel_process.collateRunResults.qmd) | Merges the per-run CSVs into `run_results.csv` |
-| [DES_HEMS.run](../reference/des_hems.DES_HEMS.qmd) | Runs the SimPy clock and writes the run's CSV |
+| [parallelProcessJoblib](../../reference/des_parallel_process.parallelProcessJoblib.qmd) | Derives per-run seeds and fans the runs out across cores |
+| [runSim](../../reference/des_parallel_process.runSim.qmd) | Builds and runs one [DES_HEMS](../../reference/des_hems.DES_HEMS.qmd) model, returns its results |
+| [write_run_params](../../reference/des_parallel_process.write_run_params.qmd) | Records the settings used, once, in `run_params_used.csv` |
+| [collateRunResults](../../reference/des_parallel_process.collateRunResults.qmd) | Merges the per-run CSVs into `run_results.csv` |
+| [DES_HEMS.run](../../reference/des_hems.DES_HEMS.qmd) | Runs the SimPy clock and writes the run's CSV |
 
 There are two time conventions to keep in mind. The model's clock is in **simulated minutes**, so a two-year duration is `2 * 365 * 24 * 60`. And the **warm-up period** is an initial stretch of simulated time that is run but not recorded, so that results are not distorted by the model starting from an empty system.
 
@@ -42,7 +50,7 @@ There are two time conventions to keep in mind. The model's clock is in **simula
 
 The command-line equivalent of the app's run button is `run_parallel_process.py` in the repository root. It is a good place to see the use case in its plainest form.
 
-```{.python include="../../run_parallel_process.py" start-line=1 end-line=19 filename="run_parallel_process.py:1-19" code-line-style="hi:8,10-18" include-hash="8a2268c045b1"}
+```{.python include="../../../run_parallel_process.py" start-line=1 end-line=19 filename="run_parallel_process.py:1-19" code-line-style="hi:8,10-18" include-hash="8a2268c045b1"}
 ```
 
 `removeExistingResults()` clears old `output_run_*.csv` and `all_results.csv` files from `data/` first. The call then passes, positionally, 12 runs, a duration of two years in minutes, zero warm-up, the start datetime, `amb_data=False` (do not model ambulance-service cases alongside HEMS; this is the normal setting), `save_params_csv=False` (do not write `run_params_used.csv` from this call), and demand and activity-duration multipliers of 1.0. The master seed is not given, so the default of 42 applies.
@@ -88,7 +96,7 @@ sequenceDiagram
 
 The seeding is the most important design decision here, so it comes first.
 
-```{.python include="../../air_ambulance_des/des_parallel_process.py" start-line=294 end-line=319 filename="air_ambulance_des/des_parallel_process.py:294-319" code-line-style="hi:5,8,11-12" include-hash="e6e32f416cae"}
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=294 end-line=319 filename="air_ambulance_des/des_parallel_process.py:294-319" code-line-style="hi:5,8,11-12" include-hash="e6e32f416cae"}
 ```
 
 `SeedSequence(master_seed).spawn(total_runs)` is NumPy's mechanism for producing statistically independent child sequences from one parent. Simply using seeds `42, 43, 44, ...` for the replications would work mechanically, but neighbouring integer seeds are not guaranteed to give uncorrelated streams. Spawning avoids that. `generate_state(1)[0]` then collapses each child into a single integer, because `runSim` and `DES_HEMS` take an `int` seed.
@@ -97,7 +105,7 @@ Because the seeds are computed up front, in the parent process, replication *n* 
 
 The seeding does not stop there. Inside the model, the per-run seed is spawned again, this time into many named random streams, one per sampling purpose. That is the subject of [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd). The start of `DES_HEMS.__init__` is where the hand-over happens:
 
-```{.python include="../../air_ambulance_des/des_hems.py" start-line=56 end-line=71 filename="air_ambulance_des/des_hems.py:56-71" code-line-style="hi:1,6-12" include-hash="674fb37f463e"}
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=56 end-line=71 filename="air_ambulance_des/des_hems.py:56-71" code-line-style="hi:1,6-12" include-hash="674fb37f463e"}
 ```
 
 Note `self.run_number = run_number + 1`. The `run` argument counts from 0 (which is how `runSim` recognises "the first run"), but the run number used in file names starts from 1, so the first replication writes `output_run_1.csv`.
@@ -106,7 +114,7 @@ Note `self.run_number = run_number + 1`. The `run` argument counts from 0 (which
 
 `runSim` is a thin wrapper. Most of its length is docstring and progress messages; the work is constructing the model, running it and, for the first replication, saving the parameters.
 
-```{.python include="../../air_ambulance_des/des_parallel_process.py" start-line=167 end-line=197 filename="air_ambulance_des/des_parallel_process.py:167-197" code-line-style="hi:7-17,27-29" include-hash="86b243cd1b73"}
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=167 end-line=197 filename="air_ambulance_des/des_parallel_process.py:167-197" code-line-style="hi:7-17,27-29" include-hash="86b243cd1b73"}
 ```
 
 Three details are worth noticing.
@@ -115,7 +123,7 @@ Three details are worth noticing.
 - The `run == 0` condition is why the parameters file is written exactly once. All replications share the same settings, so one copy is enough. The `SR NOTE` comment in the source points out that this would break if run numbering ever started at 1.
 - `write_run_params(daa_model)` reads the settings back from the model (duration, warm-up, start date, multipliers) and writes them to `run_params_used.csv`, including derived values such as the end date and the warm-up end date. [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd) reads this file back later.
 
-```{.python include="../../air_ambulance_des/des_parallel_process.py" start-line=62 end-line=97 filename="air_ambulance_des/des_parallel_process.py:62-97" code-line-style="hi:8-9,14-15,24-25" include-hash="0fb6ef0602b4"}
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=62 end-line=97 filename="air_ambulance_des/des_parallel_process.py:62-97" code-line-style="hi:8-9,14-15,24-25" include-hash="0fb6ef0602b4"}
 ```
 
 The summer and winter start dates are hard-coded as 1 April and 1 October of the start year. The comment in the code notes that this duplicates a definition in `class_hems` and must be kept in step with it.
@@ -124,28 +132,28 @@ The summer and winter start dates are hard-coded as 1 April and 1 October of the
 
 The model's `run()` method is short, because the real work lives in processes registered on the SimPy environment (covered in [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd)).
 
-```{.python include="../../air_ambulance_des/des_hems.py" start-line=812 end-line=832 filename="air_ambulance_des/des_hems.py:812-832" code-line-style="hi:10,13,16-19" include-hash="c19db5ad2a91"}
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=812 end-line=832 filename="air_ambulance_des/des_hems.py:812-832" code-line-style="hi:10,13,16-19" include-hash="c19db5ad2a91"}
 ```
 
 The simulation runs until `sim_duration + warm_up_duration`: the warm-up is added on top of the requested duration, not carved out of it. A one-year request with 24 hours of warm-up simulates 365 days plus one day, and records the last 365.
 
 The exclusion of the warm-up happens when events are logged, not here. Every call to `add_patient_result_row` checks the clock before storing a row:
 
-```{.python include="../../air_ambulance_des/des_hems.py" start-line=764 end-line=765 filename="air_ambulance_des/des_hems.py:764-765" include-hash="84b901b80c94"}
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=764 end-line=765 filename="air_ambulance_des/des_hems.py:764-765" include-hash="84b901b80c94"}
 ```
 
 So during the warm-up, patients still arrive and still occupy helicopters and cars, but nothing is added to `results_list`. By the time recording begins, the model is already in a realistic state.
 
 Finally, `run()` writes two files. They are worth distinguishing:
 
-```{.python include="../../air_ambulance_des/des_hems.py" start-line=782 end-line=810 filename="air_ambulance_des/des_hems.py:782-810" code-line-style="hi:9-12,24-29" include-hash="c34747dd3e8d"}
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=782 end-line=810 filename="air_ambulance_des/des_hems.py:782-810" code-line-style="hi:9-12,24-29" include-hash="c34747dd3e8d"}
 ```
 
 `write_all_results` appends to a single shared `all_results.csv`, which is why `removeExistingResults` deletes it before a fresh batch. `write_run_results` writes `output_run_N.csv`, one file per replication. The docstring explains why the combined file is not simply the shared one: with joblib, several workers could be appending at once, and depending on timing not all rows would be reliably written. Separate per-run files cannot collide, so they are the safe route to a combined result.
 
 ## Under the hood: collation {#sec-simulation-runs-and-replications-collation}
 
-```{.python include="../../air_ambulance_des/des_parallel_process.py" start-line=200 end-line=211 filename="air_ambulance_des/des_parallel_process.py:200-211" include-hash="a73f7310bbcd"}
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=200 end-line=211 filename="air_ambulance_des/des_parallel_process.py:200-211" include-hash="a73f7310bbcd"}
 ```
 
 `collateRunResults` finds every `output_run_*.csv` in `Utils.RESULTS_FOLDER` (the `data/` folder), reads them with pandas, concatenates them with a fresh index and writes `Utils.RUN_RESULTS_CSV`. It then deletes the per-run files. Each row already carries its run number, so the combined file still distinguishes replications.
@@ -160,4 +168,4 @@ Python threads share one interpreter lock, so CPU-bound work such as a simulatio
 
 A scenario becomes a batch of replications through three steps: `parallelProcessJoblib` spawns one independent seed per replication from the master seed, `runSim` builds and runs a `DES_HEMS` model for each, and `collateRunResults` merges the per-run CSVs into `run_results.csv`. Warm-up time is simulated but not logged, and `run_params_used.csv` records the settings alongside.
 
-Each model is handed an integer seed, but we have not yet seen what it does with it. Next, in [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd), we'll see how that seed is split into named streams and how fitted distributions are sampled. For the project background, see the [project overview](../readme.qmd).
+Each model is handed an integer seed, but we have not yet seen what it does with it. Next, in [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd), we'll see how that seed is split into named streams and how fitted distributions are sampled. For the project background, see the [project overview](../../readme.qmd).

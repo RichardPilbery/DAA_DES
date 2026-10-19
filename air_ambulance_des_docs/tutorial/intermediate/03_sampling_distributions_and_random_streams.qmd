@@ -2,9 +2,17 @@
 title: "Chapter 3: Sampling Distributions and Random Streams"
 description: "How Utils loads the fitted distributions and samples from them with named, independently seeded random streams."
 toc: true
+aliases:
+  - "../03_sampling_distributions_and_random_streams.html"
 ---
 
-In [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd) we saw that a master seed is split into one independent seed per replication, and that each replication builds its own [DES_HEMS](../reference/des_hems.DES_HEMS.qmd) model from its seed. This chapter looks at what the model does with that seed. Every random draw in a run (how many calls arrive today, which AMPDS card a call gets, how long a helicopter takes to reach the scene) comes from a named random stream owned by one class, `Utils`, in `air_ambulance_des/utils.py`. An AMPDS card is the triage code the dispatch system assigns to a call; it is defined in [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd).
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+In [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd) we saw that a master seed is split into one independent seed per replication, and that each replication builds its own [DES_HEMS](../../reference/des_hems.DES_HEMS.qmd) model from its seed. This chapter looks at what the model does with that seed. Every random draw in a run (how many calls arrive today, which AMPDS card a call gets, how long a helicopter takes to reach the scene) comes from a named random stream owned by one class, `Utils`, in `air_ambulance_des/utils.py`. An AMPDS card is the triage code the dispatch system assigns to a call; it is defined in [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd).
 
 ## The problem: random, but repeatable {#sec-sampling-distributions-and-random-streams-problem}
 
@@ -24,7 +32,7 @@ The chapter follows that use case in three steps: where `Utils` gets its distrib
 
 `Utils` is a plain class with no SimPy dependency. Its class attributes hold the folder locations; everything else is read in `__init__`.
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=34 end-line=45 filename="air_ambulance_des/utils.py:34-45" include-hash="97b4325c0cb0"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=34 end-line=45 filename="air_ambulance_des/utils.py:34-45" include-hash="97b4325c0cb0"}
 ```
 
 `PACKAGE_ROOT` and `REPO_ROOT` are worked out from the file's own location, so the paths do not depend on the directory you launch Python from. Three folders matter here:
@@ -43,7 +51,7 @@ The constructor then reads those files into attributes. They fall into three sha
 
 **Fitted distributions** are stored as Python literals in text files and parsed with `ast.literal_eval`:
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=147 end-line=154 filename="air_ambulance_des/utils.py:147-154" include-hash="eaaddd18e872"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=147 end-line=154 filename="air_ambulance_des/utils.py:147-154" include-hash="eaaddd18e872"}
 ```
 
 Each entry in `activity_time_distributions.txt` names a HEMS result, a vehicle type, a time type and a best-fit scipy distribution with its parameters, for example a Cauchy with `loc` and `scale` for helicopter `time_allocation`. At this point `self.activity_time_distr` is still a list of raw dictionaries. It is turned into something sampleable in `build_seeded_distributions()`, below.
@@ -52,10 +60,10 @@ Each entry in `activity_time_distributions.txt` names a HEMS result, a vehicle t
 
 Finally, `Utils` loads the **upper allowable time bounds** and reshapes them for fast lookup:
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=125 end-line=128 filename="air_ambulance_des/utils.py:125-128" include-hash="75f4a54f815a"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=125 end-line=128 filename="air_ambulance_des/utils.py:125-128" include-hash="75f4a54f815a"}
 ```
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=177 end-line=182 filename="air_ambulance_des/utils.py:177-182" include-hash="c3d850dc576e"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=177 end-line=182 filename="air_ambulance_des/utils.py:177-182" include-hash="c3d850dc576e"}
 ```
 
 ::: {.column-margin}
@@ -70,16 +78,16 @@ One more file is loaded defensively: the table for **ad hoc unavailability** (`a
 
 Loading does not touch randomness. Seeding happens in a separate call, `setup_seeds()`. First, here is how `DES_HEMS` builds and seeds its `Utils`:
 
-```{.python include="../../air_ambulance_des/des_hems.py" start-line=61 end-line=71 filename="air_ambulance_des/des_hems.py:61-71" code-line-style="hi:2,7,11" include-hash="378204b19b49"}
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=61 end-line=71 filename="air_ambulance_des/des_hems.py:61-71" code-line-style="hi:2,7,11" include-hash="378204b19b49"}
 ```
 
-The `random_seed` is the per-run seed that [runSim](../reference/des_parallel_process.runSim.qmd) received, so everything below is a deterministic function of it. `DES_HEMS` wraps it in a `SeedSequence`, spawns one child to hand to `Utils` as its `master_seed`, and calls `setup_seeds()`.
+The `random_seed` is the per-run seed that [runSim](../../reference/des_parallel_process.runSim.qmd) received, so everything below is a deterministic function of it. `DES_HEMS` wraps it in a `SeedSequence`, spawns one child to hand to `Utils` as its `master_seed`, and calls `setup_seeds()`.
 
 ::: {.column-margin}
 **SeedSequence spawning**: numpy's way of deriving statistically independent child seeds from a parent. Each `spawn()` call returns new children and remembers how many it has already produced.
 :::
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=184 end-line=221 filename="air_ambulance_des/utils.py:184-221" code-line-style="hi:7,32,35,36,38" include-hash="4d49571d280b"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=184 end-line=221 filename="air_ambulance_des/utils.py:184-221" code-line-style="hi:7,32,35,36,38" include-hash="4d49571d280b"}
 ```
 
 The method works in four moves:
@@ -119,7 +127,7 @@ A child's stream depends on its position in the spawn order, and `spawn()` is st
 
 With streams in place, the selection methods are short. The most common shape is a weighted choice from a probability table.
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=289 end-line=301 filename="air_ambulance_des/utils.py:289-301" code-line-style="hi:7-12" include-hash="f1231ffc31e9"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=289 end-line=301 filename="air_ambulance_des/utils.py:289-301" code-line-style="hi:7-12" include-hash="f1231ffc31e9"}
 ```
 
 `ampds_code_selection()` filters the table to the current hour, then uses `pandas.Series.sample` with the `proportion` column as `weights`. The important detail is `random_state=self.rngs["ampds_code_selection"]`: pandas accepts a `Generator`, so the draw consumes that named stream and no other. `care_category_selection()`, `callsign_group_selection()`, `vehicle_type_selection_qtr()` and `pt_outcome_selection()` follow the same pattern with their own stream names. How the patient generator chains these calls together is the subject of [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd).
@@ -132,7 +140,7 @@ With streams in place, the selection methods are short. The most common shape is
 
 Demand for the day is sampled by `inc_per_day_samples()`:
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=652 end-line=671 filename="air_ambulance_des/utils.py:652-671" code-line-style="hi:14-15,17-18" include-hash="09d9a441494d"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=652 end-line=671 filename="air_ambulance_des/utils.py:652-671" code-line-style="hi:14-15,17-18" include-hash="09d9a441494d"}
 ```
 
 The `quarter_or_season` argument chooses between the `winter`/`summer` lists and the `Q1`..`Q4` lists. `DES_HEMS` sets it to `"quarter"` (`daily_calls_by_quarter_or_season` in `des_hems.py`), then multiplies the chosen count by the demand multiplier and truncates it to an integer. There is also an older `inc_per_day()` that samples a fitted distribution instead; the model's call site for it is commented out in favour of the empirical samples.
@@ -141,7 +149,7 @@ The `quarter_or_season` argument chooses between the `winter`/`summer` lists and
 
 Durations are where the bounds and the per-distribution streams come together.
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=580 end-line=607 filename="air_ambulance_des/utils.py:580-607" code-line-style="hi:22-24" include-hash="2dd439897db1"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=580 end-line=607 filename="air_ambulance_des/utils.py:580-607" code-line-style="hi:22-24" include-hash="2dd439897db1"}
 ```
 
 ::: {.column-margin}
@@ -154,7 +162,7 @@ Durations are where the bounds and the per-distribution streams come together.
 
 ## SeededDistribution {#sec-sampling-distributions-and-random-streams-seeded}
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=1053 end-line=1059 filename="air_ambulance_des/utils.py:1053-1059" include-hash="8851c40572cc"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=1053 end-line=1059 filename="air_ambulance_des/utils.py:1053-1059" include-hash="8851c40572cc"}
 ```
 
 ::: {.column-margin}
@@ -163,10 +171,10 @@ Durations are where the bounds and the per-distribution streams come together.
 
 A frozen scipy distribution (`dist(**kwargs)`) fixes its parameters. `SeededDistribution` adds the generator, and `sample()` passes it as `random_state` to `rvs`. The result is an object you can call `.sample()` on and trust to be reproducible, which is what `activity_time()` does. `build_seeded_distributions()` creates one per fitted entry:
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=902 end-line=903 filename="air_ambulance_des/utils.py:902-903" include-hash="90f04eb10159"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=902 end-line=903 filename="air_ambulance_des/utils.py:902-903" include-hash="90f04eb10159"}
 ```
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=928 end-line=955 filename="air_ambulance_des/utils.py:928-955" code-line-style="hi:6-7,24,26" include-hash="e02a66079eac"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=928 end-line=955 filename="air_ambulance_des/utils.py:928-955" code-line-style="hi:6-7,24,26" include-hash="e02a66079eac"}
 ```
 
 The first block spawns one generator per fitted entry. Because the fitting pipeline writes one entry per HEMS result as well as per vehicle type and time type, the file holds more entries than there are (vehicle type, time type) pairs (50 entries for 12 pairs in the shipped file). The dictionary assignment keeps only the last entry for each pair, so the HEMS-result stratification is effectively ignored at sampling time and earlier generators are discarded (see [Distribution Fitting](08_distribution_fitting.qmd#sec-distribution-fitting-activity)). The loop then reads the distribution's name from the single key of `best_fit`, looks the class up in a `dist_map` (defined just above, mapping names such as `"gamma"`, `"lognorm"` or `"cauchy"` to scipy classes), and builds the wrapper. An unsupported name raises `ValueError`. The final two lines replace `self.activity_time_distr` with a dictionary keyed by `(vehicle_type, time_type)`, which is the key `activity_time()` looks up.
@@ -181,7 +189,7 @@ The first block spawns one generator per fitted entry. Because the fitting pipel
 
 Not every fitted distribution is wrapped. Ages use `sample_from_distribution()`, which takes a `{name: params}` dictionary and an explicit generator:
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=689 end-line=698 filename="air_ambulance_des/utils.py:689-698" include-hash="1724fee0cad4"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=689 end-line=698 filename="air_ambulance_des/utils.py:689-698" include-hash="1724fee0cad4"}
 ```
 
 It resolves the scipy distribution by name with `getattr(scipy.stats, dist_name)`, draws with `random_state=rng`, floors the value, and loops until it is positive. `age_sampling()` calls it with `rngs["age_sampling"]` and repeats until the age is no more than `max_age`.
@@ -196,11 +204,11 @@ It resolves the scipy distribution by name with `getattr(scipy.stats, dist_name)
 **Ad hoc unavailability**: a resource that is on shift and serviced but still cannot attend, for a reason such as weather or crew. The probabilities come from historical data.
 :::
 
-`sample_ad_hoc_reason(hour, quarter, registration)` is a different kind of sampler: it returns a *reason string* such as `"available"`, `"weather"` or `"crew"`, and it is called when resources are being allocated (see [Resource Allocation](06_resource_allocation.qmd) and [HEMSAvailability](../reference/class_hems_availability.HEMSAvailability.qmd)). The table `ad_hoc_unavailability.csv` has one row per registration, six-hour bin, quarter and reason. The method first maps the hour onto a bin (`00-05`, `06-11`, `12-17`, `18-23`) and filters the table. If that registration has no rows, it falls back to every registration (the detail is in the collapsed box below).
+`sample_ad_hoc_reason(hour, quarter, registration)` is a different kind of sampler: it returns a *reason string* such as `"available"`, `"weather"` or `"crew"`, and it is called when resources are being allocated (see [Resource Allocation](06_resource_allocation.qmd) and [HEMSAvailability](../../reference/class_hems_availability.HEMSAvailability.qmd)). The table `ad_hoc_unavailability.csv` has one row per registration, six-hour bin, quarter and reason. The method first maps the hour onto a bin (`00-05`, `06-11`, `12-17`, `18-23`) and filters the table. If that registration has no rows, it falls back to every registration (the detail is in the collapsed box below).
 
 ::: {.callout-note collapse="true" title="Deep dive: how missing ad hoc data is filled in"}
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=979 end-line=992 filename="air_ambulance_des/utils.py:979-992" include-hash="e72dbd25069d"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=979 end-line=992 filename="air_ambulance_des/utils.py:979-992" include-hash="e72dbd25069d"}
 ```
 
 Missing probabilities are then imputed, first from the registration's average across bins in that quarter, then from the bin's average across registrations. If anything is still missing, or the total is zero, the method gives up and returns `"available"`. Each fallback logs through `self.debug()`, which is silent unless `print_debug_messages` was set.
@@ -208,7 +216,7 @@ Missing probabilities are then imputed, first from the registration's average ac
 
 If the data is still thin after those fallbacks, the method simply returns `"available"`. Once the probabilities are usable the draw is the same pattern as before:
 
-```{.python include="../../air_ambulance_des/utils.py" start-line=1044 end-line=1050 filename="air_ambulance_des/utils.py:1044-1050" include-hash="09f78e630475"}
+```{.python include="../../../air_ambulance_des/utils.py" start-line=1044 end-line=1050 filename="air_ambulance_des/utils.py:1044-1050" include-hash="09f78e630475"}
 ```
 
 The probabilities are renormalised so they sum to one, then `rngs["ad_hoc_reason_selection"]` picks a reason. Defaulting to `"available"` whenever the data is thin is a deliberate-looking choice: missing data never makes a vehicle spuriously unavailable.

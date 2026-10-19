@@ -1,0 +1,243 @@
+---
+title: "Glossary"
+toc: false
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+Terms are defined as the home chapter uses them.
+
+active callsign groups
+:   Three sets on `HEMSAvailability` (callsign groups, registrations, callsigns) that record which resources are claimed by an in-flight allocation, so the same crew or vehicle cannot be allocated twice. Entries are added on claim and discarded by `return_resource`. [Chapter 6](06_resource_allocation.qmd)
+
+activity time
+:   A sampled duration for a job stage (for example `time_mobile`), drawn by `Utils.activity_time(vehicle_type, time_type)` from a fitted distribution and redrawn until it falls inside the bounds for that `time_type`. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+actual_data folder
+:   The CSVs the model reads for rotas, callsign lookup, servicing, school holidays and time bounds, which the app overwrites from uploads, scenarios or manual edits. Each file has a `_DEFAULT` twin that the app never writes to. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+ad hoc unavailability
+:   Unplanned unavailability of a helicopter, sampled by `Utils.sample_ad_hoc_reason` from per-registration, six-hour-band and per-quarter probabilities. Every degraded lookup path falls back to `"available"`. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+Ambulance
+:   The thin base class from which `HEMS` inherits, added as the generic responder. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+AMPDS card
+:   The dispatch-code category of the 999 call, sampled for each patient by `ampds_code_selection`, conditioned on the hour of day. It drives the sampled care category. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+best-fit distribution
+:   The result of `getBestFit`: `Fitter` tries each name in `sim_tools_distr_plus`, ranks them, and `get_best()` returns a one-entry dict of scipy distribution name to parameters. An empty series yields `{}`. [Chapter 8](08_distribution_fitting.qmd)
+
+call generator
+:   `DES_HEMS.generate_calls()`, the single long-lived SimPy process that decides each day's call count, places calls within each hour, spawns a `generate_patient` process per call and yields on the daily servicing check. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+calls per day
+:   The number of calls generated for a simulated day: a draw from `Utils.inc_per_day_samples`, multiplied by `demand_increase_percent` and truncated with `int()`. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+callsign
+:   The identifier of a crewed unit (for example H70), carried on each `HEMS` object. The `g-daan` aircraft switches between H70 and H71 depending on whether `g-daas` is in service. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+callsign group
+:   The grouping of callsigns that share a group number (for example 70 or 71), held on each `HEMS` object and used in allocation to select a preferred unit and to find a secondary. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+care category
+:   The patient's required level of care: CC (critical care), EC (enhanced care) or REG (regular). Sampled per patient conditioned on the AMPDS card. CC and EC patients may take the `allocate_resource` path; all others use `allocate_regular_resource`. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+fitter (package)
+:   The third-party Python package providing `Fitter` and `get_common_distributions`, imported at the top of `distribution_fit_utils.py`. [Chapter 8](08_distribution_fitting.qmd)
+
+g-daan / g-daas swap
+:   The service has two helicopters but wants the callsign H70 always crewed. When H70's usual aircraft `g-daas` is in the workshop, `g-daan` flies as H70 instead of its usual H71. Hard-coded by registration string. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+DEFAULT parameter files
+:   The `*_DEFAULT.csv` files beside each working CSV in `actual_data/`. `reset_to_defaults()` copies each over its working twin; the app never writes to them. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+distribution fitting pipeline
+:   The offline batch run of `DistributionFitUtils` (entry point `run_dist_fit_utils.py`) that reads a job-level CSV, empties `distribution_data/` and `historical_data/`, then writes the fitted distributions, probability tables and historical aggregates. It is not part of a simulation run. [Chapter 8](08_distribution_fitting.qmd)
+
+distribution_data folder
+:   The folder of fitted distributions and probability tables that `Utils.__init__` loads once per run; written by `DistributionFitUtils`. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+DistributionFitUtils
+:   The class implementing the fitting pipeline. Its output filenames and column layouts are an API, because `Utils` and the results classes read them by name. [Chapter 8](08_distribution_fitting.qmd)
+
+event log
+:   The list of dicts built by `add_patient_result_row()` and converted to `results_df` at the end of `run()`. Each dict is one row of `run_results.csv`; no row is stored before `warm_up_duration`. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+event_type
+:   The kind of an event-log row (`arrival_departure`, `queue`, `resource_use`, `resource_use_end` and the `patient_*` and `resource_*` descriptors). Downstream code filters on these strings, so they form an implicit schema. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+FilterStore
+:   The SimPy store type holding `HEMS` objects. `HEMSAvailability` keeps two, `store` for idle resources and `serviceStore` for those in the workshop, and takes items out with lambda filters. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+graceful_methods
+:   A class decorator that rebinds every non-dunder callable so that any exception becomes an `st.error` or a `print` and the method returns `None`. It is applied to `SimulationInputs`, `TrialResults` and `HistoricResults`, not to `__init__`. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+helicopter benefit
+:   A per-patient flag, sampled for HEMS cases, that records whether a helicopter would benefit the patient. For any patient on the regular allocation path (REG, and CC/EC patients who did not take `allocate_resource`) with a benefit, `PROB_HELI_BENEFIT_KNOWN` determines whether it is known at allocation, which restricts the choice to helicopters. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+HEMS resource
+:   A helicopter or car, modelled as a `HEMS` object carrying callsign, callsign group, registration, vehicle type, category, shift hours and a pre-computed servicing schedule. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+HEMS result
+:   The outcome of the HEMS attendance (for example Stand Down, or Treated not conveyed, meaning the patient was treated but nobody was taken to hospital by HEMS), sampled after allocation conditioned on patient outcome, quarter, vehicle type, callsign group and hour. It determines which later journey stages are skipped. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+HEMS rota
+:   `HEMS_ROTA.csv` in `actual_data/`, with one row per callsign, category and shift pattern. `prep_HEMS_resources` turns each row into one `HEMS` object. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+historical aggregates
+:   The `historical_*` outputs of `DistributionFitUtils`: observed totals written to `historical_data/`, which `TrialResults` and `HistoricResults` plot against simulated output. [Chapter 8](08_distribution_fitting.qmd)
+
+historical_data folder
+:   The folder of aggregated observed data loaded by `HistoricResults`, plus a `calculated/` subfolder holding the simulated historical baseline. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+HistoricResults
+:   The class that loads the files in `historical_data/` and the simulated baseline, to be passed into `TrialResults` plot methods for comparison. `TrialResults` does not import it. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+hourly arrival profile
+:   The per-quarter table of hourly proportions used by `calls_per_hour` to draw one hour per call and return `{hour: count}`. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+ia_dict
+:   The `{hour: count}` dictionary returned by `calls_per_hour`, set once per day in `generate_calls()` and consumed hour by hour. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+incidents per day samples
+:   An empirical list of daily call counts per season and per quarter (`Q1` to `Q4`), written by `incidents_per_day_samples()` and resampled at run time by `Utils.inc_per_day_samples`. [Chapter 8](08_distribution_fitting.qmd)
+
+master seed
+:   The single seed given to `parallelProcessJoblib`; `SeedSequence(master_seed).spawn(total_runs)` derives one per-run seed from it, independent of `n_cores`. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+missed call
+:   A patient for whom allocation returned `None` as the primary resource. The model still runs a `patient_journey`, but no HEMS resource is used. [Chapter 6](06_resource_allocation.qmd)
+
+missed jobs
+:   Calls counted from `resource_request_outcome` events whose `time_type` is `"No Resource Available"`, reported by `TrialResults` including an annualised normalised string. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+named random stream
+:   A dedicated numpy `Generator` per sampling purpose, held in `Utils.rngs`, so drawing more or fewer values for one purpose does not change the numbers any other purpose sees. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+parameter template
+:   The Excel workbook (`app/inputs/parameter_template.xlsx`) whose sheets the setup page reads into `actual_data/` CSVs and, via its `additional_parameters` sheet, into session-state scalars. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+Patient
+:   A plain attribute bag in `class_patient.py` with defaults and no behaviour; `generate_patient()` populates it by sampling. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+patient journey
+:   The `DES_HEMS.patient_journey()` generator: stages `time_allocation`, `time_mobile`, `time_to_scene`, `time_on_scene`, `time_to_hospital` and `time_to_clear`, some skipped depending on the HEMS result, ending in a `depart` row. Resources are returned in a `finally` block. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+patient outcome
+:   The outcome sampled for each patient, conditioned on care category and quarter. It later conditions the HEMS result. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+per-run seed
+:   The integer seed for one replication, derived from the master seed and run index and passed to `runSim` as `random_seed`. `DES_HEMS` wraps it in a further `SeedSequence`. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+predefined scenario
+:   A filled-in parameter template stored in `scenarios/` and offered as a choice on the setup page. It needs a unique name in `scenario_details`. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+preferred callsign group
+:   The callsign group sampled for a HEMS patient and used by `allocate_regular_resource` and `preferred_regular_group_available` to select the unit to send. [Chapter 6](06_resource_allocation.qmd)
+
+preferred vehicle type
+:   The vehicle type (`helicopter` or `car`) sampled for a HEMS patient and used, with the preferred callsign group, in the REG allocation path. [Chapter 6](06_resource_allocation.qmd)
+
+primary and secondary resource
+:   The first and third elements of the list `[primary, reason_text, secondary]` that allocation returns. The secondary is a second `HEMS` from the same callsign group or `None`; as written, it is always `None`. [Chapter 6](06_resource_allocation.qmd)
+
+quarter (qtr)
+:   Q1 to Q4 of the calendar year, used to stratify most probability tables. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+registration
+:   The aircraft or vehicle registration (for example `g-daan`), used as the key for servicing schedules and in the active sets. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+RWC
+:   Appears in `make_RWC_utilisation_dataframe` and `PLOT_RWC_utilisation`. Not expanded in the code; it presumably means "real-world comparison", i.e. utilisation built from historic rotas. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+replication
+:   One independently seeded run of the whole model. Results are only meaningful as a set of replications. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+reset to defaults
+:   `reset_to_defaults()`, which rewrites session state from `DEFAULT_INPUTS` and, when `reset_csvs` is set, copies each `*_DEFAULT.csv` over its working CSV. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+resource allocation
+:   The part of `HEMSAvailability` that returns, per patient, `[primary, reason_text, secondary]` as a SimPy event, via `allocate_resource` (CC and EC) or `allocate_regular_resource` (everyone else). [Chapter 6](06_resource_allocation.qmd)
+
+ResourceAllocationReason
+:   An `IntEnum` whose values index `HEMSAvailability.LOOKUP_LIST`. The enum and the list must be kept in step by hand. [Chapter 6](06_resource_allocation.qmd)
+
+results collation
+:   `collateRunResults`, which globs `output_run_*.csv` in the results folder, concatenates them into `run_results.csv` and deletes the per-run files. Call `removeExistingResults` before a fresh batch. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+run_params_used.csv
+:   The file of parameters recorded by `write_run_params`, written once by run 0 when `save_params_csv` is set. Nothing links it to the results by identifier. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+run_results.csv
+:   The combined event log across all replications, produced by collation and read by `TrialResults`. Each row carries a `run_number`. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+SR NOTE
+:   A code-comment convention in this repo (a maintainer's note-to-self) used to flag a caveat, for example in `write_run_params` and above the `run == 0` check in `runSim`. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+school holidays
+:   The date ranges in `school_holidays.csv`, parsed by `parse_school_holidays` (which raises `ValueError` if a holiday ends before it starts) and avoided when scheduling aircraft servicing. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+SeededDistribution
+:   A pair of a frozen scipy distribution and its own numpy generator, held in a dictionary keyed by `(vehicle_type, time_type)`. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+SeedSequence spawning
+:   The use of `SeedSequence.spawn` to derive child sequences: one per `Utils`, 22 named generators in `setup_seeds`, then one per activity-time fit. Children are numbered by position, so inserting a stream key shifts later streams. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+service store
+:   The second `FilterStore` (`serviceStore`) holding resources currently in the workshop. The daily servicing check moves items between it and `store`. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+servicing schedule
+:   The pre-computed service windows for each aircraft, built by `prep_HEMS_resources` from service intervals, last service dates and the callsign lookup. Windows avoid school holidays and each other, and only ever move earlier than due. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+session state defaults
+:   `DEFAULT_INPUTS` in `app/_state_control.py`, the flat dict of scalar parameters. `setup_state()` fills only missing keys, so it is idempotent. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+SimPy environment
+:   The single `simpy.Environment` owned by each `DES_HEMS` run, advanced until `sim_duration + warm_up_duration`. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+simulated historical baseline
+:   Output of `run_sim_on_historical_params`: 30 replications of two simulated years using historic rotas from `tests/rotas_historic`, summarised into `historical_data/calculated/`. It estimates quantities that cannot be observed directly. [Chapter 8](08_distribution_fitting.qmd)
+
+simulation time in minutes
+:   The model's unit of time. Durations and `warm_up_time` are passed in minutes; the app converts days by `24 * 60` and hours by `60`. [Chapter 2](02_simulation_runs_and_replications.qmd)
+
+SimulationInputs
+:   A holder of five DataFrames: run parameters and service dates from the run's data folder, and rota, callsign lookup and rota month bounds from `actual_data/`. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+Stand Down
+:   A HEMS result meaning the crew was cancelled before reaching the scene; the later journey stages are skipped. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+Streamlit app
+:   The multipage app in `app/`. It holds scalar parameters in `st.session_state`, tabular parameters as CSVs in `actual_data/`, and calls `runSim` or `parallelProcessJoblib`. [Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)
+
+summer and winter shift hours
+:   The two sets of shift hours carried by each `HEMS`. `hems_resource_on_shift` picks between them by month, using the bounds in `rota_start_end_months.csv`. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+theoretical available hours
+:   The utilisation denominator: rostered minutes per day from `warm_up_end_date` to `sim_end_date`, computed by `calculate_available_hours` from the rota alone. Servicing is not subtracted. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+time_type
+:   The "what" of an event-log row: a stage name, a callsign or a number of minutes. [Chapter 4](04_calls_and_patient_journeys.qmd)
+
+TrialResults
+:   The class that takes `run_results.csv` and derives its metric DataFrames in the constructor, exposing `PLOT_*`, `get_*` and `display_*` methods. Nothing it computes feeds back into the simulation. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+upper allowable time bounds
+:   Per-`time_type` minimum and maximum durations from `upper_allowable_time_bounds.csv`, used by `Utils.activity_time` to reject out-of-range draws and by `DistributionFitUtils` to filter data before fitting. Shared across vehicle types. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+utilisation
+:   Time in use divided by theoretical available hours, per callsign. Per-run durations are summed over runs, divided by the number of runs, then divided by single-run availability. [Chapter 7](07_trial_results_and_historic_comparison.qmd)
+
+Utils
+:   The sampling layer in `air_ambulance_des/utils.py`. It loads the fitted inputs, builds the named random streams in `setup_seeds()` and exposes selection methods that each return one sampled value. [Chapter 3](03_sampling_distributions_and_random_streams.qmd)
+
+vehicle type
+:   `helicopter` or `car`, an attribute of each `HEMS` object. Allocation hard-codes these two values. [Chapter 5](05_hems_resources_and_servicing.qmd)
+
+warm-up period
+:   Simulated minutes at the start of a run whose events are simulated but not recorded, enforced only in `add_patient_result_row`. The recorded window starts at `warm_up_duration` and lasts `sim_duration`. [Chapter 2](02_simulation_runs_and_replications.qmd)

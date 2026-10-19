@@ -1,0 +1,26 @@
+# Style block: advanced-contributor
+
+- **max_code_block_lines**: 150
+- **max_diagram_participants**: 12
+- **uses_evidence**: true
+- **Label**: Contributor
+- **Structure**: tailored
+- **Reader**: an experienced engineer about to change this codebase (a SimPy discrete-event simulation of air ambulance (HEMS) operations). They need the internals, the invariants, the extension points, and where they can make changes safely.
+- **Tone**: conversational expert. Write peer to peer, the way a senior colleague explains the codebase over a whiteboard: direct and candid, assuming competence, never padded. British English.
+- **Code**: verbatim-first. Show real excerpts by default, with line-range captions and "View source" links where available. Use illustrative blocks only for pseudocode, usage examples, or example output, never to simplify real code. Use code annotations on the non-obvious lines only.
+- **Analogies**: occasional. Use one only when it genuinely clarifies something non-obvious, such as a concurrency or ownership model. Never use one for basics.
+- **Emphasis**: primary: extension points, then edge cases and failure modes. Secondary: design rationale. Brief: limitations and debt.
+- **Diagrams**: as well as sequence diagrams, use class, state and flowchart diagrams freely where they show structure, lifecycles or failure paths.
+- **Quarto features**: tabsets are rarely needed; if used they open on **Real code**. Collapsed callouts hold optional material the reader can skip. Margin definitions only for project-specific terms. Cross-reference generously between chapters.
+- **Line highlighting** (code-line-style is enabled): use `focus:` and `dim:` to point at the lines that matter in a complete excerpt, instead of eliding lines. Use `hi:` for a single line, and the diff styles (`add`, `rem`, `chg`) only to show a change that the evidence documents. Never mark more than about a third of a block. Mark the extension point and the invariant a change must keep.
+- **Honesty about rationale**: label every claim about *why* something is built a certain way as either **documented** (citing the commit, doc, issue or PR from `evidence.yaml`) or **inferred** ("the code suggests…", "presumably to…"). Never present an inference as a documented fact.
+- **Sections** (Structure: tailored; in this order; the slug in brackets ends each section id `{#sec-<xref stem>-<slug>}`):
+  - Title, then optionally one sentence linking back to the previous chapter.
+  - `## What it is` (`what-it-is`): the job and the contract in two to four sentences: inputs, outputs, the invariants callers rely on, and where it sits among its collaborators (link them). Name one concrete use case in a sentence. A flowchart or class diagram only if it shows structure prose can't. No analogy and no history.
+  - `## How it works` (`how-it-works`): the internals, following the real call path through the key symbols, with verbatim excerpts.
+  - `## Extending this` (`extending-this`): where to make typical changes, what else must change alongside them, which tests cover this area and how to run them (from the outline's `tests`), and the conventions the code expects.
+  - `## Sharp edges` (`sharp-edges`): invariants that aren't enforced, error-handling and concurrency behaviour, surprising coupling, performance traps.
+  - `## Design notes` (`design-notes`): why it's shaped this way, documented or inferred.
+  - `## Limitations and open questions` (`limitations`): short, from evidence (TODO/FIXME markers, open issues and PRs).
+  - `## Conclusion`: one or two sentences handing off to the next chapter with a link. No recap.
+  - A sequence diagram is optional: only where a flow crosses components. If a listed section has nothing specific to say, write one honest sentence rather than padding.

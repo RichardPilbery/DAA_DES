@@ -1,7 +1,15 @@
 ---
 title: "Glossary"
 description: "Key terms used in the DAA_DES tutorial."
+aliases:
+  - "../glossary.html"
 ---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/glossary.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
 
 This glossary lists the key terms used in the tutorial, in alphabetical order, each with a link to the chapter that introduces it.
 

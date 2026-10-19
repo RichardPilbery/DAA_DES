@@ -1,0 +1,90 @@
+---
+title: "Contributor tutorial: how the simulation works"
+description: "For engineers about to change DAA_DES: internals, invariants, extension points, sharp edges and design rationale, chapter by chapter."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+**DAA_DES** is a *discrete event simulation* of Devon Air Ambulance HEMS (helicopter emergency medical service) operations. It is built on **SimPy** and packaged as `air_ambulance_des`, with a **Streamlit web app** in `app/` for setting parameters, running the model and viewing results. Each run generates daily emergency calls, samples patient characteristics from distributions fitted to historical job data, tries to allocate a helicopter or car according to rotas, servicing schedules and care category priorities, and records every step in an event log. Many seeded replications run in parallel, and the combined results are summarised and set against historical data.
+
+This version is for an experienced engineer who is about to change the code. Each chapter says what the component guarantees, follows the real call path with verbatim excerpts, then tells you where to make typical changes, which tests cover the area, what bites, and why it is shaped the way it is (labelled *documented* or *inferred*). It complements the [Project Overview](../../readme.qmd) and the [API reference](../../reference/index.qmd).
+
+**Source repository:** <https://github.com/RichardPilbery/DAA_DES>
+
+::: {.callout-note title="Known issues"}
+Open issues and pull requests were checked on 2026-10-19. See the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state. Several chapters flag places where the code appears not to do what it intends; those are observations from reading the source, so check the tracker before relying on them.
+:::
+
+## How the pieces fit together
+
+```{mermaid}
+%%| label: fig-overview
+%%| fig-cap: "How the eight parts of the system relate to each other."
+flowchart TD
+    A0["1. Streamlit App and Scenario Parameters"]
+    A1["2. Simulation Runs and Replications"]
+    A2["3. Sampling Distributions and Random Streams"]
+    A3["4. Calls and Patient Journeys"]
+    A4["5. HEMS Resources and Servicing"]
+    A5["6. Resource Allocation"]
+    A6["7. Trial Results and Historic Comparison"]
+    A7["8. Distribution Fitting"]
+    A0 -- "Launches runs" --> A1
+    A0 -- "Writes rota and servicing CSVs" --> A4
+    A0 -- "Displays outputs of" --> A6
+    A1 -- "Creates and runs" --> A3
+    A1 -- "Writes run_results.csv for" --> A6
+    A3 -- "Samples calls and times from" --> A2
+    A3 -- "Triggers daily servicing check" --> A4
+    A3 -- "Requests and returns resources" --> A5
+    A5 -- "Selects from store of" --> A4
+    A5 -- "Samples ad hoc unavailability" --> A2
+    A7 -- "Writes distribution files for" --> A2
+    A7 -- "Writes historical data for" --> A6
+    A7 -- "Runs historical baseline via" --> A1
+```
+
+Arrows show who calls or feeds whom. Chapter 8 sits upstream because it produces the data files the others read.
+
+## Domain terms you need
+
+These words appear from chapter 4 onwards. Fuller definitions are in the [Glossary](glossary.qmd).
+
+- **Care category**: CC (critical care), EC (enhanced care) or REG (regular). It is sampled per patient and decides which allocation path is used (chapters [4](04_calls_and_patient_journeys.qmd) and [6](06_resource_allocation.qmd)).
+- **AMPDS card**: the dispatch-code category of the 999 call. It drives the sampled care category.
+- **Callsign, callsign group and registration**: a callsign (such as H70) names a crewed unit, a callsign group (such as 70) clusters callsigns, and a registration (such as g-daas) identifies the physical aircraft or car. One aircraft can fly under different callsigns: g-daan is normally H71 but flies as H70 while g-daas is being serviced ([Chapter 5](05_hems_resources_and_servicing.qmd)).
+- **Quarter (qtr)**: Q1 to Q4 of the calendar year, used to stratify most probability tables.
+- **Stand Down**: a job cancelled before the crew reaches the scene ([Chapter 4](04_calls_and_patient_journeys.qmd)).
+
+## Before you change anything
+
+1. Run everything from the repository root. Nearly all paths are relative (`actual_data/`, `data/`, `distribution_data/`), so a different working directory breaks file loading.
+2. `pytest` runs the suite and `pytest -m quick` runs the fast subset; see `tests/README.md`.
+3. Suggested start: [Chapter 2](02_simulation_runs_and_replications.qmd) for the run API, then [Chapter 4](04_calls_and_patient_journeys.qmd).
+
+## Chapters
+
+Chapters are self-contained enough to read in any order once you know the diagram above. If you are changing dispatch behaviour, go to chapters 5 and 6; for reproducibility, chapters 2 and 3; for outputs and plots, chapter 7. Chapters 7 and 8 have no tests.
+
+1. [Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd) — How the web app collects parameters, writes them to `actual_data`, and triggers a run.
+2. [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd) — How `runSim` and `parallelProcessJoblib` run seeded replications and collate their output files.
+3. [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd) — How `Utils` loads the fitted distributions and samples from them with named, independently seeded random streams.
+4. [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) — How `DES_HEMS` generates daily calls, creates patients and moves each one through the stages of a job while writing the event log.
+5. [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd) — How helicopters and cars are modelled, built from the rota files, scheduled for servicing and kept in a SimPy `FilterStore`.
+6. [Resource Allocation](06_resource_allocation.qmd) — How `HEMSAvailability` chooses a primary and secondary resource for each patient, records the reason, and releases them afterwards.
+7. [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd) — How `SimulationInputs`, `TrialResults` and `HistoricResults` turn the event log and historical data into metrics and plots.
+8. [Distribution Fitting](08_distribution_fitting.qmd) — How `DistributionFitUtils` turns historical job data into the distribution and historical-data files the rest of the system reads.
+
+For definitions of the terms used throughout, see the [Glossary](glossary.qmd).
+
+## Further reading
+
+- [Project Overview](../../readme.qmd): the model logic sequence and the output columns.
+- [Class and function reference](../../reference/index.qmd): the full API.
+
+*Generated by [AI Codebase Knowledge Builder](https://github.com/The-Pocket/PocketFlow-Tutorial-Codebase-Knowledge) from commit [5e73694](https://github.com/RichardPilbery/DAA_DES/commit/5e73694f97d56092944f0b432a98759a088a9f22), 2026-10-19.*
