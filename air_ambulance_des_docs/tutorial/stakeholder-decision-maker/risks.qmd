@@ -1,0 +1,74 @@
+---
+title: "Risks"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](risks.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- The biggest risk is over-trusting the numbers. Results are averages of random runs, built on 2023 and 2024 patterns, and known differences from real figures are still being investigated.
+- Some faults are known: the model can get stuck and never finish if a servicing slot cannot be found, and some utilisation charts break when a vehicle is removed.
+- Safeguards exist (automated checks, repeatable runs, a reset option), but the checks are not run automatically on each change.
+- The model is a planning aid. It is not a live dispatch system.
+:::
+
+This page sets out what could go wrong, what is already in place, and what is missing. For the assumptions behind these risks, see [assumptions and limits](assumptions-limits.qmd).
+
+## Risks to decisions
+
+| Risk | What it means in practice |
+|---|---|
+| Treating one figure as a forecast | Each headline figure, such as missed jobs, is an average across many random runs. It is an estimate, not a prediction. |
+| Past patterns may not hold | Demand is based on two years of real jobs. Only one overall percentage adjusts it. |
+| Gaps against reality | Open issues record differences between the model's figures and historical ones. The share of jobs given to each of the two main helicopter-and-car crew teams is slightly off the real figures. The rules for choosing a vehicle are under review. |
+| No geography | Travel times come from past averages, not from where an incident is. Any change where location matters is not captured. |
+| Different numbers in different places | The public demo and a local installation set up their random chances in slightly different ways, so the same settings can give slightly different numbers. Use one place consistently when comparing scenarios. |
+
+A sensible habit is to compare any scenario with the default rota, and with the historical comparison the model provides, rather than reading a single figure alone.
+
+## Risks to running it
+
+- **The model can get stuck.** If it cannot fit a servicing slot for an aircraft, it can get stuck and never finish (the computer keeps working but never produces a result). This is a known open issue. A stuck run stops the whole simulation from finishing.
+- **One user at a time.** Scenario settings are written to shared files on the machine, not kept per person. Two people using one installation could overwrite each other's scenario. Running the automated checks may also overwrite them.
+- **Faulty charts.** Utilisation charts and figures can break when one vehicle is taken out of a scenario. Utilisation is a key output, so check it with care.
+- **The hosted demonstration site.** It has had file-handling problems, and it is slower with fewer runs. It also fetches the report tool, fonts and icons from outside services, so it relies on those being available.
+- **Results files.** One combined results file is added to on every run and the web app does not clear it. How long files are kept is not determined from the code.
+
+## Risks to data
+
+The model that users run uses made-up patients. Their age and sex are generated, not real.
+
+The separate historical data preparer is different. It reads real patient-level job records, which include each patient's age and sex. The raw records are kept out of the project's shared code history, and they are not included with it. But the code does not check that the file is complete or correctly formatted. The code also does not show who may access the records, or how they are stored and protected. This guide does not say whether any data-protection requirement is met. Ask the team (see [questions to ask](questions-to-ask.qmd)).
+
+## What is in place
+
+- **Automated checks.** They test the main rules, school holiday handling, vehicle choice and call creation. They compare output with real history and warn or fail when differences pass set limits. The checks also compare results with a saved set of earlier results, so any unplanned change in output is noticed.
+- **Repeatable runs.** Using the same [random seed](glossary.qmd) (a fixed starting number for the random chances) gives identical results from the same settings.
+- **Reset to defaults.** The web app can restore the standard rota and settings. The rota also resets when a new session starts.
+- **Open source.** The code, open issues and automatically built technical documentation are public.
+
+## What is missing
+
+- The checks run only when a developer chooses to run them. They do not run automatically on each change.
+- Nothing tests the calculation behind utilisation.
+- There is no test measuring how much the random seed changes results.
+- One person made all changes in the last year (46 changes). See [keeping it running](keeping-it-running.qmd).
+- Scenarios cannot yet be compared side by side inside the web app.
+
+For terms such as "run" and "random seed", see the [glossary](glossary.qmd).
+
+::: {.callout-note collapse="true" title="For the technical team"}
+- [Open issue: Model hangs indefinitely if servicing schedule can't be resolved](https://github.com/RichardPilbery/DAA_DES/issues/233)
+- [Open issue: Tracking down discrepancies in metrics vs historical data](https://github.com/RichardPilbery/DAA_DES/issues/165)
+- [Open issue: Revisiting Resource Allocation Logic](https://github.com/RichardPilbery/DAA_DES/issues/238)
+- [Open issue: Allocation of jobs between callsign group 70 + 71 slightly off from historical patterns](https://github.com/RichardPilbery/DAA_DES/issues/178)
+- [Open issue: Utilisation breakdown plot breaks when one helicopter/car pairing removed](https://github.com/RichardPilbery/DAA_DES/issues/217)
+- [Open issue: Car utilisation metrics break when one car is removed](https://github.com/RichardPilbery/DAA_DES/issues/215)
+- [Open issue: Write formal tests for utilisation denominator calculation](https://github.com/RichardPilbery/DAA_DES/issues/176)
+- [Open issue: Tests to quantify the variation in the impact of random seeds](https://github.com/RichardPilbery/DAA_DES/issues/183)
+- [Open issue: Errors when hosting the app on community cloud](https://github.com/RichardPilbery/DAA_DES/issues/130)
+- [Open issue: Test handling of changed CSVs in hosted deployment](https://github.com/RichardPilbery/DAA_DES/issues/101)
+:::

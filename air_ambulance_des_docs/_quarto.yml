@@ -24,6 +24,8 @@ website:
             href: tutorial/intermediate/index.qmd
           - text: Contributor
             href: tutorial/advanced-contributor/index.qmd
+          - text: Decision-makers
+            href: tutorial/stakeholder-decision-maker/index.qmd
   sidebar:
     - id: tutorial-intermediate
       title: Tutorial (Intermediate)
@@ -53,6 +55,18 @@ website:
         - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
         - tutorial/advanced-contributor/08_distribution_fitting.qmd
         - tutorial/advanced-contributor/glossary.qmd
+    - id: tutorial-stakeholder-decision-maker
+      title: Tutorial (Decision-makers)
+      style: docked
+      contents:
+        - tutorial/stakeholder-decision-maker/index.qmd
+        - tutorial/stakeholder-decision-maker/what-it-does.qmd
+        - tutorial/stakeholder-decision-maker/how-it-works.qmd
+        - tutorial/stakeholder-decision-maker/assumptions-limits.qmd
+        - tutorial/stakeholder-decision-maker/risks.qmd
+        - tutorial/stakeholder-decision-maker/keeping-it-running.qmd
+        - tutorial/stakeholder-decision-maker/questions-to-ask.qmd
+        - tutorial/stakeholder-decision-maker/glossary.qmd
 
 # tell quarto to read the generated sidebar
 metadata-files:

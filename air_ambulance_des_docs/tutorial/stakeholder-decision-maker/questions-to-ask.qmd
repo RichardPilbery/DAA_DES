@@ -1,0 +1,64 @@
+---
+title: "Questions to ask the development team"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](questions-to-ask.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- This page lists questions to put to the team before you invest in, adopt or rely on the model.
+- Each question says why it matters and points to the page that gives the background.
+- The code cannot answer most of these. They need a person who knows the project.
+- Vague or evasive answers are themselves useful information.
+:::
+
+The guide has told you what the model does and does not show. This page turns the gaps into questions. You do not need to ask all of them. **If you only ask five**, ask about the match to history, variation from the random seed, the refresh plan and who holds the data, the single contributor, and data access. Otherwise pick the groups that match your decision.
+
+## How far can you trust the results?
+
+| Question | Why it matters |
+|---|---|
+| On which measures do the results match 2023–2024 reality closely, and on which do they differ? By how much? | The team has an open list of differences from historical figures. You need to know whether the ones that matter for your decision are among them. See [assumptions and limits](assumptions-limits.qmd). |
+| How many runs are enough for the decisions we want to make? | Each headline figure is an average of random runs. The hosted demonstration uses fewer runs by default, so its figures are less steady. |
+| Has anyone measured how much results change just from the random seed? | Without that, you cannot tell a real difference between two scenarios from random noise. |
+| Would the team be willing to show a worked comparison with real outcomes that our own staff can check? | Your clinicians and planners know the service better than the model does. |
+
+## Are the built-in guesses reasonable?
+
+| Question | Why it matters |
+|---|---|
+| Where does the 50% chance that a dispatcher knows the care need in advance come from? Is it a data-based figure or an estimate? | It is a fixed estimate in the code, not learned from data. It affects which vehicle is sent and so how many jobs are missed. |
+| One rule meant to count every patient flown by helicopter as gaining a helicopter benefit appears to do nothing. Is that intended? | If it was meant to work, results are not using it. A developer note says that, once working, it might slightly overstate helicopter-benefit patients. |
+| Is it acceptable that missed calls are never queued and that cars are never unavailable at short notice? | Both simplify reality. |
+| Travel times come from past averages, not from geography. Is that good enough for the scenarios we care about? | A scenario that depends on where a base is, or how far a job is, cannot be tested properly. See [what it does](what-it-does.qmd). |
+
+## What happens when we change something?
+
+| Question | Why it matters |
+|---|---|
+| Can the model handle removing a vehicle or a different fleet layout? | Some charts and utilisation figures are known to break when a helicopter and car pairing is removed. |
+| What happens if the servicing plan cannot be fitted into the calendar? | The model can get stuck and never finish. See [risks](risks.qmd). |
+
+## Is it kept up to date?
+
+| Question | Why it matters |
+|---|---|
+| When and how will the learned patterns be refreshed with newer data? | The model reflects 2023–2024. Demand and practice move on. |
+| Who holds the cleaned job-record extract needed for a refresh, and who is allowed to use it? | The extract is not part of the project. See [keeping it running](keeping-it-running.qmd). |
+| School holiday dates stop at the end of 2027. Who will extend them, and when? | The model assumes dates cover the whole simulated period. |
+| What happens if the one active contributor is unavailable? | One person made all the changes in the last year. See [keeping it running](keeping-it-running.qmd). |
+
+## Is it safe to rely on?
+
+| Question | Why it matters |
+|---|---|
+| Will the automated checks run on every change? | At present they run only when someone chooses to run them. A change could break the model without anyone noticing. |
+| Who decides who can see the patient-level records used to build the patterns, and how are they protected? | Those records include each patient's age and sex. The code does not show how access is governed, nor does it check the file is complete. See [risks](risks.qmd). |
+| How long are result files kept, and who can see them on the hosted site? | This could not be determined from the code. |
+
+## What to do with the answers
+
+Keep a short note of each answer, who gave it and when. Treat "we don't know" as a legitimate answer, but ask when it will be found out. Unanswered questions in the first two groups are the ones most likely to change your decision. For the meaning of any term, see the [glossary](glossary.qmd).

@@ -6,7 +6,7 @@ toc: true
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](../intermediate/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

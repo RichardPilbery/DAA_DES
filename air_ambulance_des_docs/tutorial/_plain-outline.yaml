@@ -1,0 +1,396 @@
+plain_summary: |
+  This is a computer model of how Devon Air Ambulance's helicopters and critical care cars
+  respond to emergency calls. It creates a realistic stream of made-up calls, based on patterns
+  in two years of real job records (2023 and 2024), and plays out what would happen under a
+  chosen rota, fleet and servicing plan. It is for planners and managers who want to test
+  "what if" questions (for example, longer shifts, an extra car or a different aircraft) before
+  trying them for real. It produces estimates of missed jobs, how busy each vehicle and crew is,
+  and how the results compare with what actually happened, shown in a web app and an optional
+  downloadable report.
+
+components:
+  - id: streamlit_app
+    plain_name: the web app
+    plain_role: The screens where a user chooses a scenario (rota, vehicles, servicing, run length), starts the model and views the results.
+    technical_name: Streamlit app and scenario parameters (app/app.py, app/setup.py, app/model.py, app/_state_control.py)
+  - id: simulation_runner
+    plain_name: the run manager
+    plain_role: Runs the model many times over (each time with different random chances) and gathers all the runs' results into one file.
+    technical_name: des_parallel_process (runSim, parallelProcessJoblib, collateRunResults) (air_ambulance_des/des_parallel_process.py)
+  - id: sampling_utils
+    plain_name: the pattern sampler
+    plain_role: Holds the patterns learned from past jobs (how many calls a day, what type, how long each stage takes) and draws realistic values from them on request.
+    technical_name: Utils (air_ambulance_des/utils.py)
+  - id: des_hems_model
+    plain_name: the call simulator
+    plain_role: Creates each day's made-up emergency calls and patients, and moves each one through the stages of a job, writing down every step.
+    technical_name: DES_HEMS and Patient (air_ambulance_des/des_hems.py, air_ambulance_des/class_patient.py)
+  - id: hems_resources
+    plain_name: the fleet and rota model
+    plain_role: Represents each helicopter and car, its shift hours in summer and winter, and when it is away for planned servicing.
+    technical_name: HEMS, Ambulance and HEMSAvailability servicing methods (air_ambulance_des/class_hems.py, air_ambulance_des/class_ambulance.py, air_ambulance_des/class_hems_availability.py, air_ambulance_des/school_holidays.py)
+  - id: resource_allocation
+    plain_name: the dispatch rules
+    plain_role: Decides which helicopter or car, if any, is sent to each call, and records why.
+    technical_name: HEMSAvailability allocation methods and ResourceAllocationReason (air_ambulance_des/class_hems_availability.py)
+  - id: trial_results
+    plain_name: the results and comparison tool
+    plain_role: Turns the recorded steps into headline figures and charts, and sets them beside the real historical figures.
+    technical_name: TrialResults, SimulationInputs, HistoricResults (air_ambulance_des/class_simulation_trial_results.py, air_ambulance_des/class_simulation_inputs.py, air_ambulance_des/class_historic_results.py)
+  - id: distribution_fitting
+    plain_name: the historical data preparer
+    plain_role: A separate, occasional step that reads the real job records and turns them into the patterns and historical summaries the model uses.
+    technical_name: DistributionFitUtils (air_ambulance_des/distribution_fit_utils.py, run_dist_fit_utils.py)
+
+relationships:
+  - from: streamlit_app
+    to: simulation_runner
+    plain_label: starts
+  - from: streamlit_app
+    to: hems_resources
+    plain_label: sets the rota and servicing plan for
+  - from: streamlit_app
+    to: trial_results
+    plain_label: displays results from
+  - from: simulation_runner
+    to: des_hems_model
+    plain_label: runs many copies of
+  - from: simulation_runner
+    to: trial_results
+    plain_label: hands combined results to
+  - from: des_hems_model
+    to: sampling_utils
+    plain_label: draws calls and timings from
+  - from: des_hems_model
+    to: hems_resources
+    plain_label: checks each day which vehicles are in service with
+  - from: des_hems_model
+    to: resource_allocation
+    plain_label: asks for a vehicle from
+  - from: resource_allocation
+    to: hems_resources
+    plain_label: chooses from the vehicles in
+  - from: resource_allocation
+    to: sampling_utils
+    plain_label: checks chance of short-notice unavailability with
+  - from: distribution_fitting
+    to: sampling_utils
+    plain_label: supplies learned patterns to
+  - from: distribution_fitting
+    to: trial_results
+    plain_label: supplies real historical figures to
+  - from: distribution_fitting
+    to: simulation_runner
+    plain_label: uses to produce a historic-rota baseline
+
+data_flows:
+  inputs:
+    - what: "Scenario settings typed into the web app: number of runs, run length in days, start date and time, warm-up length, overall demand percentage, job-duration multiplier and master random seed"
+      from: "user, on the web app's setup page"
+      evidence: "app/_state_control.py:9-50; app/model.py:156-223"
+    - what: "A filled-in Excel parameter template (rota, vehicle and registration list, servicing rules, summer/winter months, last service dates, allowed time ranges, school holidays)"
+      from: "user upload on the setup page"
+      evidence: "app/setup.py:114, 145-214"
+    - what: "Predefined scenario spreadsheets (e.g. 24-hour running, extended critical care cover, two H145 aircraft)"
+      from: "files shipped with the project, chosen in the web app"
+      evidence: "scenarios/ folder; app/setup.py:122"
+    - what: "Current rota, vehicle list, servicing rules, service history, school holidays and allowed time ranges, held as files the model reads at the start of every run"
+      from: "project files (overwritten by the web app when a scenario is loaded)"
+      evidence: "air_ambulance_des/class_hems_availability.py:97, 229-233, 300; air_ambulance_des/class_hems.py:48"
+    - what: "Learned patterns from past jobs (calls per day by quarter, call timing by hour, call type, age, sex, care category, patient outcome, job stage durations, short-notice unavailability, share of jobs where a helicopter helps)"
+      from: "files produced by the historical data preparer"
+      evidence: "air_ambulance_des/utils.py:39-45; distribution_data/ folder; air_ambulance_des/des_hems.py:361-397"
+    - what: "Real job-level records from Devon Air Ambulance for 2023-2024, used only by the historical data preparer"
+      from: "a cleaned data extract placed in a folder that is kept out of version control"
+      evidence: "run_dist_fit_utils.py:5; external_data/README.md; air_ambulance_des/distribution_fit_utils.py:178"
+  stages:
+    - what: "Settings or uploaded spreadsheet sheets are written over the model's current parameter files; a reset copies the default files back"
+      component: streamlit_app
+      evidence: "app/setup.py:198-214; app/_state_control.py:74-121"
+    - what: "Each day, a number of calls is drawn from real past daily counts for that quarter, scaled by the demand percentage, and spread across the hours of the day"
+      component: des_hems_model
+      evidence: "air_ambulance_des/des_hems.py:228-241; air_ambulance_des/utils.py:652-670"
+    - what: "Each made-up patient is given a call type, age, sex, care category, outcome and whether a helicopter would help"
+      component: des_hems_model
+      evidence: "air_ambulance_des/des_hems.py:303-411"
+    - what: "A vehicle is chosen by the dispatch rules or, if none is free, the call is recorded as having no air ambulance resource available"
+      component: resource_allocation
+      evidence: "air_ambulance_des/des_hems.py:432-466, 492-497"
+    - what: "The job moves through allocation, mobilising, travel to scene, on scene, travel to hospital and clearing, each with a drawn duration"
+      component: des_hems_model
+      evidence: "air_ambulance_des/des_hems.py:574-711"
+    - what: "Runs are repeated with different random seeds (in parallel on a local computer, one after another on the hosted site) and combined"
+      component: simulation_runner
+      evidence: "air_ambulance_des/des_parallel_process.py:233-319, 200-211; app/model.py:143-224"
+    - what: "Combined results are turned into missed-job figures, utilisation figures and charts, alongside historical figures"
+      component: trial_results
+      evidence: "app/model.py:245-291; air_ambulance_des/class_simulation_trial_results.py"
+  outputs:
+    - what: "Results tabs in the web app: summary of missed jobs and utilisation, key charts, comparison with historical data, additional outputs, and an optional animation"
+      to: "shown on screen to the user"
+      evidence: "app/model.py:226-240, 277-291"
+    - what: "A downloadable HTML report of the results"
+      to: "downloaded by the user (needs the Quarto publishing tool to be installed)"
+      evidence: "app/_app_utils.py:83-140; app/model.py:1398-1407"
+    - what: "Combined step-by-step results file and a record of the settings used"
+      to: "the project's results folder"
+      evidence: "air_ambulance_des/des_parallel_process.py:95-97, 200-211"
+  storage:
+    - what: "Run results, settings used, calculated service dates and daily availability are saved as files in the project's results folder"
+      retention: "Replaced by the next run in most cases; one combined file is appended to on every run and is not cleared by the web app. How long files are kept beyond that is not determined from the code."
+      evidence: "air_ambulance_des/des_hems.py:782-810; air_ambulance_des/class_hems_availability.py:295; air_ambulance_des/des_parallel_process.py:200-230"
+    - what: "Scenario settings are stored by overwriting shared parameter files on disk, not per user"
+      retention: "Until another scenario is loaded or the app is reset (the rota is reset to default when a new app session starts)"
+      evidence: "app/setup.py:214; app/_state_control.py:61-67"
+    - what: "Learned patterns and historical summaries are stored as files; re-running the historical data preparer deletes and rewrites them"
+      retention: "Until the preparer is run again"
+      evidence: "air_ambulance_des/distribution_fit_utils.py:130-141, 212-213"
+  external:
+    - what: "A public demonstration copy of the web app hosted on Streamlit Community Cloud"
+      evidence: "README.md:113"
+    - what: "On the hosted site, the report tool is downloaded from GitHub at run time"
+      evidence: "app/_app_utils.py:31-65"
+    - what: "The web app loads fonts and icons from outside websites (Google Fonts, Font Awesome) and a diagram image from GitHub"
+      evidence: "app/model.py:58-59; app/acknowledgements.py:11-16; app/info.py:43"
+  personal_data:
+    - what: "The real job records read by the historical data preparer include each patient's age and sex, alongside incident date and time, call type and outcome"
+      evidence: "air_ambulance_des/distribution_fit_utils.py:184-190, 330-347, 434"
+    - what: "The model's made-up patients have an age and sex, but these are generated, not real people. Fields for postcode and location exist but are never filled in"
+      evidence: "air_ambulance_des/class_patient.py:17-28; air_ambulance_des/des_hems.py:322-323"
+
+decision_points:
+  - plain: "Default scenario: 2 years (730 days) from 1 January 2023 at 08:00, 12 runs on a local computer or 5 on the hosted site, no warm-up, demand at 100%, job durations at 100%, master seed 42"
+    evidence: "app/_state_control.py:9-50"
+  - plain: "Daily call numbers are picked from real daily counts observed in the same quarter of the year, then multiplied by the demand percentage and rounded down"
+    evidence: "air_ambulance_des/des_hems.py:76, 228-233; air_ambulance_des/utils.py:652-670"
+  - plain: "Every call is treated as an air ambulance case; the alternative path for ordinary ambulance cases is a placeholder"
+    evidence: "air_ambulance_des/des_hems.py:337-347"
+  - plain: "Share of jobs where a helicopter would help, from past data: about 15% for regular jobs, 38% for critical care jobs and 10% for enhanced care jobs"
+    evidence: "distribution_data/proportion_jobs_heli_benefit.txt; distribution_data/proportion_jobs_heli_benefit_cc.txt; distribution_data/proportion_jobs_heli_benefit_ec.txt; air_ambulance_des/des_hems.py:361-397"
+  - plain: "For critical and enhanced care jobs, there is a fixed 50% chance the dispatcher knows the care need in advance and uses the care-matching rules; otherwise the regular rules are used"
+    evidence: "air_ambulance_des/des_hems.py:432-443"
+  - plain: "For regular jobs where a helicopter would help, there is a fixed 50% chance this is known in advance; if known, only a helicopter (critical care first) can be sent"
+    evidence: "air_ambulance_des/class_hems_availability.py:16-18, 891-952"
+  - plain: "Care-matching order: a helicopter of the matching care level first, then a car of the matching level, then a helicopter of the other level, then a car of the other level"
+    evidence: "air_ambulance_des/class_hems_availability.py:552-579"
+  - plain: "Regular jobs with no known helicopter need: the preferred crew group and vehicle type first, then any helicopter, then the preferred crew group, then any free vehicle"
+    evidence: "air_ambulance_des/class_hems_availability.py:960-989"
+  - plain: "A vehicle can only be sent if it is on shift, not being serviced, not already busy, and its crew group is not already out on another job"
+    evidence: "air_ambulance_des/class_hems_availability.py:516-529, 902-914"
+  - plain: "Calls are never held in a queue: if nothing suitable is free at that moment, the call is recorded as missed"
+    evidence: "air_ambulance_des/des_hems.py:464-466, 492-497"
+  - plain: "Helicopters can be randomly unavailable at short notice (for example weather or crew), using past rates by aircraft, quarter and six-hour time band; cars are always assumed available"
+    evidence: "air_ambulance_des/utils.py:957-1010; air_ambulance_des/class_hems_availability.py:531-546"
+  - plain: "Default rota: helicopter H70 and car CC70 (crew group 70) 07:00-19:00 as critical care and 19:00-02:00 as enhanced care; H71 and CC71 07:00-19:00 in summer, 07:00-17:00 in winter; car CC72 08:00-18:00"
+    evidence: "actual_data/HEMS_ROTA_DEFAULT.csv"
+  - plain: "Summer shift hours apply from April to October"
+    evidence: "actual_data/rota_start_end_months_DEFAULT.csv; air_ambulance_des/class_hems.py:48-63, 104-120"
+  - plain: "Servicing: the H145 every 8 months and the EC135 every 12 months, each for 3 weeks, preferring January, moved earlier day by day to avoid school holidays and other aircraft being serviced"
+    evidence: "actual_data/service_schedules_by_model_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:55, 749-793"
+  - plain: "When the H145 (G-DAAS) is being serviced, the EC135 (G-DAAN) takes over the H70 callsign"
+    evidence: "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py:72-86"
+  - plain: "Job stage durations are drawn from patterns fitted to past data and kept within set limits (for example travel to scene 1-59 minutes, on scene 1-119 minutes, travel to hospital 1-139 minutes)"
+    evidence: "actual_data/upper_allowable_time_bounds_DEFAULT.csv; air_ambulance_des/utils.py:580-606"
+  - plain: "Patient ages above 115 are redrawn"
+    evidence: "air_ambulance_des/des_hems.py:322; air_ambulance_des/utils.py:553-578"
+  - plain: "Headline figures are averaged across all runs"
+    evidence: "app/model.py:281-287"
+  - plain: "Automated checks compare model output with historical data and warn or fail when distributions differ by more than set amounts (for example 10% warn and 20% fail for some comparisons)"
+    evidence: "tests/test_against_reality.py:131-133, 198-200"
+
+assumptions:
+  - plain: "Assumes future demand looks like 2023-2024 demand, adjusted only by a single overall percentage; seasonal demand adjustment is switched off"
+    evidence: "air_ambulance_des/des_hems.py:228-233; app/_app_utils.py:387; historical_data/historical_monthly_totals_all_calls.csv (2023-01 to 2024-12)"
+  - plain: "Ignores geography: no locations, distances or base positions are used, so travel times come from past averages, not from where the incident is"
+    evidence: "air_ambulance_des/class_patient.py:17-21 (location fields never filled); roadmap.md (geography listed as future work)"
+  - plain: "Assumes cars are never unavailable at short notice"
+    evidence: "air_ambulance_des/class_hems_availability.py:532-540, 917-925"
+  - plain: "Assumes a missed call is simply passed to another service; no queueing or waiting is modelled"
+    evidence: "air_ambulance_des/des_hems.py:464-466, 492-497"
+  - plain: "Assumes a single user at a time: scenario settings are written to shared files, so two people using the same installation at once could overwrite each other's scenario"
+    evidence: "app/setup.py:214; app/_state_control.py:61-67, 74-121"
+  - plain: "Assumes the real job records used to learn patterns are complete and correctly formatted; there is no checking of that file"
+    evidence: "air_ambulance_des/distribution_fit_utils.py:172-182 (note says checking logic is still required)"
+  - plain: "Assumes school holiday dates are provided for the whole simulated period; the default list runs to the end of 2027"
+    evidence: "actual_data/school_holidays_DEFAULT.csv; air_ambulance_des/class_hems_availability.py:97, 716-733"
+  - plain: "Assumes a servicing slot can always be found by moving earlier; if none fits, the model can hang"
+    evidence: "air_ambulance_des/class_hems_availability.py:781-791"
+  - plain: "Several rules are built around the current fleet's named aircraft (G-DAAS and G-DAAN) and callsigns H70 and H71, so other fleet layouts may not behave as expected"
+    evidence: "air_ambulance_des/class_hems_availability.py:139-160; air_ambulance_des/class_hems.py:72-86"
+  - plain: "A newly added helicopter with no past unavailability record borrows the average rate of the other aircraft"
+    evidence: "air_ambulance_des/utils.py:977-989"
+  - plain: "The 50% chances that a care need or helicopter benefit is known in advance are fixed estimates, not learned from data"
+    evidence: "air_ambulance_des/class_hems_availability.py:16-18; air_ambulance_des/des_hems.py:434"
+  - plain: "A rule intended to count every patient flown by helicopter as having a helicopter benefit checks the outcome before it has been decided, so it appears to have no effect"
+    evidence: "air_ambulance_des/des_hems.py:408-409 (outcome only set later at des_hems.py:520; starts empty at class_patient.py:52)"
+  - plain: "Results on the hosted site and on a local computer use different ways of deriving each run's random seed, so the same settings may give slightly different numbers in the two places"
+    evidence: "app/model.py:177 versus air_ambulance_des/des_parallel_process.py:296-298"
+  - plain: "Times are tracked in minutes of simulated time from the chosen start date"
+    evidence: "app/model.py:160-161; air_ambulance_des/des_hems.py:206"
+
+dependencies:
+  - plain: "Python, the programming language the whole model is written in"
+  - plain: "SimPy, a free add-on that provides the clock and queues for the simulation"
+  - plain: "Streamlit, a free toolkit used to build the web app"
+  - plain: "Streamlit Community Cloud, an outside hosting service for the public demonstration copy (slower, fewer runs, no parallel running)"
+  - plain: "Pandas, NumPy and SciPy, free data and statistics add-ons used throughout"
+  - plain: "Fitter, a free add-on that chooses which statistical pattern best matches past data"
+  - plain: "Plotly, a free charting add-on used for the results charts"
+  - plain: "Joblib, a free add-on that runs several model runs at once on a local computer"
+  - plain: "Quarto, a separate free publishing tool needed only for the downloadable report"
+  - plain: "GitHub, which hosts the code, issue list and automatically built technical documentation"
+  - plain: "A cleaned extract of Devon Air Ambulance job records, needed to refresh the learned patterns; not included in the project"
+
+glossary:
+  - term: the web app
+    definition: The set of web pages where users choose a scenario, run the model and view the results.
+    technical_name: Streamlit app (app/)
+  - term: the run manager
+    definition: The part that repeats the model many times with different random chances and combines the results.
+    technical_name: des_parallel_process
+  - term: the pattern sampler
+    definition: The part that holds patterns learned from past jobs and draws realistic values from them.
+    technical_name: Utils
+  - term: the call simulator
+    definition: The part that creates each day's made-up calls and patients and plays out each job step by step.
+    technical_name: DES_HEMS, Patient
+  - term: the fleet and rota model
+    definition: The part that represents each helicopter and car, its shift hours and its servicing dates.
+    technical_name: HEMS, HEMSAvailability
+  - term: the dispatch rules
+    definition: The part that decides which vehicle, if any, goes to each call.
+    technical_name: HEMSAvailability allocation methods, ResourceAllocationReason
+  - term: the results and comparison tool
+    definition: The part that turns run records into figures and charts and compares them with real past performance.
+    technical_name: TrialResults, SimulationInputs, HistoricResults
+  - term: the historical data preparer
+    definition: An occasional, separate step that turns real job records into the patterns and summaries the model uses.
+    technical_name: DistributionFitUtils
+  - term: simulation
+    definition: A computer model that imitates a real service over time, so that changes can be tried out safely.
+  - term: discrete event simulation
+    definition: A type of simulation that jumps from one event (a call, a vehicle leaving, a job ending) to the next.
+  - term: run (replication)
+    definition: One complete play-through of the simulated period. The model does many runs, each with different random chances, and averages them.
+  - term: random seed
+    definition: A starting number that fixes the random chances, so the same seed and settings give the same results again.
+    technical_name: master_seed
+  - term: warm-up period
+    definition: An optional stretch at the start of a run that is left out of the results, so the model starts from a "busy" state.
+  - term: scenario
+    definition: A set of settings (rota, fleet, servicing, demand) to test.
+  - term: parameter template
+    definition: An Excel workbook the user fills in to describe a scenario and upload to the web app.
+  - term: rota
+    definition: The table of which vehicles are on shift at which hours, with separate summer and winter hours.
+    technical_name: HEMS_ROTA
+  - term: callsign
+    definition: The radio name of a vehicle on duty, such as H70 (a helicopter) or CC72 (a car).
+  - term: callsign group
+    definition: Vehicles that share one crew, such as helicopter H70 and car CC70; only one can be out at a time.
+  - term: registration
+    definition: The aircraft's or car's own identifier, such as G-DAAS, which stays the same even if its callsign changes.
+  - term: critical care (CC)
+    definition: The highest level of pre-hospital care the service provides; one of the three care categories in the model.
+  - term: enhanced care (EC)
+    definition: A level of care above standard ambulance care but below critical care.
+  - term: regular job (REG)
+    definition: A job not identified as needing critical or enhanced care.
+  - term: helicopter benefit
+    definition: Whether a patient would gain from a helicopter rather than a car, for example for speed or access.
+  - term: AMPDS card
+    definition: The category the 999 call-handling system gives to a call, describing the type of emergency.
+  - term: missed job
+    definition: A call for which no air ambulance vehicle was free and suitable at the time, so none was sent.
+  - term: utilisation
+    definition: The share of a vehicle's on-shift hours spent on jobs.
+  - term: short-notice (ad hoc) unavailability
+    definition: Times a helicopter cannot fly although on shift, for example due to weather or crew issues.
+  - term: servicing
+    definition: Planned maintenance that takes an aircraft out of use for several weeks.
+  - term: historical baseline
+    definition: Model results using the rotas that actually ran in the past, used to check the model against reality.
+  - term: event log
+    definition: The record of every step of every simulated job, from which all results are calculated.
+    technical_name: run_results.csv
+  - term: learned patterns (fitted distributions)
+    definition: Mathematical descriptions of past data, such as how long time on scene usually takes, which the model draws from.
+  - term: open-source licence
+    definition: The terms under which the code can be used and changed; this project uses GPL-3.0.
+  - term: hosted site
+    definition: A copy of the web app running on an outside service, reachable in a browser without installing anything.
+  - term: automated tests
+    definition: Checks, run on request by the developers, that confirm the model still behaves as expected.
+
+pages:
+  stakeholder-decision-maker:
+    - page: overview
+      focus: >
+        What the model is (a planning tool for Devon Air Ambulance helicopter and car cover, not a live
+        dispatch system) and who built it. Plain system diagram of the eight parts. Project signals:
+        version 1.0.0 released May 2025, 46 changes in the last 12 months by a single contributor,
+        automated tests exist but are not run automatically on each change, GPL-3.0 open licence.
+        Known-issues note: a number of open issues concern differences from historical figures,
+        servicing scheduling (including a possible hang) and the hosted demonstration site.
+      uses: [plain_summary, components, relationships, evidence.project_signals, evidence.issues]
+    - page: what-it-does
+      focus: >
+        The planning problem it addresses (testing rota, fleet, servicing and demand changes without
+        real-world risk) and what it produces: missed-job estimates, utilisation per vehicle, call
+        patterns and side-by-side comparison with 2023-2024 actuals, on screen and as a downloadable
+        report. Worked example: loading the "24 hour running" or "Two EC 145" scenario and comparing
+        missed jobs with the default rota. Be clear about what it does not do: no live dispatch,
+        no geography, no ordinary ambulance modelling.
+      uses: [plain_summary, data_flows.inputs, data_flows.outputs, components.streamlit_app, components.trial_results, decision_points]
+    - page: how-it-works
+      focus: >
+        One page of essentials: past job records feed the historical data preparer, which supplies the
+        pattern sampler; the user sets a scenario in the web app; the run manager repeats the call
+        simulator many times; the dispatch rules pick a vehicle from the fleet and rota model or record
+        a missed job; the results and comparison tool summarises against history. Flowchart of at most
+        eight boxes, then one short paragraph per part.
+      uses: [components, relationships, data_flows.stages]
+    - page: assumptions-limits
+      focus: >
+        Demand mirrors 2023-2024 with one overall percentage; no geography or distance; cars never
+        unavailable at short notice; missed calls are not queued; fixed 50% guesses about what the
+        dispatcher knows; rules tied to the named aircraft and callsigns; school holidays only to end
+        of 2027; one user at a time on an installation; a helicopter-benefit rule that appears to have
+        no effect. Known open questions from the issue list: differences from historical metrics,
+        crew-group 70/71 split slightly off history, allocation logic under review, utilisation charts
+        breaking when a vehicle pairing is removed. Close with the technical-team callout.
+      uses: [assumptions, decision_points, evidence.issues, evidence.markers]
+    - page: risks
+      focus: >
+        Decision risk from over-trusting point figures (results are averages of random runs and rest on
+        past patterns); a run can hang if servicing cannot be scheduled; shared parameter files can be
+        overwritten by another user or by running the tests; hosted and local results can differ
+        slightly; the historical data preparer reads patient-level records with age and sex and does no
+        input checking; hosted site downloads tools and loads fonts from outside services. Mitigations
+        in place: automated tests including comparison against reality and a stored baseline,
+        reproducible seeds, a reset-to-defaults option, raw records kept out of version control.
+        What is missing: tests do not run automatically on each change, no tests for the utilisation
+        calculation. Close with the technical-team callout.
+      uses: [assumptions, dependencies, data_flows.personal_data, data_flows.storage, data_flows.external, evidence.project_signals, evidence.issues, evidence.tests]
+    - page: keeping-it-running
+      focus: >
+        What it depends on (Python and free add-ons, Streamlit hosting for the demo, Quarto for reports,
+        GitHub). Maintenance signals: one active contributor in the last year, last change October
+        2026, release 1.0.0, documentation built automatically. Upkeep tasks: refreshing learned patterns
+        requires the confidential job extract and re-running the historical data preparer; extending
+        school holiday dates beyond 2027; updating service history dates; keeping pinned add-on
+        versions current. Hosted demo is slower and limited to 5 runs by default.
+      uses: [dependencies, data_flows.storage, evidence.project_signals, evidence.repo_docs, components.distribution_fitting]
+    - page: questions-to-ask
+      focus: >
+        Questions on: how close results are to reality and on which measures; how and when learned
+        patterns will be refreshed with newer data, and who holds the job extract; where the 50%
+        dispatcher-knowledge figures come from; whether the helicopter-benefit rule that appears inactive
+        is intended; how a fleet change beyond the current named aircraft would be handled; the servicing
+        hang risk; multi-user use; whether tests will run automatically; how many runs are enough;
+        succession if the single active contributor is unavailable; who governs access to the
+        patient-level records used to build the patterns.
+      uses: [assumptions, decision_points, dependencies, data_flows.personal_data, evidence.issues, evidence.project_signals]
+    - page: glossary
+      focus: Every plain component name and unavoidable term used on these pages, with technical names for talking to developers.
+      uses: [glossary]

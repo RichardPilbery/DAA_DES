@@ -5,42 +5,67 @@ git_tracked: true                    # _quarto.yml is tracked and currently unmo
 existing_tutorial: true
 
 navigation:
-  pattern: multi-sidebar             # website.sidebar in _quarto.yml is a LIST (tutorial item) merged with the _sidebar.yml list via metadata-files
+  pattern: multi-sidebar             # website.sidebar in _quarto.yml is a LIST (two tutorial items) merged with the _sidebar.yml list via metadata-files
   details: |
-    Refresh mode: section folder is not a blocker. Tutorial is already wired into _quarto.yml.
-    website.navbar.left has Home, Reference, Tutorial (lines 15-22). website.sidebar is a list in _quarto.yml itself
-    (lines 23-36) holding one item, id "tutorial". The "reference" and "dummy-sidebar" sidebars come from the
-    quartodoc-generated _sidebar.yml (git-ignored) via top-level metadata-files (lines 38-40). Do not edit _sidebar.yml or quartodoc.sidebar.
-    The tutorial sidebar is in _quarto.yml, not in a metadata file.
-    Links into tutorial/ from OUTSIDE the section: none found in hand-written pages; the only references are the _quarto.yml
-    lines quoted below (Grep for "tutorial/" over the docs dir excluding tutorial/, reference/, _extensions/).
+    Refresh mode: section folder is not a blocker. Tutorial is already wired into _quarto.yml as a multi-audience tutorial
+    (intermediate, advanced-contributor). website.navbar.left has Home, Reference and a "Tutorial" dropdown menu (lines 15-26).
+    website.sidebar is a list in _quarto.yml itself (lines 27-55) holding two items, ids tutorial-intermediate and
+    tutorial-advanced-contributor (both style: docked). The "reference" and "dummy-sidebar" sidebars come from the
+    quartodoc-generated _sidebar.yml (git-ignored) via top-level metadata-files (lines 57-59). Do not edit _sidebar.yml or quartodoc.sidebar.
+    The tutorial sidebars are in _quarto.yml, not in a metadata file. _quarto.yml is unmodified relative to git HEAD.
+    The old single "tutorial" sidebar and the navbar item "tutorial/index.qmd" no longer exist. tutorial/index.qmd still exists on disk
+    but is NOT referenced from navigation (menu points to intermediate/index.qmd and advanced-contributor/index.qmd).
+    intermediate/ and advanced-contributor/ each hold 10 files (index, 01-08, glossary), matching the sidebar lists.
+    Links into tutorial/ from OUTSIDE the section (Grep over repo excluding tutorial/, reference/, _extensions/): none in hand-written
+    pages; only the _quarto.yml lines quoted below.
     Other facts: project.output-dir is ../docs_quarto; pre-render script sync_docs.py regenerates readme.qmd, licence.qmd,
     code_of_conduct.qmd, STARS.qmd, STRESS_DES.qmd (all git-ignored) and never touches tutorial/.
-    _quarto.yml.pre-tutorial.bak exists in the docs dir (untouched).
+    _quarto.yml.pre-tutorial.bak exists in the docs dir (untouched). The tutorial dir also holds _backup-pre-add-audience/, _styles/, _work/.
   tutorial_entries:
-    - kind: navbar item   # website.navbar.left
-      lines: "21-22"
+    - kind: navbar item (dropdown menu "Tutorial") in website.navbar.left
+      lines: "21-26"
       text: |
-        21:      - href: tutorial/index.qmd
-        22:        text: Tutorial
-    - kind: sidebar (id tutorial), in _quarto.yml itself
-      lines: "23-36"
+        21:      - text: Tutorial
+        22:        menu:
+        23:          - text: Intermediate
+        24:            href: tutorial/intermediate/index.qmd
+        25:          - text: Contributor
+        26:            href: tutorial/advanced-contributor/index.qmd
+    - kind: sidebar (id tutorial-intermediate), in _quarto.yml itself
+      lines: "28-41"
       text: |
-        23:  sidebar:
-        24:    - id: tutorial
-        25:      title: Tutorial
-        26:      contents:
-        27:        - tutorial/index.qmd
-        28:        - tutorial/01_streamlit_app_and_scenario_parameters.qmd
-        29:        - tutorial/02_simulation_runs_and_replications.qmd
-        30:        - tutorial/03_sampling_distributions_and_random_streams.qmd
-        31:        - tutorial/04_calls_and_patient_journeys.qmd
-        32:        - tutorial/05_hems_resources_and_servicing.qmd
-        33:        - tutorial/06_resource_allocation.qmd
-        34:        - tutorial/07_trial_results_and_historic_comparison.qmd
-        35:        - tutorial/08_distribution_fitting.qmd
-        36:        - tutorial/glossary.qmd
-      note: "Lines 23-24 (sidebar: / - id: tutorial) are the container; the editable chapter list is lines 27-36 (8-space indent '- ' items). Indentation: 2 spaces per level, list items indented under their key."
+        28:    - id: tutorial-intermediate
+        29:      title: Tutorial (Intermediate)
+        30:      style: docked
+        31:      contents:
+        32:        - tutorial/intermediate/index.qmd
+        33:        - tutorial/intermediate/01_streamlit_app_and_scenario_parameters.qmd
+        34:        - tutorial/intermediate/02_simulation_runs_and_replications.qmd
+        35:        - tutorial/intermediate/03_sampling_distributions_and_random_streams.qmd
+        36:        - tutorial/intermediate/04_calls_and_patient_journeys.qmd
+        37:        - tutorial/intermediate/05_hems_resources_and_servicing.qmd
+        38:        - tutorial/intermediate/06_resource_allocation.qmd
+        39:        - tutorial/intermediate/07_trial_results_and_historic_comparison.qmd
+        40:        - tutorial/intermediate/08_distribution_fitting.qmd
+        41:        - tutorial/intermediate/glossary.qmd
+    - kind: sidebar (id tutorial-advanced-contributor), in _quarto.yml itself
+      lines: "42-55"
+      text: |
+        42:    - id: tutorial-advanced-contributor
+        43:      title: Tutorial (Contributor)
+        44:      style: docked
+        45:      contents:
+        46:        - tutorial/advanced-contributor/index.qmd
+        47:        - tutorial/advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd
+        48:        - tutorial/advanced-contributor/02_simulation_runs_and_replications.qmd
+        49:        - tutorial/advanced-contributor/03_sampling_distributions_and_random_streams.qmd
+        50:        - tutorial/advanced-contributor/04_calls_and_patient_journeys.qmd
+        51:        - tutorial/advanced-contributor/05_hems_resources_and_servicing.qmd
+        52:        - tutorial/advanced-contributor/06_resource_allocation.qmd
+        53:        - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
+        54:        - tutorial/advanced-contributor/08_distribution_fitting.qmd
+        55:        - tutorial/advanced-contributor/glossary.qmd
+      note: "The parent key 'sidebar:' is line 27 (shared with the reference sidebars; do not edit it). Indentation: 2 spaces per level; sidebar list items at 4 spaces, contents items at 8 spaces with '- '."
   insertion_plan: "n/a (tutorial already present)"
 
 existing_pages:                      # hand-written pages in the docs dir (excluding reference/, _-prefixed, tutorial/)

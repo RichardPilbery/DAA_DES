@@ -1,0 +1,71 @@
+---
+title: "What it does"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](what-it-does.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- It is a planning model for Devon Air Ambulance. It lets planners test "what if" changes to rotas, vehicles, servicing and demand without trying them in real life.
+- It produces estimates of missed jobs, how busy each vehicle is, and how the results compare with what actually happened in 2023 and 2024.
+- It is not a live dispatch system. It does not model geography or ordinary ambulances.
+:::
+
+## The problem it addresses
+
+Changing how an air ambulance service runs is costly and hard to undo. Longer shifts, an extra car or a different aircraft all affect how many calls the service can answer. Trying these out for real puts patients and budgets at risk.
+
+This tool is a **simulation**: a computer model that imitates the service over time, so changes can be tried out safely. It creates a stream of made-up emergency calls, based on patterns in two years of real job records (2023 and 2024). It then plays out what would happen under the rota, fleet and servicing plan you choose.
+
+Think of a flight simulator for service planning. You can crash the plan on screen without harming anyone. As with any simulator, how far you can trust it depends on how well it matches reality (see [assumptions and limits](assumptions-limits.qmd)).
+
+## Who it is for
+
+It is for planners and managers who want to compare options before committing. The person using it picks a scenario, starts the model and reads the results. No programming is needed for that. Refreshing the underlying patterns is a separate task for a technical person (see [keeping it running](keeping-it-running.qmd)).
+
+## What you put in
+
+In [the web app](how-it-works.qmd), the user can:
+
+- choose a ready-made scenario, such as "24 hour running", "24 hour CC running", "Extended CC Coverage" or "Two EC 145" (CC and EC stand for critical care and enhanced care; see the [glossary](glossary.qmd));
+- or fill in an Excel template describing their own rota, vehicles, servicing rules, summer and winter months and school holidays, and upload it;
+- set how long to run (the default is two years, 730 days), how many times to repeat the run, and how much to scale demand up or down (the default is 100%).
+
+Each repeat uses different random chances, and the results are averaged. The default is 12 repeats on a local computer, or 5 on the public demonstration site.
+
+## What comes out
+
+| Output | What it tells you |
+|---|---|
+| Missed jobs | How many calls found no suitable air ambulance vehicle free. |
+| Vehicle use | The share of each vehicle's on-shift hours spent on jobs. |
+| Call patterns | When calls arrive and what types they are. |
+| Comparison with history | The model's figures beside the real 2023 to 2024 figures. |
+| Extras | Additional charts and an optional animation. |
+
+Results appear on screen in tabs. The user can also download an HTML report, which needs a separate free publishing tool (Quarto) to be installed. The model also saves a step-by-step record of every simulated job and the settings used to the project's results folder.
+
+## A worked example
+
+A manager wants to know whether running around the clock would reduce missed jobs.
+
+1. They open the web app and choose the "24 hour running" scenario.
+2. They run the model, then run it again with the default rota and the same settings, so they can set the two side by side.
+3. They read the missed-job figure for each. If the 24-hour scenario shows fewer missed jobs, that is a reason to look closer. It is not proof.
+
+The figures are averages over many random runs. They show a likely direction and size of change, not a promise. Whether a difference is large enough to act on is a judgement for people, not the model.
+
+## What it does not do
+
+- **It does not dispatch real aircraft.** It is for planning, not live operations.
+- **It ignores geography.** Travel times come from past averages, not from where an incident is.
+- **It does not model ordinary ambulance cases.** Every call is treated as an air ambulance case.
+- **It does not queue missed calls.** If nothing suitable is free when a call arrives, the call counts as missed.
+- **It does not predict a changing future by itself.** Demand follows 2023 to 2024 patterns, scaled by one overall percentage.
+
+The code does not show how closely the results match reality on every measure. The development team's automated checks compare the model with history and warn when the gap grows. Ask them for the current results (see [questions to ask](questions-to-ask.qmd)).
+
+For how the parts fit together, read [how it works](how-it-works.qmd). Unfamiliar terms are in the [glossary](glossary.qmd).

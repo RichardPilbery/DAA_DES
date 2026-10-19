@@ -1,0 +1,89 @@
+---
+title: "Assumptions and limits"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](assumptions-limits.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- The model assumes the future looks like 2023 and 2024, changed only by one overall demand percentage.
+- It ignores geography, never queues a missed call, and treats cars as always available at short notice.
+- Some rules are fixed estimates rather than learned from data, and a few known problems are still open.
+- Treat results as a guide for comparing scenarios, not as a forecast of exact numbers.
+:::
+
+Every model simplifies reality. This page sets out what this one assumes, where it can be wrong, and what is known not to work yet. For how the parts fit together, see [how it works](how-it-works.qmd). For what could go wrong as a result, see [risks](risks.qmd).
+
+## What the model assumes
+
+### About demand
+
+- **The future looks like the past.** Calls are drawn from real daily counts from 2023 and 2024, for the same quarter of the year. One overall percentage scales them up or down.
+- **Every call is an air ambulance case.** The model has no separate handling of ordinary ambulance cases.
+
+### About place and travel
+
+- **There is no geography.** The model holds no locations, distances or base positions. Travel times come from past averages, not from where the incident is.
+- **Distance does not affect who is sent.** Whether a car or a helicopter goes is not based on how far away the job is.
+
+### About vehicles and crews
+
+- **Cars are never unavailable at short notice.** Helicopters can be grounded at random, for example by weather or crew issues, using past rates. Cars cannot.
+- **A new helicopter borrows an average.** If you add an aircraft with no history, it takes the average short-notice unavailability of the others.
+- **Rules are tied to the current fleet.** Some servicing and callsign rules are built around today's named aircraft and [crew groups](glossary.qmd) (each helicopter shares a crew with one car; the pair is a crew group). Other fleet layouts may not behave as expected.
+- **A servicing slot can always be found.** The model moves servicing earlier, day by day, to avoid school holidays and other aircraft being serviced. If no slot fits, the model can get stuck and never finish (the computer keeps working but never produces a result). See [risks](risks.qmd).
+- **School holidays are listed for the whole period.** The default list runs to the end of 2027. Later dates need adding.
+
+### About what happens to a missed call
+
+- **A missed call is simply passed on.** If nothing suitable is free at that moment, the call is recorded as missed. The model does not hold it in a queue or track what happens next.
+
+### About what the dispatcher knows
+
+- **Two 50% figures are guesses.** For some jobs, the model assumes a 50% chance that the dispatcher knows in advance that critical or enhanced care is needed. For regular jobs, it assumes a 50% chance that the dispatcher knows a helicopter would help. These are fixed estimates, not learned from data.
+- **Helicopter benefit rates are inherited.** The model decides, for each patient, whether a [helicopter would give a real advantage](glossary.qmd) (for example speed or access). That choice affects whether a helicopter or a car is sent. The shares used come from past data and are under review.
+
+### About the data behind it
+
+- **The job records are complete and correctly formatted, and only one person uses an installation at a time.** Neither is checked by the code. See [risks](risks.qmd).
+
+## Where it is known to be wrong or unfinished
+
+These come from the project's own list of open issues and notes. The code doesn't show how soon they will be fixed.
+
+| Area | What is known | What it means for you |
+|---|---|---|
+| Match to history | Some figures differ from the real 2023–2024 figures, and the team is still tracking down why. | Don't assume the historical comparison matches reality on every measure. |
+| Crew groups | The share of jobs given to each of the two main crew groups is slightly off the real figures. The size of the gap is one of the [questions to ask](questions-to-ask.qmd). | Results for individual crews may be a little out. |
+| Dispatch rules | The rules for choosing a vehicle are under review. | Results may change once they are revisited. |
+| A helicopter-benefit rule | A rule meant to count every patient flown by helicopter as benefiting checks the outcome before it has been decided, so in practice it does nothing. A developer note says the idea behind it might overstate helicopter-benefit patients if it were working. | Results are not using this rule. |
+| Utilisation charts | Utilisation figures and charts break when one vehicle pairing is removed from a scenario. | Be careful reading "how busy" figures for scenarios that remove a vehicle. |
+| Servicing | Several questions on servicing rules, are open, including whether the usual intervals hold with two aircraft of the same type. | Servicing scenarios deserve extra scrutiny. |
+| Scenario comparison | You can't compare two scenarios side by side inside the web app. | You must compare them yourself, run by run. |
+| Hosted demonstration site | There are open problems with file handling on the public demonstration copy. | Prefer a local installation for serious work. |
+
+One more difference is worth knowing. Because the public demo and a local installation set up their random chances in slightly different ways, the same settings can give slightly different numbers. Use one place consistently when comparing scenarios.
+
+## How much to trust the numbers
+
+The model averages many runs, each with different random chances. Headline figures are therefore averages, resting on the assumptions above. The model is best used to compare one scenario with another under the same assumptions. It is less suited to predicting an exact number of missed jobs next year.
+
+Automated checks compare model output with historical data and warn or fail when they differ by set amounts. They exist, but they do not run automatically on every change. See [risks](risks.qmd) and [questions to ask](questions-to-ask.qmd) for what to raise with the team. Unfamiliar terms are in the [glossary](glossary.qmd).
+
+::: {.callout-note collapse="true" title="For the technical team"}
+- [Open issue: Tracking down discrepancies in metrics vs historical data](https://github.com/RichardPilbery/DAA_DES/issues/165)
+- [Open issue: Allocation of jobs between callsign group 70 + 71 slightly off from historical patterns](https://github.com/RichardPilbery/DAA_DES/issues/178)
+- [Open issue: Revisiting Resource Allocation Logic](https://github.com/RichardPilbery/DAA_DES/issues/238)
+- [Open issue: Update assumptions around % of REG jobs that have a helicopter benefit](https://github.com/RichardPilbery/DAA_DES/issues/205)
+- [Open issue: Utilisation breakdown plot breaks when one helicopter/car pairing removed](https://github.com/RichardPilbery/DAA_DES/issues/217)
+- [Open issue: Work out why car utilisation metrics break when one car is removed from the pool of resources](https://github.com/RichardPilbery/DAA_DES/issues/215)
+- [Open issue: Model hangs indefinitely if servicing schedule can't be resolved](https://github.com/RichardPilbery/DAA_DES/issues/233)
+- [Open issue: Does assumption around frequency of H145/H135 servicing intervals hold in two H145 situation?](https://github.com/RichardPilbery/DAA_DES/issues/266)
+- [Open issue: Further consideration of how to account for distance in decision to send a car](https://github.com/RichardPilbery/DAA_DES/issues/243)
+- [Open issue: Add ability to compare scenarios within the web app](https://github.com/RichardPilbery/DAA_DES/issues/56)
+- [Open issue: Fix errors when hosting streamlit app on community cloud](https://github.com/RichardPilbery/DAA_DES/issues/130)
+- [Open issue: Add tests to quantify the variation in the impact of random seeds](https://github.com/RichardPilbery/DAA_DES/issues/183)
+:::

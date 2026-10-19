@@ -1,0 +1,98 @@
+---
+title: "Glossary"
+description: "Plain-language meanings of the terms used in this guide."
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+automated tests
+:   Checks, run on request by the developers, that confirm the model still behaves as expected.
+
+callsign
+:   The radio name of a vehicle on duty, such as H70 (a helicopter) or CC72 (a car).
+
+crew group (callsign group)
+:   Vehicles that share one crew, such as helicopter H70 and car CC70; only one can be out at a time.
+
+critical care (CC)
+:   The highest level of pre-hospital care the service provides; one of the three care categories in the model.
+
+enhanced care (EC)
+:   A level of care above standard ambulance care but below critical care.
+
+helicopter benefit
+:   Whether a patient would gain from a helicopter rather than a car, for example for speed or access.
+
+historical baseline
+:   Model results using the rotas that actually ran in the past, used to check the model against reality.
+
+hosted site
+:   A copy of the web app running on an outside service, reachable in a browser without installing anything.
+
+learned patterns (fitted distributions)
+:   Mathematical descriptions of past data, such as how long time on scene usually takes, which the model draws from.
+
+missed job
+:   A call for which no air ambulance vehicle was free and suitable at the time, so none was sent.
+
+open-source licence
+:   The terms under which the code can be used and changed; this project uses GPL-3.0.
+
+parameter template
+:   An Excel workbook the user fills in to describe a scenario and upload to the web app.
+
+random seed
+:   A starting number that fixes the random chances, so the same seed and settings give the same results again.
+
+regular job (REG)
+:   A job not identified as needing critical or enhanced care.
+
+rota
+:   The table of which vehicles are on shift at which hours, with separate summer and winter hours.
+
+run (replication)
+:   One complete play-through of the simulated period. The model does many runs, each with different random chances, and averages them.
+
+scenario
+:   A set of settings (rota, fleet, servicing, demand) to test.
+
+servicing
+:   Planned maintenance that takes an aircraft out of use for several weeks.
+
+short-notice (ad hoc) unavailability
+:   Times a helicopter cannot fly although on shift, for example due to weather or crew issues.
+
+simulation
+:   A computer model that imitates a real service over time, so that changes can be tried out safely.
+
+the call simulator
+:   The part that creates each day's made-up calls and patients and plays out each job step by step.
+
+the dispatch rules
+:   The part that decides which vehicle, if any, goes to each call.
+
+the fleet and rota model
+:   The part that represents each helicopter and car, its shift hours and its servicing dates.
+
+the historical data preparer
+:   An occasional, separate step that turns real job records into the patterns and summaries the model uses. 
+
+the pattern sampler
+:   The part that holds patterns learned from past jobs and draws realistic values from them.
+
+the results and comparison tool
+:   The part that turns run records into figures and charts and compares them with real past performance.
+
+the run manager
+:   The part that repeats the model many times with different random chances and combines the results.
+
+the web app
+:   The set of web pages where users choose a scenario, run the model and view the results.
+
+utilisation
+:   The share of a vehicle's on-shift hours spent on jobs.
+

@@ -8,7 +8,7 @@ aliases:
 
 <!-- audience-switcher:start -->
 ::: {.audience-switcher .mb-4}
-[Written for:]{.text-muted .small} [Intermediate](05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-outline-primary}
+[Written for:]{.text-muted .small} [Intermediate](05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Contributor](../advanced-contributor/05_hems_resources_and_servicing.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary}
 :::
 <!-- audience-switcher:end -->
 

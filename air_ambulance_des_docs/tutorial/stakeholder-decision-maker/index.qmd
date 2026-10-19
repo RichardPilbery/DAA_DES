@@ -1,0 +1,92 @@
+---
+title: "Overview"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- This is a planning model of how Devon Air Ambulance's helicopters and critical care cars respond to emergency calls. It is not a live dispatch system.
+- It lets planners test "what if" questions, such as longer shifts, an extra car or a different aircraft, before trying them for real.
+- It is a young project with one active contributor and a list of open issues. This guide tells you what the code shows, and where it doesn't show enough.
+- Our reading: it looks useful for comparing scenarios against each other, but not for predicting exact numbers. The main exposures are reliance on one maintainer and some differences from real figures that are still being investigated. See [Questions to ask](questions-to-ask.qmd) before you commit.
+:::
+
+## What this is
+
+The model creates a realistic stream of made-up emergency calls. It bases them on patterns in two years of real job records (2023 and 2024). It then plays out what would happen to those calls under a rota, fleet and servicing plan that you choose.
+
+It produces estimates of:
+
+- how many jobs are missed because no suitable vehicle is free;
+- how busy each vehicle and crew is;
+- how the results compare with what actually happened.
+
+A user sees these in a web app. A downloadable report is also available. The report needs a separate free publishing tool to be installed.
+
+It is for planners and managers. It does not send real vehicles to real calls, and it does not use maps or distances. [What it does](what-it-does.qmd) explains this in more detail.
+
+## At a glance
+
+::: {.value-box-row columns="3"}
+::: {.value-box value="2 years" title="Of real job data behind it" icon="diagram-3" color="bg-teal"}
+2023 and 2024
+:::
+::: {.value-box value="v1.0.0" title="Latest release" icon="tag" color="bg-blue"}
+Released 30 May 2025
+:::
+::: {.value-box value="1" title="Active contributor" icon="person" color="bg-amber"}
+Over the last 12 months
+:::
+:::
+
+## The system on one page
+
+The model has eight parts. This simplified diagram shows how they connect. [How it works](how-it-works.qmd) describes each one in a fuller version.
+
+```{mermaid}
+%%| label: fig-overview-parts
+%%| fig-cap: "The eight parts of the model and how they connect"
+flowchart LR
+  H[Historical data preparer] -->|supplies patterns| P[Pattern sampler]
+  W[Web app] -->|starts| R[Run manager]
+  R -->|runs many copies of| C[Call simulator]
+  C -->|draws calls and timings from| P
+  C -->|asks for a vehicle from| D[Dispatch rules]
+  D -->|chooses from| F[Fleet and rota model]
+  R -->|hands combined results to| T[Results and comparison tool]
+  T -->|shown in| W
+```
+
+## Project signals
+
+Version 1.0.0 was released in May 2025, and one person made all 46 changes in the last year. [Keeping it running](keeping-it-running.qmd) sets out the full project record and what it means for upkeep.
+
+## Known issues
+
+We checked the project's public list of reported problems and requests (called 'issues'). About a dozen open ones matter for this decision. They fall into three areas:
+
+- **Differences from history.** Some model results do not yet match the historical figures closely.
+- **Servicing scheduling.** This includes a case where the model can get stuck and never finish.
+- **The hosted demonstration site.** This public copy of the web app has had problems of its own.
+
+Some of these are explained in [assumptions and limits](assumptions-limits.qmd) and [risks](risks.qmd). Open issues change over time, so check the live list before you decide.
+
+## How to use this guide
+
+Read the pages in this order, or jump to the one you need.
+
+| Page | The question it answers |
+|---|---|
+| [What it does](what-it-does.qmd) | What problem does it solve, and what does it produce? |
+| [How it works](how-it-works.qmd) | What are the main parts, and how do they fit together? |
+| [Assumptions and limits](assumptions-limits.qmd) | What does it assume, and where can it be wrong? |
+| [Risks](risks.qmd) | What could go wrong, and what is in place to prevent it? |
+| [Keeping it running](keeping-it-running.qmd) | What does it depend on, and what does upkeep involve? |
+| [Questions to ask](questions-to-ask.qmd) | What should you ask the development team? |
+| [Glossary](glossary.qmd) | What do the terms mean? |
+
+This guide describes what the code does and assumes. Where the code does not show something, the guide says so. It makes no claim about legal or regulatory compliance.

@@ -1,0 +1,76 @@
+---
+title: "Keeping it running"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Contributor](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](keeping-it-running.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- The model rests on free, widely used software components, plus one item that is not in the project: a cleaned extract of Devon Air Ambulance job records.
+- Over the last 12 months, one person made all the changes (46 in total). The most recent was on 19 October 2026. That is active, but it depends on one person.
+- Routine upkeep appears small, though the code gives no estimate of the time involved; ask the team. The costly task is refreshing the learned patterns, which needs the confidential job records.
+- The public demonstration copy is slower and does fewer runs than a local installation.
+:::
+
+## What it depends on
+
+The model is built from free components. None needs a licence fee. The project itself is released under an open licence (GPL-3.0), which sets the terms for using and changing the code. This page does not give legal advice on those terms.
+
+| Dependency | What it is used for | Why it matters to you |
+|---|---|---|
+| Python | The programming language the model is written in | Anyone maintaining it needs this skill |
+| SimPy | Provides the simulation clock and queues | Core to the [call simulator](how-it-works.qmd) |
+| Streamlit | Builds the [web app](how-it-works.qmd) | Changes to this toolkit can affect the screens |
+| Pandas, NumPy, SciPy, Fitter | Data handling and statistics, including choosing which pattern best matches past data | Used throughout |
+| Plotly | The results charts | Affects what users see |
+| Joblib | Runs several model runs at once on a local computer | Gives speed on a local installation only |
+| Quarto | Builds the downloadable report | Optional. Needed only for the report |
+| GitHub | Holds the code, the issue list and the automatically built technical documentation | The project's home |
+
+The project fixes the version of each component. That keeps results steady, but someone must update them from time to time. Whether any are out of date was not determined from the code.
+
+### Outside services
+
+- **Streamlit Community Cloud** hosts the public demonstration copy. It is slower than a local installation. It runs five model runs by default (twelve locally), and it runs them one after another rather than in parallel.
+- On the hosted site, the report tool is downloaded from GitHub when needed. The web app also loads fonts and icons from outside websites. If those services change or are unavailable, parts of the hosted site could be affected. How the site behaves in that case was not determined from the code.
+
+### The job records
+
+The learned patterns come from real Devon Air Ambulance job records for 2023 and 2024. These records are not part of the project. They are kept out of the project's shared code store, so they are not published. They include each patient's age and sex, so access to them needs proper governance. See [risks](risks.qmd).
+
+## How actively it is maintained
+
+| Signal | What the code and history show |
+|---|---|
+| Latest release | Version 1.0.0, 30 May 2025 |
+| Most recent change | 19 October 2026 |
+| Changes in the last 12 months | 46, all by a single contributor |
+| Automated checks | Tests exist. Nothing runs them automatically on each change. |
+| Automatic builds | Only the technical documentation is built automatically |
+| Written documentation | Setup guide, roadmap, test guide, model diagrams and reporting checklists |
+
+Three points follow from this.
+
+- The project is alive, not abandoned.
+- Knowledge sits with one person. If that person is unavailable, who would take over was not determined from the code.
+- Developers must run the tests by hand. Nothing catches a breaking change on its own.
+
+## What upkeep involves
+
+1. **Refresh the learned patterns.** This is a separate, occasional step run by the [historical data preparer](how-it-works.qmd). It needs the confidential job extract. It deletes and rewrites the existing pattern files. The code notes that checks on the extract are still to be written. A refresh therefore needs care, and the date of the next one was not determined from the code.
+2. **Extend the school holiday dates.** The default list runs to the end of 2027. The model assumes dates are given for the whole simulated period.
+3. **Update the service history.** The last service dates for each aircraft must stay current, or the servicing plan drifts from reality.
+4. **Keep software versions current.** This is routine, but it needs testing afterwards.
+5. **Clear old results.** Most result files are replaced by the next run. One combined file grows with every run and is not cleared by the web app. How long files are kept was not determined from the code.
+6. **Rebuild the fleet rules if the fleet changes.** Several rules are tied to the current named aircraft and callsigns, so a different fleet may need developer work. See [assumptions and limits](assumptions-limits.qmd).
+
+## Running it for several people
+
+The web app keeps scenario settings in shared files. It is built for one user at a time on each installation. For a team, plan either one installation per person or an agreed way of taking turns.
+
+## What to take from this
+
+Running costs are low and the software is free. The real exposures are people and data: one active contributor, and a job extract that only the service can supply. The [questions to ask](questions-to-ask.qmd) page turns these into questions for the team.
