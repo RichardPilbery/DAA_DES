@@ -1,0 +1,171 @@
+---
+title: "Chapter 2: Simulation Runs and Replications"
+description: "How runSim and parallelProcessJoblib run seeded replications of the air ambulance model and collate their output files."
+toc: true
+aliases:
+  - "../02_simulation_runs_and_replications.html"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Confident Coder](../advanced-contributor/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+In [Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd) we saw the app gather a scenario (number of runs, duration, start date, demand multiplier, master seed) and then call into the package to run it. This chapter looks at what is on the other end of that call: the functions in `air_ambulance_des/des_parallel_process.py` that turn those numbers into many independent runs of the model and a single results file.
+
+## Why one run is not enough {#sec-simulation-runs-and-replications-motivation}
+
+Our central use case is the one the app's "Run" button performs. A user asks for **12 replications of a two-year simulation, starting on 1 January 2023, with the master seed 42**. They want a combined event log they can summarise (see [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd)), and they want to be able to run the same scenario tomorrow and get exactly the same numbers.
+
+Those two wants pull in different directions. A discrete event simulation is stochastic: call numbers, patient types and activity durations are all sampled, so one run is just one possible two years. You need several **replications** to see the spread. Yet the answer must also be reproducible, and the replications must not be copies of each other. The code solves this by deriving one independent seed per replication from a single master seed, then running the replications across CPU cores.
+
+::: {.column-margin}
+**Replication**: one complete run of the simulation with its own random seed. Results are compared across replications to see how much chance matters.
+:::
+
+::: {.column-margin}
+**Master seed**: the single integer the user controls. Every per-run seed is derived from it, so the same master seed always gives the same set of runs.
+:::
+
+## The pieces {#sec-simulation-runs-and-replications-concepts}
+
+Four functions do the work, plus the model's own `run()` method:
+
+| Piece | Role |
+|---|---|
+| [parallelProcessJoblib](../../reference/des_parallel_process.parallelProcessJoblib.qmd) | Derives per-run seeds and fans the runs out across cores |
+| [runSim](../../reference/des_parallel_process.runSim.qmd) | Builds and runs one [DES_HEMS](../../reference/des_hems.DES_HEMS.qmd) model, returns its results |
+| [write_run_params](../../reference/des_parallel_process.write_run_params.qmd) | Records the settings used, once, in `run_params_used.csv` |
+| [collateRunResults](../../reference/des_parallel_process.collateRunResults.qmd) | Merges the per-run CSVs into `run_results.csv` |
+| [DES_HEMS.run](../../reference/des_hems.DES_HEMS.qmd) | Runs the SimPy clock and writes the run's CSV |
+
+There are two time conventions to keep in mind. The model's clock is in **simulated minutes**, so a two-year duration is `2 * 365 * 24 * 60`. And the **warm-up period** is an initial stretch of simulated time that is run but not recorded, so that results are not distorted by the model starting from an empty system.
+
+::: {.column-margin}
+**Warm-up period**: simulated minutes at the start of a run during which events happen but no rows are written to the event log.
+:::
+
+## Using it {#sec-simulation-runs-and-replications-using}
+
+The command-line equivalent of the app's run button is `run_parallel_process.py` in the repository root. It is a good place to see the use case in its plainest form.
+
+```{.python include="../../../run_parallel_process.py" start-line=1 end-line=19 filename="run_parallel_process.py:1-19" code-line-style="hi:8,10-18" include-hash="8a2268c045b1"}
+```
+
+`removeExistingResults()` clears old `output_run_*.csv` and `all_results.csv` files from `data/` first. The call then passes, positionally, 12 runs, a duration of two years in minutes, zero warm-up, the start datetime, `amb_data=False` (do not model ambulance-service cases alongside HEMS; this is the normal setting), `save_params_csv=False` (do not write `run_params_used.csv` from this call), and demand and activity-duration multipliers of 1.0. The master seed is not given, so the default of 42 applies.
+
+The app makes the same call, shown in full in [chapter 1](01_streamlit_app_and_scenario_parameters.qmd#sec-streamlit-app-and-scenario-parameters-run), with keyword arguments. The lines that matter here are the `master_seed=` argument, which comes from session state, and the `collateRunResults()` call that follows `parallelProcessJoblib`. The other values are converted as set up in that chapter: duration is days multiplied by `24 * 60`, warm-up is hours multiplied by 60, and the demand multiplier is a percentage divided by 100.
+
+::: {.callout-warning title="The command-line script does not collate"}
+`run_parallel_process.py` calls `removeExistingResults()` and `parallelProcessJoblib` but never `collateRunResults()`. Run on its own, it leaves the per-run files rather than a combined `run_results.csv`. The app does call the collation step, as shown above. If you use the script, call `collateRunResults()` yourself afterwards.
+:::
+
+## What happens when you call it {#sec-simulation-runs-and-replications-walkthrough}
+
+1. `parallelProcessJoblib` builds a `SeedSequence` from the master seed and spawns one child per replication, then turns each child into an integer seed.
+2. joblib starts up to `n_cores` worker processes (all cores by default) and calls `runSim` once per replication, handing each its own seed.
+3. Each `runSim` creates a `DES_HEMS` model with that seed and calls its `run()` method. The model simulates the full period and writes `output_run_N.csv`.
+4. The first run (`run == 0`) also writes `run_params_used.csv`.
+5. When all workers have finished, the caller runs `collateRunResults()`, which concatenates the per-run files into `run_results.csv` and deletes them.
+
+```{mermaid}
+%%| label: fig-simulation-runs-and-replications-flow
+%%| fig-cap: "From one call to a combined results file (three replications shown)"
+sequenceDiagram
+    participant App as App or script
+    participant PP as parallelProcessJoblib
+    participant RS as runSim (per worker)
+    participant M as DES_HEMS
+    participant D as data folder
+    App->>PP: total_runs=3, master_seed=42
+    PP->>PP: spawn 3 seeds from master seed
+    PP->>RS: run=0, 1, 2 with seeds (in parallel)
+    RS->>M: DES_HEMS(run_number, random_seed, ...)
+    RS->>M: run()
+    M->>D: output_run_N.csv
+    RS->>D: run_params_used.csv (run 0 only)
+    RS-->>PP: results DataFrame
+    PP-->>App: list of DataFrames
+    App->>D: collateRunResults() merges into run_results.csv
+```
+
+@fig-simulation-runs-and-replications-flow shows that two things come back from a run: a DataFrame returned to the caller, and a CSV on disk. The app ignores the returned list and relies on the files.
+
+## Under the hood: deriving the seeds {#sec-simulation-runs-and-replications-seeds}
+
+The seeding is the most important design decision here, so it comes first.
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=294 end-line=319 filename="air_ambulance_des/des_parallel_process.py:294-319" code-line-style="hi:5,8,11-12" include-hash="e6e32f416cae"}
+```
+
+`SeedSequence(master_seed).spawn(total_runs)` is NumPy's mechanism for producing statistically independent child sequences from one parent. Simply using seeds `42, 43, 44, ...` for the replications would work mechanically, but neighbouring integer seeds are not guaranteed to give uncorrelated streams. Spawning avoids that. `generate_state(1)[0]` then collapses each child into a single integer, because `runSim` and `DES_HEMS` take an `int` seed.
+
+Because the seeds are computed up front, in the parent process, replication *n* gets the same seed whatever order the workers happen to finish in, and whatever the number of cores. That is what makes a run reproducible. The `Parallel(n_jobs=n_cores)(delayed(runSim)(...) for run in range(total_runs))` pattern is joblib's standard way of mapping a function over a range of arguments in separate processes.
+
+The seeding does not stop there. Inside the model, the per-run seed is spawned again, this time into many named random streams, one per sampling purpose. That is the subject of [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd). The start of `DES_HEMS.__init__` is where the hand-over happens:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=56 end-line=71 filename="air_ambulance_des/des_hems.py:56-71" code-line-style="hi:1,6-12" include-hash="674fb37f463e"}
+```
+
+Note `self.run_number = run_number + 1`. The `run` argument counts from 0 (which is how `runSim` recognises "the first run"), but the run number used in file names starts from 1, so the first replication writes `output_run_1.csv`.
+
+## Under the hood: one run {#sec-simulation-runs-and-replications-runsim}
+
+`runSim` is a thin wrapper. Most of its length is docstring and progress messages; the work is constructing the model, running it and, for the first replication, saving the parameters.
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=167 end-line=197 filename="air_ambulance_des/des_parallel_process.py:167-197" code-line-style="hi:7-17,27-29" include-hash="86b243cd1b73"}
+```
+
+Three details are worth noticing.
+
+- `time.process_time()` measures CPU time used by the current process. Because each replication runs in its own worker process, this is a fair per-run timing, though it is not wall-clock time.
+- The `run == 0` condition is why the parameters file is written exactly once. All replications share the same settings, so one copy is enough. The `SR NOTE` comment in the source points out that this would break if run numbering ever started at 1.
+- `write_run_params(daa_model)` reads the settings back from the model (duration, warm-up, start date, multipliers) and writes them to `run_params_used.csv`, including derived values such as the end date and the warm-up end date. [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd) reads this file back later.
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=62 end-line=97 filename="air_ambulance_des/des_parallel_process.py:62-97" code-line-style="hi:8-9,14-15,24-25" include-hash="0fb6ef0602b4"}
+```
+
+The summer and winter start dates are hard-coded as 1 April and 1 October of the start year. The comment in the code notes that this duplicates a definition in `class_hems` and must be kept in step with it.
+
+## Under the hood: inside `DES_HEMS.run` {#sec-simulation-runs-and-replications-run}
+
+The model's `run()` method is short, because the real work lives in processes registered on the SimPy environment (covered in [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd)).
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=812 end-line=832 filename="air_ambulance_des/des_hems.py:812-832" code-line-style="hi:10,13,16-19" include-hash="c19db5ad2a91"}
+```
+
+The simulation runs until `sim_duration + warm_up_duration`: the warm-up is added on top of the requested duration, not carved out of it. A one-year request with 24 hours of warm-up simulates 365 days plus one day, and records the last 365.
+
+The exclusion of the warm-up happens when events are logged, not here. Every call to `add_patient_result_row` checks the clock before storing a row:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=764 end-line=765 filename="air_ambulance_des/des_hems.py:764-765" include-hash="84b901b80c94"}
+```
+
+So during the warm-up, patients still arrive and still occupy helicopters and cars, but nothing is added to `results_list`. By the time recording begins, the model is already in a realistic state.
+
+Finally, `run()` writes two files. They are worth distinguishing:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=782 end-line=810 filename="air_ambulance_des/des_hems.py:782-810" code-line-style="hi:9-12,24-29" include-hash="c34747dd3e8d"}
+```
+
+`write_all_results` appends to a single shared `all_results.csv`, which is why `removeExistingResults` deletes it before a fresh batch. `write_run_results` writes `output_run_N.csv`, one file per replication. The docstring explains why the combined file is not simply the shared one: with joblib, several workers could be appending at once, and depending on timing not all rows would be reliably written. Separate per-run files cannot collide, so they are the safe route to a combined result.
+
+## Under the hood: collation {#sec-simulation-runs-and-replications-collation}
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=200 end-line=211 filename="air_ambulance_des/des_parallel_process.py:200-211" include-hash="a73f7310bbcd"}
+```
+
+`collateRunResults` finds every `output_run_*.csv` in `Utils.RESULTS_FOLDER` (the `data/` folder), reads them with pandas, concatenates them with a fresh index and writes `Utils.RUN_RESULTS_CSV`. It then deletes the per-run files. Each row already carries its run number, so the combined file still distinguishes replications.
+
+This is the **`run_results.csv`** that the results classes consume. Its sibling, **`run_params_used.csv`**, describes the settings under which it was produced.
+
+::: {.callout-note collapse="true" title="Refresher: why joblib uses processes"}
+Python threads share one interpreter lock, so CPU-bound work such as a simulation gains little from them. joblib's default backend starts separate worker processes, each with its own interpreter and memory. That is why the functions return DataFrames or write files rather than updating shared variables, and why the seeds are computed in the parent and passed in as plain integers.
+:::
+
+## Conclusion {#sec-simulation-runs-and-replications-conclusion}
+
+A scenario becomes a batch of replications through three steps: `parallelProcessJoblib` spawns one independent seed per replication from the master seed, `runSim` builds and runs a `DES_HEMS` model for each, and `collateRunResults` merges the per-run CSVs into `run_results.csv`. Warm-up time is simulated but not logged, and `run_params_used.csv` records the settings alongside.
+
+Each model is handed an integer seed, but we have not yet seen what it does with it. Next, in [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd), we'll see how that seed is split into named streams and how fitted distributions are sampled. For the project background, see the [project overview](../../readme.qmd).

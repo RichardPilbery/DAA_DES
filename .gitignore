@@ -163,30 +163,51 @@ cython_debug/
 
 .DS_Store
 
+# Data files
+# This will ensure all data folders are kept present in the file structure, but that their
+# contents (with the exception of the .gitkeep file) will not be tracked
 external_data/*
 !external_data/.gitkeep
+!external_data/README.md
+
 data/*
+!data/.gitkeep
+!data/README.md
+
+# Ingore temp file that may accidentally be tracked while editing Excel file
 app/assets/~$text.xlsx
 
 session_data.json
 
 /.quarto/
-/outputs/*.html
 
+# Avoid accidental upload of created app outputs, which are intended to only be
+/outputs/*.html
 /app/fig_outputs/*.txt
 /app/fig_outputs/*.html
 /app/outputs/*.html
-app/outputs/.gitkeep
+# Ensure app outputs folder will remain present in file structure
+!app/outputs/.gitkeep
+
+# Avoid accidental upload of created visualisations
 visualisation/event_log.csv
 visualisation/*.svg
 visualisation/*.html
+
 Rplots.pdf
+
+# Ensure any testing notebooks are excluded
 app/*test*.ipynb
 visualisation/*test*.ipynb
+
+# Ensure large event log files are not uploaded
 event_log.csv
 temp_test.csv
+
+# Avoid upload of intermediate animation outputs, which are only needed for debugging
 visualisation/anim_process_files/*
 
+# Ensure test logs and outputs are not uploaded
 tests/BUILDING_TESTS.ipynb
 tests/*FAILURES.csv
 tests/*FULL.csv
@@ -196,12 +217,31 @@ tests/test_outputs/*.csv
 tests/test_logs/*.txt
 
 log.txt
-tests/helpers.py
 
+# Ensure jupyter notebooks are not allowed to be uploaded
+# This is in place to minimize the risk of any exploratory data analysis being uploaded, which
+# could contain outputs that are not intended for wider sharing if not sanitised correctly.
+# If removing this in future, it is highly recommended to look at the addition of a
+# notebook stripping GitHub action, which would ensure only the notebook contents, not its output,
+# are uploaded. Alternatively, consider doing these kinds of analyses in Quarto or RMarkdown, which
+# have many of the same benefits without the same risk of outputs being unexpectedly embedded.
 *.ipynb
+
 data/run_params_used.csv
+
 code_documenter/output_py/*
 !code_documenter/output_py/.gitkeep
+
 historical_data/calculated/SIM_hist_params.csv
 
-!data/.gitkeep
+# Ignore vscode config files, which are likely to be individual to each contributor
+.vscode/
+app/inputs/~$parameter_template.xlsx
+
+_freeze/
+
+# Ignore a common folder name that is used for testing out features/changes
+test/
+
+# Ignore temporary excel files
+~$*.xlsx

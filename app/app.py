@@ -14,33 +14,26 @@ if "first_load" not in st.session_state:
     reset_to_defaults(reset_session_state=False, reset_csvs=True, notify=False)
     st.session_state["first_load"] = False
 
-if platform.processor() == '':
-    get_quarto("quarto_streamlit_community_cloud") # This name must match the repository name on GitHub
+if platform.processor() == "":
+    get_quarto("daa_des")  # This name must match the repository name on GitHub
 
 pg = st.navigation(
-
     {
-
         "Model Setup": [
             st.Page("welcome.py", title="Welcome"),
-            st.Page("setup.py", title="Choose Model Parameters")
+            st.Page("setup.py", title="Choose Model Parameters"),
         ],
-
         "Model Outputs": [
-
             st.Page("model.py", title="Run Simulation"),
             # st.Page("compare_scenarios.py", title="Scenario Comparison")
-            ],
+        ],
         "Additional Information": [
             # st.Page("what_is.py", title="Introduction to Simulation"),
             st.Page("glossary.py", title="Glossary of Terms"),
             st.Page("info.py", title="Model Details"),
             st.Page("acknowledgements.py", title="Acknowledgements"),
-            ]
-
+        ],
     }
-
-
-     )
+)
 
 pg.run()

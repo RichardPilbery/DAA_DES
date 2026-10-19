@@ -1,0 +1,362 @@
+docs_dir: air_ambulance_des_docs     # relative to the target repo (C:/DAAT/DAA_DES)
+project_type: website
+section_dir: tutorial
+git_tracked: true                    # _quarto.yml is tracked and unmodified relative to HEAD (tutorial wiring is committed)
+existing_tutorial: true
+
+navigation:
+  pattern: multi-sidebar             # website.sidebar in _quarto.yml is a LIST (four tutorial items) merged with the _sidebar.yml list via metadata-files
+  details: |
+    Refresh mode: section folder is not a blocker. The tutorial is already wired into _quarto.yml as a four-audience tutorial
+    (intermediate, advanced-contributor, stakeholder-decision-maker, stakeholder-domain-expert).
+    website.navbar.left has Home, Reference and a "Tutorial" dropdown menu (lines 21-30) with four entries.
+    website.sidebar (line 31) is a list in _quarto.yml itself (lines 32-82) holding four items, ids tutorial-intermediate,
+    tutorial-advanced-contributor, tutorial-stakeholder-decision-maker, tutorial-stakeholder-domain-expert (all style: docked).
+    The "reference" and other sidebars come from the quartodoc-generated _sidebar.yml (git-ignored) via top-level
+    metadata-files (lines 84-86). Do not edit _sidebar.yml or quartodoc.sidebar.
+    The tutorial sidebars are in _quarto.yml, not in a metadata file.
+    tutorial/index.qmd still exists on disk but is NOT referenced from navigation (the menu points at each audience's index.qmd).
+    Audience folders: intermediate/ and advanced-contributor/ hold 10 files each (index, 01-08, glossary); stakeholder-decision-maker/
+    holds 8 (index, what-it-does, how-it-works, assumptions-limits, risks, keeping-it-running, questions-to-ask, glossary);
+    stakeholder-domain-expert/ holds 7 (index, what-it-does, how-it-works, how-decisions-are-made, reading-results, assumptions-limits, glossary).
+    The sidebar lists match the files on disk.
+    Links into tutorial/ from OUTSIDE the section (Grep over the repo excluding tutorial/, reference/, _extensions/, docs_quarto/):
+    none in hand-written pages; only the _quarto.yml lines quoted below.
+    Other facts: project.output-dir is ../docs_quarto; pre-render script sync_docs.py regenerates readme.qmd, licence.qmd,
+    code_of_conduct.qmd, STARS.qmd, STRESS_DES.qmd (all git-ignored) and never touches tutorial/.
+    _quarto.yml.pre-tutorial.bak exists in the docs dir (untouched). tutorial/ also holds _backup-pre-add-audience/, _styles/, _work/ and
+    top-level _evidence.yaml, _generation.json, _outline.yaml, _plain-outline.yaml, _site-profile.yaml.
+  tutorial_entries:
+    - kind: navbar item (dropdown menu "Tutorial") in website.navbar.left
+      lines: "21-30"
+      text: |
+        21:      - text: Tutorial
+        22:        menu:
+        23:          - text: Intermediate
+        24:            href: tutorial/intermediate/index.qmd
+        25:          - text: Contributor
+        26:            href: tutorial/advanced-contributor/index.qmd
+        27:          - text: Decision-makers
+        28:            href: tutorial/stakeholder-decision-maker/index.qmd
+        29:          - text: Domain experts
+        30:            href: tutorial/stakeholder-domain-expert/index.qmd
+    - kind: sidebar (id tutorial-intermediate), in _quarto.yml itself
+      lines: "32-45"
+      text: |
+        32:    - id: tutorial-intermediate
+        33:      title: Tutorial (Intermediate)
+        34:      style: docked
+        35:      contents:
+        36:        - tutorial/intermediate/index.qmd
+        37:        - tutorial/intermediate/01_streamlit_app_and_scenario_parameters.qmd
+        38:        - tutorial/intermediate/02_simulation_runs_and_replications.qmd
+        39:        - tutorial/intermediate/03_sampling_distributions_and_random_streams.qmd
+        40:        - tutorial/intermediate/04_calls_and_patient_journeys.qmd
+        41:        - tutorial/intermediate/05_hems_resources_and_servicing.qmd
+        42:        - tutorial/intermediate/06_resource_allocation.qmd
+        43:        - tutorial/intermediate/07_trial_results_and_historic_comparison.qmd
+        44:        - tutorial/intermediate/08_distribution_fitting.qmd
+        45:        - tutorial/intermediate/glossary.qmd
+    - kind: sidebar (id tutorial-advanced-contributor), in _quarto.yml itself
+      lines: "46-59"
+      text: |
+        46:    - id: tutorial-advanced-contributor
+        47:      title: Tutorial (Contributor)
+        48:      style: docked
+        49:      contents:
+        50:        - tutorial/advanced-contributor/index.qmd
+        51:        - tutorial/advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd
+        52:        - tutorial/advanced-contributor/02_simulation_runs_and_replications.qmd
+        53:        - tutorial/advanced-contributor/03_sampling_distributions_and_random_streams.qmd
+        54:        - tutorial/advanced-contributor/04_calls_and_patient_journeys.qmd
+        55:        - tutorial/advanced-contributor/05_hems_resources_and_servicing.qmd
+        56:        - tutorial/advanced-contributor/06_resource_allocation.qmd
+        57:        - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
+        58:        - tutorial/advanced-contributor/08_distribution_fitting.qmd
+        59:        - tutorial/advanced-contributor/glossary.qmd
+    - kind: sidebar (id tutorial-stakeholder-decision-maker), in _quarto.yml itself
+      lines: "60-71"
+      text: |
+        60:    - id: tutorial-stakeholder-decision-maker
+        61:      title: Tutorial (Decision-makers)
+        62:      style: docked
+        63:      contents:
+        64:        - tutorial/stakeholder-decision-maker/index.qmd
+        65:        - tutorial/stakeholder-decision-maker/what-it-does.qmd
+        66:        - tutorial/stakeholder-decision-maker/how-it-works.qmd
+        67:        - tutorial/stakeholder-decision-maker/assumptions-limits.qmd
+        68:        - tutorial/stakeholder-decision-maker/risks.qmd
+        69:        - tutorial/stakeholder-decision-maker/keeping-it-running.qmd
+        70:        - tutorial/stakeholder-decision-maker/questions-to-ask.qmd
+        71:        - tutorial/stakeholder-decision-maker/glossary.qmd
+    - kind: sidebar (id tutorial-stakeholder-domain-expert), in _quarto.yml itself
+      lines: "72-82"
+      text: |
+        72:    - id: tutorial-stakeholder-domain-expert
+        73:      title: Tutorial (Domain experts)
+        74:      style: docked
+        75:      contents:
+        76:        - tutorial/stakeholder-domain-expert/index.qmd
+        77:        - tutorial/stakeholder-domain-expert/what-it-does.qmd
+        78:        - tutorial/stakeholder-domain-expert/how-it-works.qmd
+        79:        - tutorial/stakeholder-domain-expert/how-decisions-are-made.qmd
+        80:        - tutorial/stakeholder-domain-expert/reading-results.qmd
+        81:        - tutorial/stakeholder-domain-expert/assumptions-limits.qmd
+        82:        - tutorial/stakeholder-domain-expert/glossary.qmd
+      note: "The parent key 'sidebar:' is line 31 (shared with the reference sidebars; do not edit it). Indentation: 2 spaces per level; sidebar list items at 4 spaces, contents items at 8 spaces with '- '. Line 83 is blank, line 84 is a comment, metadata-files at 85-86."
+  insertion_plan: "n/a (tutorial already present)"
+
+existing_pages:                      # hand-written pages in the docs dir (excluding reference/, _-prefixed, tutorial/)
+  - path: index.qmd
+    title: Air Ambulance Discrete Event Simulation (H1 only; no title field)
+    summary: Stub landing page with a one-line welcome and toc front matter.
+    covers: [welcome]
+  - path: citation_details.qmd
+    title: Citing this work
+    summary: Includes ../CITATION.cff in a markdown block.
+    covers: [citation]
+  - path: readme.qmd
+    title: Devon Air Ambulance Discrete Event Simulation
+    summary: GENERATED by sync_docs.py from the repo README.md (git-ignored). Describes the DES model logic sequence, issue tracking and the API docs link.
+    covers: [DES model logic, AMPDS card category, callsign choice, HEMS result, patient outcome]
+    generated: true
+  - path: STARS.qmd
+    title: STARS (checklist)
+    summary: GENERATED copy of checklists/STARS/STARS.qmd (git-ignored). Reporting checklist, about 70 KB.
+    covers: [STARS reporting checklist]
+    generated: true
+  - path: STRESS_DES.qmd
+    title: STRESS-DES
+    summary: GENERATED copy of checklists/STRESS-DES/STRESS_DES.qmd (git-ignored). Currently "Coming soon!".
+    covers: [STRESS-DES checklist]
+    generated: true
+  - path: licence.qmd
+    title: Licence
+    summary: GENERATED copy of the repo LICENSE (git-ignored).
+    covers: [licence]
+    generated: true
+  - path: code_of_conduct.qmd
+    title: Code of Conduct
+    summary: GENERATED copy of CODE_OF_CONDUCT.md (git-ignored).
+    covers: [contributor code of conduct]
+    generated: true
+  # background_information/, input_data/ and model_details/ exist but are empty.
+  # Only index.qmd and citation_details.qmd are tracked; the others exist only after sync_docs.py has run.
+  # Prefer linking to index.qmd and the reference pages; readme.qmd etc. are present now but are generated.
+
+pre_render:
+  script: sync_docs.py   # project.pre-render in _quarto.yml; runs on a whole-project render or preview, not necessarily for `quarto render <docs>/tutorial`
+  what_it_does: |
+    root = parent of the docs dir (the repo root). It copies, overwriting, into the docs dir:
+    README.md -> readme.qmd; LICENSE -> licence.qmd; CODE_OF_CONDUCT.md -> code_of_conduct.qmd;
+    checklists/STARS/STARS.qmd -> STARS.qmd; checklists/STRESS-DES/STRESS_DES.qmd -> STRESS_DES.qmd.
+    Then it prepends a YAML header (format: html: toc: true, toc-expand: 3) to readme.qmd and rewrites
+    "/reference/" to "../reference/" in it. It never touches tutorial/ or deletes anything.
+    All five copied files are git-ignored.
+
+house_style:
+  front_matter_fields: [format.html.toc, format.html.toc-expand, title (only STRESS_DES.qmd), toc]
+  callouts: none observed (pages are tiny or copies of repo files)
+  code: no executable cells seen; site-level format.html.execute.freeze is auto. The include-code-files, code-window and code-line-style filters are enabled.
+  notes: >
+    Little hand-written evidence. README prose is plain and impersonal, British spelling ("Licence"), Title Case headings.
+    Tutorial pages should carry title and description plus toc: true. Theme flatly/darkly with custom scss; body-width 1200px.
+
+quartodoc:
+  present: true
+  package: air_ambulance_des
+  reference_dir: reference
+  reference_built: true              # 15 .qmd files in reference/ (including index.qmd and _api_index.qmd)
+  reference_tracked_in_git: false    # /reference/ is git-ignored
+  inventory: objects.json            # git-ignored too
+  interlinks_filter: false           # filters: include-code-files, code-window, code-line-style, value-box
+  link_style: relative
+  note: >
+    Page-level objects (sections.contents) are 13 classes/functions, each with its own page. objects.json lists
+    86 names including methods and attributes; members live on the parent page (anchor in the uri). Names are
+    package.module.Object, e.g. air_ambulance_des.class_hems.HEMS.
+  objects:
+    - name: air_ambulance_des.class_ambulance.Ambulance
+      page: reference/class_ambulance.Ambulance.qmd
+    - name: air_ambulance_des.class_hems.HEMS.hems_resource_on_shift
+      page: reference/class_hems.HEMS.qmd
+    - name: air_ambulance_des.class_hems.HEMS.unavailable_due_to_service
+      page: reference/class_hems.HEMS.qmd
+    - name: air_ambulance_des.class_hems.HEMS
+      page: reference/class_hems.HEMS.qmd
+    - name: air_ambulance_des.class_patient.Patient
+      page: reference/class_patient.Patient.qmd
+    - name: air_ambulance_des.class_hems_availability.ResourceAllocationReason
+      page: reference/class_hems_availability.ResourceAllocationReason.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.add_hems
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.allocate_regular_resource
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.allocate_resource
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.current_store_status
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.daily_servicing_check
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.do_ranges_overlap
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.find_next_service_date
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.is_during_school_holidays
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.is_other_resource_being_serviced
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.populate_store
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.preferred_regular_group_available
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.preferred_resource_available
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.prep_HEMS_resources
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.return_resource
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability.years_between
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.class_hems_availability.HEMSAvailability
+      page: reference/class_hems_availability.HEMSAvailability.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.activity_time_distributions
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.ad_hoc_unavailability
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.age_distributions
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.callsign_group
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.callsign_group_by_ampds_card_and_hour_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.callsign_group_by_ampds_card_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.enhanced_or_critical_care_by_ampds_card_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.getBestFit
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hems_result_by_callsign_group_and_vehicle_type_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_care_cat_counts
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_median_time_of_activities_by_month_and_resource_type
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_resource_utilisation
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_totals
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_totals_all_calls
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_totals_by_callsign
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_totals_by_day_of_week
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.historical_monthly_totals_by_hour_of_day
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hour_by_ampds_card_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.hourly_arrival_by_qtr_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.import_and_wrangle
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.incidents_per_day
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.incidents_per_day_samples
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.patient_outcome_by_care_category_and_quarter_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.removeExistingResults
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.school_holidays
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.sex_by_ampds_card_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.upper_allowable_time_bounds
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.vehicle_type_by_quarter_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils.vehicle_type_probs
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.distribution_fit_utils.DistributionFitUtils
+      page: reference/distribution_fit_utils.DistributionFitUtils.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.add_patient_result_row
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.calls_per_hour
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.generate_calls
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.patient_journey
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.predetermine_call_arrival
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.run
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.store_patient_results
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.write_all_results
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS.write_run_results
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_hems.DES_HEMS
+      page: reference/des_hems.DES_HEMS.qmd
+    - name: air_ambulance_des.des_parallel_process.runSim
+      page: reference/des_parallel_process.runSim.qmd
+    - name: air_ambulance_des.des_parallel_process.parallelProcessJoblib
+      page: reference/des_parallel_process.parallelProcessJoblib.qmd
+    - name: air_ambulance_des.class_simulation_inputs.SimulationInputs
+      page: reference/class_simulation_inputs.SimulationInputs.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.PLOT_SIMULATION_utilisation_summary
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.PLOT_hourly_call_counts
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.calculate_available_hours
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.compute_average_calls
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.count_weekdays_in_month
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.display_UNTATTENDED_calls_per_run
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.display_resource_use_exploration
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.display_vehicle_utilisation_metric
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.get_AVERAGE_UNATTENDED_calls_per_run
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.get_AVERAGE_calls_per_run
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.get_UNATTENDED_calls_per_run
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.get_calls_per_run
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.get_perc_unattended_string
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.get_perc_unattended_string_normalised
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.make_SIMULATION_utilisation_headline_figure
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.make_SIMULATION_utilisation_variation_plot
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults.make_job_count_df
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.class_simulation_trial_results.TrialResults
+      page: reference/class_simulation_trial_results.TrialResults.qmd
+    - name: air_ambulance_des.des_parallel_process.write_run_params
+      page: reference/des_parallel_process.write_run_params.qmd
+    - name: air_ambulance_des.des_parallel_process.collateRunResults
+      page: reference/des_parallel_process.collateRunResults.qmd
+
+tools:
+  quarto: "1.11.0"
+  quartodoc_installed: true          # importable (it has no __version__ attribute)
+
+filters: [include-code-files, code-window, code-line-style, value-box]
+
+extensions_present:
+  - {name: quarto-ext/include-code-files, version: 1.0.0, contributes: [filters], enabled: true}
+  - {name: mcanouil/code-window, version: 1.6.0, contributes: [filters], enabled: true}   # requires quarto >=1.9.36; 1.11.0 installed
+  - {name: EmilHvitfeldt/code-line-style, version: 0.1.0, contributes: [filters], enabled: true}
+  - {name: bergam0t/value-box, version: 2.0.0, contributes: [filters], enabled: true}

@@ -1,0 +1,77 @@
+---
+title: "Tutorial: How the simulation works"
+description: "A guided tour of the DAA_DES air ambulance discrete event simulation, from the Streamlit app through to the fitted distributions."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](index.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+Devon Air Ambulance sends helicopters and rapid-response cars (together, HEMS: helicopter emergency medical service) to the most serious emergency calls. This project simulates that service day by day so you can ask "what if" questions, such as "what if a second helicopter flew 24 hours a day?", and see how many calls would go unattended.
+
+**DAA_DES** is a *discrete event simulation* built on **SimPy** and packaged as `air_ambulance_des`, with a **Streamlit web app** in `app/` for setting parameters, running the model and viewing results. Each simulation run generates daily emergency calls, samples patient characteristics from *distributions fitted to historical job data*, tries to allocate a helicopter or car according to rotas (the shift patterns saying when each vehicle is staffed), servicing schedules and *care category* priorities (how serious a case is: critical, enhanced or regular), and records every step in an **event log** (a table with one row per step of every simulated job). Many seeded **replications** run in parallel, and the combined results are summarised and set against **historical data** so that scenarios can be compared with current performance.
+
+This tutorial is written for readers who are comfortable with Python but new to this repository. It complements the [Project Overview](../../readme.qmd), which describes the model logic at a high level, and the [API reference](../../reference/index.qmd), which documents each class and function.
+
+**Source repository:** <https://github.com/RichardPilbery/DAA_DES>
+
+::: {.callout-note}
+## Known problems the tutorial points out
+While reading the code closely, the chapters flag a handful of places where the code looks like it does not do what it appears to intend (for example in resource allocation and the daily servicing check). Each is marked with a warning callout whose title starts with "Possible bug", "Known issue" or "Watch out", and is an observation from reading the source, not a confirmed defect. Please check the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for their current status.
+:::
+
+## How the pieces fit together
+
+```{mermaid}
+%%| label: fig-overview
+%%| fig-cap: "How the eight parts of the system relate to each other."
+flowchart TD
+    A0["1. Streamlit App and Scenario Parameters"]
+    A1["2. Simulation Runs and Replications"]
+    A2["3. Sampling Distributions and Random Streams"]
+    A3["4. Calls and Patient Journeys"]
+    A4["5. HEMS Resources and Servicing"]
+    A5["6. Resource Allocation"]
+    A6["7. Trial Results and Historic Comparison"]
+    A7["8. Distribution Fitting"]
+    A0 -- "Launches runs" --> A1
+    A0 -- "Writes rota and servicing CSVs" --> A4
+    A0 -- "Displays outputs of" --> A6
+    A1 -- "Creates and runs" --> A3
+    A1 -- "Writes run_results.csv for" --> A6
+    A3 -- "Samples calls and times from" --> A2
+    A3 -- "Triggers daily servicing check" --> A4
+    A3 -- "Requests and returns resources" --> A5
+    A5 -- "Selects from store of" --> A4
+    A5 -- "Samples ad hoc unavailability" --> A2
+    A7 -- "Writes distribution files for" --> A2
+    A7 -- "Writes historical data for" --> A6
+    A7 -- "Runs historical baseline via" --> A1
+```
+
+Arrows show who calls or feeds whom. Chapter 8 sits upstream because it produces the data files the others read.
+
+## Chapters
+
+How to read this: read chapters 1 to 4 in order for the core model. Chapters 5 and 6 are the most detailed (resources and allocation); skip to them if you are changing rotas or dispatch rules. Chapter 7 is only needed if you are working on outputs. Chapter 8 is an offline pipeline and can be read on its own. You will get most from chapters 4 to 6 if you know that a SimPy process is a Python generator that yields timeouts; collapsed "Refresher" boxes cover this.
+
+1. [Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd) — How the web app collects parameters, writes them to `actual_data`, and triggers a run.
+2. [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd) — How `runSim` and `parallelProcessJoblib` run seeded replications and collate their output files.
+3. [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd) — How `Utils` loads the fitted distributions and samples from them with named, independently seeded random streams.
+4. [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) — How `DES_HEMS` generates daily calls, creates patients and moves each one through the stages of a job while writing the event log.
+5. [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd) — How helicopters and cars are modelled, built from the rota files, scheduled for servicing and kept in a SimPy `FilterStore`.
+6. [Resource Allocation](06_resource_allocation.qmd) — How `HEMSAvailability` chooses a primary and secondary resource for each patient, records the reason, and releases them afterwards.
+7. [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd) — How `SimulationInputs`, `TrialResults` and `HistoricResults` turn the event log and historical data into metrics and plots.
+8. [Distribution Fitting](08_distribution_fitting.qmd) — How `DistributionFitUtils` turns historical job data into the distribution and historical-data files the rest of the system reads.
+
+For definitions of the terms used throughout, see the [Glossary](glossary.qmd).
+
+## Further reading
+
+- [Project Overview](../../readme.qmd): the model logic sequence and the output columns.
+- [Class and function reference](../../reference/index.qmd): the full API.
+
+*Generated by [AI Codebase Knowledge Builder](https://github.com/The-Pocket/PocketFlow-Tutorial-Codebase-Knowledge) from commit [967933d](https://github.com/RichardPilbery/DAA_DES/commit/967933d9a7774b711fe57d4ad838e50ebedde3a7) (plus uncommitted changes), 2026-10-19.*

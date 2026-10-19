@@ -1,0 +1,66 @@
+---
+title: "Your data"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](your-data.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- If you use the web app, it does not ask for your name, email address or any other personal details. You only choose settings or upload a filled-in scenario spreadsheet.
+- The patients inside the model are made up. They have an age and a sex, but no name, address or location.
+- The model's patterns were built from real Devon Air Ambulance job records, which include each patient's age and sex. Those records are not published with the project.
+- Some things could not be determined from the code. This page says which.
+:::
+
+## If you use the web app
+
+The [web app](glossary.qmd) is the set of screens where you pick a scenario and view the results. This is what it takes from you:
+
+- Settings you type in, such as how many days to simulate, how many runs to do and how busy the service should be.
+- Or a filled-in Excel spreadsheet that describes a scenario (shift times, vehicles, servicing rules and school holidays).
+
+To use the web application to try out the model, you will not be asked for a name, an email address or a sign-in. Streamlit community cloud, where the model is hosted, does not use
+
+The settings you choose to try out are not linked to you in an identifiable way.
+
+## Outside services
+
+When you open the web app, your browser also fetches some fonts, icons and one picture from other websites. The public demonstration is run by a separate hosting company. On that copy, the tool that makes the downloadable report is fetched from a code-sharing website when needed.
+
+Those sites can normally see that your browser asked for something. The code does not show what they keep. That depends on them, not on this project.
+
+## Patients in the model
+
+The model makes up its patients. Each one is given an age and a sex, drawn from patterns in past jobs. They are not real people.
+
+There are blank spaces for a postcode and a location. The code never fills them in.
+
+## Real records behind the patterns
+
+The patterns come from real Devon Air Ambulance job records for 2023 and 2024. A separate, occasional step, the [historical data preparer](glossary.qmd), reads those records.
+
+The records it reads include:
+
+- each patient's age and sex
+- the date and time of the incident
+- the type of call
+- the outcome
+
+Here is what the code shows about them:
+
+- The real records are held in a private folder that is left out of what the project publishes. Only Devon Air Ambulance or carefully vetted project collaborators will have access to that data, with only the bare minimum of data required for the model to function being made available.
+- You cannot download data about any real people from the project.
+- The preparer turns it into patterns and summary figures, and those are what the model uses day to day.
+
+## What gets saved
+
+The model saves its results as files on the computer it runs on. They hold the step-by-step results and a record of the settings used. Most are replaced by the next run, but one combined file keeps adding results and the web app never clears it.
+
+## Who to ask
+
+Questions about the real records are best put to the project's authors, or on the project's public issue list. The [overview](index.qmd) names the authors and describes the issue list.
+
+To see what the model does with information after it has been set up, read [what it does](what-it-does.qmd). For the plain meaning of any term, see the [glossary](glossary.qmd).

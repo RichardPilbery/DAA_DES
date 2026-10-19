@@ -1,0 +1,33 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Devon Air Ambulance Discrete Event Simulation Model
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Sammi
+    family-names: Rosser
+    email: s.j.rosser@exeter.ac.uk
+    affiliation: >-
+      NIHR Applied Research Collaboration for the South West
+      Peninsula (PenARC), University of Exeter
+    orcid: 'https://orcid.org/0000-0002-9552-8988'
+  - given-names: Richard
+    family-names: Pilbery
+    affiliation: Yorkshire Ambulance Service NHS Trust
+    orcid: 'https://orcid.org/0000-0002-5797-9788'
+  - given-names: Hannah
+    family-names: Trebilcock
+    affiliation: Devon Air Ambulance
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.15555520
+repository-code: 'https://github.com/RichardPilbery/DAA_DES'
+url: 'https://daa-des-demo.streamlit.app/'
+keywords:
+  - discrete event simulation
+  - air ambulance
+license: GPL-3.0

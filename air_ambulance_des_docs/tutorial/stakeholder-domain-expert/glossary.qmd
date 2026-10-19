@@ -1,0 +1,159 @@
+---
+title: "Glossary"
+description: "Plain-language meanings of the terms used in this guide."
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/glossary.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](glossary.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [General public](../stakeholder-public/glossary.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+AMPDS card
+:   The category the 999 call-handling system gives to a call, describing the type of emergency.
+
+automated tests
+:   Checks, run on request by the developers, that confirm the model still behaves as expected.
+
+callsign
+:   The radio name of a vehicle on duty, such as H70 (a helicopter) or CC72 (a car).
+
+baseline
+:   The default scenario run, used as the comparison point for other scenarios.
+
+care category
+:   Critical care, enhanced care or regular, as used by the model. "Care level" means the same thing.
+
+crew group (callsign group)
+:   Vehicles that share one crew, such as helicopter H70 and car CC70 (group 70); only one can be out at a time.
+
+chi-squared test and Cramer's V
+:   Statistical tools used to ask whether the model gives each crew group or callsign a different share of jobs from the real records. One says whether the difference is bigger than chance would explain; the other says how big it is, from 0 (none) to 1 (complete).
+
+critical care (CC)
+:   The highest level of pre-hospital care the service provides; one of the three care categories in the model.
+
+demand percentage
+:   A single setting that scales every day's number of calls up or down (100% means the same as 2023-2024).
+
+discrete event simulation
+:   A type of simulation that jumps from one event (a call, a vehicle leaving, a job ending) to the next.
+
+effect size (Cohen's d)
+:   A measure of how big the gap is between the model's average and the real average, compared with how much that figure normally varies from one day or month to the next. Around 0.2 is a small gap and around 0.5 a medium one.
+
+enhanced care (EC)
+:   A level of care above standard ambulance care but below critical care.
+
+event log
+:   The record of every step of every simulated job, from which all results are calculated.
+
+helicopter benefit
+:   Whether a patient would gain from a helicopter rather than a car, for example for speed or access.
+
+HEMS
+:   Helicopter emergency medical service; in this model, any Devon Air Ambulance helicopter or critical care car.
+
+HEMS result
+:   What happened once a vehicle was sent, such as stood down, landed but no patient contact, treated but not conveyed, conveyed by HEMS or conveyed by land with HEMS.
+
+historical baseline
+:   Model results using the rotas that actually ran in the past, used to check the model against reality.
+
+hosted site
+:   A copy of the web app running on an outside service, reachable in a browser without installing anything.
+
+job stages
+:   The steps of a simulated job - allocation, mobilising, travel to scene, on scene, travel to hospital and clearing - each with its own drawn time.
+
+job-duration multiplier
+:   A single setting that stretches or shrinks every stage time of every job (1.0 means unchanged).
+
+KS statistic
+:   A measure of how far apart two patterns are, such as the model's spread of busy and quiet days against the real spread. A value of 0.1 means that, at the worst point, the two differ by about 10 percentage points.
+
+learned patterns (fitted distributions)
+:   Mathematical descriptions of past data, such as how long time on scene usually takes, which the model draws from.
+
+missed job
+:   A call for which no air ambulance vehicle was free and suitable at the time, so none was sent.
+
+open-source licence
+:   The terms under which the code can be used and changed; this project uses GPL-3.0.
+
+parameter template
+:   An Excel workbook the user fills in to describe a scenario and upload to the web app.
+
+patient outcome
+:   The recorded outcome for the patient (for example survived or died, as recorded in the job record), drawn from past patterns for the care category and quarter.
+
+preferred crew group and vehicle type
+:   The crew group and vehicle the model assumes would be sent to a call if everything were free, drawn from past patterns before the dispatch rules check what is actually available.
+
+quarter
+:   A three-month part of the year (January-March, April-June, July-September, October-December), used to vary many of the learned patterns by season.
+
+random seed
+:   A starting number that fixes the random chances, so the same seed and settings give the same results again.
+
+registration
+:   The aircraft's or car's own identifier, such as G-DAAS, which stays the same even if its callsign changes.
+
+regular job (REG)
+:   A job not identified as needing critical or enhanced care.
+
+rota
+:   The table of which vehicles are on shift at which hours, with separate summer and winter hours.
+
+run (replication)
+:   One complete play-through of the simulated period. The model does many runs, each with different random chances, and averages them.
+
+scenario
+:   A set of settings (rota, fleet, servicing, demand) to test.
+
+servicing
+:   Planned maintenance that takes an aircraft out of use for several weeks.
+
+short-notice (ad hoc) unavailability
+:   Times a helicopter cannot fly although on shift, for example due to weather or crew issues.
+
+simulation
+:   A computer model that imitates a real service over time, so that changes can be tried out safely.
+
+stand down
+:   A job cancelled after the vehicle was assigned and before it reached the scene.
+
+statistically significant (p-value)
+:   Unlikely to be just luck. The checks treat a difference as significant when the chance of seeing it by luck alone is below 5% (a p-value below 0.05).
+
+the call simulator
+:   The part that creates each day's made-up calls and patients and plays out each job step by step.
+
+the dispatch rules
+:   The part that decides which vehicle, if any, goes to each call.
+
+the fleet and rota model
+:   The part that represents each helicopter and car, its shift hours and its servicing dates.
+
+the historical data preparer
+:   An occasional, separate step that turns real job records into the patterns and summaries the model uses.
+
+the pattern sampler
+:   The part that holds patterns learned from past jobs and draws realistic values from them.
+
+the results and comparison tool
+:   The part that turns run records into figures and charts and compares them with real past performance.
+
+the run manager
+:   The part that repeats the model many times with different random chances and combines the results.
+
+the web app
+:   The set of web pages where users choose a scenario, run the model and view the results.
+
+utilisation
+:   The share of a vehicle's on-shift hours spent on jobs.
+
+warm-up period
+:   An optional stretch at the start of a run that is left out of the results, so the model starts from a "busy" state.
+
+Developers call these parts by their software names; the technical guides (see the audience switcher at the top) use those names.

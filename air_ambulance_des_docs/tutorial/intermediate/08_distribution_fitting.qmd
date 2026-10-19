@@ -1,0 +1,193 @@
+---
+title: "Chapter 8: Distribution Fitting"
+description: "How DistributionFitUtils turns a historical job extract into the distribution and historical-data files the rest of the system reads."
+toc: true
+aliases:
+  - "../08_distribution_fitting.html"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](08_distribution_fitting.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Confident Coder](../advanced-contributor/08_distribution_fitting.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+In [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd) we saw `HistoricResults` loading aggregated files from `historical_data/`, and in [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd) we saw `Utils` loading fitted inputs from `distribution_data/`. Both chapters treated those files as a given. This chapter is about where they come from.
+
+## Why fit distributions at all? {#sec-distribution-fitting-motivation}
+
+The simulation does not replay history. When it needs an activity time, a patient age or the number of calls on a given day, it draws a random value from something that describes the real data. Those descriptions have to be built from somewhere.
+
+Our central use case is this: **a new extract of cleaned job data arrives (say, another year of Devon Air Ambulance jobs), and you want the model and the results pages to reflect it.** Doing that by hand would mean working out dozens of probability tables, picking a suitable statistical distribution for each phase of a job, and aggregating the observed totals that `HistoricResults` compares against.
+
+[DistributionFitUtils](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) automates the lot. It is an *offline* pipeline: you run it occasionally from the command line, not during a simulation run and not from the Streamlit app. Its output is a set of files that the rest of the system reads.
+
+::: {.column-margin}
+**Distribution fitting pipeline**: the offline sequence of steps that turns a job-level CSV into the files in `distribution_data/` and `historical_data/`. See the [glossary](glossary.qmd).
+:::
+
+## Inputs and outputs {#sec-distribution-fitting-io}
+
+@fig-distribution-fitting-flow shows the whole picture. One CSV goes in, three main families of output come out, and each is consumed by a part of the system you have already met.
+
+```{mermaid}
+%%| label: fig-distribution-fitting-flow
+%%| fig-cap: "What DistributionFitUtils reads and writes"
+flowchart LR
+    A[Cleaned job extract CSV] --> D[DistributionFitUtils]
+    B[actual_data/upper_allowable_time_bounds.csv] --> D
+    D --> E[distribution_data/]
+    D --> F[historical_data/]
+    D --> G[historical_data/calculated/]
+    E --> H[Utils: sampling in a run]
+    F --> I[HistoricResults]
+    G --> I
+    D -.runs the model.-> J[parallelProcessJoblib]
+    J -.-> G
+```
+
+- **`distribution_data/`** holds probability tables, fitted distributions and daily call-count samples. `Utils` loads these when a model is built.
+- **`historical_data/`** holds aggregated *observed* totals, such as jobs per month or missed calls by hour. `HistoricResults` reads these.
+- **`historical_data/calculated/`** holds the output of a *simulated historical baseline*: the model run with the historic rotas and servicing, so that you can compare like with like.
+- **`actual_data/`** is also written: `school_holidays.csv` (if requested), and the rota, lookup and service files are overwritten by the baseline step, so back up any scenario you care about first.
+
+::: {.column-margin}
+**Simulated historical baseline**: a set of model runs using historic rotas and servicing rather than the user's scenario, giving the simulation's own picture of "how things were". See the [glossary](glossary.qmd).
+:::
+
+## Running the pipeline {#sec-distribution-fitting-using}
+
+The entry point is the small script `run_dist_fit_utils.py` at the repository root.
+
+```{.python include="../../../run_dist_fit_utils.py" start-line=1 end-line=10 filename="run_dist_fit_utils.py:1-10" include-hash="a16d54cb319d"}
+```
+
+The constructor takes the path to the extract. `import_and_wrangle()` does the fitting and writing; `run_sim_on_historical_params()` then produces the baseline. Passing `calculate_school_holidays=True` also regenerates the school holiday dates used by the servicing logic in [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd).
+
+Two practical points follow from how the class is written:
+
+- File paths such as `"distribution_data/hour_by_ampds_card_probs.csv"` are relative strings, so the script has to be run from the repository root.
+- `distribution_fit_utils.py` uses bare imports (`from utils import Utils`, `from des_parallel_process import ...`), as some other modules in the package do. We describe them as they are; just be aware that the module expects the package directory to be importable in that way.
+
+## Key concept: a best-fit distribution {#sec-distribution-fitting-best-fit}
+
+Most of the continuous inputs (activity times, ages, daily call counts) are stored as a *best-fit distribution*: the name and parameters of whichever candidate from a fixed list matched the data most closely. The choice is delegated to the `Fitter` library, wrapped by [getBestFit](../../reference/distribution_fit_utils.DistributionFitUtils.qmd).
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=142 end-line=163 filename="air_ambulance_des/distribution_fit_utils.py:142-163" code-line-style="hi:12,17,20,22,dim:1-10" include-hash="e6e5b28d3ec4"}
+```
+
+`Fitter.fit()` tries each candidate distribution against the sample and `get_best()` returns a dictionary such as `{"lognorm": {...parameters...}}`. If there is no data at all (`q_times.size` is zero) it returns an empty dictionary instead of failing, which matters because some combinations of vehicle type and HEMS result have no jobs.
+
+Which candidates are tried? The constructor hard-codes a list, `self.sim_tools_distr_plus` (poisson, gamma, lognorm, weibull_min and so on). A comment in the constructor notes that this was fixed deliberately, rather than using `get_common_distributions()`, to make random number generation setup more robust. That fits the sampling side: [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd) builds samplers from these names, so every name written here has to be one the sampler understands.
+
+## What import_and_wrangle does {#sec-distribution-fitting-wrangle}
+
+[import_and_wrangle](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) is the conductor. It first reads the CSV and adds helper columns (`date_only`, `hour`, `day_of_week`, `month`, `quarter`, `first_day_of_month`) derived from `inc_date`. It also reads `actual_data/upper_allowable_time_bounds.csv`, which holds the minimum and maximum plausible value for each activity time. These bounds replaced an earlier approach based on the upper quartile, and have the advantage that they can be edited from the front end.
+
+Then it clears out the old results and calls one method per output.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=212 end-line=252 filename="air_ambulance_des/distribution_fit_utils.py:212-252" code-line-style="hi:1-2" include-hash="b2145982c091"}
+```
+
+The two `removeExistingResults` calls delete every file with an extension at the top level of `historical_data/` and `distribution_data/` (subfolders, including `historical_data/calculated/`, are left alone), so an interrupted run leaves you with missing files rather than a mixture of old and new. After that, each call writes its own file. Some alternatives are commented out, and the original source labels others as archived code; we do not cover those.
+
+Below this excerpt, the method calls the school-holiday calculation (if requested), then the twelve `historical_*` methods that write to `historical_data/`, and finally `ad_hoc_unavailability()`, wrapped in a `try` that prints a message if its input file is missing.
+
+## Probability tables {#sec-distribution-fitting-probs}
+
+The simplest outputs are tables of proportions. [hourly_arrival_by_qtr_probs](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) is typical: count calls per hour within each quarter, divide by the quarter's total, and write a CSV.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=863 end-line=873 filename="air_ambulance_des/distribution_fit_utils.py:863-873" include-hash="224910e226f8"}
+```
+
+This is the hourly arrival profile that [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) uses in `calls_per_hour()` to spread a day's calls over the hours. `hour_by_ampds_card_probs()` follows the same shape, grouping by `hour` and `ampds_card`, and many of the other `*_probs` methods do likewise with different grouping columns (care category, vehicle type, callsign group, quarter).
+
+## Fitting activity times {#sec-distribution-fitting-activity}
+
+[activity_time_distributions](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) is where `getBestFit` earns its keep. Each HEMS result has its own list of phases that apply (a "Stand Down" has no time on scene, for instance), held in `self.times_to_fit`. The method loops over every HEMS result, every phase in its list and every vehicle type.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=370 end-line=421 filename="air_ambulance_des/distribution_fit_utils.py:370-421" code-line-style="hi:7-12,hi:16-19" include-hash="25857643a38a"}
+```
+
+For each combination, it selects the matching times, drops anything outside the bounds read earlier, fits, and records the winner along with `n`, the number of observations used. The special case for `time_on_scene` ignores the HEMS result, because the comment in the code says there is very little data for results other than "patient conveyed", which caused fitting problems. The list of dictionaries is written as JSON to `distribution_data/activity_time_distributions.txt`, which is the file `Utils` wraps in `SeededDistribution` objects. Note that `Utils` keys the loaded fits only by (vehicle type, time type), so when several HEMS results give an entry for the same pair, only the last one in the file is used when sampling (see [Sampling Distributions and Random Streams](03_sampling_distributions_and_random_streams.qmd#sec-sampling-distributions-and-random-streams-seeded)).
+
+`age_distributions()` works in the same spirit, with one fit per AMPDS card.
+
+## Daily call counts {#sec-distribution-fitting-daily}
+
+How many calls arrive each day is handled twice. `incidents_per_day()` fits a distribution by season and by quarter, giving `inc_per_day_distributions.txt` and `inc_per_day_qtr_distributions.txt`. Alongside that, [incidents_per_day_samples](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) stores the *empirical* counts directly.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=612 end-line=645 filename="air_ambulance_des/distribution_fit_utils.py:612-645" include-hash="9095fa3be288"}
+```
+
+Each observed daily count is repeated in proportion to a weight for its year (default `{2023: 1.0, 2024: 1.1}`, scaled by `scale_factor`), so that recent, busier years count for more. The result is a dictionary of plain lists keyed by `"winter"`, `"summer"`, `"Q1"` to `"Q4"`, saved to `inc_per_day_samples.json`. Drawing from such a list at random reproduces the observed spread of busy and quiet days, with no assumption that it follows a textbook curve.
+
+Note that `incidents_per_day()` uses a different year-weight map from the one above, so check both methods before changing how recent years are treated.
+
+## Historical aggregates {#sec-distribution-fitting-historical}
+
+The `historical_*` methods do no fitting. They simply summarise what actually happened, in the shape that `HistoricResults` expects.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=1548 end-line=1572 filename="air_ambulance_des/distribution_fit_utils.py:1548-1572" include-hash="1f2768e4df21"}
+```
+
+[historical_monthly_totals](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) drops duplicate `inc_date` rows first, since several resources can attend one job, then counts jobs and stand-downs per month and writes `historical_jobs_per_month.csv`. The other methods in the family cut the data by callsign, day of week, hour of day, activity durations, utilisation, missed jobs and care category. [upper_allowable_time_bounds](../../reference/distribution_fit_utils.DistributionFitUtils.qmd) also lives in this part of the class, but the pipeline currently reads the bounds from `actual_data/` instead of calling it (the call in `import_and_wrangle` is commented out).
+
+## The simulated historical baseline {#sec-distribution-fitting-baseline}
+
+Observed totals describe the past; to judge a scenario fairly you also want the *model's* version of the past. `run_sim_on_historical_params()` provides it. First it overwrites the rota, callsign lookup and servicing files in `actual_data/` with the historic versions from `tests/rotas_historic/`.
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=2691 end-line=2730 filename="air_ambulance_des/distribution_fit_utils.py:2691-2730" code-line-style="dim:1-20,hi:25-27,hi:29-40" include-hash="48935983ae09"}
+```
+
+Then it runs 30 replications of 104 weeks (728 days), with no warm-up and debug output switched on, using `parallelProcessJoblib` and `collateRunResults` exactly as described in [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd), and the collated `data/run_results.csv` is summarised into the `historical_data/calculated/SIM_hist_params_*` files.
+
+::: {.callout-warning title="Known issue: the missed-jobs summary cannot currently run"}
+The method ends by calling `_job_outcome_calculation.get_missed_call_df(...)` to write the two `SIM_hist_params_missed_jobs_care_cat_*` files. But the import that provides that name is commented out at the top of the module, under a `TODO: Important fix for rerunning with new input data`:
+
+```{.python include="../../../air_ambulance_des/distribution_fit_utils.py" start-line=20 end-line=21 filename="air_ambulance_des/distribution_fit_utils.py:20-21" include-hash="10c4846b1781"}
+```
+
+No other line defines `_job_outcome_calculation`, so those calls would raise a `NameError`. The surrounding `try` only catches `FileNotFoundError`, so the error would propagate. The earlier steps (the two "suboptimal" summaries) have already been written by then. The `SIM_hist_params_missed_jobs_*` files currently in `historical_data/calculated/` were therefore produced by an earlier version of the code. Treat this as something to fix before relying on a fresh run.
+:::
+
+`run_sim_on_historical_params` is not part of the generated API reference, so it appears here as plain code only.
+
+## Under the hood: one pass through the pipeline {#sec-distribution-fitting-walkthrough}
+
+1. You construct `DistributionFitUtils` with the extract path. Nothing is read yet; the constructor stores the path and the lists of times and candidate distributions.
+2. `import_and_wrangle()` loads the CSV, adds date and time columns, and reads the allowable time bounds.
+3. It deletes every file with an extension at the top level of `historical_data/` and `distribution_data/` (subfolders, including `historical_data/calculated/`, are left alone).
+4. Each fitting method filters the DataFrame, then either counts and divides (probability tables) or calls `getBestFit` (distributions), and writes one file.
+5. The `historical_*` methods write observed aggregates.
+6. `run_sim_on_historical_params()` swaps in the historic rota files and runs the model to build the baseline.
+
+```{mermaid}
+%%| label: fig-distribution-fitting-sequence
+%%| fig-cap: "One pass through the fitting pipeline"
+sequenceDiagram
+    participant U as run_dist_fit_utils.py
+    participant D as DistributionFitUtils
+    participant F as Fitter
+    participant FS as Output folders
+    participant P as parallelProcessJoblib
+    U->>D: import_and_wrangle()
+    D->>FS: removeExistingResults
+    D->>D: activity_time_distributions()
+    D->>F: getBestFit(times)
+    F-->>D: best fit and parameters
+    D->>FS: write distribution_data files
+    D->>FS: write historical_data files
+    U->>D: run_sim_on_historical_params()
+    D->>P: run 30 replications
+    P-->>D: run_results.csv
+    D->>FS: write calculated baseline files
+```
+
+The design is deliberately plain: one long class, one method per output file, and the folder layout acting as the contract with the rest of the system. The cost of that simplicity is that the pipeline does little checking. The source itself notes a TODO to validate the imported CSV for missing values and wrong column names, so a malformed extract usually fails deep inside a method.
+
+## Conclusion {#sec-distribution-fitting-conclusion}
+
+`DistributionFitUtils` is the start of the data's journey through this project. It reads a cleaned job extract, fits distributions with `Fitter`, tabulates probabilities and call-count samples for `Utils`, writes observed aggregates for `HistoricResults`, and runs a baseline simulation on historic rotas for comparison.
+
+That completes the tour: from the Streamlit parameters in chapter 1, through seeded runs, patient journeys, resources and allocation, to the results and the fitting that underpins them. To look up a term, see the [glossary](glossary.qmd). For signatures and parameters of every documented class and function, head to the [API reference](../../reference/index.qmd).

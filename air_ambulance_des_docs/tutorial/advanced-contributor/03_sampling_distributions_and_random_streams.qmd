@@ -1,0 +1,197 @@
+---
+title: "Chapter 3: Sampling Distributions and Random Streams"
+description: "How Utils loads the fitted distribution files and samples from them with named, independently seeded random streams."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](03_sampling_distributions_and_random_streams.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+[Chapter 2](02_simulation_runs_and_replications.qmd) ended with each replication getting its own seed from the master seed. This chapter picks that seed up inside the model and follows it into `Utils`.
+
+## What it is {#sec-sampling-distributions-and-random-streams-what-it-is}
+
+`Utils` (in `air_ambulance_des/utils.py`) is the model's sampling layer. Its constructor reads every fitted input the model needs from `distribution_data/` (plus `upper_allowable_time_bounds.csv` from `actual_data/`) into pandas frames and dictionaries. After `setup_seeds()` it exposes selection methods (`ampds_code_selection`, `care_category_selection`, `activity_time`, `inc_per_day_samples`, `sample_ad_hoc_reason` and friends) that each return one sampled value.
+
+The contract callers rely on:
+
+- **Input:** a `SeedSequence` (the `master_seed` argument) and the files in `distribution_data/`, which [Distribution Fitting](08_distribution_fitting.qmd) produces.
+- **Output:** one value per call, drawn from a stream named for the purpose, so the same seed always gives the same sequence for that purpose.
+- **Invariant:** each sampling purpose has its own `numpy` `Generator`. Drawing more or fewer values for one purpose must not move the numbers any other purpose sees.
+- **Callers:** `DES_HEMS` builds one `Utils` per run ([Calls and Patient Journeys](04_calls_and_patient_journeys.qmd)). `HEMSAvailability` receives that same object and calls `sample_ad_hoc_reason` during allocation ([Resource Allocation](06_resource_allocation.qmd)).
+
+The use case this chapter keeps returning to: a patient's mobile time is sampled with `activity_time("helicopter", "time_mobile")`, and you want it to be reproducible and unaffected by someone adding a new sampled attribute elsewhere.
+
+`Utils` also carries unrelated odds and ends: folder constants, school-holiday date calculators, and module-level helpers such as `format_diff` and `get_rota_month_strings`. They are out of scope here except where they bite (see @sec-sampling-distributions-and-random-streams-sharp-edges).
+
+## How it works {#sec-sampling-distributions-and-random-streams-how-it-works}
+
+### Construction and seeding
+
+`DES_HEMS.__init__` turns the run's integer seed into a `SeedSequence`, spawns one child for `Utils`, and calls `setup_seeds()` straight away.
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=61 end-line=71 filename="air_ambulance_des/des_hems.py:61-71" code-line-style="focus:2,6-9" include-hash="378204b19b49"}
+```
+
+So the seed chain from [Chapter 2](02_simulation_runs_and_replications.qmd) is: master seed, then per-run seed (integer), then a `SeedSequence` per model, then one child per `Utils`, then one stream per purpose (@fig-sampling-utils-seed-tree).
+
+```{mermaid}
+%%| label: fig-sampling-utils-seed-tree
+%%| fig-cap: "Seed hierarchy inside one run"
+flowchart TD
+    A["random_seed (int, per run)"] --> B["SeedSequence(random_seed)"]
+    B -->|"spawn(1)[0]"| C["Utils.master_seed_sequence"]
+    C -->|"spawn(22) in setup_seeds"| D["22 named Generators in Utils.rngs"]
+    C -->|"spawn(n) in build_seeded_distributions"| E["one Generator per activity-time fit"]
+    E --> F["SeededDistribution"]
+```
+
+`setup_seeds()` does the spawning:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=184 end-line=221 filename="air_ambulance_des/utils.py:184-221" code-line-style="focus:32-38" include-hash="4d49571d280b"}
+```
+
+`SeedSequence.spawn` is stateful: it hands out children numbered from an internal counter. That is why the second `spawn` inside `build_seeded_distributions` (called on the last line above) gives the activity-time generators streams that differ from the 22 named ones, without any extra bookkeeping.
+
+### Weighted table lookups
+
+Most selection methods follow one pattern: filter a probability table by the conditioning variables, then draw one row with `proportion` as weights, passing the named generator as `random_state`.
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=289 end-line=301 filename="air_ambulance_des/utils.py:289-301" code-line-style="focus:8-12" include-hash="f1231ffc31e9"}
+```
+
+`care_category_selection`, `pt_outcome_selection`, `callsign_group_selection`, `vehicle_type_selection_qtr` and the HEMS result sampler `Utils.hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs` are the same shape with different filters and different stream keys. Two methods deviate: `sex_selection` compares `rngs["sex_selection"].uniform(0, 1)` with a single probability, and `sample_ad_hoc_reason` uses `Generator.choice` with normalised probabilities.
+
+### Continuous distributions and activity times
+
+The files `activity_time_distributions.txt`, `age_distributions.txt` and the two `inc_per_day_*` files hold Python literals, read with `ast.literal_eval` in the constructor. Activity times are special: `build_seeded_distributions` replaces `self.activity_time_distr` with a dictionary of `SeededDistribution` objects, keyed by `(vehicle_type, time_type)`.
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=890 end-line=955 filename="air_ambulance_des/utils.py:890-955" code-line-style="focus:13-14,62,64" code-window-collapse="closed" include-hash="464164a16540"}
+```
+
+Each fitted entry is looked up in a name-to-scipy-class map (`dist_map`). Unknown names raise `ValueError`; `exponential` and `normal` are aliases. The generator for entry *i* is the *i*-th spawned child, so the order of entries in `activity_time_distributions.txt` decides which entry gets which stream.
+
+`SeededDistribution` is a thin pair of a frozen scipy distribution and its generator:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=1053 end-line=1059 filename="air_ambulance_des/utils.py:1053-1059" include-hash="8851c40572cc"}
+```
+
+`activity_time` then draws from it, rejecting values outside the bounds for that `time_type`:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=580 end-line=607 filename="air_ambulance_des/utils.py:580-607" code-line-style="focus:22-24" include-hash="2dd439897db1"}
+```
+
+The bounds come from `min_max_cache`, built in the constructor from `upper_allowable_time_bounds.csv`:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=177 end-line=182 filename="air_ambulance_des/utils.py:177-182" include-hash="c3d850dc576e"}
+```
+
+Note the lookup is by `time_type` only. The bounds are shared across vehicle types.
+
+Ages and daily call counts use the other path, `sample_from_distribution`, which takes a one-entry dict such as `{"gamma": {...}}` and the stream to use:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=673 end-line=698 filename="air_ambulance_des/utils.py:673-698" code-line-style="focus:23-26" include-hash="3c9b73dd308f"}
+```
+
+It floors the draw and loops until the result is positive. `age_sampling` and `inc_per_day` wrap it in further loops (a maximum age; per-season or per-quarter min and max counts).
+
+The model itself calls `inc_per_day_samples`, not `inc_per_day`. It resamples from empirical daily counts stored in `inc_per_day_samples.json`:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=652 end-line=671 filename="air_ambulance_des/utils.py:652-671" code-line-style="focus:14-16,18-20" include-hash="09d9a441494d"}
+```
+
+`quarter_or_season` picks the JSON key (`"summer"`/`"winter"` or `"Q1"` to `"Q4"`). `DES_HEMS` sets `daily_calls_by_quarter_or_season = "quarter"` (`des_hems.py:76`), so the quarter keys are the live path; the season default here is not what the model uses.
+
+### Ad hoc unavailability
+
+`sample_ad_hoc_reason(hour, quarter, registration)` maps the hour to a six-hour bin, filters `ad_hoc_unavailability.csv` by registration, bin and quarter, and falls back in stages:
+
+1. no rows for that registration: use all registrations for that bin and quarter;
+2. still none: return `"available"`;
+3. any NaN probability: impute the registration's mean across bins for that reason, else the bin's mean across registrations, else return `"available"`;
+4. probabilities still missing or summing to zero: return `"available"`.
+
+Only then does it normalise and draw:
+
+```{.python include="../../../air_ambulance_des/utils.py" start-line=1044 end-line=1050 filename="air_ambulance_des/utils.py:1044-1050" include-hash="09f78e630475"}
+```
+
+Every degraded path returns `"available"`, so missing data silently makes aircraft more available. The constructor is consistent with this: if `ad_hoc_unavailability.csv` is absent, the `FileNotFoundError` is caught (`utils.py:131-138`) and `self.ad_hoc_probs` is simply never set. The failure then surfaces as an `AttributeError` at the first call, not at construction.
+
+## Extending this {#sec-sampling-distributions-and-random-streams-extending-this}
+
+**Add a new sampled quantity (a new probability table).**
+
+1. Produce the CSV in `DistributionFitUtils` ([Distribution Fitting](08_distribution_fitting.qmd)), writing to `distribution_data/`.
+2. Load it in `Utils.__init__` next to the others.
+3. Add a key to `module_keys` in `setup_seeds` **at the end of the list**. See the first sharp edge below for why.
+4. Write the selection method following `ampds_code_selection`: filter, then `pd.Series.sample(..., random_state=self.rngs["<key>"])`.
+5. Call it from `DES_HEMS` ([Calls and Patient Journeys](04_calls_and_patient_journeys.qmd)).
+
+**Add a new activity time or vehicle type.** Add the fit in the activity-time distributions file via the fitting pipeline, and add a row for the `time_type` in `upper_allowable_time_bounds.csv`. `activity_time` raises `ValueError` for a missing distribution or missing bounds. A new scipy family must be added to `dist_map` in `build_seeded_distributions`.
+
+**Change which file backs a sampler** (for example per-season versus per-quarter call counts): the switch is `daily_calls_by_quarter_or_season` on `DES_HEMS`. The JSON must have the matching keys.
+
+**Conventions the code expects**
+
+- One stream key per sampling purpose, and the method reads `self.rngs[<key>]`. Keys are strings, so a typo is a `KeyError` at the first sample.
+- Probability tables have a `proportion` column. Method-specific filter columns are named in the existing methods.
+- Tests that exercise sampling construct `Utils(master_seed=SeedSequence(42))` and call `setup_seeds()` explicitly (`tests/test_resource_allocation.py:34-35`).
+
+**Tests that cover this area:** `tests/test_reproducibility.py`, `tests/test_against_reality.py`, `tests/test_backtest.py` and `tests/test_resource_allocation.py`. The repo's `tests/README.md` documents running them from the repo root:
+
+```{.bash .illustrative filename="Example usage (see tests/README.md)"}
+pytest tests/test_reproducibility.py
+pytest tests/test_resource_allocation.py
+pytest -m backtest
+```
+
+If a change to sampling is meant to alter results, `tests/README.md` describes `pytest -m backtest --update-backtest-baseline` for refreshing the stored baseline after you have checked the differences.
+
+## Sharp edges {#sec-sampling-distributions-and-random-streams-sharp-edges}
+
+- **Inserting a stream key shifts everyone after it.** Children are numbered by position in `spawn(len(module_keys))`, and the activity-time generators are spawned afterwards from the same sequence. Adding a key anywhere moves the activity-time streams, and adding one mid-list also moves the later named streams. Results change even for a fixed seed. This follows from how `SeedSequence.spawn` works; the repo does not say it in a comment (inferred).
+- **`setup_seeds()` is not idempotent.** `build_seeded_distributions` overwrites `self.activity_time_distr` (a list of dicts) with a dict. A second call would iterate the dict's tuple keys and fail on `entry["vehicle_type"]`.
+- **The default `master_seed=SeedSequence(42)` is evaluated once, at function definition.** Every `Utils()` that uses the default shares one `SeedSequence` object and its spawn counter. Two such objects do not get identical streams.
+- **Bare `Utils()` objects have no streams.** `HEMS` objects ([Chapter 5](05_hems_resources_and_servicing.qmd)) each build a bare `Utils()` for their time-range helper (`class_hems.py:33`). It has no `rngs` because `setup_seeds()` is never called, so never sample from it.
+- **Import-time file reads.** `HEMS_ROTA`, `HEMS_ROTA_DEFAULT` and `SERVICING_SCHEDULES_BY_MODEL` are read when the module is imported (`utils.py:49-56`), not when `Utils` is constructed. The app overwrites those CSVs ([Streamlit App and Scenario Parameters](01_streamlit_app_and_scenario_parameters.qmd)), so a process that imported `utils` earlier holds the old class-level frames. `Utils.__init__` itself reads `distribution_data/` fresh each time.
+- **Rejection loops have no cap.** `activity_time`, `sample_from_distribution`, `age_sampling` and `inc_per_day` loop until a draw lands in range. Bounds that the fitted distribution almost never reaches will hang a run rather than raise.
+- **Stale-looking `TODO: RANDOM SEED SETTING`** comments sit above `sex_selection` and `age_sampling` (`utils.py:535`, `:552`), yet both already use named streams. Whatever they originally flagged, the current code is seeded.
+- **Ad hoc fallbacks are silent.** See above: every degraded path returns `"available"`, and `sample_ad_hoc_reason` is annotated `-> bool` while returning a string.
+- **Hour ranges are inclusive in one place.** `hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs` treats hours 7 to 18 inclusive as `"day"`, so a call at 18:xx is day; `sample_ad_hoc_reason` uses different, six-hour bins.
+- **Two methods lack `self`.** `Utils.current_time()` and `Utils.biased_mean(series, bias)` are defined without `self`, so they only work when called on the class, not an instance. Commit `7f5798f` notes `biased_mean` "may need watching".
+
+## Design notes {#sec-sampling-distributions-and-random-streams-design-notes}
+
+**Documented.**
+
+- Random number streams for activity times were introduced in commit `2af661f`, and commit `9a05b28` moved seed handling to numpy seed sequences "more robustly". Together these are the origin of the `SeedSequence` plus named-generator design.
+- Commit `2eb0ffd` fixed different results in tests where a seed was set, which is the behaviour `tests/test_reproducibility.py` now guards.
+- Commit `7f5798f` added the option to stratify calls per day by season or quarter, which is the `quarter_or_season` argument.
+- Commit `ceb157e` switched vehicle type sampling to per quarter, which is why `vehicle_type_selection_qtr` is live and the non-quarter version is commented out.
+- Commit `5ad2dec` moved `utils.py` into the `air_ambulance_des` package; file history before that move was not followed.
+
+**Inferred.**
+
+- The named-stream split presumably exists so that changing one part of the model (say, adding a sampled field) does not reshuffle unrelated draws, which makes scenario comparisons less noisy. The code is consistent with that but no commit message says so.
+- Pairing each scipy distribution with its own generator in `SeededDistribution` suggests the aim of keeping every `(vehicle_type, time_type)` fit independent of how many times the others are drawn.
+- The large block of commented-out methods and `# ARCHIVED CODE` suggests the sampling tables were reworked more than once; the live versions are the quarter-stratified ones. This is a reading of the code only.
+
+## Limitations and open questions {#sec-sampling-distributions-and-random-streams-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
+
+- Issue [#183](https://github.com/RichardPilbery/DAA_DES/issues/183) (open as of 2026-10-19): add tests to quantify how much the random seed matters.
+- Issue [#241](https://github.com/RichardPilbery/DAA_DES/issues/241) (open as of 2026-10-19): a car is sometimes sent when the ad hoc unavailability spreadsheet gives no obvious reason, which touches the sampling fallbacks above.
+- The two `TODO: RANDOM SEED SETTING` markers at `air_ambulance_des/utils.py:535` and `:552`.
+
+Check the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state.
+
+## Conclusion
+
+With sampling and seeding in hand, [Calls and Patient Journeys](04_calls_and_patient_journeys.qmd) shows where `DES_HEMS` calls these methods as each call becomes a patient.

@@ -5,22 +5,29 @@ import numpy as np
 from scipy.stats import chi2_contingency, chi2
 import shutil
 import os
+import pandas as pd
+import tempfile
 
 
 def fail_with_message(message: str):
     """Cleanly formatted pytest failure message."""
     pytest.fail(textwrap.dedent(message))
 
+
 def warn_with_message(message: str):
     """Cleanly formatted warning message."""
     warnings.warn(textwrap.dedent(message), UserWarning)
+
+
 def format_sigfigs(x, sigfigs=4):
     if x == 0:
         return "0"
     else:
         from math import log10, floor
+
         digits = sigfigs - 1 - floor(log10(abs(x)))
         return f"{x:.{digits}f}"
+
 
 def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
     """
@@ -35,37 +42,43 @@ def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
     """
 
     # Create a table of proportions (separate from the original count table)
-    df['prop_simulated'] = df['count_simulated'] / df['count_simulated'].sum()
-    df['prop_historic'] = df['count_historic'] / df['count_historic'].sum()
-    df['abs_diff'] = (df['prop_simulated'] - df['prop_historic']).abs()
+    df["prop_simulated"] = df["count_simulated"] / df["count_simulated"].sum()
+    df["prop_historic"] = df["count_historic"] / df["count_historic"].sum()
+    df["abs_diff"] = (df["prop_simulated"] - df["prop_historic"]).abs()
 
     df.round(5).to_csv(f"tests/test_outputs/TEST_OUTPUT_{what}_proportions.csv")
 
     # Create the contingency table (observed frequencies)
     # Rows: Callsigns, Columns: Data Source (Simulated, Historic)
-    contingency_table = df[['count_simulated', 'count_historic']].values
+    contingency_table = df[["count_simulated", "count_historic"]].values
 
     # Perform the Chi-Squared Test of Homogeneity
     chi2_stat, p_val, dof, expected_freq = chi2_contingency(contingency_table)
 
     # Interpretation
-    alpha = alpha # Significance level
+    alpha = alpha  # Significance level
 
     if p_val < alpha:
         print(f"Result: Reject the null hypothesis (H₀) for {what}.")
-        print("Conclusion: There is a statistically significant difference in the distribution of callsigns between the simulated and historic data.")
+        print(
+            "Conclusion: There is a statistically significant difference in the distribution of callsigns between the simulated and historic data."
+        )
     else:
         print(f"Result: Fail to reject the null hypothesis (H₀) for {what}.")
-        print("Conclusion: There is no statistically significant difference in the distribution of callsigns between the simulated and historic data.")
+        print(
+            "Conclusion: There is no statistically significant difference in the distribution of callsigns between the simulated and historic data."
+        )
 
     # --- Calculate Effect Size (Cramér's V) ---
-    n = np.sum(contingency_table) # Total number of observations
-    min_dim = min(contingency_table.shape) - 1 # min(rows-1, cols-1)
+    n = np.sum(contingency_table)  # Total number of observations
+    min_dim = min(contingency_table.shape) - 1  # min(rows-1, cols-1)
 
     # Handle potential division by zero if min_dim is 0 (though unlikely here)
     if min_dim == 0:
         cramers_v = np.nan
-        fail_with_message("Cannot calculate Cramér's V because min(rows-1, cols-1) is 0.")
+        fail_with_message(
+            "Cannot calculate Cramér's V because min(rows-1, cols-1) is 0."
+        )
     else:
         cramers_v = np.sqrt(chi2_stat / (n * min_dim))
         print(f"Total Observations (n): {n}")
@@ -95,26 +108,51 @@ def calculate_chi_squared_and_cramers(df, what, alpha=0.05):
                 f"p_val: {p_val:.4f}, cramers_v: {cramers_v:.4f}\n\n{df}"
             )
 
-    max_diff = df['abs_diff'].max()
+    max_diff = df["abs_diff"].max()
 
     # Additionally assert that no single category differs too much
     if max_diff > 0.1:
-        fail_with_message(f"{what}: One category differs in proportion by more than 10% (found {max_diff:.4f}).\n\n{df}")
+        fail_with_message(
+            f"{what}: One category differs in proportion by more than 10% (found {max_diff:.4f}).\n\n{df}"
+        )
     elif max_diff >= 0.05:
-        warn_with_message(f"{what}: One category differs in proportion by more than 5% (found {max_diff:.4f}).\n\n{df}")
+        warn_with_message(
+            f"{what}: One category differs in proportion by more than 5% (found {max_diff:.4f}).\n\n{df}"
+        )
     else:
         pass
-
 
 
 def save_logs(output_path, log_location="log.txt", output_folder="tests/test_logs/"):
     full_output_path = f"{output_folder}/LOG_{output_path}"
 
     if os.path.exists(full_output_path):
-            try:
-                os.remove(full_output_path)
-                print(f"Removed previous log: {full_output_path}")
-            except Exception as e:
-                print(f"Warning: Failed to remove {full_output_path} — {e}")
+        try:
+            os.remove(full_output_path)
+            print(f"Removed previous log: {full_output_path}")
+        except Exception as e:
+            print(f"Warning: Failed to remove {full_output_path} — {e}")
 
     shutil.copyfile(log_location, full_output_path)
+
+
+def read_parameter_file(path):
+    """Read every sheet of a parameter template or scenario file into a dictionary of dataframes."""
+    # openpyxl warns that it can't read the data validation dropdowns used in the
+    # template, which doesn't affect the values read in
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        return pd.read_excel(path, sheet_name=None)
+
+
+def backup_actual_data(actual_data_folder="actual_data"):
+    """Copy the actual_data folder somewhere temporary so tests that overwrite its csvs can restore it."""
+    backup_folder = os.path.join(tempfile.mkdtemp(), "actual_data")
+    shutil.copytree(actual_data_folder, backup_folder)
+    return backup_folder
+
+
+def restore_actual_data(backup_folder, actual_data_folder="actual_data"):
+    """Restore the actual_data folder from a backup created by backup_actual_data()."""
+    shutil.copytree(backup_folder, actual_data_folder, dirs_exist_ok=True)
+    shutil.rmtree(os.path.dirname(backup_folder), ignore_errors=True)

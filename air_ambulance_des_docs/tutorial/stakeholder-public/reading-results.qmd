@@ -1,0 +1,77 @@
+---
+title: "Reading the results"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/reading-results.qmd){.btn .btn-sm .btn-outline-primary} [General public](reading-results.qmd){.btn .btn-sm .btn-primary .active aria-current="page"}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- The figures are averages over many pretend runs. They are estimates, not a forecast of a particular day or year.
+- A "missed job" in the model means no suitable helicopter or car was free at that moment. It does not mean the patient got no help. The model simply assumes the call is passed to another service, and does not follow what happens next.
+- Some of the "real" comparison figures, such as missed jobs by care level, come from the model itself, run on past rotas.
+- The public demonstration and a copy on a local computer can give slightly different numbers.
+:::
+
+This page helps you read what the [web app](glossary.qmd) shows, and avoid the easiest mistakes. For what the model leaves out, see [assumptions and limits](assumptions-limits.qmd). Unfamiliar words are in the [glossary](glossary.qmd).
+
+## Averages, not predictions
+
+The model plays out the same set of settings many times. Each repeat is called a run, and each run uses different random chances, a bit like replaying a board game with fresh dice rolls. Usually it does 12 runs on a local computer and 5 on the public demonstration. The app guesses which it is running on, and you can change the number.
+
+The headline figures are the average of all those runs.
+
+::: {.value-box-row columns="2"}
+::: {.value-box value="12" title="Runs, usually, on a local computer" color="bg-navy"}
+The average of 12 runs
+:::
+::: {.value-box value="5" title="Runs, usually, on the public demonstration" color="bg-teal"}
+The average of 5 runs
+:::
+:::
+
+- Two runs of the same settings give different answers, just as two real years would.
+- A small gap between two options may be nothing more than chance.
+- The average is not a promise about next Tuesday, or next year.
+- More runs give a steadier average. The code does not say how many are enough.
+
+## Missed jobs
+
+In the model, a call is "missed" if no suitable helicopter or car is free when it comes in. The model does not hold calls in a queue. It assumes the call goes to another service.
+
+So "missed" does not mean the patient was left alone. It also does not mean exactly the same as "missed" in the real records, where the reason for no attendance can be anything. Be careful when you put the two side by side.
+
+Yearly figures are estimates. The model counts missed calls over the days it simulates, averages across the runs, and scales up to a full year. For example (invented numbers), about 10 missed calls in a 100-day run would become roughly 37 a year.
+
+## How busy each vehicle is
+
+"Utilisation" is the share of a vehicle's shift time spent on jobs. A figure of 30% means about 30% of its planned shift hours were spent on jobs.
+
+Keep two things in mind:
+
+- The shift hours used are not reduced when an aircraft is away being serviced. A serviced aircraft may therefore look less busy than it really would be.
+- Each helicopter shares its crew with one car, so only one of the pair can be out at a time. While the helicopter is on a job, its partner car is unavailable, but the figures do not count that car as busy.
+
+## Comparing with real figures
+
+The app sets the model's results beside figures from 2023 and 2024. This is the best way to judge how far to trust the model. If it matches the past well, its "what if" answers deserve more weight.
+
+Two cautions:
+
+- Some "real" comparison figures, such as missed jobs by care level (for example critical care), do not come from real records. They come from the model run on the rotas that actually ran in the past.
+- The range printed beside each simulated missed-job figure also comes from that run on past rotas. It is not a range for the option you are testing.
+
+## Local copy or public demonstration
+
+The two versions roll their pretend dice in slightly different ways, and the demonstration also does fewer runs. The same settings can therefore give slightly different numbers. Compare options only within one version.
+
+## A quick checklist
+
+1. Look at the comparison with 2023 and 2024 first.
+2. Treat small differences between options with caution.
+3. Remember that "missed" means "no suitable vehicle free", not "no help".
+4. Check whether a "real" figure is a real record or model output. If a chart does not say it is from real records, treat it as model output.
+
+Known questions about how well the model matches the past are listed on the project's public issue list. The [overview](index.qmd) says where to find it.

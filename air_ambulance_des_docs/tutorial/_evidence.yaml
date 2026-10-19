@@ -1,0 +1,580 @@
+gathered_on: 2026-10-19
+repo_url: https://github.com/RichardPilbery/DAA_DES
+history:
+  status: available
+  note: "Full clone, 825 commits. Local remotes are 'main' (user fork Bergam0t/DAA_DES) and 'upstream' (RichardPilbery/DAA_DES); no 'origin'. Some recent commits are dated 2026-10-15."
+github:
+  status: checked
+  reason: ""
+  issues_url: https://github.com/RichardPilbery/DAA_DES/issues
+project_signals:
+  last_commit: 2026-10-19
+  commits_last_12_months: 46
+  contributors_last_12_months: 1
+  latest_release: v1.0.0 (2025-05-30)
+  ci: true            # .github/workflows/docs.yml only (docs build); no test workflow
+  tests: true
+  licence: GPL-3.0
+starter_issues: []
+repo_docs:
+  - path: roadmap.md
+    summary: Phases of model development (Oct 2024 to May 2025 for version 1, geographical elements listed as future work).
+  - path: tests/README.md
+    summary: Pytest commands, marker list and a table of what each test file checks; quick tests are school holidays, resource allocation, call generation and scenario importing; test_backtest compares against a stored baseline.
+  - path: reference/README.md
+    summary: Model logic and structure diagrams (drawio/svg/png) for the simulation.
+  - path: checklists/README.md
+    summary: STARS and STRESS-DES reporting checklists for the DES model.
+  - path: app/inputs/README.md
+    summary: Describes the Excel parameter template and the input files the app writes.
+  - path: README.md
+    summary: Project overview, installation, how to run the app and the command line scripts.
+
+abstractions:
+  streamlit_app:
+    rationale:
+      - kind: commit
+        ref: 02521a7
+        date: 2025-02-25
+        summary: Initial approach to allowing changeable rotas and models in the app.
+      - kind: commit
+        ref: c82cb2f
+        date: 2025-05-22
+        summary: Ensure all files are reset and add automated reset on new app load or refresh (basis of reset_to_defaults behaviour).
+      - kind: commit
+        ref: f067ed7
+        date: 2025-05-22
+        summary: Demand adjustment parameter temporarily removed because it produced unexpected behaviour (matches the commented-out seasonal demand TODO).
+      - kind: commit
+        ref: 6c5cd6c
+        date: 2025-10-27
+        summary: First approach to importing parameters from an Excel template; followed by 1fb4840 improving how spreadsheet inputs are handled and restored to defaults.
+      - kind: commit
+        ref: 2d34d73
+        date: 2025-10-27
+        summary: Interim addition of predefined scenarios chosen in the app.
+      - kind: commit
+        ref: b675ac3
+        date: 2026-10-15
+        summary: Fix scenario uploading logic and reduce fragility of file pathways.
+      - kind: commit
+        ref: cfa31e0
+        date: 2025-10-08
+        summary: Series of commits (also 0338459, d1a9e83) adjusting relative paths and CSV loading to fix Streamlit Community Cloud problems.
+    markers:
+      - ref: app/_state_control.py:80
+        text: "TODO: This could be refactored to cycle through each csv in this folder automatically."
+      - ref: app/_state_control.py:131
+        text: "TODO: Implement action (set_scenario_1_params placeholder; also lines 138, 143, 150)"
+      - ref: app/setup.py:199
+        text: "TODO: Consider whether the school holidays file needs to be added in to this"
+      - ref: app/setup.py:939
+        text: "# TODO: Add to session state"
+      - ref: app/_app_utils.py:387
+        text: "TODO: Add this in if we decide seasonal demand adjustment is a thing that's wanted"
+      - ref: app/setup.py:7
+        text: "Workaround to deal with relative import issues (also app/model.py:20)"
+    issues:
+      - kind: issue
+        number: 130
+        title: Fix errors when hosting streamlit app on community cloud
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/130
+        relevance: Hosted deployment problems linked to the path and CSV loading fixes.
+      - kind: issue
+        number: 262
+        title: Hosted app experiencing filepath issues with visualisation functions
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/262
+        relevance: Path handling in the app on hosted deployments.
+      - kind: issue
+        number: 101
+        title: Test handling of changed csvs in hosted deployment
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/101
+        relevance: Concerns the app writing over CSVs in actual_data when hosted.
+      - kind: issue
+        number: 56
+        title: Add ability to compare scenarios within the web app
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/56
+        relevance: Scenario comparison not yet built; related to the placeholder set_scenario functions.
+      - kind: issue
+        number: 74
+        title: Add limits to start date picker in web app to avoid issues with school holiday detection
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/74
+        relevance: Start date input interacts with school holiday data.
+    tests:
+      - tests/test_scenario_importing.py
+
+  simulation_runner:
+    rationale:
+      - kind: commit
+        ref: 9a05b28
+        date: 2025-04-17
+        summary: Adjust random seeds to use seed sequences more robustly.
+      - kind: commit
+        ref: 2af661f
+        date: 2025-04-16
+        summary: Implement random number streams for activity times.
+      - kind: commit
+        ref: 3bf122e
+        date: 2025-04-02
+        summary: Removed the warm_up_period boolean because rows are simply not added during the warm-up period.
+      - kind: commit
+        ref: b48ec2c
+        date: 2025-04-11
+        summary: Attempted fixes for issues #136 and #139 in the run functions (see also 7f4fcf1, 724d50d).
+      - kind: commit
+        ref: 5ad2dec
+        date: 2025-10-22
+        summary: Restructured the code as the air_ambulance_des package.
+      - kind: commit
+        ref: f77f7b8
+        date: 2025-10-09
+        summary: Changed how run results are saved when executing sequentially rather than in parallel.
+      - kind: commit
+        ref: af2ccf2
+        date: 2026-10-15
+        summary: Fix for days when the number of calls is zero (adds tests/test_call_generation.py).
+    markers:
+      - ref: air_ambulance_des/des_hems.py:778
+        text: "TODO - Improve error handling here (set_index P_ID KeyError swallowed with pass)"
+    issues:
+      - kind: issue
+        number: 233
+        title: Model hangs indefinitely if servicing schedule can't be resolved
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/233
+        relevance: A run can hang, which would block a replication in the parallel pool.
+      - kind: issue
+        number: 183
+        title: Add tests to quantify the variation in the impact of random seeds
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/183
+        relevance: Seed handling across replications.
+      - kind: issue
+        number: 165
+        title: Tracking down discrepancies in metrics vs historical data
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/165
+        relevance: Differences between run output and observed data.
+      - kind: issue
+        number: 245
+        title: Explore drop-in replacements for pandas to speed up processing
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/245
+        relevance: Performance of processing run output.
+    tests:
+      - tests/test_unittest_model.py
+      - tests/test_reproducibility.py
+      - tests/test_backtest.py
+      - tests/conftest.py
+
+  sampling_utils:
+    rationale:
+      - kind: commit
+        ref: 9a05b28
+        date: 2025-04-17
+        summary: Seed handling changed to use numpy seed sequences more robustly.
+      - kind: commit
+        ref: 2af661f
+        date: 2025-04-16
+        summary: Random number streams introduced for activity times.
+      - kind: commit
+        ref: 7f5798f
+        date: 2025-05-07
+        summary: Option to stratify calls per day by season or quarter; notes the biased_mean function in Utils may need watching.
+      - kind: commit
+        ref: 2eb0ffd
+        date: 2025-04-30
+        summary: Fix for different results during tests where a seed is set.
+      - kind: commit
+        ref: ceb157e
+        date: 2025-05-29
+        summary: Vehicle type sampling switched to per quarter.
+      - kind: commit
+        ref: 5ad2dec
+        date: 2025-10-22
+        summary: Package restructure moved utils.py into air_ambulance_des (file history before this was not followed beyond the move).
+    markers:
+      - ref: air_ambulance_des/utils.py:535
+        text: "TODO: RANDOM SEED SETTING (above sex_selection)"
+      - ref: air_ambulance_des/utils.py:552
+        text: "TODO: RANDOM SEED SETTING (second selection method)"
+    issues:
+      - kind: issue
+        number: 183
+        title: Add tests to quantify the variation in the impact of random seeds
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/183
+        relevance: Related to the named random streams and the TODO notes on seed setting.
+      - kind: issue
+        number: 241
+        title: Instances where car sent when ad-hoc unavailability spreadsheet does not provide obvious reason
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/241
+        relevance: Ad hoc unavailability sampling.
+    tests:
+      - tests/test_reproducibility.py
+      - tests/test_against_reality.py
+      - tests/test_backtest.py
+      - tests/test_resource_allocation.py
+
+  des_hems_model:
+    rationale:
+      - kind: commit
+        ref: 1f646db
+        date: 2024-10-25
+        summary: Simulation unit of time adjusted to minutes.
+      - kind: commit
+        ref: 192fd1d
+        date: 2025-05-20
+        summary: Patient journey refactored.
+      - kind: commit
+        ref: 9b559c2
+        date: 2025-05-30
+        summary: Allocation uses only the regular path and helicopter benefit is not always known in advance.
+      - kind: commit
+        ref: e18e48c
+        date: 2025-05-30
+        summary: Call handlers sometimes know in advance that a job would benefit from CC/EC.
+      - kind: commit
+        ref: ea4909f
+        date: 2025-05-23
+        summary: Helicopter benefit always set if the patient is conveyed by HEMS (discussion in issue #223).
+      - kind: commit
+        ref: 9b32e45
+        date: 2025-05-19
+        summary: Time-of-day aspect added to HEMS result sampling.
+      - kind: commit
+        ref: af2ccf2
+        date: 2026-10-15
+        summary: Fix for days with zero calls, with new tests in test_call_generation.py.
+      - kind: commit
+        ref: 3bf122e
+        date: 2025-04-02
+        summary: Rows are not recorded during warm-up, replacing a warm-up flag.
+    markers:
+      - ref: air_ambulance_des/des_hems.py:338
+        text: "TODO: We'll need the logic to decide whether it is an ambulance or HEMS case"
+      - ref: air_ambulance_des/des_hems.py:404
+        text: "TODO: SR 30/5 I have commented this out for now and we should revisit this at some point - as we might be slightly overestimating heli benefit patients"
+      - ref: air_ambulance_des/des_hems.py:778
+        text: "TODO - Improve error handling here"
+      - ref: air_ambulance_des/class_patient.py:42
+        text: "TODO: Initialise as a dt?"
+    issues:
+      - kind: issue
+        number: 192
+        title: Patient outcome is sometimes 'Patient Conveyed' when vehicle type is car - is this expected?
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/192
+        relevance: Known oddity in sampled patient outcome versus vehicle type.
+      - kind: issue
+        number: 205
+        title: Update assumptions around % of REG jobs that have a helicopter benefit
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/205
+        relevance: Related to the heli benefit TODO at des_hems.py:404.
+      - kind: issue
+        number: 168
+        title: Add calls per day visualisation over time
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/168
+        relevance: Call generation checking.
+      - kind: issue
+        number: 165
+        title: Tracking down discrepancies in metrics vs historical data
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/165
+        relevance: Differences between simulated and historical metrics.
+    tests:
+      - tests/test_call_generation.py
+      - tests/test_unittest_model.py
+      - tests/test_against_condition_changes.py
+      - tests/test_against_reality.py
+
+  hems_resources:
+    rationale:
+      - kind: commit
+        ref: 5ba60b0
+        date: 2024-09-13
+        summary: Added the Ambulance class that HEMS inherits from.
+      - kind: commit
+        ref: 3242c69
+        date: 2025-02-13
+        summary: Servicing scheduled around school holidays and preferred month.
+      - kind: commit
+        ref: ba0f813
+        date: 2025-03-21
+        summary: Servicing schedules separated out from the rota, and missed calls added.
+      - kind: commit
+        ref: d9a0e58
+        date: 2025-04-04
+        summary: Corrected re-allocation of G-DAAN to H70 when G-DAAS is being serviced (first attempt be8e91d noted as not working).
+      - kind: commit
+        ref: b08d224
+        date: 2025-04-24
+        summary: Daily servicing check refactored.
+      - kind: commit
+        ref: 8f42554
+        date: 2025-04-24
+        summary: Fix for simultaneous allocation of the same resource.
+      - kind: commit
+        ref: 7b88b4a
+        date: 2025-05-21
+        summary: Rota start/end checks switched from quarters to selected months.
+      - kind: commit
+        ref: cfefa7e
+        date: 2026-10-15
+        summary: Parsing of school holiday dates made more robust (school_holidays.py history starts here).
+    markers: []
+    issues:
+      - kind: issue
+        number: 233
+        title: Model hangs indefinitely if servicing schedule can't be resolved
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/233
+        relevance: Failure mode of find_next_service_date and scheduling.
+      - kind: issue
+        number: 220
+        title: How to force winter servicing if helo has time off?
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/220
+        relevance: Open question about servicing scheduling rules.
+      - kind: issue
+        number: 266
+        title: Does assumption around frequency of H145/H135 servicing intervals hold in two H145 situation?
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/266
+        relevance: Servicing interval assumption.
+      - kind: issue
+        number: 92
+        title: Explain how servicing+servicing overrun is dealt with in the model in logic diagram + web app
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/92
+        relevance: Servicing behaviour is under-documented.
+      - kind: issue
+        number: 143
+        title: Add explanation of what is and isn't modelled around servicing etc. for the 'changing helicopter model' scenario
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/143
+        relevance: Servicing modelling limits.
+      - kind: issue
+        number: 60
+        title: Decision on periods of extreme unavailability (and possible associated model work)
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/60
+        relevance: Resource unavailability handling.
+    tests:
+      - tests/test_unittest_model.py
+      - tests/test_school_holidays.py
+      - tests/test_against_condition_changes.py
+
+  resource_allocation:
+    rationale:
+      - kind: commit
+        ref: b476b8d
+        date: 2025-05-20
+        summary: HEMSAvailability class rewritten with easier-to-follow lookups; ac98121 added explanatory comments.
+      - kind: commit
+        ref: 8f42554
+        date: 2025-04-24
+        summary: Fix to avoid simultaneous allocation of the same resource (c210f81 reports no overlap and unit tests passing).
+      - kind: commit
+        ref: 96d6f97
+        date: 2025-04-30
+        summary: Sampling from ad hoc unavailability introduced; c705e99 stops cars sampling an ad hoc reason (issue #170).
+      - kind: commit
+        ref: 9b559c2
+        date: 2025-05-30
+        summary: Logic changed to use only the regular allocation path, and heli benefit not always known in advance.
+      - kind: commit
+        ref: 7fa1a27
+        date: 2025-05-28
+        summary: Preferred callsign group worked out without care category stratification, using only cases where no other resource was tasked.
+      - kind: commit
+        ref: a10d45f
+        date: 2025-05-29
+        summary: Removed check for the 'other' callsign group.
+      - kind: commit
+        ref: 2bd23f9
+        date: 2026-10-15
+        summary: Adjusted timing of the check for heli benefit being known (adds tests to test_resource_allocation.py).
+    markers: []
+    issues:
+      - kind: issue
+        number: 238
+        title: Revisiting Resource Allocation Logic
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/238
+        relevance: Open review of the allocation logic itself.
+      - kind: issue
+        number: 178
+        title: Allocation of jobs between callsign group 70 + 71 slightly off from historical patterns
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/178
+        relevance: Known mismatch in allocation versus history.
+      - kind: issue
+        number: 211
+        title: Resource allocation of solo cars vs backup cars, and how to make this flexible for added resources
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/211
+        relevance: Limits on flexibility when adding resources.
+      - kind: issue
+        number: 241
+        title: Instances where car sent when ad-hoc unavailability spreadsheet does not provide obvious reason
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/241
+        relevance: Car allocation versus unavailability data.
+      - kind: issue
+        number: 243
+        title: Further consideration of how to account for distance (without going fully geographical) in decision to send a car
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/243
+        relevance: Allocation ignores distance.
+      - kind: issue
+        number: 84
+        title: Make resource allocation logic more prominent in model logic diagram
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/84
+        relevance: Documentation gap.
+    tests:
+      - tests/test_resource_allocation.py
+      - tests/test_unittest_model.py
+
+  trial_results:
+    rationale:
+      - kind: commit
+        ref: 8b393b5
+        date: 2025-10-07
+        summary: Major interim refactor of the visualisation code to class-based (TrialResults, HistoricResults).
+      - kind: commit
+        ref: 0704f3d
+        date: 2025-10-07
+        summary: Refactor restored the first page of simulation output; later commits (ae14150, 2078627, f95ae70, 7f56d8e, aacf1e5) restored remaining plots one tab at a time.
+      - kind: commit
+        ref: 7ae9c47
+        date: 2025-10-22
+        summary: Improved layout and clarity of the historic results class.
+      - kind: commit
+        ref: 3039d72
+        date: 2025-10-23
+        summary: Changed how daily availability data is brought into the app and TrialResults (81982cc ensures it is assigned to a class attribute).
+      - kind: commit
+        ref: cfa31e0
+        date: 2025-10-08
+        summary: Changes to resolve a Streamlit cloud indexing bug (a7684b9 tweak for odd streamlit indexing bug).
+    markers:
+      - ref: air_ambulance_des/class_simulation_trial_results.py:471
+        text: "TODO: need to add in a check to ensure this only happens for calls at the end of the model, not due to errors elsewhere (repeated at :3794)"
+      - ref: air_ambulance_des/class_simulation_trial_results.py:621
+        text: "TODO - see what we can do about any instances where these columns remain NA"
+      - ref: air_ambulance_des/class_simulation_trial_results.py:931
+        text: "TODO: Update to pull historical data from hist data class (repeated at :1180)"
+      - ref: air_ambulance_des/class_simulation_trial_results.py:2226
+        text: "TODO: Confirm difference between run_results and event_log_df"
+      - ref: air_ambulance_des/class_simulation_trial_results.py:2407
+        text: "TODO: NOT YET CONVERTED TO OO"
+      - ref: air_ambulance_des/class_simulation_trial_results.py:2741
+        text: "TODO: convert to use historical class"
+    issues:
+      - kind: issue
+        number: 217
+        title: Utilisation breakdown plot breaks when one helicopter/car pairing removed
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/217
+        relevance: Bug in utilisation plotting in TrialResults.
+      - kind: issue
+        number: 215
+        title: Work out why car utilisation metrics break when one car is removed from the pool of resources
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/215
+        relevance: Utilisation metric bug.
+      - kind: issue
+        number: 176
+        title: Write formal tests for utilisation denominator calculation function(s)
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/176
+        relevance: No tests cover the available-hours calculation.
+      - kind: issue
+        number: 165
+        title: Tracking down discrepancies in metrics vs historical data
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/165
+        relevance: Metric discrepancies versus history.
+      - kind: issue
+        number: 244
+        title: Provide a copyable summary table of the key metrics
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/244
+        relevance: Proposed addition to results output.
+    tests: []
+
+  distribution_fitting:
+    rationale:
+      - kind: commit
+        ref: 7fa1a27
+        date: 2025-05-28
+        summary: Callsign group probabilities calculated without care category stratification, using only instances with no other resource tasked.
+      - kind: commit
+        ref: 5cdd3b8
+        date: 2025-05-29
+        summary: Jobs allocated during ad hoc unavailability removed when calculating callsign group probabilities.
+      - kind: commit
+        ref: 0915eaa
+        date: 2025-05-30
+        summary: Helicopter benefit probability calculated per care category.
+      - kind: commit
+        ref: 387af74
+        date: 2025-05-16
+        summary: Upper allowable time bounds and historical median times no longer drop rows where a single time is missing (similar to #198, b08988d).
+      - kind: commit
+        ref: 899dbe2
+        date: 2025-05-23
+        summary: Archived distribution data no longer in use.
+      - kind: commit
+        ref: 5dbbb2a
+        date: 2025-05-29
+        summary: Changes to ad hoc unavailability calculations.
+      - kind: commit
+        ref: 2540486
+        date: 2025-06-02
+        summary: Summarised data used for calculating suboptimal resource allocation.
+    markers:
+      - ref: air_ambulance_des/distribution_fit_utils.py:20
+        text: "TODO: Important fix for rerunning with new input data (commented-out visualisation import)"
+      - ref: air_ambulance_des/distribution_fit_utils.py:149
+        text: "TODO: Determine how Fitter works this out"
+      - ref: air_ambulance_des/distribution_fit_utils.py:172
+        text: "TODO: Additional logic is required to check the imported CSV"
+      - ref: air_ambulance_des/distribution_fit_utils.py:313
+        text: "TODO: Determine whether this should also be stratified by yearly quarter"
+      - ref: air_ambulance_des/distribution_fit_utils.py:985
+        text: "TODO: Ideally we'd also remove any instances where we know one of the helos to have been off for servicing (repeated at :1165)"
+      - ref: air_ambulance_des/distribution_fit_utils.py:1254
+        text: "TODO: These probability calculation functions could probably be refactored into a single function"
+      - ref: air_ambulance_des/distribution_fit_utils.py:2737
+        text: "TODO: Add saving of parameters used"
+    issues:
+      - kind: issue
+        number: 187
+        title: Investigate car/helicopter split within callsign groups
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/187
+        relevance: Concerns how callsign group and vehicle probabilities are derived.
+      - kind: issue
+        number: 205
+        title: Update assumptions around % of REG jobs that have a helicopter benefit
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/205
+        relevance: Heli benefit probabilities come from the fitted data.
+      - kind: issue
+        number: 165
+        title: Tracking down discrepancies in metrics vs historical data
+        state: open
+        url: https://github.com/RichardPilbery/DAA_DES/issues/165
+        relevance: Fitted distributions versus observed metrics.
+    tests: []

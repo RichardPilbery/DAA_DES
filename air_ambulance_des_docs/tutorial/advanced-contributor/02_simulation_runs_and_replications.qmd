@@ -1,0 +1,182 @@
+---
+title: "Chapter 2: Simulation Runs and Replications"
+description: "How runSim and parallelProcessJoblib derive per-run seeds, run seeded DES_HEMS replications across cores, and how the per-run CSVs are collated."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](02_simulation_runs_and_replications.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+[Chapter 1](01_streamlit_app_and_scenario_parameters.qmd) ended with the Run button handing session-state values to the run functions. This chapter follows that call into the package.
+
+## What it is {#sec-simulation-runs-and-replications-what-it-is}
+
+`air_ambulance_des/des_parallel_process.py` is the package's run API. [`runSim`](../../reference/des_parallel_process.runSim.qmd) builds one [`DES_HEMS`](../../reference/des_hems.DES_HEMS.qmd) model for a run number and seed, calls `run()` and returns that run's results `DataFrame`. [`parallelProcessJoblib`](../../reference/des_parallel_process.parallelProcessJoblib.qmd) turns a single **master seed** into one **per-run seed** per replication, then fans `runSim` out over CPU cores with joblib. [`collateRunResults`](../../reference/des_parallel_process.collateRunResults.qmd) merges the per-run CSVs into `data/run_results.csv`, which is the file the results classes read (see [Chapter 7](07_trial_results_and_historic_comparison.qmd)).
+
+The contract callers rely on:
+
+- **Inputs**: durations are in simulated **minutes** (the model's unit of time), `warm_up_time` is in the same unit, and the other parameters come from the scenario the app wrote to `actual_data/`.
+- **Outputs are files, not return values.** Every run writes `data/output_run_N.csv` (N starts at 1); the first run also writes `data/run_params_used.csv` via [`write_run_params`](../../reference/des_parallel_process.write_run_params.qmd). The return value of `parallelProcessJoblib` is a list of DataFrames that no in-repo caller uses.
+- **Determinism**: the same `master_seed` and `total_runs` give the same per-run seeds, whatever `n_cores` is.
+
+::: {.column-margin}
+**Warm-up period**: simulated minutes at the start of a run whose events are run but not recorded. It lets the model reach a realistic state (resources mid-job, servicing under way) before results begin.
+:::
+
+::: {.column-margin}
+**Replication**: one independently seeded run of the whole model. Results are only meaningful as a set of replications.
+:::
+
+The use case for this chapter is the one every scenario comparison starts with: twelve replications of a two-year scenario from the app's Run button or from `run_parallel_process.py`, producing one combined event log.
+
+```{mermaid}
+%%| label: fig-simulation-runs-and-replications-flow
+%%| fig-cap: "Files and functions involved in a parallel run"
+flowchart LR
+    A["app/model.py<br/>or run_parallel_process.py"] --> B[parallelProcessJoblib]
+    B -->|"SeedSequence(master_seed).spawn(n)"| C[runSim x n]
+    C --> D[DES_HEMS.run]
+    D --> E["data/output_run_N.csv"]
+    C -->|"run == 0"| F["data/run_params_used.csv"]
+    E --> G[collateRunResults]
+    G --> H["data/run_results.csv"]
+    D --> I["data/all_results.csv"]
+```
+
+The call generator and sampling the run relies on are covered in [Chapter 4](04_calls_and_patient_journeys.qmd) and [Chapter 3](03_sampling_distributions_and_random_streams.qmd).
+
+## How it works {#sec-simulation-runs-and-replications-how-it-works}
+
+### Deriving one seed per replication
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=294 end-line=319 filename="air_ambulance_des/des_parallel_process.py:294-319" code-line-style="focus:5,8,19" include-hash="e6e32f416cae"}
+```
+
+`SeedSequence(master_seed).spawn(total_runs)` yields `total_runs` child sequences. Each is collapsed to a single integer with `generate_state(1)[0]` and passed to `runSim` as `random_seed`. The seed for replication `i` is therefore a function of `(master_seed, i)` only. Nothing depends on which worker picks up the job, so results do not change with `n_cores`. Because `SeedSequence.spawn` keys children by index (numpy behaviour, not repo code), asking for more runs should not change the seeds of the earlier ones. `tests/test_reproducibility.py` checks same-seed and different-seed behaviour end to end.
+
+`Parallel(n_jobs=n_cores)` with the default `n_cores=-1` uses every core. The generator expression passes every setting explicitly, so `runSim` never reads session state or globals for its configuration.
+
+### One replication
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=167 end-line=197 filename="air_ambulance_des/des_parallel_process.py:167-197" code-line-style="focus:18,28-29" include-hash="86b243cd1b73"}
+```
+
+`runSim` is deliberately thin. It constructs `DES_HEMS`, calls `run()`, and returns `daa_model.results_df`. The timing uses `time.process_time()`, which is CPU time of the worker process, not wall-clock time, so the "took N minutes" message is not a stopwatch reading.
+
+Parameter recording is gated on `run == 0` and `save_params_csv`. The `SR NOTE` code comment above it (a maintainer's note-to-self convention in this repo) is a warning to keep in mind: the check assumes runs are numbered from zero.
+
+### What `DES_HEMS` does with the seed and the run number
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=56 end-line=71 filename="air_ambulance_des/des_hems.py:56-71" code-line-style="focus:1,6-7,11-12" include-hash="674fb37f463e"}
+```
+
+Two things matter here. First, `self.run_number = run_number + 1`: the model's run number is one-based, so the file for the first replication is `output_run_1.csv` while `runSim` still sees `run == 0`. Second, the integer seed is wrapped in a *second* `SeedSequence`, and a spawned child of that goes to `Utils`, whose `setup_seeds()` makes the named random streams. How those streams are derived is the subject of [Chapter 3](03_sampling_distributions_and_random_streams.qmd). `HEMSAvailability` is also handed the parent `SeedSequence` as `master_seed`, but it only stores it and does not use it. Its random draws (ad hoc unavailability, `know_heli_benefit`) come from the shared `Utils` instance and so from the streams described in [Chapter 3](03_sampling_distributions_and_random_streams.qmd).
+
+### The warm-up period and the end of the run
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=764 end-line=772 filename="air_ambulance_des/des_hems.py:764-772" code-line-style="focus:1-2" include-hash="db6c51ace865"}
+```
+
+The warm-up is not a flag and not a separate phase. Events during the warm-up are simulated but simply not appended to `results_list`, because `add_patient_result_row` checks `self.env.now >= self.warm_up_duration` ([Chapter 4](04_calls_and_patient_journeys.qmd) covers the rows themselves). The commit that removed the old `warm_up_period` boolean ("rows are simply not added during the warm-up period", `3bf122e`, 2025-04-02) documents this.
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=812 end-line=832 filename="air_ambulance_des/des_hems.py:812-832" code-line-style="focus:14,20-21" include-hash="c19db5ad2a91"}
+```
+
+`run()` starts the `generate_calls` process, runs the SimPy environment until `sim_duration + warm_up_duration`, converts the row list to a DataFrame and then writes two files. The recorded window is therefore exactly `sim_duration` long and starts at `warm_up_duration`.
+
+### Writing and collating
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=795 end-line=810 filename="air_ambulance_des/des_hems.py:795-810" code-line-style="focus:12" include-hash="1d95e57f76f6"}
+```
+
+The docstring is the documented reason for per-run files: appending to one shared file does not work reliably under joblib, because it depends on process timing. `write_all_results` (just above, at lines 782-793) still appends to `data/all_results.csv` from every worker; nothing in the collation path reads that file.
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=200 end-line=211 filename="air_ambulance_des/des_parallel_process.py:200-211" code-line-style="focus:5,10-11" include-hash="a73f7310bbcd"}
+```
+
+Collation globs `output_run_*.csv` in `Utils.RESULTS_FOLDER`, concatenates them with `ignore_index=True`, writes `run_results.csv` (index column included), and deletes the per-run files. The run identity survives in the data because each row already carries a `run_number` column from the model, not because of anything collation does.
+
+```{.python include="../../../air_ambulance_des/des_parallel_process.py" start-line=214 end-line=230 filename="air_ambulance_des/des_parallel_process.py:214-230" code-line-style="focus:10-12,14" include-hash="26f950d770a4"}
+```
+
+`removeExistingResults` is the counterpart you must call before a fresh batch, because collation takes whatever matches the glob. It always removes `output_run_*.csv` and `all_results.csv`, and removes `run_results.csv` only on request.
+
+### The three callers
+
+`parallelProcessJoblib` is called from the app, from the CLI script and from tests. The app also has a second path, which matters for seeds.
+
+```{.python include="../../../app/model.py" start-line=156 end-line=178 filename="app/model.py:156-178" code-line-style="focus:1-2,22" include-hash="666bbaab4c4c"}
+```
+
+When `platform.processor() == ""`, which the code comments describe as a guess that the app is on Streamlit Community Cloud, the app skips joblib and loops over `runSim`, using `master_seed + run` as the seed (see "Two seeding schemes" under Sharp edges). It then concatenates the returned frames and writes `Utils.RUN_RESULTS_CSV` directly (lines 187-190), so it does not use `collateRunResults` on this path. Commit `f77f7b8` ("Changed how run results are saved when executing sequentially rather than in parallel") is the documented change to that behaviour. 
+
+`run_parallel_process.py` is the command-line equivalent:
+
+```{.python include="../../../run_parallel_process.py" start-line=7 end-line=19 filename="run_parallel_process.py:7-19" include-hash="034d2d77e183"}
+```
+
+It calls `removeExistingResults()`, runs 12 replications of two years with no warm-up, `amb_data=False`, `save_params_csv=False`, and leaves `master_seed` at its default of 42. It does not call `collateRunResults()`, so it leaves `output_run_N.csv` files in `data/` and writes neither `run_results.csv` nor `run_params_used.csv`.
+
+## Extending this {#sec-simulation-runs-and-replications-extending-this}
+
+**Add a run-level parameter** (for example another multiplier). Touch these in order:
+
+1. `DES_HEMS.__init__` (`des_hems.py:44-55`) to accept and store it.
+2. `runSim` and `parallelProcessJoblib` signatures, and the `delayed(runSim)(...)` call, which lists every argument explicitly.
+3. `write_run_params`, if the setting should be recorded in `run_params_used.csv`. The DataFrame there is a hand-built dict, so a new key is not recorded automatically.
+4. The app's two call sites in `app/model.py` (sequential and parallel) and, if wanted, `DEFAULT_INPUTS` and the setup page ([Chapter 1](01_streamlit_app_and_scenario_parameters.qmd)).
+5. `run_parallel_process.py`, which passes arguments positionally. Inserting a parameter before existing positional ones shifts the meaning of the later arguments.
+
+**Change the parallel backend or worker count.** Everything is in the `Parallel(n_jobs=n_cores)(...)` expression. Keep the seeds computed *before* dispatch, in the parent, so reproducibility stays independent of scheduling.
+
+**Change what is collated.** Edit `collateRunResults` and keep `Utils.RUN_RESULTS_CSV` and the `output_run_` filename pattern in step with `DES_HEMS.write_run_results`. They are linked only by a string pattern.
+
+**Tests.** From the repo root (per `tests/README.md`):
+
+```{.bash .illustrative filename="Example usage (see tests/README.md)"}
+pytest tests/test_reproducibility.py   # same seed, same results; different seed, different results
+pytest tests/test_unittest_model.py    # includes the warm-up period behaviour
+pytest -m backtest                     # compares a fixed scenario with the stored baseline
+```
+
+`tests/conftest.py` builds shared simulation fixtures using exactly the `removeExistingResults()`, `parallelProcessJoblib(...)`, `collateRunResults()` sequence. `test_backtest.py` restores the `data` folder afterwards, but the README warns that other tests delete and rewrite `data/run_results.csv` and `data/all_results.csv`, so don't run them while you care about a results file in `data/`. If a seed change is intentional, the README documents `pytest -m backtest --update-backtest-baseline`.
+
+## Sharp edges {#sec-simulation-runs-and-replications-sharp-edges}
+
+- **Stale files poison collation.** `collateRunResults` merges whatever `output_run_*.csv` exists. Skipping `removeExistingResults()` after an aborted batch mixes old and new replications. If nothing matches, `pd.concat` on an empty list raises `ValueError`.
+- **Glob order is not sorted**, so row order in `run_results.csv` is not guaranteed to follow run number. Anything that depends on order should sort.
+- **Concurrent appends to `all_results.csv`.** Every worker calls `write_all_results`, which checks `os.path.isfile` and then appends. The check and write are not atomic, so in principle the header could be written twice or rows interleaved (inferred from the code, not observed). This is why the per-run files exist; treat `all_results.csv` as unreliable in parallel runs.
+- **Parameters and results are not linked.** `run_params_used.csv` is written once, by run 0, from that model instance only. The `SR NOTE` in `write_run_params` records that no identifier ties it to the results and that a failed write could leave the two out of step. Note also that its `sim_end_date` is `sim_start_date + sim_duration`, which does not include the warm-up, whereas the model actually runs until `sim_duration + warm_up_duration`. Its summer and winter start dates are hardcoded strings (April and October), with a comment saying `class_hems` must be updated in step.
+- **Two seeding schemes.** Parallel: spawned per-run seeds. Sequential (hosted app): `master_seed + run`. Don't compare outputs across the two.
+- **The one-based file number versus the zero-based run argument** (see above). Someone starting `run` from 1 would silently lose `run_params_used.csv`.
+- **Unit conversions live in the caller.** The app multiplies days by 24 x 60 and warm-up hours by 60 and passes floats. `runSim`'s docstring says "minutes or other time unit", but the model assumes minutes throughout.
+- **A hung run blocks the pool.** Issue [#233](https://github.com/RichardPilbery/DAA_DES/issues/233) (open as of 2026-10-19) reports the model hanging indefinitely if a servicing schedule cannot be resolved. Joblib has no timeout here, so one such replication stalls the batch.
+- **Empty runs.** `convert_results_to_df` swallows a `KeyError` on `set_index("P_ID")` (the `TODO` at `des_hems.py:778`). A run with no recorded rows therefore yields an empty frame without an error.
+
+## Design notes {#sec-simulation-runs-and-replications-design-notes}
+
+- **Seed sequences instead of consecutive integers.** Documented: commit `9a05b28` (2025-04-17) "Adjust random seeds to use seed sequences more robustly", following `2af661f` (2025-04-16) which introduced random number streams for activity times. The commented-out `Utils.get_distribution_seeds` call above the spawn code shows an earlier attempt at a different scheme. The later reason for keeping `master_seed + run` in the hosted path is not documented; presumably it predates the change.
+- **Per-run files plus collation.** Documented in the `write_run_results` docstring: shared-file appends are unreliable under joblib.
+- **Warm-up by omission.** Documented: `3bf122e`.
+- **Time in minutes.** Documented: `1f646db` (2024-10-25) adjusted the simulation unit of time to minutes.
+- **Everything passed explicitly into `delayed(runSim)`.** Inferred: it keeps workers free of shared state, which suits joblib's process-based workers.
+- **Wrapping the integer seed in a new `SeedSequence` inside `DES_HEMS`.** Inferred: it lets `runSim` stay a simple integer interface while the model still gets independent child streams.
+
+## Limitations and open questions {#sec-simulation-runs-and-replications-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
+
+- `des_hems.py:778`: `TODO - Improve error handling here` (the swallowed `KeyError`).
+- `write_run_params` carries the `SR NOTE` about linking parameter and results files with an identifier.
+- Open as of 2026-10-19: [#183](https://github.com/RichardPilbery/DAA_DES/issues/183) (quantify the variation due to random seeds), [#233](https://github.com/RichardPilbery/DAA_DES/issues/233) (hang on unresolvable servicing schedule), [#165](https://github.com/RichardPilbery/DAA_DES/issues/165) (discrepancies against historical metrics), [#245](https://github.com/RichardPilbery/DAA_DES/issues/245) (faster alternatives to pandas for processing run output).
+
+Check the project's [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues) for the current state. For command-line usage from a user's perspective, see the [README](../../readme.qmd).
+
+## Conclusion
+
+Next, [Chapter 3](03_sampling_distributions_and_random_streams.qmd) opens up the `Utils` object each run builds from its seed and shows how the named random streams are made.

@@ -1,0 +1,105 @@
+---
+title: "Assumptions and limits"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/assumptions-limits.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](assumptions-limits.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [General public](../stakeholder-public/assumptions-limits.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- The model assumes 2023-2024 demand, patterns and unavailability rates carry forward, changed only by one overall demand percentage. It has no geography and no queue for missed calls.
+- Several dispatch inputs are fixed estimates, not learned from data, and a few rules appear not to behave as their descriptions say.
+- Some open questions remain about how closely results match history. Check the baseline against your own experience before trusting scenario differences.
+:::
+
+This page separates what the model **does** (the rules on [how decisions are made](how-decisions-are-made.qmd)) from what it **assumes**, and lists where it appears to differ from how you know the service works. For reading the outputs, see [reading results](reading-results.qmd). For the parts involved, see [how it works](how-it-works.qmd).
+
+::: {.callout-important title="Why every model needs assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer.
+
+So the question is not whether each assumption below is a perfect reflection of reality, because none will be. The question is whether the assumptions and simplifications are reasonable for the questions you want to ask of the model. You know how the service really works, so you are well placed to judge this. For each item, ask whether it would change the answer to the question you are using the model for. If it would not, it is a reasonable simplification.
+:::
+
+## What it assumes about demand and patients
+
+- **The future looks like 2023-2024.** Daily call counts are drawn from real days in the same quarter. Seasonal demand adjustment is switched off, so the single demand percentage is the only lever.
+- **Every call is an air ambulance case.** The route for ordinary ambulance cases is a placeholder. This is reasonable. The demand the model draws on is the demand recorded by the HEMS desk, including jobs that came in during hours when no HEMS vehicle was staffed and were reviewed afterwards. It is not an estimate of every emergency where a helicopter might have been sent, so there is no separate group of ordinary ambulance cases to model.
+- **Busy hours may be slightly under-filled.** Calls within an hour are placed one after another at random gaps. If the gaps reach 59 minutes, the remaining calls for that hour are not created.
+- **Preferred crew group ignores the call.** The odds (group 70 about 73%, group 71 about 15%, group 72 about 12%) are the same whatever the call type, care category, time or season.
+
+## What it assumes about place and travel
+
+- **No geography.** There are no locations, distances or base positions. Travel times come from past averages, not from where the incident is.
+- **Distance does not affect whether a car or helicopter goes.**
+- **Times are minutes of simulated time** from the chosen start date.
+
+## What it assumes about crews, aircraft and cars
+
+| Assumption | What it means in practice |
+|---|---|
+| Cars are never unavailable at short notice. | Only helicopters are grounded at random. |
+| Helicopter unavailability is a fresh draw for each call. | A helicopter grounded by weather for one call can be available for the next call minutes later. Weather does not persist. |
+| The unavailability rates treated summer as April to September. | The default rota treats summer as April to October, so October is handled differently in the two. |
+| A new helicopter with no record borrows the average of the others. | Its unavailability is a guess. |
+| A job started near the end of a shift carries on to completion. | There is no handover or early stand-down. |
+| A missed call is simply recorded as missed. | There is no queue, holding or onward tracking. |
+| "Missed" differs from the real records. | In the model it means no suitable vehicle free at that moment. In the records it means no Devon Air Ambulance resource was recorded as attending, for any reason. |
+
+## Fixed estimates, not learned from data
+
+- The **50% chance** that a critical or enhanced care need is known to the dispatcher in advance.
+- The **50% chance** that a helicopter benefit is known in advance for regular jobs.
+
+Both are fixed values. Test how much your conclusions depend on them if you can.
+
+## Where the model appears to differ from the rules it describes
+
+These are readings of the code. They are not confirmed by the developers.
+
+- **Helicopter benefit for conveyed patients.** A rule meant to give every patient conveyed by helicopter a helicopter benefit checks the HEMS result before it has been decided, so it appears to have no effect (see [how decisions are made](how-decisions-are-made.qmd)).
+- **Stage times and job results.** Stage-time patterns were fitted separately for each HEMS result. The model looks them up only by vehicle type and stage, so it appears to use one result's pattern for every job. This is "landed but no patient contact" for most stages and "conveyed by land with HEMS" for travel to hospital.
+- **Covering H70 during servicing.** While the H145 is serviced, the EC135 takes the H70 callsign. It appears to keep its own H71 hours and enhanced care level. In that period no helicopter appears to be rostered as critical care or for the 19:00-02:00 shift.
+- **The January servicing preference.** It appears narrower than it sounds. A due date in January moves to 2 January if that is clear of school holidays. Due dates in other months are kept. The 4-week overrun buffer setting appears to have no effect on dates.
+- **Utilisation and servicing.** The description says servicing is taken into account, but rostered hours do not appear to be reduced for it. Utilisation for serviced aircraft may be understated.
+- **Estimated range on the results summary.** The range beside each simulated missed-job figure appears to come from the historic-rota run, not from your scenario.
+
+## Practical limits
+
+- **Servicing slots.** The model assumes a slot can always be found by moving earlier. If none fits, the run freezes and never produces results.
+- **Named fleet.** Changing to a different set of aircraft or callsigns (beyond H70, H71 and CC70 to CC72) may give odd results, so test a new layout against the default first.
+- **School holidays.** The default list ends in 2027. Later dates must be added.
+- **One user at a time.** Only one person should run the app at a time on a shared installation, otherwise their scenario settings can overwrite each other.
+- **Unchecked source records.** The historical data preparer does not check that the job records are complete or correctly formatted.
+- **Hosted and local runs.** They derive random seeds differently, so identical settings can give slightly different numbers.
+
+## Open questions from the project's issue list
+
+These were open when the evidence was gathered (19 October 2026). The code doesn't show when they will be resolved.
+
+- Some metrics differ from the real 2023-2024 figures, and the reasons are still being traced.
+- The split of jobs between crew groups 70 and 71 is slightly off history.
+- The dispatch logic is under review.
+- Cars are sometimes sent when the unavailability data gives no obvious reason.
+- Distance is not considered when deciding to send a car.
+- The share of regular jobs with a helicopter benefit is being reconsidered.
+- A "conveyed" outcome sometimes appears for cars.
+- Whether the servicing intervals hold with two H145s is open, as is how to force winter servicing and how to treat periods of extreme unavailability.
+
+Treat the model as a way to compare scenarios under the same assumptions, not to predict an exact day. Unfamiliar terms are in the [glossary](glossary.qmd).
+
+::: {.callout-note collapse="true" title="For the technical team (issue states as of 19 October 2026)"}
+- [Open issue: Tracking down discrepancies in metrics vs historical data](https://github.com/RichardPilbery/DAA_DES/issues/165)
+- [Open issue: Allocation of jobs between callsign group 70 + 71 slightly off from historical patterns](https://github.com/RichardPilbery/DAA_DES/issues/178)
+- [Open issue: Revisiting Resource Allocation Logic](https://github.com/RichardPilbery/DAA_DES/issues/238)
+- [Open issue: Instances where car sent when ad-hoc unavailability spreadsheet does not provide obvious reason](https://github.com/RichardPilbery/DAA_DES/issues/241)
+- [Open issue: Further consideration of how to account for distance in decision to send a car](https://github.com/RichardPilbery/DAA_DES/issues/243)
+- [Open issue: Update assumptions around % of REG jobs that have a helicopter benefit](https://github.com/RichardPilbery/DAA_DES/issues/205)
+- [Open issue: Patient outcome is sometimes 'Patient Conveyed' when vehicle type is car](https://github.com/RichardPilbery/DAA_DES/issues/192)
+- [Open issue: Does assumption around frequency of H145/H135 servicing intervals hold in two H145 situation?](https://github.com/RichardPilbery/DAA_DES/issues/266)
+- [Open issue: How to force winter servicing if helo has time off?](https://github.com/RichardPilbery/DAA_DES/issues/220)
+- [Open issue: Decision on periods of extreme unavailability](https://github.com/RichardPilbery/DAA_DES/issues/60)
+- [Open issue: Model hangs indefinitely if servicing schedule can't be resolved](https://github.com/RichardPilbery/DAA_DES/issues/233)
+- [Open issue: Write formal tests for utilisation denominator calculation function(s)](https://github.com/RichardPilbery/DAA_DES/issues/176)
+:::

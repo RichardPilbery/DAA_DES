@@ -54,55 +54,77 @@ import pytest
 from _pytest.outcomes import Failed  # Needed to catch pytest.fail
 import warnings
 
-from helpers import warn_with_message, fail_with_message, calculate_chi_squared_and_cramers, format_sigfigs
+from helpers import (
+    warn_with_message,
+    fail_with_message,
+    calculate_chi_squared_and_cramers,
+    format_sigfigs,
+)
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
-from des_parallel_process import parallelProcessJoblib, collateRunResults, runSim, removeExistingResults
+from air_ambulance_des.des_parallel_process import (
+    parallelProcessJoblib,
+    collateRunResults,
+    runSim,
+    removeExistingResults,
+)
 
 ##############################################################################
 # Begin tests                                                                #
 ##############################################################################
 
+
 ##################################
 # Calls in period                #
 ##################################
-#-------------------------------------------#
+# -------------------------------------------#
 # Average daily calls                       #
-#-------------------------------------------#
+# -------------------------------------------#
 @pytest.mark.calls
 def test_average_daily_calls_in_period(simulation_results):
     try:
-        event_df = simulation_results # defined in conftest.py
+        event_df = simulation_results  # defined in conftest.py
 
         arrivals = event_df[event_df["time_type"] == "arrival"].copy()
         # Check we have one row per patient before proceeding
-        assert len(arrivals) == len(arrivals.drop_duplicates(['P_ID', 'run_number']))
+        assert len(arrivals) == len(arrivals.drop_duplicates(["P_ID", "run_number"]))
 
         arrivals["timestamp_dt"] = pd.to_datetime(arrivals["timestamp_dt"])
 
-        arrivals["month"] = arrivals["timestamp_dt"].dt.strftime('%Y-%m-01')
-        monthly_jobs_per_run = arrivals[['P_ID', 'run_number', 'month']].groupby(['run_number','month']).count()
+        arrivals["month"] = arrivals["timestamp_dt"].dt.strftime("%Y-%m-01")
+        monthly_jobs_per_run = (
+            arrivals[["P_ID", "run_number", "month"]]
+            .groupby(["run_number", "month"])
+            .count()
+        )
 
-        average_monthly_jobs = monthly_jobs_per_run.groupby('month').mean().round(3).reset_index()
+        average_monthly_jobs = (
+            monthly_jobs_per_run.groupby("month").mean().round(3).reset_index()
+        )
 
         # Pull in historical data
-        historical_monthly_jobs = pd.read_csv("historical_data/historical_monthly_totals_all_calls.csv")
+        historical_monthly_jobs = pd.read_csv(
+            "historical_data/historical_monthly_totals_all_calls.csv"
+        )
 
         # Pull out daily number of calls across simulation and reality
-        sim_calls = np.array(average_monthly_jobs['P_ID'])  # simulated data
-        real_calls = np.array(historical_monthly_jobs['inc_date'])  # real data
+        sim_calls = np.array(average_monthly_jobs["P_ID"])  # simulated data
+        real_calls = np.array(historical_monthly_jobs["inc_date"])  # real data
 
         # Welch’s t-test (does not assume equal variances)
         t_stat, p_value = stats.ttest_ind(sim_calls, real_calls, equal_var=False)
 
         # Mean difference and effect size
         mean_diff = np.mean(sim_calls) - np.mean(real_calls)
-        pooled_std = np.sqrt((np.std(sim_calls, ddof=1) ** 2 + np.std(real_calls, ddof=1) ** 2) / 2)
+        pooled_std = np.sqrt(
+            (np.std(sim_calls, ddof=1) ** 2 + np.std(real_calls, ddof=1) ** 2) / 2
+        )
         cohen_d = mean_diff / pooled_std
 
         # Thresholds
@@ -138,35 +160,44 @@ def test_average_daily_calls_in_period(simulation_results):
         gc.collect()
 
 
-
-#-------------------------------------------#
+# -------------------------------------------#
 # Distribution of Calls Received per Day    #
-#-------------------------------------------#
+# -------------------------------------------#
+
 
 @pytest.mark.calls
 def test_distribution_daily_calls(simulation_results):
     try:
-        event_df = simulation_results # defined in conftest.py
+        event_df = simulation_results  # defined in conftest.py
 
         arrivals = event_df[event_df["time_type"] == "arrival"].copy()
         # Check we have one row per patient before proceeding
-        assert len(arrivals) == len(arrivals.drop_duplicates(['P_ID', 'run_number']))
+        assert len(arrivals) == len(arrivals.drop_duplicates(["P_ID", "run_number"]))
 
         arrivals["timestamp_dt"] = pd.to_datetime(arrivals["timestamp_dt"])
-        arrivals["date"] = arrivals["timestamp_dt"].dt.strftime('%Y-%m-%d')
-        sim_daily_call_counts = arrivals.groupby(['run_number', 'date'])[['P_ID']].count().reset_index().rename(columns={'P_ID':'calls_in_day'})
-        historical_daily_calls = pd.read_csv("historical_data/historical_daily_calls_breakdown.csv")
+        arrivals["date"] = arrivals["timestamp_dt"].dt.strftime("%Y-%m-%d")
+        sim_daily_call_counts = (
+            arrivals.groupby(["run_number", "date"])[["P_ID"]]
+            .count()
+            .reset_index()
+            .rename(columns={"P_ID": "calls_in_day"})
+        )
+        historical_daily_calls = pd.read_csv(
+            "historical_data/historical_daily_calls_breakdown.csv"
+        )
 
         assert len(sim_daily_call_counts) > 0, "No simulated daily calls found"
         assert len(historical_daily_calls) > 0, "No historical data found"
 
-        statistic, p_value = stats.ks_2samp(sim_daily_call_counts['calls_in_day'],
-                                        historical_daily_calls["calls_in_day"])
+        statistic, p_value = stats.ks_2samp(
+            sim_daily_call_counts["calls_in_day"],
+            historical_daily_calls["calls_in_day"],
+        )
 
         # Thresholds
         p_thresh = 0.05
-        warn_effect = 0.1 #  A KS statistic of 0.1 implies up to a 10% difference between CDFs — reasonable as a caution threshold.
-        fail_effect = 0.2 # A 20% difference netweem CDFs is substantial — reasonable for failure.
+        warn_effect = 0.1  #  A KS statistic of 0.1 implies up to a 10% difference between CDFs — reasonable as a caution threshold.
+        fail_effect = 0.2  # A 20% difference netweem CDFs is substantial — reasonable for failure.
 
         if p_value < p_thresh and statistic > fail_effect:
             fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
@@ -187,48 +218,94 @@ def test_distribution_daily_calls(simulation_results):
         del event_df, arrivals
         gc.collect()
 
+
 ##################################
 # Total Job Durations            #
 ##################################
 
-#------------------------------------------------------------#
+
+# ------------------------------------------------------------#
 # Average Total Job Durations (by vehicle type)              #
-#------------------------------------------------------------#
+# ------------------------------------------------------------#
 @pytest.mark.jobdurations
 def test_average_total_job_durations(simulation_results):
     try:
-        event_df = simulation_results # defined in conftest.py
+        event_df = simulation_results  # defined in conftest.py
 
-        simulated_job_time_df = event_df[event_df['event_type'].isin(['resource_use', 'resource_use_end'])].copy()
-        simulated_job_time_df['timestamp_dt'] = pd.to_datetime(simulated_job_time_df['timestamp_dt'])
-        simulated_job_time_df = simulated_job_time_df[['P_ID', 'run_number', 'event_type', 'timestamp_dt', 'vehicle_type']].pivot(index=["P_ID", "run_number", "vehicle_type"], columns="event_type", values="timestamp_dt").reset_index()
+        simulated_job_time_df = event_df[
+            event_df["event_type"].isin(["resource_use", "resource_use_end"])
+        ].copy()
+        simulated_job_time_df["timestamp_dt"] = pd.to_datetime(
+            simulated_job_time_df["timestamp_dt"]
+        )
+        simulated_job_time_df = (
+            simulated_job_time_df[
+                ["P_ID", "run_number", "event_type", "timestamp_dt", "vehicle_type"]
+            ]
+            .pivot(
+                index=["P_ID", "run_number", "vehicle_type"],
+                columns="event_type",
+                values="timestamp_dt",
+            )
+            .reset_index()
+        )
 
-        assert simulated_job_time_df['resource_use'].notna().all(), "Missing 'resource_use' times."
-        assert simulated_job_time_df['resource_use_end'].notna().all(), "Missing 'resource_use_end' times."
+        assert simulated_job_time_df["resource_use"].notna().all(), (
+            "Missing 'resource_use' times."
+        )
+        assert simulated_job_time_df["resource_use_end"].notna().all(), (
+            "Missing 'resource_use_end' times."
+        )
 
-        simulated_job_time_df['resource_use_duration'] = simulated_job_time_df['resource_use_end'] - simulated_job_time_df['resource_use']
-        simulated_job_time_df['resource_use_duration_minutes'] = (simulated_job_time_df['resource_use_duration'].dt.total_seconds()) / 60
+        simulated_job_time_df["resource_use_duration"] = (
+            simulated_job_time_df["resource_use_end"]
+            - simulated_job_time_df["resource_use"]
+        )
+        simulated_job_time_df["resource_use_duration_minutes"] = (
+            simulated_job_time_df["resource_use_duration"].dt.total_seconds()
+        ) / 60
 
-        historical_time_df = pd.read_csv("historical_data/historical_job_durations_breakdown.csv")
+        historical_time_df = pd.read_csv(
+            "historical_data/historical_job_durations_breakdown.csv"
+        )
 
         for vehicle in ["helicopter", "car"]:
             # Pull out daily number of calls across simulation and reality
-            sim_durations = np.array(simulated_job_time_df[simulated_job_time_df["vehicle_type"]==vehicle]['resource_use_duration_minutes'])  # simulated data
-            real_durations = np.array(historical_time_df[historical_time_df["vehicle_type"]==vehicle]['value'])  # real data
+            sim_durations = np.array(
+                simulated_job_time_df[simulated_job_time_df["vehicle_type"] == vehicle][
+                    "resource_use_duration_minutes"
+                ]
+            )  # simulated data
+            real_durations = np.array(
+                historical_time_df[historical_time_df["vehicle_type"] == vehicle][
+                    "value"
+                ]
+            )  # real data
 
-            assert len(sim_durations) > 10, f"Too few simulated jobs for {vehicle} to perform a meaningful test."
-            assert len(real_durations) > 10, f"Too few real jobs for {vehicle} to perform a meaningful test."
+            assert len(sim_durations) > 10, (
+                f"Too few simulated jobs for {vehicle} to perform a meaningful test."
+            )
+            assert len(real_durations) > 10, (
+                f"Too few real jobs for {vehicle} to perform a meaningful test."
+            )
 
             # Welch’s t-test (does not assume equal variances)
-            t_stat, p_value = stats.ttest_ind(sim_durations, real_durations, equal_var=False)
+            t_stat, p_value = stats.ttest_ind(
+                sim_durations, real_durations, equal_var=False
+            )
 
             # Mean difference and effect size
             sim_mean = np.mean(sim_durations)
             real_mean = np.mean(real_durations)
             mean_diff = sim_mean - real_mean
-            pooled_std = np.sqrt((np.std(sim_durations, ddof=1) ** 2 + np.std(real_durations, ddof=1) ** 2) / 2)
+            pooled_std = np.sqrt(
+                (
+                    np.std(sim_durations, ddof=1) ** 2
+                    + np.std(real_durations, ddof=1) ** 2
+                )
+                / 2
+            )
             cohen_d = mean_diff / pooled_std
-
 
             # Thresholds
             p_thresh = 0.05
@@ -263,43 +340,79 @@ def test_average_total_job_durations(simulation_results):
         gc.collect()
 
 
-#------------------------------------------------------------#
+# ------------------------------------------------------------#
 # Distribution of Total Job Durations (by vehicle type)      #
-#------------------------------------------------------------#
+# ------------------------------------------------------------#
 @pytest.mark.jobdurations
 def test_distribution_total_job_durations(simulation_results):
     try:
-        event_df = simulation_results # defined in conftest.py
+        event_df = simulation_results  # defined in conftest.py
 
-        simulated_job_time_df = event_df[event_df['event_type'].isin(['resource_use', 'resource_use_end'])].copy()
-        simulated_job_time_df['timestamp_dt'] = pd.to_datetime(simulated_job_time_df['timestamp_dt'])
-        simulated_job_time_df = simulated_job_time_df[['P_ID', 'run_number', 'event_type', 'timestamp_dt', 'vehicle_type']].pivot(index=["P_ID", "run_number", "vehicle_type"], columns="event_type", values="timestamp_dt").reset_index()
+        simulated_job_time_df = event_df[
+            event_df["event_type"].isin(["resource_use", "resource_use_end"])
+        ].copy()
+        simulated_job_time_df["timestamp_dt"] = pd.to_datetime(
+            simulated_job_time_df["timestamp_dt"]
+        )
+        simulated_job_time_df = (
+            simulated_job_time_df[
+                ["P_ID", "run_number", "event_type", "timestamp_dt", "vehicle_type"]
+            ]
+            .pivot(
+                index=["P_ID", "run_number", "vehicle_type"],
+                columns="event_type",
+                values="timestamp_dt",
+            )
+            .reset_index()
+        )
 
-        assert simulated_job_time_df['resource_use'].notna().all(), "Missing 'resource_use' times."
-        assert simulated_job_time_df['resource_use_end'].notna().all(), "Missing 'resource_use_end' times."
+        assert simulated_job_time_df["resource_use"].notna().all(), (
+            "Missing 'resource_use' times."
+        )
+        assert simulated_job_time_df["resource_use_end"].notna().all(), (
+            "Missing 'resource_use_end' times."
+        )
 
-        simulated_job_time_df['resource_use_duration'] = simulated_job_time_df['resource_use_end'] - simulated_job_time_df['resource_use']
-        simulated_job_time_df['resource_use_duration_minutes'] = (simulated_job_time_df['resource_use_duration'].dt.total_seconds()) / 60
+        simulated_job_time_df["resource_use_duration"] = (
+            simulated_job_time_df["resource_use_end"]
+            - simulated_job_time_df["resource_use"]
+        )
+        simulated_job_time_df["resource_use_duration_minutes"] = (
+            simulated_job_time_df["resource_use_duration"].dt.total_seconds()
+        ) / 60
 
-        historical_time_df = pd.read_csv("historical_data/historical_job_durations_breakdown.csv")
+        historical_time_df = pd.read_csv(
+            "historical_data/historical_job_durations_breakdown.csv"
+        )
 
         # Thresholds
         p_thresh = 0.05
-        warn_effect = 0.1 #  A KS statistic of 0.1 implies up to a 10% difference between CDFs — reasonable as a caution threshold.
-        fail_effect = 0.2 # A 20% difference netweem CDFs is substantial — reasonable for failure.
+        warn_effect = 0.1  #  A KS statistic of 0.1 implies up to a 10% difference between CDFs — reasonable as a caution threshold.
+        fail_effect = 0.2  # A 20% difference netweem CDFs is substantial — reasonable for failure.
 
         ##########################
         # CHECK HELO DISTRIBUTION
         ##########################
-        historical_time_df_helos_only = historical_time_df[historical_time_df["vehicle_type"] == "helicopter"]
-        simulated_job_time_df_helos_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "helicopter"]
+        historical_time_df_helos_only = historical_time_df[
+            historical_time_df["vehicle_type"] == "helicopter"
+        ]
+        simulated_job_time_df_helos_only = simulated_job_time_df[
+            simulated_job_time_df["vehicle_type"] == "helicopter"
+        ]
 
         statistic_helo, p_value_helo = stats.ks_2samp(
-            historical_time_df_helos_only['value'],
-            simulated_job_time_df_helos_only['resource_use_duration_minutes']
+            historical_time_df_helos_only["value"],
+            simulated_job_time_df_helos_only["resource_use_duration_minutes"],
         )
 
-        def check_output(what, p_value, statistic, p_thresh=p_thresh, fail_effect=fail_effect, warn_effect=warn_effect):
+        def check_output(
+            what,
+            p_value,
+            statistic,
+            p_thresh=p_thresh,
+            fail_effect=fail_effect,
+            warn_effect=warn_effect,
+        ):
             if p_value < p_thresh and statistic > fail_effect:
                 fail_with_message(f"""[FAIL - COMPARISON WITH REALITY] Significant and large difference in distribution of
                         {what} between simulation and reality
@@ -318,24 +431,28 @@ def test_distribution_total_job_durations(simulation_results):
         check_output(
             what="**HELO TOTAL JOB DURATION DISTRIBUTION**",
             p_value=p_value_helo,
-            statistic=statistic_helo
+            statistic=statistic_helo,
         )
 
         ##########################
         # CHECK CAR DISTRIBUTION
         ##########################
-        historical_time_df_cars_only = historical_time_df[historical_time_df["vehicle_type"] == "car"]
-        simulated_job_time_df_cars_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "car"]
+        historical_time_df_cars_only = historical_time_df[
+            historical_time_df["vehicle_type"] == "car"
+        ]
+        simulated_job_time_df_cars_only = simulated_job_time_df[
+            simulated_job_time_df["vehicle_type"] == "car"
+        ]
 
         statistic_car, p_value_car = stats.ks_2samp(
-            historical_time_df_cars_only['value'],
-            simulated_job_time_df_cars_only['resource_use_duration_minutes']
+            historical_time_df_cars_only["value"],
+            simulated_job_time_df_cars_only["resource_use_duration_minutes"],
         )
 
         check_output(
             what="**CAR TOTAL JOB DURATION DISTRIBUTION**",
             p_value=p_value_car,
-            statistic=statistic_car
+            statistic=statistic_car,
         )
 
     finally:
@@ -343,31 +460,36 @@ def test_distribution_total_job_durations(simulation_results):
         gc.collect()
 
 
-
-
-
 ##################################
 # Job Durations by Job Stage     #
 ##################################
 
-#------------------------------------------------------------#
+
+# ------------------------------------------------------------#
 # Average Job Durations by Stage (by vehicle type)           #
-#------------------------------------------------------------#
+# ------------------------------------------------------------#
 @pytest.mark.jobdurations
 def test_average_per_stage_job_durations(simulation_results):
     try:
-        run_results = simulation_results # defined in conftest.py
+        run_results = simulation_results  # defined in conftest.py
 
-        job_times = ['time_allocation', 'time_mobile', 'time_to_scene', 'time_on_scene',
-                    'time_to_hospital', 'time_to_clear']
+        job_times = [
+            "time_allocation",
+            "time_mobile",
+            "time_to_scene",
+            "time_on_scene",
+            "time_to_hospital",
+            "time_to_clear",
+        ]
 
-        run_results = (
-            run_results[run_results["event_type"].isin(job_times)]
-            [['P_ID', 'run_number', 'time_type', 'event_type', 'vehicle_type']]
-            )
-        run_results['time_type'] = run_results['time_type'].astype('float')
+        run_results = run_results[run_results["event_type"].isin(job_times)][
+            ["P_ID", "run_number", "time_type", "event_type", "vehicle_type"]
+        ]
+        run_results["time_type"] = run_results["time_type"].astype("float")
 
-        historical_time_df = pd.read_csv("historical_data/historical_job_durations_breakdown.csv")
+        historical_time_df = pd.read_csv(
+            "historical_data/historical_job_durations_breakdown.csv"
+        )
 
         all_results = []
         errors = []
@@ -379,42 +501,56 @@ def test_average_per_stage_job_durations(simulation_results):
                     # Pull out daily number of calls across simulation and reality
                     sim_durations = np.array(
                         run_results[
-                            (run_results["vehicle_type"]==vehicle) &
-                            (run_results["event_type"]==time_type)
-                            ]
-                        ['time_type'].astype('float')
-                        )  # simulated data
+                            (run_results["vehicle_type"] == vehicle)
+                            & (run_results["event_type"] == time_type)
+                        ]["time_type"].astype("float")
+                    )  # simulated data
 
                     real_durations = np.array(
                         historical_time_df[
-                            (historical_time_df["vehicle_type"]==vehicle) &
-                            (historical_time_df["name"] == time_type)]
-                        ['value']
-                        )  # real data
+                            (historical_time_df["vehicle_type"] == vehicle)
+                            & (historical_time_df["name"] == time_type)
+                        ]["value"]
+                    )  # real data
 
-                    assert len(sim_durations) > 10, f"Too few simulated jobs for {vehicle} to perform a meaningful test."
-                    assert len(real_durations) > 10, f"Too few real jobs for {vehicle} to perform a meaningful test."
+                    assert len(sim_durations) > 10, (
+                        f"Too few simulated jobs for {vehicle} to perform a meaningful test."
+                    )
+                    assert len(real_durations) > 10, (
+                        f"Too few real jobs for {vehicle} to perform a meaningful test."
+                    )
 
                     # Welch’s t-test (does not assume equal variances)
-                    t_stat, p_value = stats.ttest_ind(sim_durations, real_durations, equal_var=False, nan_policy="omit")
+                    t_stat, p_value = stats.ttest_ind(
+                        sim_durations,
+                        real_durations,
+                        equal_var=False,
+                        nan_policy="omit",
+                    )
 
                     # Mean difference and effect size
                     sim_mean = np.nanmean(sim_durations)
                     real_mean = np.nanmean(real_durations)
                     mean_diff = sim_mean - real_mean
-                    pooled_std = np.sqrt((np.nanstd(sim_durations, ddof=1) ** 2 + np.nanstd(real_durations, ddof=1) ** 2) / 2)
+                    pooled_std = np.sqrt(
+                        (
+                            np.nanstd(sim_durations, ddof=1) ** 2
+                            + np.nanstd(real_durations, ddof=1) ** 2
+                        )
+                        / 2
+                    )
                     cohen_d = mean_diff / pooled_std
 
-
-                    all_results.append({
-                        'time_type': time_type,
-                        'vehicle_type': vehicle,
-                        'mean_sim' : sim_mean,
-                        'mean_real': real_mean,
-                        'mean_diff': mean_diff,
-                        't_stat': t_stat,
-                        'p_value': p_value,
-                        'cohen_d': cohen_d
+                    all_results.append(
+                        {
+                            "time_type": time_type,
+                            "vehicle_type": vehicle,
+                            "mean_sim": sim_mean,
+                            "mean_real": real_mean,
+                            "mean_diff": mean_diff,
+                            "t_stat": t_stat,
+                            "p_value": p_value,
+                            "cohen_d": cohen_d,
                         }
                     )
 
@@ -428,7 +564,9 @@ def test_average_per_stage_job_durations(simulation_results):
                     # Decision logic
                     # Will only fail if significance threshold is met and cohen's D is sufficiently large
                     if p_value < p_thresh and abs(cohen_d) > fail_effect:
-                        errors.append(f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s {time_type} significantly different between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}). Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}. Mean diff: {mean_diff:.2f}.""")
+                        errors.append(
+                            f"""[FAIL - COMPARISON WITH REALITY] **Average total job durations** for {vehicle}s {time_type} significantly different between simulation and reality (p={p_value:.4f}, Cohen's d={cohen_d:.2f}). Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}. Mean diff: {mean_diff:.2f}."""
+                        )
                     # Else will provide appropriate warning
                     elif p_value < p_thresh and abs(cohen_d) > warn_effect:
                         warnings.append(f"""[WARN - COMPARISON WITH REALITY] Possible practical difference in **Average total job durations** for {vehicle}s {time_type}
@@ -443,17 +581,34 @@ def test_average_per_stage_job_durations(simulation_results):
                                     Sim mean: {sim_mean:.2f}, Real mean: {real_mean:.2f}.
                                     Mean diff: {mean_diff:.2f}.""")
                 except Failed as e:  # Specifically catch pytest.fail
-                    errors.append(f"Group {time_type}:{vehicle} failed with pytest.fail: {str(e)}")
+                    errors.append(
+                        f"Group {time_type}:{vehicle} failed with pytest.fail: {str(e)}"
+                    )
                 except Exception as e:
-                    errors.append(f"Group {time_type}:{vehicle} failed with error: {str(e)}")
+                    errors.append(
+                        f"Group {time_type}:{vehicle} failed with error: {str(e)}"
+                    )
 
         all_results_df = pd.DataFrame(all_results)
-        numeric_cols = ['mean_sim','mean_real','mean_diff','t_stat','p_value','cohen_d']
-        all_results_df[numeric_cols] = all_results_df[numeric_cols].map(format_sigfigs, na_action='ignore')
-        all_results_df.to_csv("tests/test_outputs/TEST_OUTPUT_average_per_stage_job_durations.csv")
+        numeric_cols = [
+            "mean_sim",
+            "mean_real",
+            "mean_diff",
+            "t_stat",
+            "p_value",
+            "cohen_d",
+        ]
+        all_results_df[numeric_cols] = all_results_df[numeric_cols].map(
+            format_sigfigs, na_action="ignore"
+        )
+        all_results_df.to_csv(
+            "tests/test_outputs/TEST_OUTPUT_average_per_stage_job_durations.csv"
+        )
 
         if warnings:
-            warn_with_message("Some callsign group comparisons had warnings:\n" + "\n".join(warnings))
+            warn_with_message(
+                "Some callsign group comparisons had warnings:\n" + "\n".join(warnings)
+            )
 
         if errors:
             pytest.fail("Some callsign group comparisons failed:\n" + "\n".join(errors))
@@ -546,25 +701,49 @@ def test_average_per_stage_job_durations(simulation_results):
 #         gc.collect()
 
 
-
 ##############################################################
 # Split between callsign groups                              #
 ##############################################################
 
+
 @pytest.mark.callsigngroup
 def test_proportions_callsigngroup_allocations(simulation_results):
     # Calculate proportion of jobs allocated to each callsign group in the simulation
-    callsign_group_counts_simulated = simulation_results[simulation_results["event_type"]=="resource_use"]["callsign_group"].value_counts().reset_index(name="count_simulated")
+    callsign_group_counts_simulated = (
+        simulation_results[simulation_results["event_type"] == "resource_use"][
+            "callsign_group"
+        ]
+        .value_counts()
+        .reset_index(name="count_simulated")
+    )
     # callsign_group_counts["proportion_simulated"] = callsign_group_counts["count_simulated"].apply(lambda x: x/callsign_group_counts["count_simulated"].sum())
-    callsign_group_counts_simulated["callsign_group"] = callsign_group_counts_simulated["callsign_group"].astype('int')
+    callsign_group_counts_simulated["callsign_group"] = callsign_group_counts_simulated[
+        "callsign_group"
+    ].astype("int")
 
     # Read in the proportion of jobs allocated to each callsign group in historical data
-    callsign_group_counts_historic = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv").drop(columns="month").sum().reset_index(name="count_historic")
-    callsign_group_counts_historic["callsign_group"] = callsign_group_counts_historic["index"].str.extract("(\d+)")
-    callsign_group_counts_historic = callsign_group_counts_historic.drop(columns='index').groupby('callsign_group').sum().reset_index()
-    callsign_group_counts_historic["callsign_group"] = callsign_group_counts_historic["callsign_group"].astype('int')
+    callsign_group_counts_historic = (
+        pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
+        .drop(columns="month")
+        .sum()
+        .reset_index(name="count_historic")
+    )
+    callsign_group_counts_historic["callsign_group"] = callsign_group_counts_historic[
+        "index"
+    ].str.extract("(\d+)")
+    callsign_group_counts_historic = (
+        callsign_group_counts_historic.drop(columns="index")
+        .groupby("callsign_group")
+        .sum()
+        .reset_index()
+    )
+    callsign_group_counts_historic["callsign_group"] = callsign_group_counts_historic[
+        "callsign_group"
+    ].astype("int")
 
-    callsign_group_counts = callsign_group_counts_simulated.merge(callsign_group_counts_historic, on="callsign_group")
+    callsign_group_counts = callsign_group_counts_simulated.merge(
+        callsign_group_counts_historic, on="callsign_group"
+    )
 
     # Calculate
     calculate_chi_squared_and_cramers(callsign_group_counts, what="callsign group")
@@ -574,13 +753,17 @@ def test_proportions_callsigngroup_allocations(simulation_results):
 # Split between callsigns                                    #
 ##############################################################
 
+
 @pytest.mark.callsign
 def test_proportions_callsign_allocations(simulation_results):
     # Calculate proportion of jobs allocated to each callsign in the simulation
     callsign_counts_simulated = (
-        simulation_results[simulation_results["event_type"]=="resource_use"]
-        ["callsign"].value_counts()
-        .reset_index(name="count_simulated"))
+        simulation_results[simulation_results["event_type"] == "resource_use"][
+            "callsign"
+        ]
+        .value_counts()
+        .reset_index(name="count_simulated")
+    )
     # callsign_counts["proportion_simulated"] = callsign_counts["count_simulated"].apply(lambda x: x/callsign_counts["count_simulated"].sum())
 
     # Read in the proportion of jobs allocated to each callsign group in historical data
@@ -589,10 +772,12 @@ def test_proportions_callsign_allocations(simulation_results):
         .drop(columns="month")
         .sum()
         .reset_index(name="count_historic")
-        )
-    callsign_counts_historic.rename(columns={'index':'callsign'}, inplace=True)
+    )
+    callsign_counts_historic.rename(columns={"index": "callsign"}, inplace=True)
 
-    callsign_counts = callsign_counts_simulated.merge(callsign_counts_historic, on="callsign")
+    callsign_counts = callsign_counts_simulated.merge(
+        callsign_counts_historic, on="callsign"
+    )
 
     # Calculate
     calculate_chi_squared_and_cramers(callsign_counts, what="callsign")
@@ -607,10 +792,12 @@ def test_proportions_callsign_allocations(simulation_results):
 def test_proportions_within_callsign_group(simulation_results):
     # Calculate proportion of jobs allocated to each callsign in the simulation
     callsign_counts_simulated = (
-        simulation_results[simulation_results["event_type"]=="resource_use"]
-        ["callsign"].value_counts()
+        simulation_results[simulation_results["event_type"] == "resource_use"][
+            "callsign"
+        ]
+        .value_counts()
         .reset_index(name="count_simulated")
-        )
+    )
     # callsign_counts["proportion_simulated"] = callsign_counts["count_simulated"].apply(lambda x: x/callsign_counts["count_simulated"].sum())
 
     # Read in the proportion of jobs allocated to each callsign group in historical data
@@ -619,21 +806,25 @@ def test_proportions_within_callsign_group(simulation_results):
         .drop(columns="month")
         .sum()
         .reset_index(name="count_historic")
-        )
-    callsign_counts_historic.rename(columns={'index':'callsign'}, inplace=True)
+    )
+    callsign_counts_historic.rename(columns={"index": "callsign"}, inplace=True)
 
-    callsign_counts = callsign_counts_simulated.merge(callsign_counts_historic, on="callsign")
+    callsign_counts = callsign_counts_simulated.merge(
+        callsign_counts_historic, on="callsign"
+    )
 
-    callsign_counts["callsign_group"] = callsign_counts["callsign"].str.extract(r'(\d+)')
+    callsign_counts["callsign_group"] = callsign_counts["callsign"].str.extract(
+        r"(\d+)"
+    )
 
     errors = []
 
     for callsign_group in callsign_counts["callsign_group"].unique():
         try:
             calculate_chi_squared_and_cramers(
-                callsign_counts[callsign_counts["callsign_group"]==callsign_group],
-                what=f"split_within_callsign_group_{callsign_group}"
-                )
+                callsign_counts[callsign_counts["callsign_group"] == callsign_group],
+                what=f"split_within_callsign_group_{callsign_group}",
+            )
         except Failed as e:  # Specifically catch pytest.fail
             errors.append(f"Group {callsign_group} failed with pytest.fail: {str(e)}")
         except Exception as e:

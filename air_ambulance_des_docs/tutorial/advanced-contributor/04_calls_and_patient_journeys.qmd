@@ -1,0 +1,234 @@
+---
+title: "Chapter 4: Calls and Patient Journeys"
+description: "How DES_HEMS generates daily calls, builds a Patient for each, walks it through the job stages and writes the event log."
+toc: true
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](04_calls_and_patient_journeys.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+[Chapter 3](03_sampling_distributions_and_random_streams.qmd) covered where the random numbers come from; this chapter covers what the model does with them.
+
+## What it is {#sec-calls-and-patient-journeys-what-it-is}
+
+[`DES_HEMS`](../../reference/des_hems.DES_HEMS.qmd) owns one run: one `simpy.Environment`, one `Utils` instance with its named random streams, one `HEMSAvailability` resource store and one list of event-log rows. Its constructor takes the run number, durations, start date, seed and the two multipliers that [Chapter 2](02_simulation_runs_and_replications.qmd) passes in. All times are simulated minutes. A call to `run()` starts a single SimPy process, [`generate_calls()`](../../reference/des_hems.DES_HEMS.qmd), and runs the environment until `sim_duration + warm_up_duration`.
+
+The contract, from a caller's point of view:
+
+- **In:** the constructor arguments, plus the CSVs under `distribution_data/` and `actual_data/` (via `Utils` and `HEMSAvailability`).
+- **Out:** `results_df`, one row per *step* per patient, which `write_run_results()` and `write_all_results()` persist (see [Chapter 2](02_simulation_runs_and_replications.qmd)).
+- **Invariants you can rely on:** every patient that starts a journey has the resource it was given returned in a `finally` block; no row is stored before `warm_up_duration`; each patient has a unique `id` within the run.
+
+Use case for this chapter: a CC (critical care) job (the other care categories are EC, enhanced care, and REG, regular) arrives at 14:20 on a weekday. We follow it from the daily call count, through the sampled patient attributes and the resource request, to the final `depart` row. Choosing the resource is [Chapter 6](06_resource_allocation.qmd); building the resources is [Chapter 5](05_hems_resources_and_servicing.qmd). Here the allocation call is treated as a black box that yields a list.
+
+::: {.column-margin}
+**Event log**: the list of dicts built by `add_patient_result_row()`, turned into `results_df` at the end of `run()`. Each dict is one row of `run_results.csv`.
+:::
+
+```{mermaid}
+%%| label: fig-calls-and-patient-journeys-overview
+%%| fig-cap: "Processes inside one DES_HEMS run"
+flowchart LR
+    run["run()"] --> gc["generate_calls()<br/>one process"]
+    gc -->|"each day"| ds["daily_servicing_check()"]
+    gc -->|"each call"| gp["generate_patient()<br/>one process per call"]
+    gp -->|"yield"| alloc["allocate_resource() or<br/>allocate_regular_resource()"]
+    gp --> pj["patient_journey()<br/>one process per patient"]
+    pj --> log["add_patient_result_row()"]
+    gp --> log
+    pj -->|"finally"| ret["return_resource()"]
+```
+
+@fig-calls-and-patient-journeys-overview shows the shape: one long-lived generator process spawns a short-lived `generate_patient` process per call, and that in turn spawns a `patient_journey` process.
+
+## How it works {#sec-calls-and-patient-journeys-how-it-works}
+
+### The call generator
+
+`generate_calls()` is a loop that advances `env.now` by yielding timeouts. The first half of each iteration decides, once per simulated day, how many calls there will be.
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=206 end-line=248 dedent=4 filename="air_ambulance_des/des_hems.py:206-248" code-line-style="focus:23-28,41-43" include-hash="514dab89ce3f"}
+```
+
+The daily count comes from `Utils.inc_per_day_samples` (a draw from the empirical daily call-count sample for the quarter, see [Chapter 3](03_sampling_distributions_and_random_streams.qmd)), multiplied by `demand_increase_percent` and truncated with `int()`. `calls_per_hour(qtr)` then distributes those calls across the hours of the day. Finally the loop yields on `daily_servicing_check`, so servicing state is updated *before* any call that day. That ordering matters: a test named `test_servicing_checked_on_days_with_no_calls` (in `tests/test_call_generation.py`, see [Extending this](#sec-calls-and-patient-journeys-extending-this)) exists because the check must run even when `calls_today` is zero.
+
+`ia_dict` is the `{hour: count}` result of `calls_per_hour`; it is set once per day and consumed hour by hour in the second excerpt. `calls_per_hour` draws one hour per call, weighted by the quarter's `proportion` column, using the `calls_per_hour` stream, and returns `{hour: count}`:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=126 end-line=161 dedent=4 filename="air_ambulance_des/des_hems.py:126-161" include-hash="52e56895a55f"}
+```
+
+::: {.callout-note collapse="true" title="Deep dive: predetermine_call_arrival is not on the live path"}
+[`predetermine_call_arrival()`](../../reference/des_hems.DES_HEMS.qmd) (lines 163-194) also builds on `calls_per_hour`, but returns exponential inter-arrival times and nothing in `generate_calls()` calls it. The live path spreads each hour's calls with uniform integer waits instead (next excerpt). A search of the package finds no other caller (check before deleting it), so treat it as an alternative arrival mechanism that is currently unused. The code is not documented as deprecated.
+:::
+
+The second half of the iteration places the calls inside the current hour.
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=250 end-line=284 dedent=4 filename="air_ambulance_des/des_hems.py:250-284" code-line-style="focus:9-13" include-hash="e9d9575747b8"}
+```
+
+For an hour with `n` calls, each call waits a uniform integer number of minutes in `[0, 59 - minutes_elapsed]` (stream `call_iat`), then spawns `generate_patient` with `env.process(...)` (fire and forget; the generator does not wait for the patient). `date_time_of_call` is re-evaluated after each wait so the patient gets the true timestamp, not the hour start. After the loop the generator sleeps to the top of the next hour. The `else` branch (zero calls today) jumps straight to midnight.
+
+Two properties follow from this scheme. Calls bunch towards the end of the hour: each wait is drawn from a window that shrinks as `minutes_elapsed` grows, so later calls in a busy hour cluster close to minute 59. The last call can never land after minute 59. A third consequence: once `minutes_elapsed` reaches 59 the `if minutes_elapsed < 59` guard is false, so any remaining calls allocated to that hour by `calls_per_hour` are never generated, and the number of patients created can be lower than `calls_today`. This follows from reading the code; I have not measured how often it happens. These are modelling choices of this implementation, not properties of the historic data (inferred from the code; no commit or doc gives a reason).
+
+### Building a patient
+
+`generate_patient()` is a generator function, so it can `yield` on the resource store. It starts by sampling the attributes that do not depend on resources.
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=303 end-line=335 dedent=4 filename="air_ambulance_des/des_hems.py:303-335" include-hash="f9a9ef89e099"}
+```
+
+[`Patient`](../../reference/class_patient.Patient.qmd) is a plain attribute bag (`air_ambulance_des/class_patient.py`, 78 lines) with defaults such as `hems_cc_or_ec = "REG"`, `hems_case = -1` and empty strings for the allocation fields. There is no behaviour on it. The sampling order is significant for reproducibility only through the named streams in `Utils`: each selector draws from its own generator, so reordering these calls does not change the numbers each stream produces (see [Chapter 3](03_sampling_distributions_and_random_streams.qmd)).
+
+Key attributes sampled here:
+
+- **AMPDS card**: the dispatch-code category of the call (see the [glossary](glossary.qmd)); it depends on the hour of day (`ampds_code_selection(pt.hour)`).
+- **Care category** (`CC`, `EC` or `REG`): depends on the AMPDS card.
+- **Patient outcome**: depends on care category and quarter.
+
+The first event-log row, `("arrival", "arrival_departure")`, is written before any resource logic, so every patient has an arrival row even if nothing is sent.
+
+Next, if `amb_data` is true the code flips a coin on whether the case is HEMS or ambulance. Otherwise `hems_case = 1`, which is the normal case and a fair one: the demand pool is built from jobs recorded by the HEMS desk, including jobs reviewed afterwards that arrived while no vehicle was staffed, so it is not an estimate of every emergency a helicopter might attend, and there is no non-HEMS population to split off. For HEMS cases it samples the preferred callsign group, the helicopter benefit flag and the preferred vehicle type, logging each as its own row. Then comes the branch that decides the allocation path:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=432 end-line=466 dedent=4 filename="air_ambulance_des/des_hems.py:432-466" code-line-style="focus:1-6" include-hash="290095060f61"}
+```
+
+CC and EC patients take the `allocate_resource` path only half of the time (`know_cc_ec_benefit` stream, threshold 0.5). Everything else, including the other half of CC/EC, goes through `allocate_regular_resource`. The 0.5 is a hard-coded literal. The rationale is documented: call handlers sometimes know in advance that a job would benefit from CC/EC, so allocation can only target CC/EC resources for some of those jobs (commit `e18e48c`; commit `9b559c2` adjusted this so that helicopter benefit is not always known in advance). The value 0.5 itself has no cited source.
+
+Both calls return `[primary, reason_text, secondary]`. The reason is logged as `resource_preferred_outcome`, and `patient_journey` is started either with the resources or with `None, pt, None` when nothing was available. How the list is built is [Chapter 6](06_resource_allocation.qmd).
+
+### The patient journey
+
+`patient_journey()` is one long generator: a sequence of "log a row, sample a duration, yield a timeout" blocks, gated by whether a resource exists and by the sampled HEMS result.
+
+```{mermaid}
+%%| label: fig-calls-and-patient-journeys-stages
+%%| fig-cap: "Stages of patient_journey and where the HEMS result skips them"
+flowchart TD
+    A["resource?"] -->|no| X["rows: No HEMS available,<br/>No Resource Available"]
+    X --> Z["depart"]
+    A -->|yes| B["sample hems_result"]
+    B --> C["time_allocation"]
+    C --> D["time_mobile"]
+    D --> E{"Stand Down?"}
+    E -->|yes| H["time_to_clear"]
+    E -->|no| F["time_to_scene, time_on_scene"]
+    F --> G{"result in Stand Down,<br/>Landed but no patient contact,<br/>Treated not conveyed?"}
+    G -->|yes| H
+    G -->|no| I["time_to_hospital"]
+    I --> H
+    H --> Z
+```
+
+Stand Down means the crew was cancelled before reaching the scene; "Landed but no patient contact" and "Treated not conveyed" (in code, `"Patient Treated but not conveyed by HEMS"`) are results where nobody is taken to hospital, which is why the hospital leg is skipped.
+
+The first part handles the no-resource case and, otherwise, copies the allocated vehicle's identity onto the patient and samples the HEMS result.
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=479 end-line=530 dedent=4 filename="air_ambulance_des/des_hems.py:479-530" code-line-style="focus:24-31" include-hash="d8dab1096952"}
+```
+
+The HEMS result is sampled *after* allocation, conditioned on patient outcome, quarter, vehicle type, callsign group and hour. That is why `time_of_day` appears in the very long `Utils` method name, `hems_results_by_patient_outcome_and_time_of_day_and_quarter_and_vehicle_type_and_callsign_group_probs` (commit `9b32e45` added the time-of-day dimension). Two booleans derived from the result then skip later stages: `no_HEMS_at_scene` is true only for `"Stand Down"`, and `no_HEMS_hospital` is true for `"Stand Down"`, `"Landed but no patient contact"` and `"Patient Treated but not conveyed by HEMS"` (`des_hems.py:545-559`).
+
+Each stage then follows the same pattern. Here is allocation:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=574 end-line=588 dedent=4 filename="air_ambulance_des/des_hems.py:574-588" include-hash="6f675aed1916"}
+```
+
+`Utils.activity_time(vehicle_type, name)` returns a sampled duration (the upper-bound clipping lives there, see [Chapter 3](03_sampling_distributions_and_random_streams.qmd)), and `activity_duration_multiplier` scales it. Note the order: the duration *row* is written first, then the `queue` row, then the timeout. So a row's `timestamp` is the *start* of the stage and the duration is carried in `time_type` as a number. The stages are `time_allocation`, `time_mobile`, `time_to_scene`, `time_on_scene`, `time_to_hospital` and `time_to_clear`, in that order. Handover is explicitly "Not currently available" (comment at line 687).
+
+Finally the journey ends with a `depart` row, and the resource is always returned:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=711 end-line=721 dedent=4 filename="air_ambulance_des/des_hems.py:711-721" code-line-style="focus:3-4" include-hash="d07def723dc2"}
+```
+
+The `try`/`finally` is the invariant to keep. If any sampling call raises inside the journey, the resource still goes back to the store, and a `resource_use_end` row is written. The `depart` row is only written on the success path. Commit `192fd1d` ("Patient journey refactored") is the documented change that reshaped this function; the commit history does not state why the `finally` was introduced, so the safety intent is inferred.
+
+### The event log
+
+Every row goes through one function:
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=723 end-line=765 dedent=4 filename="air_ambulance_des/des_hems.py:723-765" code-line-style="focus:42-43" include-hash="0ea118a20175"}
+```
+
+`time_type` is the *what* (a stage name, a callsign, a number of minutes) and `event_type` the *kind* (`arrival_departure`, `queue`, `resource_use`, `resource_use_end` and the `patient_*` / `resource_*` descriptors). Downstream code in [Chapter 7](07_trial_results_and_historic_comparison.qmd) filters on `event_type` values, so these strings are an implicit schema. Every row is a snapshot of the *patient's current attributes*, which is why early rows (before allocation) have empty `callsign` and `registration` and later rows have them filled.
+
+The warm-up guard on the last two lines is the only place warm-up is enforced. It replaced an earlier warm-up flag (commit `3bf122e`). Because the patient still runs through the whole journey during warm-up, the resources are used normally; only the log is suppressed. `**kwargs` lets callers add extra columns, but nothing in this file passes any.
+
+At the end of `run()`, `convert_results_to_df` builds `results_df` indexed by `P_ID`, and the two write methods persist it ([Chapter 2](02_simulation_runs_and_replications.qmd)).
+
+## Extending this {#sec-calls-and-patient-journeys-extending-this}
+
+**Add a patient attribute.** Add a default in `Patient.__init__` (`class_patient.py`), sample it in `generate_patient()` with a new named stream (add the stream name in `Utils.setup_seeds` and the selector in `Utils`; see [Chapter 3](03_sampling_distributions_and_random_streams.qmd)), and add a key in `add_patient_result_row()` if it should reach the CSV. Then check `TrialResults` ([Chapter 7](07_trial_results_and_historic_comparison.qmd)) for column assumptions. If the attribute needs a new input file, it is produced by `DistributionFitUtils` ([Chapter 8](08_distribution_fitting.qmd)).
+
+**Add a new event-log row.** Call `self.add_patient_result_row(patient, <time_type>, <event_type>)`. Choose a new `event_type` string deliberately: downstream filters key on it.
+
+**Add or reorder a journey stage.** Edit `patient_journey()`. Each stage needs: a matching `activity_time` name in the fitted distributions, a duration row, a `queue` row, a `yield self.env.timeout(...)`, and a `patient.time_in_sim` update. If the stage can be skipped, extend the `no_HEMS_*` booleans. The flowchart in @fig-calls-and-patient-journeys-stages is the logic to keep in step.
+
+**Change the arrival process.** `generate_calls()` and `calls_per_hour()`. The `ia_dict` hand-off between the new-day block and the per-hour block is a local variable, so any replacement must still set it on the first iteration of each day.
+
+**Change how helicopter benefit is sampled.** The block at lines 356-411 of `generate_patient()`. See the sharp edges below before touching the `hems_result` check.
+
+**Tests.**
+
+| File | Covers |
+|---|---|
+| `tests/test_call_generation.py` | Includes `test_servicing_checked_on_days_with_no_calls`; days with zero calls, first-day partial starts, servicing on zero-call days, reduced demand against historic calls |
+| `tests/test_unittest_model.py` | Model-level unit tests |
+| `tests/test_against_condition_changes.py` | Behaviour when conditions (rotas, demand) change |
+| `tests/test_against_reality.py` | Comparison with observed patterns |
+
+Run everything with `pytest` from the repository root. `README.md` documents marker-based subsets (`pytest -m resources` is its example) and `-k` matching; `test_call_generation.py` carries the `calls` marker, so `pytest -m calls` selects it; `pytest.ini` lists the registered markers.
+
+## Sharp edges {#sec-calls-and-patient-journeys-sharp-edges}
+
+**The `amb_data` branch assigns a comparison, not a value.**
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=337 end-line=347 dedent=4 filename="air_ambulance_des/des_hems.py:337-347" code-line-style="focus:5-9" include-hash="d91c2db31569"}
+```
+
+`pt.hems_case == 0` evaluates to a boolean, and that boolean is assigned. When the coin flip fails, `hems_case` is `False` rather than `0`. It happens to work because `False == 1` is false in the later checks, but a reader assuming `0` will be misled. With `amb_data` on, a non-HEMS patient never gets a `patient_journey` process at all (it is only started inside `if pt.hems_case == 1`), so the ambulance branches in `patient_journey` are only reached for HEMS cases. The TODO at line 338 says the ambulance/HEMS decision logic is unfinished.
+
+**The "conveyed by HEMS means benefit" override cannot fire.**
+
+```{.python include="../../../air_ambulance_des/des_hems.py" start-line=408 end-line=411 dedent=4 filename="air_ambulance_des/des_hems.py:408-411" code-line-style="hi:1" include-hash="ff3319ba3aca"}
+```
+
+`hems_result` is only assigned in `patient_journey`, after allocation, and `Patient` initialises it to `""`. So at this point the condition is always false. The comment above it (lines 399-406) says the author commented something out and wants to revisit it; the live code is not commented out, but it is inert. Commit `ea4909f` (discussion in issue #223) documents the intent that benefit is always set when HEMS conveys. Do not assume it holds in the current event log.
+
+**Distribution files are read per patient.** The three `proportion_jobs_heli_benefit*.txt` files are opened and parsed inside `generate_patient()` for every HEMS patient (lines 361-390). It is harmless at this scale but it is I/O in the hot path, and the paths are relative to the working directory.
+
+**Calls can be silently dropped.** If the waits sum to 59 before every call allocated to an hour is placed, the remaining calls are skipped (see the call generator above), so fewer patients arrive than `calls_per_hour` allocated. This follows from reading the code; the tests in `test_call_generation.py` are the place to check call counts (issue #165 concerns discrepancies against historic metrics).
+
+**Zero-call days.** `calls_today` and `new_day` are instance state; `ia_dict` is a local that is only assigned on a new day. The zero-call fix (commit `af2ccf2`) and its tests are the reference for what must keep working: no arrivals on a zero-call day, and servicing still checked.
+
+**The `finally` only returns resources.** It does not remove the process from the SimPy event queue and does not write a `depart` row on failure, so a crash mid-journey yields a log with a `resource_use` row and a `resource_use_end` row but no `depart`.
+
+**Log file side effect.** `logging.basicConfig(filename="log.txt", filemode="w", ...)` runs at import (line 30), truncating `log.txt` in the working directory each time the module is imported. Debug messages are only written when `print_debug_messages` is true.
+
+## Design notes {#sec-calls-and-patient-journeys-design-notes}
+
+- **Minutes as the unit of time.** Documented: commit `1f646db` (2024-10-25) changed the simulation unit to minutes. This is also why `date_time_of_call` takes elapsed minutes.
+- **Warm-up by suppressing the log, not by a flag.** Documented: commit `3bf122e` (2025-04-02) records that rows are not stored during warm-up, replacing a warm-up flag. The code suggests the benefit is that no journey code needs to know about warm-up.
+- **Three processes per call.** Inferred: splitting generation, patient creation and journey means a patient can block on the resource request without stalling the call generator.
+- **Time-of-day in the HEMS result.** Documented: commit `9b32e45` (2025-05-19).
+- **Per-purpose random streams.** The streams `calls_per_hour`, `call_iat`, `know_cc_ec_benefit` and the three `helicopter_benefit_from_*` streams keep each draw independent; see [Chapter 3](03_sampling_distributions_and_random_streams.qmd).
+
+## Limitations and open questions {#sec-calls-and-patient-journeys-limitations}
+
+::: {.callout-note title="Why the model makes simplifying assumptions"}
+Every simulation model rests on assumptions and simplifications, and it has to. No model can be a perfect copy of reality. Adding ever more detail does not fix that, and can make things worse: each extra detail is one more thing to get wrong, so an over-complicated model can drift further from reality, not closer. Judge the items below, and any change you are tempted to make, against whether the assumption is reasonable for the questions asked of the model. Closing every gap with reality is not the aim, and extra fidelity can add more error than it removes.
+:::
+
+- TODO at `des_hems.py:338`: logic to decide ambulance versus HEMS case is missing.
+- TODO at `des_hems.py:404`: helicopter benefit may be slightly overestimated; see the sharp edge above.
+- TODO at `des_hems.py:778`: `convert_results_to_df` swallows a `KeyError` (empty results, no `P_ID` column) with `pass`.
+- TODO at `class_patient.py:42`: `current_dt` is initialised to `None` rather than a datetime.
+- Open as of 2026-10-19: [#192](https://github.com/RichardPilbery/DAA_DES/issues/192) (patient outcome is sometimes "Patient Conveyed" when the vehicle is a car), [#205](https://github.com/RichardPilbery/DAA_DES/issues/205) (update assumptions on the percentage of REG jobs with helicopter benefit), [#168](https://github.com/RichardPilbery/DAA_DES/issues/168) (calls-per-day visualisation) and [#165](https://github.com/RichardPilbery/DAA_DES/issues/165) (discrepancies against historical metrics).
+
+For anything newer, check the [issue tracker](https://github.com/RichardPilbery/DAA_DES/issues).
+
+## Conclusion
+
+Next, in [Chapter 5](05_hems_resources_and_servicing.qmd), we look at what `HEMSAvailability` and `HEMS` actually are, and what `daily_servicing_check` does when `generate_calls()` yields on it.

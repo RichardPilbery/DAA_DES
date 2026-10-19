@@ -1,0 +1,12 @@
+/*-- scss:defaults --*/
+
+// Sidebar colors
+$sidebar-bg: #00205B;  // Background color
+$sidebar-fg: #ffffff;  // Foreground (text) color
+// Navbar matches the sidebar
+$navbar-bg: $sidebar-bg;
+$navbar-fg: $sidebar-fg;
+$navbar-hover-color: $sidebar-fg;
+
+$body-bg: #1F1F1F;
+$code-block-bg: #00205B;

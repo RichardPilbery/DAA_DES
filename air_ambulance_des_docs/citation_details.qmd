@@ -1,0 +1,7 @@
+# Citing this work
+
+If you use or build on this work, please use the following citation:
+
+```markdown
+{{< include ../CITATION.cff >}}
+```

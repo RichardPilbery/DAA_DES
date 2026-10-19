@@ -1,0 +1,64 @@
+---
+title: "How it works"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](how-it-works.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Domain experts](../stakeholder-domain-expert/how-it-works.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- The model has eight parts. Seven run every time you test a scenario. One, the historical data preparer, is used only occasionally to refresh the model's knowledge of past jobs.
+- A user chooses a scenario in the web app. The run manager then plays out the chosen period many times over, each time with different random chances, and averages the results.
+- In each play-through, made-up calls arrive and the dispatch rules either send a vehicle or record a missed job. The results are then set beside the real figures from 2023 and 2024.
+- Every call is either served immediately or recorded as missed. The model never holds a call in a queue.
+:::
+
+## The big picture
+
+Think of rolling a dice many times to see what is typical. The model does not predict one particular day. It plays out two years of made-up days again and again, and reports the typical outcome. The made-up days follow patterns taken from Devon Air Ambulance's real job records for 2023 and 2024.
+
+@fig-how-it-works-parts shows how the eight parts fit together.
+
+```{mermaid}
+%%| label: fig-how-it-works-parts
+%%| fig-cap: "The eight parts of the model and how they connect"
+flowchart LR
+  P[Historical data preparer] -->|supplies patterns| S[Pattern sampler]
+  P -->|supplies real figures| R[Results and comparison tool]
+  W[Web app] -->|starts| M[Run manager]
+  W -->|sets rota and servicing| F[Fleet and rota model]
+  M -->|runs many copies of| C[Call simulator]
+  C -->|draws calls and timings| S
+  C -->|asks for a vehicle| D[Dispatch rules]
+  D -->|chooses from| F
+  M -->|hands over combined results| R
+  R -->|displays in| W
+```
+
+## The parts, one at a time
+
+**The web app.** This is what a person sees. The user picks a scenario: run length, start date, demand level, rota, vehicles and servicing. They can choose a ready-made scenario, such as 24-hour running or Two EC 145 (two aircraft of the larger type). They can also upload their own filled-in Excel template. The web app then starts the model and shows the results on screen. A downloadable report is optional and needs a separate publishing tool installed.
+
+**The run manager.** One play-through of the model is only one possible version of events. The run manager repeats it many times, each with different random chances. By default it does 12 runs on a local computer, or 5 on the public demonstration site. It then combines all the runs into one set of results. On a local computer, runs happen side by side. On the hosted site, they happen one after another.
+
+**The call simulator.** This creates each day's made-up calls. It draws a number of calls from real daily counts for that time of year, scaled by the chosen demand percentage. It spreads them across the day and gives each made-up patient a type of call, age, sex and level of care. It then moves each job through its stages: from the call being accepted, through the crew getting ready, travelling to the scene, treating the patient, taking them to hospital and becoming free again. It writes down every step.
+
+**The pattern sampler.** This holds the patterns learned from past jobs, such as how many calls to expect, what types they are and how long each stage usually takes. The call simulator asks it for realistic values whenever it needs one. It also holds the past rate at which helicopters are unavailable at short notice, for example because of weather or crew.
+
+**The fleet and rota model.** This represents each helicopter and car, its shift hours in summer and winter, and its planned servicing. Each day, the call simulator checks it to see which vehicles are in service.
+
+**The dispatch rules.** When a call arrives, these rules decide which vehicle, if any, to send. A vehicle must be on shift, not in servicing, not already busy, and its crew must not be out on another job. If nothing suitable is free at that moment, the call is recorded as a missed job. The rules record the reason for each choice.
+
+**The results and comparison tool.** This turns the recorded steps into headline figures, such as missed jobs and how busy each vehicle is, and into charts. It sets them beside the real historical figures. Headline figures are averaged across all runs.
+
+**The historical data preparer.** This is a separate step, run only when the learned patterns need refreshing. It reads the real job records, which are not included in the project, and produces the patterns and historical summaries the other parts use. Those records include each patient's age and sex. See [keeping it running](keeping-it-running.qmd) for what that involves.
+
+## What this means for a decision
+
+- Results are averages of random runs. They are estimates, not forecasts of a given day.
+- Everything the model knows about "normal" comes from the preparer's last run on 2023 and 2024 data.
+- Only one person should use an installation at a time, because a second user's settings could overwrite the first's.
+
+For what the model assumes and where it can be wrong, see [assumptions and limits](assumptions-limits.qmd). For terms used here, see the [glossary](glossary.qmd).

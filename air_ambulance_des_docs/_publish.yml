@@ -1,0 +1,4 @@
+- source: project
+  quarto-pub:
+    - id: 6459aa88-32ff-4630-9b76-1024df5d2722
+      url: https://bergam0t.quarto.pub/air-ambulance-simulation

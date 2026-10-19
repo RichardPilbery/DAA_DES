@@ -1,47 +1,57 @@
 import streamlit as st
 import platform
+
 # Data processing imports
 import pandas as pd
-import numpy as np
-from datetime import datetime, timedelta
-# Plotting
-import plotly.express as px
-import plotly.graph_objects as go
+from datetime import datetime
 
+# Memory management
 import gc
 
-from scipy.stats import ks_2samp
+from _app_utils import (
+    get_text,
+    get_text_sheet,
+    summary_sidebar,
+    generate_quarto_report,
+)
 
-import _app_utils
-from _app_utils import DAA_COLORSCHEME, iconMetricContainer, \
-                        get_text, get_text_sheet, format_sigfigs
+from air_ambulance_des.utils import iconMetricContainer, COLORSCHEME, format_diff
 
 # Workaround to deal with relative import issues
 # https://discuss.streamlit.io/t/importing-modules-in-pages/26853/2
 from pathlib import Path
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 # Simulation imports
-from des_parallel_process import runSim, parallelProcessJoblib, collateRunResults
+from air_ambulance_des.des_parallel_process import (
+    runSim,
+    parallelProcessJoblib,
+    collateRunResults,
+)
 from _state_control import setup_state
+
+from air_ambulance_des.utils import Utils
 
 from streamlit_extras.stylable_container import stylable_container
 
-import visualisation._job_count_calculation as _job_count_calculation
-import visualisation._vehicle_calculation as _vehicle_calculation
-import visualisation._utilisation_result_calculation as _utilisation_result_calculation
-import visualisation._job_time_calcs as _job_time_calcs
-import visualisation._job_outcome_calculation as _job_outcome_calculation
-import visualisation._resource_use_exploration as _resource_use_exploration
+from air_ambulance_des.class_simulation_trial_results import TrialResults
+from air_ambulance_des.class_simulation_inputs import SimulationInputs
+from air_ambulance_des.class_historic_results import HistoricResults
+
+APP_DIR = Path(__file__).parent.resolve()
 
 st.set_page_config(layout="wide")
 
-with open("app/style.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+with open(f"{APP_DIR}/style.css") as css:
+    st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
 
 
 setup_state()
+
+# st.write("Current working directory:", os.getcwd())
+# st.write("Contents:", os.listdir())
 
 # Pull in required font
 poppins_script = """
@@ -54,163 +64,217 @@ quarto_string = ""
 text_df = get_text_sheet("model")
 
 # Avoid reading from utils due to odd issues it seems to be introducing
-# TODO: Explore why this is happening in more detail
 # u = Utils()
 # rota = u.HEMS_ROTA
-#rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
+# rota = pd.read_csv("actual_data/HEMS_ROTA.csv")
 # SERVICING_SCHEDULE = pd.read_csv('actual_data/service_schedules_by_model.csv')
 
+# Set up the columns for the 'run simulation' button and DAA logo
 col1, col2 = st.columns([0.7, 0.3])
 
 with col1:
     st.title("Run a Simulation")
 
 with col2:
-    st.image("app/assets/daa-logo.svg", width=200)
+    st.image(f"{APP_DIR}/assets/daa-logo.svg", width=200)
 
+# Add a sidebar with a toggle for debugging messages and a summary of the model input parameters
 with st.sidebar:
-    # generate_downloadable_report = st.toggle("Generate a Downloadable Summary of Results", False,
-    #                                          help="This will generate a downloadable report. This can slow down the running of the model, so turn this off if you don't need it.")
+    debug_messages = st.toggle(
+        "Turn on debugging messages",
+        value=st.session_state.debugging_messages_to_log,
+        key="key_debugging_messages_to_log",
+        on_change=lambda: setattr(
+            st.session_state,
+            "debugging_messages_to_log",
+            st.session_state.key_debugging_messages_to_log,
+        ),
+        help="This will turn on display of messages in the developer terminal and write logging messages to the log.txt file",
+    )
 
-    debug_messages = st.toggle("Turn on debugging messages",
-                               value=st.session_state.debugging_messages_to_log,
-                               key="key_debugging_messages_to_log",
-                               on_change= lambda: setattr(st.session_state, 'debugging_messages_to_log', st.session_state.key_debugging_messages_to_log),
-                               help="This will turn on display of messages in the developer terminal and write logging messages to the log.txt file")
+    summary_sidebar(quarto_string=quarto_string)
 
-    _app_utils.summary_sidebar(quarto_string=quarto_string)
-
-with stylable_container(key="run_buttons",
-            css_styles=f"""
+# Create the run button with a custom style
+with stylable_container(
+    key="run_buttons",
+    css_styles=f"""
                     button {{
-                            background-color: {DAA_COLORSCHEME['blue']};
+                            background-color: {COLORSCHEME["blue"]};
                             color: white;
                             border-color: white;
                         }}
-                        """
-            ):
+                        """,
+):
     button_run_pressed = st.button(
         "Click this button to run the simulation with the selected parameters",
-        icon=":material/play_circle:")
+        icon=":material/play_circle:",
+    )
 
+# If the user hasn't been to the setup page, warn them that they will be using the default
+# parameters, and give them an easy way to navigate to the parameter setup page
 if not st.session_state["visited_setup_page"]:
     if not button_run_pressed:
-        with stylable_container(key="warning_buttons",
+        with stylable_container(
+            key="warning_buttons",
             css_styles=f"""
                     button {{
-                            background-color: {DAA_COLORSCHEME['orange']};
-                            color: {DAA_COLORSCHEME['charcoal']};
+                            background-color: {COLORSCHEME["orange"]};
+                            color: {COLORSCHEME["charcoal"]};
                             border-color: white;
                         }}
-                        """
+                        """,
+        ):
+            if st.button(
+                "**Warning**\n\nYou haven't set up any parameters - default parameters will be used!\n\nClick this button to go to the parameter page, or click the blue button above\n\nif you are happy to use the default model parameters",
+                icon=":material/warning:",
             ):
-            if st.button("**Warning**\n\nYou haven't set up any parameters - default parameters will be used!\n\nClick this button to go to the parameter page, or click the blue button above\n\nif you are happy to use the default model parameters",
-                        icon=":material/warning:"):
-                    st.switch_page("setup.py")
+                st.switch_page("setup.py")
 
 if button_run_pressed:
+    # Clear cache when new run is started
+    st.cache_data.clear()
 
     gc.collect()
 
+    # MARK: Run Simulation
     progress_text = "Simulation in progress. Please wait."
     # This check is a way to guess whether it's running on
     # Streamlit community cloud
-    if platform.processor() == '':
+    if platform.processor() == "":
         my_bar = st.progress(0, text=progress_text)
 
-    with st.spinner(f'Simulating {st.session_state.number_of_runs_input} replication(s) of {st.session_state.sim_duration_input} days. This may take several minutes...', show_time=True):
-
+    with st.spinner(
+        f"Simulating {st.session_state.number_of_runs_input} replication(s) of {st.session_state.sim_duration_input} days. This may take several minutes...",
+        show_time=True,
+    ):
         # If running on community cloud, parallelisation will not work
         # so run instead using the runSim function sequentially
-        if platform.processor() == '':
+        if platform.processor() == "":
             print("Running sequentially")
             results = []
 
             for run in range(st.session_state.number_of_runs_input):
                 run_results = runSim(
-                        run = run,
-                        total_runs = st.session_state.number_of_runs_input,
-                        sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
-                        warm_up_time = float(st.session_state.warm_up_duration * 60),
-                        sim_start_date = datetime.combine(
-                            datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
-                            datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
-                            ),
-                        amb_data=st.session_state.amb_data,
-                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
-                        print_debug_messages=debug_messages,
-                        random_seed=st.session_state.master_seed + run
-                    )
+                    run=run,
+                    total_runs=st.session_state.number_of_runs_input,
+                    sim_duration=float(st.session_state.sim_duration_input * 24 * 60),
+                    warm_up_time=float(st.session_state.warm_up_duration * 60),
+                    sim_start_date=datetime.combine(
+                        datetime.strptime(
+                            st.session_state.sim_start_date_input, "%Y-%m-%d"
+                        ).date(),
+                        datetime.strptime(
+                            st.session_state.sim_start_time_input, "%H:%M"
+                        ).time(),
+                    ),
+                    amb_data=st.session_state.amb_data,
+                    demand_increase_percent=float(st.session_state.overall_demand_mult)
+                    / 100.0,
+                    activity_duration_multiplier=float(
+                        st.session_state.activity_duration_multiplier
+                    ),
+                    print_debug_messages=debug_messages,
+                    random_seed=st.session_state.master_seed + run,
+                )
 
-                results.append(
-                    run_results
-                    )
+                results.append(run_results)
 
-                my_bar.progress((run+1)/st.session_state.number_of_runs_input, text=progress_text)
+                my_bar.progress(
+                    (run + 1) / st.session_state.number_of_runs_input,
+                    text=progress_text,
+                )
 
             # Turn into a single dataframe when all runs complete
-            results_all_runs = pd.concat(results)
+            pd.concat(results).to_csv(
+                Utils.RUN_RESULTS_CSV, index=True, encoding="utf-8-sig"
+            )
 
             my_bar.empty()
 
         # If running locally, use parallel processing function to speed up execution significantly
         else:
             print("Running in parallel")
-            print(f"st.session_state.overall_demand_mult: {st.session_state.overall_demand_mult}")
-            print(f"st.session_state.sim_duration_input: {st.session_state.sim_duration_input}")
+            print(
+                f"st.session_state.overall_demand_mult: {st.session_state.overall_demand_mult}"
+            )
+            print(
+                f"st.session_state.sim_duration_input: {st.session_state.sim_duration_input}"
+            )
             parallelProcessJoblib(
-                        total_runs = st.session_state.number_of_runs_input,
-                        sim_duration = float(st.session_state.sim_duration_input * 24 * 60),
-                        warm_up_time = float(st.session_state.warm_up_duration * 60),
-                        sim_start_date = datetime.combine(
-                            datetime.strptime(st.session_state.sim_start_date_input, '%Y-%m-%d').date(),
-                            datetime.strptime(st.session_state.sim_start_time_input, '%H:%M').time(),
-                            ),
-                        amb_data = st.session_state.amb_data,
-                        demand_increase_percent=float(st.session_state.overall_demand_mult)/100.0,
-                        activity_duration_multiplier=float(st.session_state.activity_duration_multiplier),
-                        print_debug_messages=debug_messages,
-                        master_seed=st.session_state.master_seed
-
+                total_runs=st.session_state.number_of_runs_input,
+                sim_duration=float(st.session_state.sim_duration_input * 24 * 60),
+                warm_up_time=float(st.session_state.warm_up_duration * 60),
+                sim_start_date=datetime.combine(
+                    datetime.strptime(
+                        st.session_state.sim_start_date_input, "%Y-%m-%d"
+                    ).date(),
+                    datetime.strptime(
+                        st.session_state.sim_start_time_input, "%H:%M"
+                    ).time(),
+                ),
+                amb_data=st.session_state.amb_data,
+                demand_increase_percent=float(st.session_state.overall_demand_mult)
+                / 100.0,
+                activity_duration_multiplier=float(
+                    st.session_state.activity_duration_multiplier
+                ),
+                print_debug_messages=debug_messages,
+                master_seed=st.session_state.master_seed,
             )
             collateRunResults()
-            results_all_runs = pd.read_csv("data/run_results.csv")
-
 
         tab_names = [
             "Simulation Results Summary",
             "Key Visualisations",
             "Comparing Model with Historic Data",
             "Additional Outputs",
-            "Download Output"
-            ]
+            "Download Output",
+        ]
 
-
-
+        # Set up the required number of tabs for results, which will vary depending on whether
+        # the user has chosen to create an animation
         if st.session_state.create_animation_input:
             tab_names.append("Animation")
-            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(
-                tab_names
-            )
+            tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs(tab_names)
         else:
-            tab1, tab2, tab3, tab4, tab5 = st.tabs(
-                tab_names
-            )
+            tab1, tab2, tab3, tab4, tab5 = st.tabs(tab_names)
 
         with tab5:
             report_message = st.empty()
 
-            # report_message.info("Generating Report...")
+        try:
+            simulation_inputs = SimulationInputs(
+                data_folder_path="data", actual_data_folder_path="actual_data"
+            )
+            print("simulation input object created successfully")
 
+        except FileNotFoundError:
+            print("data folder or actual_data folder not found")
 
-        def get_job_count_df():
-            return _job_count_calculation.make_job_count_df(params_path="data/run_params_used.csv",
-                                                            path="data/run_results.csv")
+        try:
+            historical_data = HistoricResults(
+                historical_data_folder_path="historical_data",
+                historic_rota_df_path="tests/rotas_historic/HISTORIC_HEMS_ROTA.csv",
+                historic_callsign_df_path="tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv",
+                historic_servicing_df_path="tests/rotas_historic/HISTORIC_service_dates.csv",
+            )
+            print("historical data object created successfully")
 
-        def get_params_df():
-            return pd.read_csv("data/run_params_used.csv")
+        except FileNotFoundError:
+            print("historical data folder or historic rotas not found")
 
+        try:
+            trial_results = TrialResults(
+                simulation_inputs=simulation_inputs,
+                historical_data=historical_data,
+                run_results=pd.read_csv("data/run_results.csv"),
+                daily_availability_data=pd.read_csv("data/daily_availability.csv"),
+            )
+            print("trial results object created successfully")
+        except FileNotFoundError:
+            print("run results not found")
+
+        # MARK: Result Summary
         with tab1:
             quarto_string += "# Key Metrics\n\n"
 
@@ -224,48 +288,53 @@ if button_run_pressed:
 
             report_message = st.empty()
 
-            historical_utilisation_df_complete, historical_utilisation_df_summary = (
-                _utilisation_result_calculation.make_RWC_utilisation_dataframe(
-                    historical_df_path="historical_data/historical_monthly_resource_utilisation.csv",
-                    rota_path="tests/rotas_historic/HISTORIC_HEMS_ROTA.csv",
-                    callsign_path="tests/rotas_historic/HISTORIC_callsign_registration_lookup.csv",
-                    service_path="tests/rotas_historic/HISTORIC_service_dates.csv"
-                    )
-                )
-
-            print(historical_utilisation_df_summary)
-
             st.subheader("Missed Jobs")
 
             t1_col1, t1_col2 = st.columns(2)
 
             with t1_col1:
-                total_average_calls_received_per_year, perc_unattended, perc_unattended_normalised = _vehicle_calculation.get_perc_unattended_string_normalised(results_all_runs)
+                (
+                    total_average_calls_received_per_year,
+                    perc_unattended,
+                    perc_unattended_normalised,
+                ) = trial_results.get_perc_unattended_string_normalised()
 
                 quarto_string += "## Calls Not Attended\n\n"
 
                 quarto_string += f"Across these runs of the simulation, on average a DAAT Resource was unable to attend {perc_unattended} calls\n\n"
 
-                with iconMetricContainer(key="nonattend_metric", icon_unicode="e61f", family="outline"):
-                    st.metric("Average Number of Calls DAAT Resource Couldn't Attend",
-                            perc_unattended,
-                            border=True)
-                    missed_calls_hist_string = _job_count_calculation.plot_historical_missed_jobs_data(format="string")
+                with iconMetricContainer(
+                    key="nonattend_metric", icon_unicode="e61f", family="outline"
+                ):
+                    st.metric(
+                        "Average Number of Calls DAAT Resource Couldn't Attend",
+                        perc_unattended,
+                        border=True,
+                    )
+                    missed_calls_hist_string = (
+                        historical_data.PLOT_historical_missed_jobs_data(
+                            format="string"
+                        )
+                    )
                     st.caption(f"**{perc_unattended_normalised}**")
-                    st.caption(f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically (approximately {total_average_calls_received_per_year*(float(missed_calls_hist_string)/100):.0f} calls per year)*")
+                    st.caption(
+                        f"*This compares to an average of {missed_calls_hist_string:.1f}% of calls missed historically (approximately {total_average_calls_received_per_year * (float(missed_calls_hist_string) / 100):.0f} calls per year)*"
+                    )
 
-                    missed_calls_description = get_text("missed_calls_description", text_df)
+                    missed_calls_description = get_text(
+                        "missed_calls_description", text_df
+                    )
 
             with t1_col2:
                 st.caption(missed_calls_description)
 
                 quarto_string += missed_calls_description
 
-                    # with st.expander("View Breakdown"):
-                    #     outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
-                    #     outcome_df["Count"] = (outcome_df["Count"]/st.session_state.number_of_runs_input).round(0)
-                    #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
-                    #     st.dataframe(outcome_df)
+                # with st.expander("View Breakdown"):
+                #     outcome_df = _vehicle_calculation.resource_allocation_outcomes(results_all_runs)
+                #     outcome_df["Count"] = (outcome_df["Count"]/st.session_state.number_of_runs_input).round(0)
+                #     outcome_df.rename(columns={'Count':'Mean Calls per Simulation Run'}, inplace=True)
+                #     st.dataframe(outcome_df)
 
             st.divider()
 
@@ -275,66 +344,49 @@ if button_run_pressed:
 
             col_ec_cc_sim, col_ec_cc_hist_sim = st.columns(2)
 
-            def get_missed_jobs_fig(care_category, df, what="average"):
-                    row = df[
-                        (df["care_cat"]==care_category) &
-                        (df["time_type"]=="No Resource Available")
-                        ]
-                    if what == "average":
-                        return row['jobs_per_year_average'].values[0]
-                    elif what == "min":
-                        return row['jobs_per_year_min'].values[0]
-                    elif what == "max":
-                        return row['jobs_per_year_max'].values[0]
-
             with col_ec_cc_sim:
                 st.markdown("#### Simulation Outputs")
 
-                missed_jobs_care_cat_summary = _job_outcome_calculation.get_missed_call_df(
-                    results_all_runs=results_all_runs,
-                    run_length_days = float(st.session_state.sim_duration_input),
-                    what="summary"
-                    )
-
-                sim_missed_cc = get_missed_jobs_fig("CC", missed_jobs_care_cat_summary)
-                sim_missed_ec = get_missed_jobs_fig("EC", missed_jobs_care_cat_summary)
-                sim_missed_all_reg = get_missed_jobs_fig("REG", missed_jobs_care_cat_summary) + get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary)
-                sim_missed_reg_heli_benefit = get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary)
+                sim_missed_cc = trial_results.RETURN_missed_jobs_fig("CC")
+                sim_missed_ec = trial_results.RETURN_missed_jobs_fig("EC")
+                sim_missed_all_reg = trial_results.RETURN_missed_jobs_fig(
+                    "REG"
+                ) + trial_results.RETURN_missed_jobs_fig("REG - Helicopter Benefit")
+                sim_missed_reg_heli_benefit = trial_results.RETURN_missed_jobs_fig(
+                    "REG - Helicopter Benefit"
+                )
 
                 # ----------------------------------------------------------------------- #
 
                 # ======= Calculate missed jobs under historical rotas/conditions ======= #
-                SIM_hist_params_missed_jobs = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_summary.csv")
-
-                hist_missed_cc = get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs)
-                hist_missed_ec = get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs)
-                hist_missed_all_reg = get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs)+get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs)
-                hist_missed_reg_heli_benefit = get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs)
+                hist_missed_cc = historical_data.RETURN_missed_jobs_fig("CC")
+                hist_missed_ec = historical_data.RETURN_missed_jobs_fig("EC")
+                hist_missed_all_reg = historical_data.RETURN_missed_jobs_fig(
+                    "REG"
+                ) + historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit")
+                hist_missed_reg_heli_benefit = historical_data.RETURN_missed_jobs_fig(
+                    "REG - Helicopter Benefit"
+                )
                 # ======================================================================= #
 
                 # '''''''''''' Calculate the difference '''''''''''' #
                 diff_missed_cc = sim_missed_cc - hist_missed_cc
                 diff_missed_ec = sim_missed_ec - hist_missed_ec
                 diff_missed_all_reg = sim_missed_all_reg - hist_missed_all_reg
-                diff_missed_reg_heli_benefit = sim_missed_reg_heli_benefit - hist_missed_reg_heli_benefit
+                diff_missed_reg_heli_benefit = (
+                    sim_missed_reg_heli_benefit - hist_missed_reg_heli_benefit
+                )
 
-                def format_diff(value):
-                    if value > 0:
-                        return f"**:red[+{value:.0f}]** from historical"
-                    elif value < 0:
-                        return f"**:green[{value:.0f}]** from historical"
-                    else:
-                        return "**:gray[no difference]** from historical"
-                # '''''''''''''''''''''''''''''''''''''''''''''''''' #
+                """""" """""" """""" """""" """""" """""" """""" """""" ""  #
 
                 missed_jobs_sim_string = f"""
     The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
-    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)}*), with an estimated range of {get_missed_jobs_fig("CC", missed_jobs_care_cat_summary, "min"):.0f} to {get_missed_jobs_fig("CC", missed_jobs_care_cat_summary, "max"):.0f}
+    - **{sim_missed_cc:.0f} critical care** jobs that would be missed due to no resource being available  (*{format_diff(diff_missed_cc)}*), with an estimated range of {historical_data.RETURN_missed_jobs_fig("CC", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("CC", "max"):.0f}
 
-    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)}*) with an estimated range of {get_missed_jobs_fig("EC", missed_jobs_care_cat_summary, "min"):.0f} to {get_missed_jobs_fig("EC", missed_jobs_care_cat_summary, "max"):.0f}
+    - **{sim_missed_ec:.0f} enhanced care** jobs that would be missed due to no resource being available (*{format_diff(diff_missed_ec)}*) with an estimated range of {historical_data.RETURN_missed_jobs_fig("EC", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("EC", "max"):.0f}
 
-    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)}*) with an estimated range of {get_missed_jobs_fig("REG", missed_jobs_care_cat_summary, "min")+get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary, "min"):.0f} to {get_missed_jobs_fig("REG", missed_jobs_care_cat_summary, "max")+get_missed_jobs_fig("REG - Helicopter Benefit", missed_jobs_care_cat_summary, "max"):.0f}
+    - **{sim_missed_all_reg:.0f} jobs with no predicted CC or EC intervention** that would be missed due to no resource being available (*{format_diff(diff_missed_all_reg)}*) with an estimated range of {historical_data.RETURN_missed_jobs_fig("REG", "min") + historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("REG", "max") + historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit", "max"):.0f}
 
         - of these missed regular jobs, **{sim_missed_reg_heli_benefit:.0f}** may have benefitted from the attendance of a helicopter (*{format_diff(diff_missed_reg_heli_benefit)}*)
                             """
@@ -345,15 +397,14 @@ if button_run_pressed:
                 quarto_string += missed_jobs_sim_string
 
             with col_ec_cc_hist_sim:
-
                 missed_jobs_historical_comparison = f"""
     As CC, EC and helicopter benefit can only be determined for attended jobs, we cannot estimate the ratio for previously missed jobs.
     However, the simulation estimates that, with historical rotas and vehicles, there would be - on average, per year - roughly
 
-    - {hist_missed_cc:.0f} critical care jobs that would be missed due to no resource being available *(estimated range of {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("CC", SIM_hist_params_missed_jobs, "max"):.0f})*
-    - {hist_missed_ec:.0f} enhanced care jobs that would be missed due to no resource being available *(estimated range of {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("EC", SIM_hist_params_missed_jobs, "max"):.0f})*
-    - {hist_missed_all_reg:.0f} jobs with no predicted CC or EC intervention that would be missed due to no resource being available *(estimated range of {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs, "min")+get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("REG", SIM_hist_params_missed_jobs, "max")+get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "max"):.0f})*
-        - of these missed regular jobs, {hist_missed_reg_heli_benefit:.0f} may have benefitted from the attendance of a helicopter *(estimated range of {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "min"):.0f} to {get_missed_jobs_fig("REG - Helicopter Benefit", SIM_hist_params_missed_jobs, "max"):.0f})*
+    - {hist_missed_cc:.0f} critical care jobs that would be missed due to no resource being available *(estimated range of {historical_data.RETURN_missed_jobs_fig("CC", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("CC", "max"):.0f})*
+    - {hist_missed_ec:.0f} enhanced care jobs that would be missed due to no resource being available *(estimated range of {historical_data.RETURN_missed_jobs_fig("EC", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("EC", "max"):.0f})*
+    - {hist_missed_all_reg:.0f} jobs with no predicted CC or EC intervention that would be missed due to no resource being available *(estimated range of {historical_data.RETURN_missed_jobs_fig("REG", "min") + historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("REG", "max") + historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit", "max"):.0f})*
+        - of these missed regular jobs, {hist_missed_reg_heli_benefit:.0f} may have benefitted from the attendance of a helicopter *(estimated range of {historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit", "min"):.0f} to {historical_data.RETURN_missed_jobs_fig("REG - Helicopter Benefit", "max"):.0f})*
                             """
 
                 st.caption(missed_jobs_historical_comparison)
@@ -366,26 +417,30 @@ if button_run_pressed:
             col_ec_cc_suboptimal_sim, col_ec_cc_suboptimal_hist_sim = st.columns(2)
 
             with col_ec_cc_suboptimal_sim:
-                mean_cc_sent_ec, min_cc_sent_ec, max_cc_sent_ec = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(results_all_runs, st.session_state.sim_duration_input)
+                mean_cc_sent_ec, min_cc_sent_ec, max_cc_sent_ec = (
+                    trial_results.RETURN_prediction_cc_patients_sent_ec_resource()
+                )
 
-                mean_heli_ben_sent_car, min_heli_ben_sent_car, max_heli_ben_sent_car = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(results_all_runs, st.session_state.sim_duration_input)
+                mean_heli_ben_sent_car, min_heli_ben_sent_car, max_heli_ben_sent_car = (
+                    trial_results.RETURN_prediction_heli_benefit_patients_sent_car()
+                )
 
-                # SIM_hist_complete = pd.read_csv("historical_data/calculated/SIM_hist_params.csv")
+                mean_cc_sent_ec_HIST, min_cc_sent_ec_HIST, max_cc_sent_ec_HIST = (
+                    historical_data.RETURN_prediction_cc_patients_sent_ec_resource()
+                )
 
-                sim_hist_suboptimal_care_cat_summary = pd.read_csv("historical_data/calculated/SIM_hist_params_suboptimal_care_cat_sent_summary.csv")
-                sim_hist_suboptimal_vehicle_type_summary = pd.read_csv("historical_data/calculated/SIM_hist_params_suboptimal_vehicle_type_sent_summary.csv")
-
-                mean_cc_sent_ec_HIST, min_cc_sent_ec_HIST, max_cc_sent_ec_HIST = _job_outcome_calculation.get_prediction_cc_patients_sent_ec_resource(sim_hist_suboptimal_care_cat_summary, 730, summarised_df_provided=True) # TODO - fix hardcoded param which may change
-
-                mean_heli_ben_sent_car_HIST, min_heli_ben_sent_car_HIST, max_heli_ben_sent_car_HIST = _job_outcome_calculation.get_prediction_heli_benefit_patients_sent_car(sim_hist_suboptimal_vehicle_type_summary, 730, summarised_df_provided=True) # TODO - fix hardcoded param which may change
-
+                (
+                    mean_heli_ben_sent_car_HIST,
+                    min_heli_ben_sent_car_HIST,
+                    max_heli_ben_sent_car_HIST,
+                ) = historical_data.RETURN_prediction_heli_benefit_patients_sent_car()
 
                 suboptimal_jobs_sim_string = f"""
                 The simulation estimates that, with the proposed conditions, there would be - on average, per year - roughly
 
-                - **{mean_cc_sent_ec:.0f} critical care (CC)** jobs that would be sent an enhanced care (EC) resource (*{format_diff(mean_cc_sent_ec-mean_cc_sent_ec_HIST)}*), with an estimated range of {min_cc_sent_ec:.0f} to {max_cc_sent_ec:.0f}
+                - **{mean_cc_sent_ec:.0f} critical care (CC)** jobs that would be sent an enhanced care (EC) resource (*{format_diff(mean_cc_sent_ec - mean_cc_sent_ec_HIST)}*), with an estimated range of {min_cc_sent_ec:.0f} to {max_cc_sent_ec:.0f}
 
-                - **{mean_heli_ben_sent_car:.0f} jobs that would benefit from a helicopter** that would be sent a car (*{format_diff(mean_heli_ben_sent_car-mean_heli_ben_sent_car_HIST)}*) with an estimated range of {min_heli_ben_sent_car:.0f} to {max_heli_ben_sent_car:.0f}
+                - **{mean_heli_ben_sent_car:.0f} jobs that would benefit from a helicopter** that would be sent a car (*{format_diff(mean_heli_ben_sent_car - mean_heli_ben_sent_car_HIST)}*) with an estimated range of {min_heli_ben_sent_car:.0f} to {max_heli_ben_sent_car:.0f}
                 """
 
                 st.write(suboptimal_jobs_sim_string)
@@ -410,24 +465,34 @@ if button_run_pressed:
             st.subheader("Resource Utilisation")
 
             quarto_string += "\n\n## Resource Utilisation"
-            resource_use_wide, utilisation_df_overall, utilisation_df_per_run, utilisation_df_per_run_by_csg = (
-                _utilisation_result_calculation.make_utilisation_model_dataframe(
-                path="data/run_results.csv",
-                params_path="data/run_params_used.csv",
-                service_path="data/service_dates.csv",
-                callsign_path="actual_data/callsign_registration_lookup.csv",
-                rota_path="actual_data/HEMS_ROTA.csv",
-                rota_times="actual_data/rota_start_end_months.csv"
-            ))
-
-            print(utilisation_df_overall)
 
             # Get unique callsigns for helicopters and cars from run_results
-            if 'vehicle_type' in results_all_runs.columns and 'callsign' in results_all_runs.columns:
-                all_helicopter_callsigns = sorted(list(results_all_runs[results_all_runs['vehicle_type'] == 'helicopter']['callsign'].dropna().unique()))
-                all_car_callsigns = sorted(list(results_all_runs[results_all_runs['vehicle_type'] == 'car']['callsign'].dropna().unique()))
+            if (
+                "vehicle_type" in trial_results.run_results.columns
+                and "callsign" in trial_results.run_results.columns
+            ):
+                all_helicopter_callsigns = sorted(
+                    list(
+                        trial_results.run_results[
+                            trial_results.run_results["vehicle_type"] == "helicopter"
+                        ]["callsign"]
+                        .dropna()
+                        .unique()
+                    )
+                )
+                all_car_callsigns = sorted(
+                    list(
+                        trial_results.run_results[
+                            trial_results.run_results["vehicle_type"] == "car"
+                        ]["callsign"]
+                        .dropna()
+                        .unique()
+                    )
+                )
             else:
-                st.error("The 'run_results' DataFrame is missing 'vehicle_type' or 'callsign' columns.")
+                st.error(
+                    "The 'run_results' DataFrame is missing 'vehicle_type' or 'callsign' columns."
+                )
                 all_helicopter_callsigns = []
                 all_car_callsigns = []
 
@@ -436,15 +501,13 @@ if button_run_pressed:
             if all_helicopter_callsigns:
                 helo_cols = st.columns(len(all_helicopter_callsigns))
                 for idx, helo_callsign in enumerate(all_helicopter_callsigns):
-                    quarto_string = _utilisation_result_calculation.display_vehicle_utilisation_metric(
+                    quarto_string = trial_results.display_vehicle_utilisation_metric(
                         st_column=helo_cols[idx],
                         callsign_to_display=helo_callsign,
                         vehicle_type_label="Helicopter",
                         icon_unicode="f60c",
-                        sim_utilisation_df=utilisation_df_overall,
-                        hist_summary_df=historical_utilisation_df_summary,
-                        util_calc_module=_utilisation_result_calculation,
-                        current_quarto_string=quarto_string
+                        historical_data_class=historical_data,
+                        current_quarto_string=quarto_string,
                     )
             else:
                 st.info("No helicopter data found in the current run results.")
@@ -455,23 +518,15 @@ if button_run_pressed:
             # --- Display Car Metrics ---
             st.markdown("### Cars")
             if all_car_callsigns:
-                # Your original line for index manipulation.
-                # Ensure this is necessary or adapt if callsigns in historical_utilisation_df_summary match directly
-                # or if the get_hist_util_fig function handles the "CC" prefix.
-                # For the mock, get_hist_util_fig handles "CC" to "C" transformation.
-                # historical_utilisation_df_summary.index = historical_utilisation_df_summary.index.str.replace("CC", "C")
-
                 car_metric_cols = st.columns(len(all_car_callsigns))
                 for idx, car_callsign in enumerate(all_car_callsigns):
-                    quarto_string = _utilisation_result_calculation.display_vehicle_utilisation_metric(
+                    quarto_string = trial_results.display_vehicle_utilisation_metric(
+                        historical_data_class=historical_data,
                         st_column=car_metric_cols[idx],
                         callsign_to_display=car_callsign,
                         vehicle_type_label="Car",
                         icon_unicode="eb3c",
-                        sim_utilisation_df=utilisation_df_overall,
-                        hist_summary_df=historical_utilisation_df_summary,
-                        util_calc_module=_utilisation_result_calculation,
-                        current_quarto_string=quarto_string
+                        current_quarto_string=quarto_string,
                     )
             else:
                 st.info("No car data found in the current run results.")
@@ -482,22 +537,34 @@ if button_run_pressed:
 
             t1_col3, t1_col4 = st.columns(2)
 
+        # MARK: Key Plots
         with tab2:
             tab_2_1, tab_2_2, tab_2_3, tab_2_4, tab_2_5 = st.tabs(
-                ["'Missed' Calls", "Resource Utilisation",
-                 "Split of Jobs by Callsign Group", "CC and EC Benefit",
-                 "Resource Tasking"]
-                 )
+                [
+                    "'Missed' Calls",
+                    "Resource Utilisation",
+                    "Split of Jobs by Callsign Group",
+                    "CC and EC Benefit",
+                    "Resource Tasking",
+                ]
+            )
 
             with tab_2_1:
+
                 @st.fragment
                 def missed_jobs():
-                    show_proportions_per_hour = st.toggle("Show as proportion of jobs missed per hour", value=False )
+                    show_proportions_per_hour = st.toggle(
+                        "Show as proportion of jobs missed per hour", value=False
+                    )
+
                     by_quarter = st.toggle("Stratify results by quarter", value=False)
-                    st.plotly_chart(_job_count_calculation.plot_missed_jobs(
-                        show_proportions_per_hour=show_proportions_per_hour,
-                        by_quarter=by_quarter
-                        ))
+
+                    st.plotly_chart(
+                        trial_results.PLOT_missed_jobs(
+                            show_proportions_per_hour=show_proportions_per_hour,
+                            by_quarter=by_quarter,
+                        )
+                    )
 
                 missed_jobs()
 
@@ -536,25 +603,27 @@ In this case, we would be looking for two things to be consistent across the top
             # It then gets put here.
 
             with tab_2_2:
+
                 @st.fragment
                 def create_utilisation_rwc_plot():
-                    call_df = get_job_count_df()
+                    fig_utilisation = trial_results.PLOT_UTIL_rwc_plot()
 
-                    fig_utilisation = _utilisation_result_calculation.create_UTIL_rwc_plot(
-                        call_df,
-                        real_data_path="historical_data/historical_monthly_totals_by_callsign.csv"
-                        )
+                    fig_utilisation.write_html(
+                        f"{APP_DIR}/fig_outputs/fig_utilisation.html",
+                        full_html=False,
+                        include_plotlyjs="cdn",
+                    )  # , post_script = poppins_script)#,full_html=False, include_plotlyjs='cdn')
 
-                    fig_utilisation.write_html("app/fig_outputs/fig_utilisation.html")#, post_script = poppins_script)#,full_html=False, include_plotlyjs='cdn')
-
-                    st.plotly_chart(
-                        fig_utilisation
-                    )
+                    st.plotly_chart(fig_utilisation)
 
                 create_utilisation_rwc_plot()
 
-                historical_monthly_totals_df = pd.read_csv("historical_data/historical_monthly_totals_by_callsign.csv")
-                historical_monthly_totals_df["month"] = pd.to_datetime(historical_monthly_totals_df["month"], format="%Y-%m-%d")
+                historical_monthly_totals_df = pd.read_csv(
+                    "historical_data/historical_monthly_totals_by_callsign.csv"
+                )
+                historical_monthly_totals_df["month"] = pd.to_datetime(
+                    historical_monthly_totals_df["month"], format="%Y-%m-%d"
+                )
 
                 st.caption(f"""
 This plot shows the split within a callsign group of resources that are sent on jobs.
@@ -573,33 +642,36 @@ If the simulation is not using the default parameters, we would not expect the o
     wish to consider the historical split as part of your decision making.
                 """)
 
+                st.plotly_chart(
+                    trial_results.PLOT_SIMULATION_utilisation_summary(
+                        historical_results_obj=historical_data
+                    )
+                )
 
-                st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_summary_plot(
-                    utilisation_df_overall,
-                    historical_utilisation_df_summary
-                ))
-
-                st.plotly_chart(_utilisation_result_calculation.make_SIMULATION_utilisation_variation_plot(
-                    utilisation_df_per_run,
-                    historical_utilisation_df_summary
-                ))
+                st.plotly_chart(
+                    trial_results.make_SIMULATION_utilisation_variation_plot(
+                        historical_results_obj=historical_data
+                    )
+                )
 
                 with tab_2_3:
+
                     @st.fragment
                     def plot_callsign_group_split():
-                        x_is_callsign_group = st.toggle("Plot callsign group on the horizontal axis",
-                                                        value=False)
+                        x_is_callsign_group = st.toggle(
+                            "Plot callsign group on the horizontal axis", value=False
+                        )
 
                         st.plotly_chart(
-                            _utilisation_result_calculation.create_callsign_group_split_rwc_plot(
-                            x_is_callsign_group=x_is_callsign_group
+                            trial_results.create_callsign_group_split_rwc_plot(
+                                historical_data_obj=historical_data,
+                                x_is_callsign_group=x_is_callsign_group,
                             )
                         )
 
                     plot_callsign_group_split()
 
                 with tab_2_4:
-
                     st.caption("""
 Historical data has been retrospectively audited to determine when jobs have included interventions that
 could only be delivered by an EC or CC team.
@@ -623,41 +695,43 @@ only EC interventions would be delivered and only an EC benefit would have been 
 dataset.
 """)
 
-                    df_sim_breakdown = _job_outcome_calculation.get_missed_call_df(
-                       results_all_runs,
-                       run_length_days=730,
-                       what="breakdown"
-                       )
-                    df_sim_breakdown["what"] = "Simulation"
-
-                    df_hist_breakdown = pd.read_csv("historical_data/calculated/SIM_hist_params_missed_jobs_care_cat_breakdown.csv")
-                    df_hist_breakdown["what"] = "Historical (Simulated with Historical Rotas)"
-                    st.subheader("Variation in projected missed calls across simulation runs")
-                    st.write("This is compared with an estimate of the missed calls per year by category using historic rotas")
+                    st.subheader(
+                        "Variation in projected missed calls across simulation runs"
+                    )
+                    st.write(
+                        "This is compared with an estimate of the missed calls per year by category using historic rotas"
+                    )
 
                     st.plotly_chart(
-                        _job_outcome_calculation.plot_missed_calls_boxplot(df_sim_breakdown, df_hist_breakdown)
+                        trial_results.plot_missed_calls_boxplot(
+                            historical_results_obj=historical_data
+                        )
                     )
-                    tab_2_1.subheader("Variation in missed calls across simulation runs")
+                    tab_2_1.subheader(
+                        "Variation in missed calls across simulation runs"
+                    )
 
                     tab_2_1.plotly_chart(
-                        _job_outcome_calculation.plot_missed_calls_boxplot(
-                            df_sim_breakdown, df_hist_breakdown,
+                        trial_results.plot_missed_calls_boxplot(
+                            historical_results_obj=historical_data,
                             what="summary",
-                            historical_yearly_missed_calls_estimate=total_average_calls_received_per_year*(float(missed_calls_hist_string)/100)
-                            )
+                            historical_yearly_missed_calls_estimate=total_average_calls_received_per_year
+                            * (float(missed_calls_hist_string) / 100),
+                        )
                     )
 
                     st.subheader("Job Categories - Simulation vs Historical")
 
                     @st.fragment
                     def plot_cc_ec_split():
-                        show_proportions_care_cat_plot = st.toggle("Show Proportions", True)
+                        show_proportions_care_cat_plot = st.toggle(
+                            "Show Proportions", True
+                        )
 
                         st.plotly_chart(
-                            _job_outcome_calculation.get_care_cat_counts_plot_sim(
+                            trial_results.get_care_cat_counts_plot_sim(
                                 show_proportions=show_proportions_care_cat_plot
-                                )
+                            )
                         )
 
                         st.caption("""
@@ -667,10 +741,10 @@ dataset.
                         """)
 
                         st.plotly_chart(
-                                _job_outcome_calculation.get_care_cat_counts_plot_historic(
-                                    show_proportions=show_proportions_care_cat_plot
-                                )
+                            historical_data.PLOT_care_cat_counts_historic(
+                                show_proportions=show_proportions_care_cat_plot
                             )
+                        )
 
                         st.caption("""
                             We can also take a look at the proportion of jobs allocated to each category
@@ -681,70 +755,72 @@ dataset.
                             """)
 
                         st.dataframe(
-                            _job_outcome_calculation.get_care_cat_proportion_table().drop(columns=["Historic Job Counts", "Simulated Job Counts"])
+                            trial_results.get_care_cat_proportion_table().drop(
+                                columns=["Historic Job Counts", "Simulated Job Counts"]
+                            )
                         )
 
                     plot_cc_ec_split()
 
             with tab_2_5:
+
                 @st.fragment
                 def job_count_heatmap():
-                    normalise_heatmap_daily_jobs = st.toggle("Normalise by average daily jobs", False)
-
-                    fig_jobs_by_callsign_heatmap = _job_count_calculation.plot_job_count_heatmap(
-                        run_results=results_all_runs,
-                        normalise_per_day=normalise_heatmap_daily_jobs,
-                        simulated_days=st.session_state.sim_duration_input
-                        )
-
-                    st.plotly_chart(
-                        fig_jobs_by_callsign_heatmap
+                    normalise_heatmap_daily_jobs = st.toggle(
+                        "Normalise by average daily jobs", False
                     )
 
-                    fig_jobs_by_callsign_heatmap_monthly = _job_count_calculation.plot_job_count_heatmap_monthly(
-                        run_results=results_all_runs,
+                    fig_jobs_by_callsign_heatmap = trial_results.PLOT_job_count_heatmap(
                         normalise_per_day=normalise_heatmap_daily_jobs,
-                        simulated_days=st.session_state.sim_duration_input
-                        )
-
-                    st.plotly_chart(
-                        fig_jobs_by_callsign_heatmap_monthly
+                        simulated_days=st.session_state.sim_duration_input,
                     )
+
+                    st.plotly_chart(fig_jobs_by_callsign_heatmap)
+
+                    fig_jobs_by_callsign_heatmap_monthly = (
+                        trial_results.PLOT_job_count_heatmap_monthly(
+                            normalise_per_day=normalise_heatmap_daily_jobs,
+                            simulated_days=st.session_state.sim_duration_input,
+                        )
+                    )
+
+                    st.plotly_chart(fig_jobs_by_callsign_heatmap_monthly)
 
                 job_count_heatmap()
 
+        # MARK: Historical Comparisons
         with tab3:
-
-            # tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5 = st.tabs([
-            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs([
-                "Jobs per Month",
-                "Jobs by Hour of Day",
-                "Jobs by Day of Week",
-                "Jobs per Day - Distribution",
-                "Job Durations - Overall",
-                "Job Durations - Split"
-                ])
+            tab_3_1, tab_3_2, tab_3_3, tab_3_4, tab_3_5, tab_3_6 = st.tabs(
+                [
+                    "Jobs per Month",
+                    "Jobs by Hour of Day",
+                    "Jobs by Day of Week",
+                    "Jobs per Day - Distribution",
+                    "Job Durations - Overall",
+                    "Job Durations - Split",
+                ]
+            )
 
             with tab_3_1:
+
                 @st.fragment
                 def plot_monthly_jobs():
-                    call_df = get_job_count_df()
-
                     mj_1, mj_2 = st.columns(2)
 
                     show_real_data = mj_1.toggle(
-                        "Compare with Real Data",
-                        value=True,
-                        disabled=False)
+                        "Compare with Real Data", value=True, disabled=False
+                    )
 
-                    show_individual_runs = mj_2.toggle("Show Individual Simulation Runs", value=False)
+                    show_individual_runs = mj_2.toggle(
+                        "Show Individual Simulation Runs", value=False
+                    )
 
                     if show_real_data:
                         historical_view_method = st.radio(
                             "Choose Historical Data Display Method",
                             ["Range", "Individual Lines"],
-                            horizontal=True
-                            )
+                            horizontal=True,
+                        )
                         if historical_view_method == "Range":
                             show_historical_individual_years = False
                         else:
@@ -752,30 +828,27 @@ dataset.
                     else:
                         show_historical_individual_years = False
 
-                    fig_monthly_calls = _job_count_calculation.plot_monthly_calls(
-                            call_df,
-                            show_individual_runs=show_individual_runs,
-                            use_poppins=True,
-                            show_historical=show_real_data,
-                            show_historical_individual_years=show_historical_individual_years,
-                            historical_monthly_job_data_path="historical_data/historical_monthly_totals_all_calls.csv",
-                            job_count_col="inc_date"
-                            )
-
-                    _job_count_calculation.plot_monthly_calls(
-                            call_df,
-                            show_individual_runs=show_individual_runs,
-                            use_poppins=False,
-                            show_historical=show_real_data,
-                            show_historical_individual_years=show_historical_individual_years,
-                            historical_monthly_job_data_path="historical_data/historical_monthly_totals_all_calls.csv",
-                            job_count_col="inc_date"
-                            ).write_html("app/fig_outputs/fig_monthly_calls.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
-
-
-                    return st.plotly_chart(
-                        fig_monthly_calls
+                    fig_monthly_calls = trial_results.PLOT_monthly_calls(
+                        show_individual_runs=show_individual_runs,
+                        use_poppins=True,
+                        show_historical=show_real_data,
+                        show_historical_individual_years=show_historical_individual_years,
+                        job_count_col="inc_date",
                     )
+
+                    trial_results.PLOT_monthly_calls(
+                        show_individual_runs=show_individual_runs,
+                        use_poppins=False,
+                        show_historical=show_real_data,
+                        show_historical_individual_years=show_historical_individual_years,
+                        job_count_col="inc_date",
+                    ).write_html(
+                        f"{APP_DIR}/fig_outputs/fig_monthly_calls.html",
+                        full_html=False,
+                        include_plotlyjs="cdn",
+                    )  # , post_script = poppins_script)
+
+                    return st.plotly_chart(fig_monthly_calls)
 
                 plot_monthly_jobs()
                 st.caption("""
@@ -787,52 +860,46 @@ Partial months are excluded for ease of interpretation.
 
                 @st.fragment
                 def plot_jobs_per_hour():
-                    call_df = get_job_count_df()
-                    params_df = get_params_df()
                     help_jph = get_text("help_jobs_per_hour", text_df)
                     jph_1, jph_2, jph_3, jph_4 = st.columns(4)
 
                     display_historic_jph = jph_1.toggle(
-                        "Display Historic Data",
-                        value=True
-                        )
+                        "Display Historic Data", value=True
+                    )
                     average_per_month = jph_2.toggle(
-                        "Display Average Calls Per Month",
-                        value=True,
-                        help= help_jph
-                        )
+                        "Display Average Calls Per Month", value=True, help=help_jph
+                    )
 
-                    display_advanced = jph_3.toggle("Display Advanced Plot", value=False)
+                    display_advanced = jph_3.toggle(
+                        "Display Advanced Plot", value=False
+                    )
 
                     if not display_advanced:
                         display_error_bars_bar = jph_4.toggle("Display Variation")
                     else:
                         display_error_bars_bar = False
 
-                    fig_hour_of_day = _job_count_calculation.plot_hourly_call_counts(
-                        call_df, params_df,
+                    fig_hour_of_day = trial_results.PLOT_hourly_call_counts(
                         average_per_month=average_per_month,
                         box_plot=display_advanced,
                         show_error_bars_bar=display_error_bars_bar,
                         use_poppins=True,
                         show_historical=display_historic_jph,
-                        historical_data_path="historical_data/historical_monthly_totals_by_hour_of_day.csv"
-                        )
+                    )
 
-                    _job_count_calculation.plot_hourly_call_counts(
-                        call_df, params_df,
+                    trial_results.PLOT_hourly_call_counts(
                         average_per_month=average_per_month,
                         box_plot=display_advanced,
                         show_error_bars_bar=display_error_bars_bar,
                         use_poppins=False,
                         show_historical=display_historic_jph,
-                        historical_data_path="historical_data/historical_monthly_totals_by_hour_of_day.csv"
-                        ).write_html("app/fig_outputs/fig_hour_of_day.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+                    ).write_html(
+                        f"{APP_DIR}/fig_outputs/fig_hour_of_day.html",
+                        full_html=False,
+                        include_plotlyjs="cdn",
+                    )  # , post_script = poppins_script)
 
-
-                    st.plotly_chart(
-                        fig_hour_of_day
-                    )
+                    st.plotly_chart(fig_hour_of_day)
 
                 plot_jobs_per_hour()
 
@@ -840,59 +907,52 @@ Partial months are excluded for ease of interpretation.
 
                 @st.fragment
                 def plot_jobs_per_day():
-                    call_df = get_job_count_df()
-                    params_df = get_params_df()
                     # help_jph = get_text("help_jobs_per_hour", text_df)
                     jpd_1, jpd_2, jpd_3, jpd_4 = st.columns(4)
 
                     display_historic_jph_pd = jpd_1.toggle(
-                        "Display Historic Data",
-                        value=True,
-                         key="historic_pd"
-                        )
+                        "Display Historic Data", value=True, key="historic_pd"
+                    )
 
                     average_per_month_pd = jpd_2.toggle(
                         "Display Average Calls Per Day",
                         value=True,
                         # help= help_jph,
-                        key="average_pd"
+                        key="average_pd",
+                    )
 
-                        )
-
-                    display_advanced_pd = jpd_3.toggle("Display Advanced Plot", value=False,
-                                                        key="advanced_pd")
+                    display_advanced_pd = jpd_3.toggle(
+                        "Display Advanced Plot", value=False, key="advanced_pd"
+                    )
 
                     if not display_advanced_pd:
-                        display_error_bars_bar_pd = jpd_4.toggle("Display Variation",
-                                                        key="variation_pd")
+                        display_error_bars_bar_pd = jpd_4.toggle(
+                            "Display Variation", key="variation_pd"
+                        )
                     else:
                         display_error_bars_bar_pd = False
 
-                    fig_day_of_week = _job_count_calculation.plot_daily_call_counts(
-                        call_df, params_df,
+                    fig_day_of_week = trial_results.PLOT_daily_call_counts(
                         average_per_month=average_per_month_pd,
                         box_plot=display_advanced_pd,
                         show_error_bars_bar=display_error_bars_bar_pd,
                         use_poppins=True,
                         show_historical=display_historic_jph_pd,
-                        historical_data_path="historical_data/historical_monthly_totals_by_day_of_week.csv"
-                        )
+                    )
 
-                    _job_count_calculation.plot_daily_call_counts(
-                        call_df, params_df,
+                    trial_results.PLOT_daily_call_counts(
                         average_per_month=average_per_month_pd,
                         box_plot=display_advanced_pd,
                         show_error_bars_bar=display_error_bars_bar_pd,
                         use_poppins=False,
                         show_historical=display_historic_jph_pd,
-                        historical_data_path="historical_data/historical_monthly_totals_by_day_of_week.csv"
-                        ).write_html("app/fig_outputs/fig_day_of_week.html",full_html=False, include_plotlyjs='cdn')#, post_script = poppins_script)
+                    ).write_html(
+                        f"{APP_DIR}/fig_outputs/fig_day_of_week.html",
+                        full_html=False,
+                        include_plotlyjs="cdn",
+                    )  # , post_script = poppins_script)
 
-
-                    st.plotly_chart(
-                        fig_day_of_week
-                    )
-
+                    st.plotly_chart(fig_day_of_week)
 
                 plot_jobs_per_day()
 
@@ -901,125 +961,10 @@ Partial months are excluded for ease of interpretation.
             #######################################
 
             with tab_3_4:
+
                 @st.fragment()
                 def plot_days_with_job_count_hist():
-                    call_df = get_job_count_df()
-                    call_df["day"] = pd.to_datetime(call_df["timestamp_dt"]).dt.date
-                    daily_call_counts = (
-                        call_df.groupby(['run_number', 'day'])['P_ID'].agg("count")
-                        .reset_index().rename(columns={"P_ID": "Calls per Day"})
-                        )
-
-                    historical_daily_calls = pd.read_csv(
-                        "historical_data/historical_daily_calls_breakdown.csv"
-                        )
-
-                    # Create histogram with two traces
-                    call_count_hist = go.Figure()
-
-                    # Simulated data
-                    call_count_hist.add_trace(go.Histogram(
-                        x=daily_call_counts["Calls per Day"],
-                        name="Simulated",
-                        histnorm='percent',
-                        xbins=dict( # bins used for histogram
-                            start=0.0,
-                            end=max(daily_call_counts["Calls per Day"])+1,
-                            size=1.0
-                        ),
-                        opacity=0.75
-                    ))
-
-                    # Historical data
-                    call_count_hist.add_trace(go.Histogram(
-                        x=historical_daily_calls["calls_in_day"],
-                        xbins=dict( # bins used for histogram
-                            start=0.0,
-                            end=max(historical_daily_calls["calls_in_day"])+1,
-                            size=1.0
-                        ),
-                        name="Historical",
-                        histnorm='percent',
-                        opacity=0.75
-                    ))
-
-                    # Update layout
-                    call_count_hist.update_layout(
-                        title="Distribution of Jobs Per Day: Simulated vs Historical",
-                        barmode='overlay',
-                        bargap=0.03,
-                        xaxis=dict(
-                            tickmode='linear',
-                            tick0=0,
-                            dtick=1
-                        )
-                    )
-
-                    # Save and display
-                    call_count_hist.write_html("app/fig_outputs/daily_calls_dist_histogram.html",
-                                               full_html=False, include_plotlyjs='cdn')
-
-                    call_count_hist.update_layout(font=dict(family="Poppins", size=18, color="black"))
-
-                    st.plotly_chart(call_count_hist)
-
-                    st.caption("""
-This plot looks at the number of days across all repeats of the simulation where each given number of calls was observed (i.e. on how many days was one call received, two calls, three calls, and so on).
-                           """)
-
-                    statistic, p_value = ks_2samp(daily_call_counts["Calls per Day"],
-                                                  historical_daily_calls["calls_in_day"])
-
-                    if p_value > 0.05:
-                        st.success(f"""There is no statistically significant difference between
-                                 the distributions of call data from historical data and the
-                                 simulation (p = {format_sigfigs(p_value)})
-
-                                 This means that the pattern of calls produced by the simulation
-                                 matches the pattern seen in the real-world data —
-                                 for example, the frequency or variability of daily calls
-                                 is sufficiently similar to what has been observed historically.
-                                 """)
-                    else:
-                        ks_text_string_sig = f"""
-There is a statistically significant difference between the
-distributions of call data from historical data and
-the simulation (p = {format_sigfigs(p_value)}).
-
-This means that the pattern of calls produced by the simulation
-does not match the pattern seen in the real-world data —
-for example, the frequency or variability of daily calls
-may be different.
-
-The simulation may need to be adjusted to better
-reflect the patterns of demand observed historically.
-
-"""
-
-                        if statistic < 0.1:
-                            st.info(ks_text_string_sig + f"""Although the difference is
-                                    statistically significant, the actual magnitude
-                                    of the difference (D = {format_sigfigs(statistic)}) is small.
-                                    This suggests the simulation's call volume pattern is reasonably
-                                    close to reality.
-                                    """)
-
-                        elif statistic < 0.2:
-                            st.warning(ks_text_string_sig + f"""The KS statistic (D = {format_sigfigs(statistic)})
-                                    indicates a moderate difference in
-                                    distribution. You may want to review the simulation model to
-                                    ensure it adequately reflects real-world variability.
-                                    """)
-
-                        else:
-                                st.error(ks_text_string_sig + f"""The KS statistic (D = {format_sigfigs(statistic)})
-                                   suggests a large difference in call volume patterns.
-                                   The simulation may not accurately reflect historical
-                                   demand and may need adjustment.
-                                    """)
-
-
-
+                    trial_results.PLOT_days_with_job_count_hist_ks()
 
                 plot_days_with_job_count_hist()
 
@@ -1031,36 +976,18 @@ reflect the patterns of demand observed historically.
 
                 @st.fragment
                 def create_job_duration_plot():
-                    historical_time_df = _job_time_calcs.get_historical_times_breakdown(
-                                'historical_data/historical_job_durations_breakdown.csv'
-                                )
-
-                    simulated_job_time_df = _job_time_calcs.get_total_times_model(
-                                get_summary=False,
-                                path="data/run_results.csv",
-                                params_path="data/run_params_used.csv",
-                                rota_path="actual_data/HEMS_ROTA.csv",
-                                service_path="data/service_dates.csv",
-                                callsign_path="actual_data/callsign_registration_lookup.csv",
-                                rota_times="actual_data/rota_start_end_months.csv"
-                                )
-
-                    plot_violin=st.toggle("Violin Plot?", value=False)
+                    plot_violin = st.toggle("Violin Plot?", value=False)
 
                     # Create plot for inclusion in streamlit
-                    fig_job_durations_historical =  _job_time_calcs.plot_historical_job_duration_vs_simulation_overall(
-                            historical_activity_times=historical_time_df,
-                            utilisation_model_df=simulated_job_time_df,
-                            use_poppins = True,
-                            write_to_html = True,
-                            html_output_filepath = "app/fig_outputs/fig_job_durations_historical.html",
-                            violin=plot_violin
-                            )
+                    fig_job_durations_historical = trial_results.plot_historical_job_duration_vs_simulation_overall(
+                        use_poppins=True,
+                        write_to_html=True,
+                        html_output_filepath=f"{APP_DIR}/fig_outputs/fig_job_durations_historical.html",
+                        violin=plot_violin,
+                    )
 
                     # Include job durations plot in streamlit app
-                    st.plotly_chart(
-                    fig_job_durations_historical
-                        )
+                    st.plotly_chart(fig_job_durations_historical)
 
                     st.caption("""
     This plot looks at the total amount of time each resource was in use during the simulation.
@@ -1072,23 +999,56 @@ reflect the patterns of demand observed historically.
     each resource type, and likely to be fairly central within that region.
     """)
 
-                    historical_time_df_cars_only = historical_time_df[historical_time_df["vehicle_type"] == "car"]
-                    historical_time_df_helos_only = historical_time_df[historical_time_df["vehicle_type"] == "helicopter"]
+                    historical_data.historical_time_df_cars_only = (
+                        historical_data.historical_job_durations_breakdown[
+                            historical_data.historical_job_durations_breakdown[
+                                "vehicle_type"
+                            ]
+                            == "car"
+                        ]
+                    )
+                    historical_data.historical_time_df_helos_only = (
+                        historical_data.historical_job_durations_breakdown[
+                            historical_data.historical_job_durations_breakdown[
+                                "vehicle_type"
+                            ]
+                            == "helicopter"
+                        ]
+                    )
 
-                    simulated_job_time_df_cars_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "car"]
-                    simulated_job_time_df_helos_only = simulated_job_time_df[simulated_job_time_df["vehicle_type"] == "helicopter"]
+                    trial_results.simulated_job_time_df_cars_only = (
+                        trial_results.resource_use_wide[
+                            trial_results.resource_use_wide["vehicle_type"] == "car"
+                        ]
+                    )
+                    trial_results.simulated_job_time_df_helos_only = (
+                        trial_results.resource_use_wide[
+                            trial_results.resource_use_wide["vehicle_type"]
+                            == "helicopter"
+                        ]
+                    )
 
-                    _job_time_calcs.calculate_ks_for_job_durations(
-                        historical_data_series=historical_time_df_helos_only[historical_time_df_helos_only["name"]=="total_duration"]["value"],
-                        simulated_data_series=simulated_job_time_df_helos_only["resource_use_duration"],
-                        what="helicopters"
-                        )
+                    trial_results.calculate_ks_for_job_durations(
+                        historical_data_series=historical_data.historical_time_df_helos_only[
+                            historical_data.historical_time_df_helos_only["name"]
+                            == "total_duration"
+                        ]["value"],
+                        simulated_data_series=trial_results.simulated_job_time_df_helos_only[
+                            "resource_use_duration"
+                        ],
+                        what="helicopters",
+                    )
 
-                    _job_time_calcs.calculate_ks_for_job_durations(
-                        historical_data_series=historical_time_df_cars_only[historical_time_df_cars_only["name"]=="total_duration"]["value"],
-                        simulated_data_series=simulated_job_time_df_cars_only["resource_use_duration"],
-                        what="cars"
-                        )
+                    trial_results.calculate_ks_for_job_durations(
+                        historical_data_series=historical_data.historical_time_df_cars_only[
+                            historical_data.historical_time_df_cars_only["name"]
+                            == "total_duration"
+                        ]["value"],
+                        simulated_data_series=trial_results.simulated_job_time_df_cars_only[
+                            "resource_use_duration"
+                        ],
+                        what="cars",
+                    )
 
                 create_job_duration_plot()
 
@@ -1097,9 +1057,7 @@ reflect the patterns of demand observed historically.
             ############################
 
             with tab_3_6:
-                st.plotly_chart(
-                    _job_time_calcs.plot_time_breakdown()
-                )
+                st.plotly_chart(trial_results.PLOT_time_breakdown())
 
                 st.caption("""
 This chart is comparing how long different stages of emergency jobs take in real life (called Historical) versus how long they take in a computer simulation (called Simulated).
@@ -1128,34 +1086,25 @@ These stages are shown for two types of vehicles:
 - If the boxes and whiskers for simulated and historical data overlap a lot, that means the simulation is doing a good job of copying reality.
                            """)
 
+        # MARK: Debugging Plots
         with tab4:
-
             st.caption("""
 This tab contains visualisations to help model authors do additional checks into the underlying functioning of the model.
 
 Most users will not need to look at the visualisations in this tab.
             """)
 
-            # tab_4_1, tab_4_2, tab_4_3, tab_4_4, tab_4_5 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes",
-            #                                               "Process Analytics", "Process Analytics - Resources"
-            #                                               ])
-
-            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(["Debug Resources", "Debug Events", "Debug Outcomes", "Debug Job Durations"
-                                                ])
+            tab_4_1, tab_4_2, tab_4_3, tab_4_4 = st.tabs(
+                [
+                    "Debug Resources",
+                    "Debug Events",
+                    "Debug Outcomes",
+                    "Debug Job Durations",
+                ]
+            )
 
             with tab_4_1:
-                resource_use_events_only = results_all_runs[
-                    (results_all_runs["event_type"] == "resource_use") |
-                    (results_all_runs["event_type"] == "resource_use_end")
-                ].reset_index(drop=True).copy()
-
-                # Call the refactored function
-                # Ensure DAA_COLORSCHEME is defined and passed
-                _resource_use_exploration.display_resource_use_exploration(
-                    resource_use_events_only,
-                    results_all_runs,
-                    DAA_COLORSCHEME
-                    )
+                trial_results.display_resource_use_exploration()
 
                 st.caption("""
 This visual shows the resource use of each resource throughout the simulation.
@@ -1186,126 +1135,88 @@ the overall time period.*
 
                 st.subheader("Jobs per Day - By Callsign")
 
-                st.plotly_chart(_job_count_calculation.plot_jobs_per_callsign())
+                st.plotly_chart(trial_results.PLOT_jobs_per_callsign())
 
                 st.subheader("Minutes per day on Shift")
 
-                daily_availability_df = (
-                    pd.read_csv("data/daily_availability.csv")
-                    .melt(id_vars="month")
-                    .rename(columns={"value":"theoretical_availability", "variable": "callsign"})
-                    )
-
-                st.plotly_chart(
-                    px.bar(daily_availability_df, x="month", y="theoretical_availability", facet_row="callsign")
-                )
+                st.plotly_chart(trial_results.PLOT_daily_availability())
 
                 st.subheader("Jobs Outcome by Category/Preference")
 
                 @st.fragment
                 def plot_preferred_outcome_by_hour():
-                    show_proportions_job_outcomes_by_hour = st.toggle("Show Proportions", False, key="show_proportions_job_outcomes_by_hour")
-                    st.plotly_chart(_job_outcome_calculation.get_preferred_outcome_by_hour(show_proportions=show_proportions_job_outcomes_by_hour))
+                    show_proportions_job_outcomes_by_hour = st.toggle(
+                        "Show Proportions",
+                        False,
+                        key="show_proportions_job_outcomes_by_hour",
+                    )
+                    st.plotly_chart(
+                        trial_results.get_preferred_outcome_by_hour(
+                            show_proportions=show_proportions_job_outcomes_by_hour
+                        )
+                    )
 
                 plot_preferred_outcome_by_hour()
 
-                st.plotly_chart(_job_outcome_calculation.get_facet_plot_preferred_outcome_by_hour())
+                st.plotly_chart(
+                    trial_results.get_facet_plot_preferred_outcome_by_hour()
+                )
 
             with tab_4_2:
                 st.subheader("Event Overview")
 
                 # @st.fragment
                 # def event_overview_plot():
-                #     runs_to_display_eo = st.multiselect("Choose the runs to display", results_all_runs["run_number"].unique(), default=1)
-
-                #     events_over_time_df = results_all_runs[results_all_runs["run_number"].isin(runs_to_display_eo)]
-
-                #     # Fix to deal with odd community cloud indexing bug
-                #     if 'P_ID' not in events_over_time_df.columns:
-                #         events_over_time_df = events_over_time_df.reset_index()
-
-                #     events_over_time_df['time_type'] = events_over_time_df['time_type'].astype('str')
-
-                #     fig = px.scatter(
-                #             events_over_time_df,
-                #             x="timestamp_dt",
-                #             y="time_type",
-                #             # facet_row="run_number",
-                #             # showlegend=False,
-                #             color="time_type",
-                #             height=800,
-                #             title="Events Over Time - By Run"
-                #             )
-
-                #     fig.update_traces(marker=dict(size=3, opacity=0.5))
-
-                #     fig.update_layout(yaxis_title="", # Remove y-axis label
-                #                       yaxis_type='category',
-                #                       showlegend=False)
-                #     # Remove facet labels
-                #     fig.for_each_annotation(lambda x: x.update(text=""))
+                #     runs_to_display_eo = st.multiselect(
+                #         "Choose the runs to display",
+                #         trial_results.run_results["run_number"].unique(),
+                #         default=1,
+                #     )
 
                 #     st.plotly_chart(
-                #         fig,
-                #             use_container_width=True
-                #         )
+                #         trial_results.PLOT_events_over_time(runs=runs_to_display_eo),
+                #         use_container_width=True,
+                #     )
 
                 # event_overview_plot()
 
-                # Fix to deal with odd community cloud indexing bug
-                if 'P_ID' not in results_all_runs.columns:
-                    results_all_runs = results_all_runs.reset_index()
-
-
                 st.plotly_chart(
-                        px.line(
-                            results_all_runs[results_all_runs["time_type"]=="arrival"],
-                            x="timestamp_dt",
-                            y="P_ID",
-                            color="run_number",
-                            height=800,
-                            title="Cumulative Arrivals Per Run"),
-                            use_container_width=True
-                        )
+                    trial_results.PLOT_cumulative_arrivals_per_run(),
+                    use_container_width=True,
+                )
 
                 st.subheader("Event Counts")
                 st.write(f"Period: {st.session_state.sim_duration_input} days")
 
-                event_counts_df =  (pd.DataFrame(
-                        results_all_runs[["run_number", "time_type"]].value_counts()).reset_index()
-                        .pivot(index="run_number", columns="time_type", values="count")
-                )
-                event_counts_long = event_counts_df.reset_index(drop=False).melt(id_vars="run_number")
-
                 @st.fragment
                 def event_funnel_plot():
+                    hems_events_initial = [
+                        "arrival",
+                        "HEMS call start",
+                        "HEMS allocated to call",
+                        "HEMS mobile",
+                        # "HEMS stood down en route",
+                        "HEMS on scene",
+                        # "HEMS patient treated (not conveyed)",
+                        "HEMS leaving scene",
+                        "HEMS arrived destination",
+                        "HEMS clear",
+                    ]
 
-                    hems_events_initial = ["arrival", "HEMS call start", "HEMS allocated to call", "HEMS mobile",
-                                    # "HEMS stood down en route",
-                                    "HEMS on scene",
-                                    # "HEMS patient treated (not conveyed)",
-                                    "HEMS leaving scene",
-                                    "HEMS arrived destination",
-                                    "HEMS clear"]
+                    hems_events = st.multiselect(
+                        "Choose the events to show",
+                        trial_results.event_counts_long["time_type"].unique(),
+                        hems_events_initial,
+                    )
 
-                    hems_events = st.multiselect("Choose the events to show",
-                                                 event_counts_long["time_type"].unique(),
-                                                 hems_events_initial)
+                    run_select = st.multiselect(
+                        "Choose the runs to show",
+                        trial_results.event_counts_long["run_number"].unique(),
+                        1,
+                    )
 
-                    run_select = st.multiselect("Choose the runs to show",
-                                                 event_counts_long["run_number"].unique(),
-                                                 1)
-
-                    return st.plotly_chart(
-                            px.funnel(
-                                event_counts_long[(event_counts_long["time_type"].isin(hems_events)) &
-                                                  (event_counts_long["run_number"].isin(run_select))  ],
-                                facet_col="run_number",
-                                x="value",
-                                y="time_type",
-                                category_orders={"time_type": hems_events[::-1]}
-
-                        )
+                    st.plotly_chart(
+                        trial_results.PLOT_event_funnel_plot(hems_events, run_select)
                     )
 
                 event_funnel_plot()
@@ -1314,45 +1225,47 @@ the overall time period.*
                 def patient_viz():
                     st.subheader("Per-patient journey exploration")
 
-                    patient_filter = st.selectbox("Select a patient", results_all_runs.P_ID.unique())
+                    patient_filter = st.selectbox(
+                        "Select a patient", trial_results.run_results.P_ID.unique()
+                    )
 
-                    tab_list =  st.tabs([f"Run {i+1}" for i in range(st.session_state.number_of_runs_input)])
+                    tab_list = st.tabs(
+                        [
+                            f"Run {i + 1}"
+                            for i in range(st.session_state.number_of_runs_input)
+                        ]
+                    )
 
                     for idx, tab in enumerate(tab_list):
-                        p_df = results_all_runs[
-                                    (results_all_runs.P_ID==patient_filter) &
-                                    (results_all_runs.run_number==idx+1)]
+                        p_df = trial_results.run_results[
+                            (trial_results.run_results.P_ID == patient_filter)
+                            & (trial_results.run_results.run_number == idx + 1)
+                        ].copy()
 
-                        p_df['time_type'] = p_df['time_type'].astype('str')
-
-                        fig = px.scatter(
-                                p_df,
-                                x="timestamp_dt",
-                                y="time_type",
-                                color="time_type")
-
-                        fig.update_layout(yaxis_type='category')
+                        p_df["time_type"] = p_df["time_type"].astype("str")
 
                         tab.plotly_chart(
-                            fig,
+                            trial_results.PLOT_per_patient_events(p_df),
                             use_container_width=True,
-                            key=f"p_viz_{patient_filter}_{idx}"
+                            key=f"p_viz_{patient_filter}_{idx}",
                         )
 
                 patient_viz()
 
             with tab_4_3:
+
                 @st.fragment
                 def explore_outcomes():
                     plot_counts = st.toggle("Plot Counts", value=False)
 
-                    st.caption("Note that these plots only cover patients for whom a resource was available to attend")
+                    st.caption(
+                        "Note that these plots only cover patients for whom a resource was available to attend"
+                    )
 
                     st.subheader("HEMS result by vehicle type")
                     try:
                         st.plotly_chart(
-                            _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
-                                                                        plot_counts=plot_counts)
+                            trial_results.plot_patient_outcomes(plot_counts=plot_counts)
                         )
                     except:
                         st.write("Error generating chart")
@@ -1360,20 +1273,24 @@ the overall time period.*
                     st.subheader("HEMS result by care category")
                     try:
                         st.plotly_chart(
-                        _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
-                                                                    plot_counts=plot_counts,
-                                                                    group_cols="care_cat")
+                            trial_results.plot_patient_outcomes(
+                                plot_counts=plot_counts,
+                                group_cols="care_cat",
+                            )
                         )
                     except:
                         st.write("Error generating chart")
 
                     st.subheader("HEMS Result by Outcome")
-                    st.caption("Note this sums to 1 within each outcome, not within each hems result")
+                    st.caption(
+                        "Note this sums to 1 within each outcome, not within each hems result"
+                    )
                     try:
                         st.plotly_chart(
-                        _job_outcome_calculation.plot_patient_outcomes(df=results_all_runs,
-                                                                    plot_counts=plot_counts,
-                                                                    group_cols="outcome")
+                            trial_results.plot_patient_outcomes(
+                                plot_counts=plot_counts,
+                                group_cols="outcome",
+                            )
                         )
                     except:
                         st.write("Error generating chart")
@@ -1381,24 +1298,25 @@ the overall time period.*
                     st.subheader("Outcome by Vehicle Type")
                     try:
                         st.plotly_chart(
-                        _job_outcome_calculation.plot_patient_outcomes(
-                            df=results_all_runs,
-                            group_cols="vehicle_type",
-                            outcome_col="outcome",
-                            plot_counts=plot_counts)
+                            trial_results.plot_patient_outcomes(
+                                group_cols="vehicle_type",
+                                outcome_col="outcome",
+                                plot_counts=plot_counts,
+                            )
                         )
                     except:
                         st.write("Error generating chart")
 
                     st.subheader("Vehicle Type by Care Cat")
-                    st.caption("Note this sums to 1 within each cat, not within each vehicle type")
+                    st.caption(
+                        "Note this sums to 1 within each cat, not within each vehicle type"
+                    )
                     try:
                         st.plotly_chart(
-                        _job_outcome_calculation.plot_patient_outcomes(
-                            df=results_all_runs,
-                            outcome_col="vehicle_type",
-                            group_cols="care_cat",
-                            plot_counts=plot_counts
+                            trial_results.plot_patient_outcomes(
+                                outcome_col="vehicle_type",
+                                group_cols="care_cat",
+                                plot_counts=plot_counts,
                             )
                         )
                     except:
@@ -1407,21 +1325,14 @@ the overall time period.*
                     st.header("Outcome variation across day")
 
                     try:
-                        hourly_hems_result_counts = results_all_runs[results_all_runs["time_type"]=="HEMS call start"].groupby(["hems_result", "hour"]).size().reset_index(name="count")
-                        total_per_group = hourly_hems_result_counts.groupby("hour")["count"].transform("sum")
-                        hourly_hems_result_counts["proportion"] = hourly_hems_result_counts["count"] / total_per_group
-
                         if plot_counts:
                             y_col_hourly_hems_result = "count"
                         else:
                             y_col_hourly_hems_result = "proportion"
 
                         st.plotly_chart(
-                            px.bar(
-                            hourly_hems_result_counts,
-                            x="hour",
-                            y=y_col_hourly_hems_result,
-                            color="hems_result"
+                            trial_results.PLOT_outcome_variation_across_day(
+                                y_col=y_col_hourly_hems_result
                             )
                         )
                     except:
@@ -1429,142 +1340,78 @@ the overall time period.*
 
                 explore_outcomes()
 
-
             with tab_4_4:
                 st.subheader("Duration by HEMS Outcome and Vehicle Type")
-                st.caption("Outcomes are sorted by the average job duration (shortest first)")
-                st.plotly_chart(
-                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
-                        results_all_runs,
-                        y="hems_result", color="vehicle_type",
-                        column_of_interest="hems_result",
-                        show_group_averages=True)
+                st.caption(
+                    "Outcomes are sorted by the average job duration (shortest first)"
                 )
-
+                st.plotly_chart(
+                    trial_results.plot_total_times_by_hems_or_pt_outcome(
+                        y="hems_result",
+                        color="vehicle_type",
+                        column_of_interest="hems_result",
+                        show_group_averages=True,
+                    )
+                )
 
                 st.markdown("#### Per-vehicle focus")
                 st.plotly_chart(
-                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
-                        results_all_runs,
-                        y="vehicle_type", color="hems_result",
+                    trial_results.plot_total_times_by_hems_or_pt_outcome(
+                        y="vehicle_type",
+                        color="hems_result",
                         column_of_interest="hems_result",
-                        show_group_averages=False)
+                        show_group_averages=False,
+                    )
                 )
 
                 st.divider()
 
                 st.subheader("Duration by Patient Outcome and Vehicle Type")
-                st.caption("Outcomes are sorted by the average job duration (shortest first)")
+                st.caption(
+                    "Outcomes are sorted by the average job duration (shortest first)"
+                )
 
                 st.plotly_chart(
-                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
-                        results_all_runs,
-                        y="outcome", color="vehicle_type",
+                    trial_results.plot_total_times_by_hems_or_pt_outcome(
+                        y="outcome",
+                        color="vehicle_type",
                         column_of_interest="outcome",
-                        show_group_averages=True)
+                        show_group_averages=True,
+                    )
                 )
 
                 st.markdown("#### Per-vehicle focus")
 
                 st.plotly_chart(
-                    _job_time_calcs.plot_total_times_by_hems_or_pt_outcome(
-                        results_all_runs,
-                        y="vehicle_type", color="outcome",
+                    trial_results.plot_total_times_by_hems_or_pt_outcome(
+                        y="vehicle_type",
+                        color="outcome",
                         column_of_interest="outcome",
-                        show_group_averages=False)
+                        show_group_averages=False,
+                    )
                 )
-
-
-            # with tab_4_4:
-            #     _process_analytics.create_event_log("data/run_results.csv")
-
-            #     print("Current working directory:", os.getcwd())
-
-            #     # This check is a way to guess whether it's running on
-            #     # Streamlit community cloud
-            #     if platform.processor() == '':
-            #         try:
-            #             process1 = subprocess.Popen(["Rscript", "app/generate_bupar_outputs.R"],
-            #                                         stdout=subprocess.PIPE,
-            #                                         stderr=subprocess.PIPE,
-            #                                         text=True,
-            #                                         cwd="app")
-
-            #         except:
-            #             # Get absolute path to the R script
-            #             script_path = Path(__file__).parent / "generate_bupar_outputs.R"
-            #             st.write(f"Trying path: {script_path}" )
-
-            #             process1 = subprocess.Popen(["Rscript", str(script_path)],
-            #                                         stdout=subprocess.PIPE,
-            #                                         stderr=subprocess.PIPE,
-            #                                         text=True)
-
-            #     else:
-            #         result = subprocess.run(["Rscript", "app/generate_bupar_outputs.R"],
-            #                                 capture_output=True, text=True)
-            #     try:
-            #         st.subheader("Process - Absolute Frequency")
-            #         st.image("visualisation/absolute_frequency.svg")
-            #     except:
-            #         st.warning("Process maps could not be generated")
-
-            #     try:
-            #         # st.html("visualisation/anim_process.html")
-            #         components.html("visualisation/anim_process.html")
-            #     except:
-            #         st.warning("Animated Process maps could not be generated")
-
-            #     try:
-            #         # st.subheader("Process - Absolute Cases")
-            #         # st.image("visualisation/absolute_case.svg")
-
-            #         st.subheader("Performance - Average (Mean) Transition and Activity Times")
-            #         st.image("visualisation/performance_mean.svg")
-
-            #         st.subheader("Performance - Maximum Transition and Activity Times")
-            #         st.image("visualisation/performance_max.svg")
-
-            #         st.subheader("Activity - Processing Time - activity")
-            #         st.image("visualisation/processing_time_activity.svg")
-
-            #         st.subheader("Activity - Processing Time - Resource/Activity")
-            #         st.image("visualisation/processing_time_resource_activity.svg")
-            #     except:
-            #         st.warning("Process maps could not be generated")
-
-
-            # with tab_4_5:
-            #     try:
-            #         st.subheader("Activities - by Resource")
-            #         st.image("visualisation/relative_resource_level.svg")
-            #     except:
-            #         st.warning("Animated process maps could not be generated")
-
-            #     try:
-            #         # st.html("visualisation/anim_resource_level.html")
-            #         components.html("visualisation/anim_resource_level.html")
-            #     except:
-            #         st.warning("Animated process maps could not be generated")
-
-
+        # MARK: Generate Report
         with tab5:
+
             @st.fragment()
             def generate_report_button():
                 if st.button("Click here to generate the downloadable report"):
                     report_message.info("Generating Report...")
-                    with st.spinner("Generating report. This may take a minute...", show_time=True):
+                    with st.spinner(
+                        "Generating report. This may take a minute...", show_time=True
+                    ):
                         try:
-                            with open("app/fig_outputs/quarto_text.txt", "w") as text_file:
+                            with open("fig_outputs/quarto_text.txt", "w") as text_file:
                                 text_file.write(quarto_string)
 
-                            msg = _app_utils.generate_quarto_report(run_quarto_check=False)
+                            msg = generate_quarto_report(run_quarto_check=False)
 
                             if msg == "success":
                                 st.success("Report Available for Download")
 
-                        except Exception as e: # noqa
-                            st.error("Report cannot be generated - please speak to a developer")
-
+                        except Exception as e:  # noqa
+                            st.error(
+                                "Report cannot be generated - please speak to a developer"
+                            )
 
             generate_report_button()

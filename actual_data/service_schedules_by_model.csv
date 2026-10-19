@@ -1,4 +1,4 @@
 model,vehicle_type,service_schedule_months,service_duration_weeks
-Airbus H145,helicopter,12,3
-Airbus EC135,helicopter,8,3
+Airbus H145,helicopter,8,3
+Airbus EC135,helicopter,12,3
 Volvo XC90,car,0,0

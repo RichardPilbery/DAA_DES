@@ -1,9 +1,0 @@
-r-base
-r-base-dev
-r-cran-ggplot2
-r-cran-readr
-r-cran-bupaverse
-r-cran-processanimateR
-r-cran-diagrammeR
-r-cran-ggplot2
-r-cran-htmlwidgets

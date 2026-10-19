@@ -1,0 +1,200 @@
+project:
+  type: website
+  output-dir: ../docs_quarto
+  pre-render:
+    - sync_docs.py
+
+filters:
+  - include-code-files
+  - code-window
+  - code-line-style
+  - value-box
+website:
+  title: "Air Ambulance Simulation"
+  description: "Documentation for the vidigi pathway animation package"
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: reference/index.qmd
+        text: Reference
+      - text: Tutorials
+        menu:
+          - text: Intermediate Coder
+            href: tutorial/intermediate/index.qmd
+          - text: Confident Coder
+            href: tutorial/advanced-contributor/index.qmd
+          - text: Decision-makers
+            href: tutorial/stakeholder-decision-maker/index.qmd
+          - text: Domain experts
+            href: tutorial/stakeholder-domain-expert/index.qmd
+          - text: General public
+            href: tutorial/stakeholder-public/index.qmd
+  sidebar:
+    - id: tutorial-intermediate
+      title: Tutorial (Intermediate Coder)
+      style: docked
+      contents:
+        - tutorial/intermediate/index.qmd
+        - tutorial/intermediate/01_streamlit_app_and_scenario_parameters.qmd
+        - tutorial/intermediate/02_simulation_runs_and_replications.qmd
+        - tutorial/intermediate/03_sampling_distributions_and_random_streams.qmd
+        - tutorial/intermediate/04_calls_and_patient_journeys.qmd
+        - tutorial/intermediate/05_hems_resources_and_servicing.qmd
+        - tutorial/intermediate/06_resource_allocation.qmd
+        - tutorial/intermediate/07_trial_results_and_historic_comparison.qmd
+        - tutorial/intermediate/08_distribution_fitting.qmd
+        - tutorial/intermediate/glossary.qmd
+    - id: tutorial-advanced-contributor
+      title: Tutorial (Confident Coder)
+      style: docked
+      contents:
+        - tutorial/advanced-contributor/index.qmd
+        - tutorial/advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd
+        - tutorial/advanced-contributor/02_simulation_runs_and_replications.qmd
+        - tutorial/advanced-contributor/03_sampling_distributions_and_random_streams.qmd
+        - tutorial/advanced-contributor/04_calls_and_patient_journeys.qmd
+        - tutorial/advanced-contributor/05_hems_resources_and_servicing.qmd
+        - tutorial/advanced-contributor/06_resource_allocation.qmd
+        - tutorial/advanced-contributor/07_trial_results_and_historic_comparison.qmd
+        - tutorial/advanced-contributor/08_distribution_fitting.qmd
+        - tutorial/advanced-contributor/glossary.qmd
+    - id: tutorial-stakeholder-decision-maker
+      title: Tutorial (Decision-makers)
+      style: docked
+      contents:
+        - tutorial/stakeholder-decision-maker/index.qmd
+        - tutorial/stakeholder-decision-maker/what-it-does.qmd
+        - tutorial/stakeholder-decision-maker/how-it-works.qmd
+        - tutorial/stakeholder-decision-maker/assumptions-limits.qmd
+        - tutorial/stakeholder-decision-maker/risks.qmd
+        - tutorial/stakeholder-decision-maker/keeping-it-running.qmd
+        - tutorial/stakeholder-decision-maker/questions-to-ask.qmd
+        - tutorial/stakeholder-decision-maker/glossary.qmd
+    - id: tutorial-stakeholder-domain-expert
+      title: Tutorial (Domain experts)
+      style: docked
+      contents:
+        - tutorial/stakeholder-domain-expert/index.qmd
+        - tutorial/stakeholder-domain-expert/what-it-does.qmd
+        - tutorial/stakeholder-domain-expert/how-it-works.qmd
+        - tutorial/stakeholder-domain-expert/how-decisions-are-made.qmd
+        - tutorial/stakeholder-domain-expert/reading-results.qmd
+        - tutorial/stakeholder-domain-expert/assumptions-limits.qmd
+        - tutorial/stakeholder-domain-expert/glossary.qmd
+    - id: tutorial-stakeholder-public
+      title: Tutorial (General public)
+      style: docked
+      contents:
+        - tutorial/stakeholder-public/index.qmd
+        - tutorial/stakeholder-public/what-it-does.qmd
+        - tutorial/stakeholder-public/your-data.qmd
+        - tutorial/stakeholder-public/reading-results.qmd
+        - tutorial/stakeholder-public/assumptions-limits.qmd
+        - tutorial/stakeholder-public/glossary.qmd
+
+# tell quarto to read the generated sidebar
+metadata-files:
+  - _sidebar.yml
+
+quartodoc:
+  dir: reference
+  out_index: index.qmd
+  # the name used to import the package you want to create reference docs for
+  package: air_ambulance_des
+  # write sidebar data to this file
+  sidebar:
+    file: "_sidebar.yml"
+    style: docked
+    tools:
+      - icon: github
+        menu:
+          - text: Source Code
+            href:  https://github.com/RichardPilbery/DAA_DES
+            target: _blank
+          - text: Report a Bug
+            href:  https://github.com/RichardPilbery/DAA_DES/issues
+            target: _blank
+
+    search: true
+    title: "Air Ambulance Simulation"
+    subtitle: "Opreational Modelling for Air Ambulance Services"
+    collapse-level: 2
+    contents:
+      - file: index.qmd
+        text: "Introduction"
+      - file: readme.qmd
+        text: "Project Overview"
+      - section: "Class and Function Overview"
+        contents:
+          - "{{ contents }}"
+      - section: "Model Checklists"
+        contents:
+        - text: "STARS"
+          href: STARS.qmd
+        - text: "STRESS-DES"
+          href: STRESS_DES.qmd
+      - section: "Package Details"
+        contents:
+        - text: "Licence"
+          href: licence.qmd
+        - text: "Contributor Code of Conduct"
+          href: code_of_conduct.qmd
+        - text: "Citing this Work"
+          href: citation_details.qmd
+
+  sections:
+    - title: Model Component Classes
+      desc: ""
+      contents:
+        - class_ambulance.Ambulance
+        - class_hems.HEMS
+        - class_patient.Patient
+    - title: Resource Availability
+      desc: ""
+      contents:
+        - class_hems_availability.ResourceAllocationReason
+        - class_hems_availability.HEMSAvailability
+
+    - title: Data Fitting and Preparation
+      desc: ""
+      contents:
+        - distribution_fit_utils.DistributionFitUtils
+
+    - title: Simulation Model
+      desc: ""
+      contents:
+        - des_hems.DES_HEMS
+
+    - title: Model Running
+      desc: ""
+      contents:
+        - des_parallel_process.runSim
+        - des_parallel_process.parallelProcessJoblib
+
+    - title: Results
+      desc: ""
+      contents:
+        - class_simulation_inputs.SimulationInputs
+        - class_simulation_trial_results.TrialResults
+
+    - title: Helpers
+      desc: ""
+      contents:
+        - des_parallel_process.write_run_params
+        - des_parallel_process.collateRunResults
+
+
+
+format:
+  html:
+    grid:
+      sidebar-width: 325px
+      body-width: 1200px
+      margin-width: 250px
+      gutter-width: 1.5rem
+    execute:
+      freeze: auto
+    theme:
+      light: [flatly, theme-light.scss]
+      dark: [darkly, theme-dark.scss]

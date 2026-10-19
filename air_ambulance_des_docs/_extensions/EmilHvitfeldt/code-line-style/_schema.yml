@@ -1,0 +1,59 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mcanouil/quarto-wizard/main/schemas/quarto-extension-schema.json
+$schema: https://raw.githubusercontent.com/mcanouil/quarto-wizard/main/schemas/quarto-extension-schema.json
+
+attributes:
+  - name: code-line-style
+    description: |
+      Region spec applied to a code block. Use short keys (`add`, `rem`, `chg`,
+      `note`, `hi`, `focus`, `dim`, `strong`) followed by `:` and a line range
+      (`2`, `2-5`, `2,4-6`). Pipe-separated segments become RevealJS fragments
+      (e.g. `|hi:2|rem:3,add:4-7|hi:8`).
+    target: code-block
+    example: 'code-line-style="add:2-3, rem:5"'
+  - name: code-line-style-preset
+    description: |
+      Comma-separated list of presets to load. Built-in: `diff`, `emphasis`.
+      Defaults to both when omitted.
+    target: code-block
+    example: 'code-line-style-preset="emphasis"'
+  - name: code-line-style-static
+    description: |
+      How to render multi-step specs in static (non-RevealJS) output.
+      `last` (default) shows only the final step; `merged` overlays every step.
+    target: code-block
+    values: [last, merged]
+    example: 'code-line-style-static="merged"'
+
+options:
+  - name: code-line-style
+    description: |
+      Cell-level YAML option (alternative to the attribute form). Accepts a
+      structured spec with `preset`, inline `styles`, `transition`, and
+      `steps` for progressive reveal.
+    target: cell
+    schema:
+      type: object
+      properties:
+        preset:
+          type: string
+          description: Preset name (e.g. `diff`, `emphasis`).
+        styles:
+          type: object
+          description: |
+            Inline style definitions keyed by name. Each value is an object
+            of primitives (`bg`, `fg`, `gutter`, `opacity`, `weight`,
+            `marker`, `duration`, `easing`).
+        transition:
+          type: object
+          properties:
+            duration:
+              type: number
+            mode:
+              type: string
+            easing:
+              type: string
+        steps:
+          type: array
+          description: |
+            List of step objects. Each step maps a style name to a region
+            (line number, range, or `{ line, match }` / `{ line, cols }`).

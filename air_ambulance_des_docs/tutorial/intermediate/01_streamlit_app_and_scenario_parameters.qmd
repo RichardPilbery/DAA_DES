@@ -1,0 +1,204 @@
+---
+title: "Chapter 1: Streamlit App and Scenario Parameters"
+description: "How the web app collects parameters, writes them to actual_data, and triggers a simulation run."
+toc: true
+aliases:
+  - "../01_streamlit_app_and_scenario_parameters.html"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [Confident Coder](../advanced-contributor/01_streamlit_app_and_scenario_parameters.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](../stakeholder-domain-expert/index.qmd){.btn .btn-sm .btn-outline-primary} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+## Why the app matters {#sec-streamlit-app-and-scenario-parameters-motivation}
+
+Suppose an analyst at the air ambulance charity wants to ask: "What happens to missed jobs if we run a second helicopter 24 hours a day, with demand 10% higher?" They should not need to edit CSV files by hand or write a Python script. They open the Streamlit web app, pick or upload a scenario, press one button and read the results.
+
+This chapter follows that single use case through the `app/` folder. The app does three jobs:
+
+1. It holds **simple parameters** (number of runs, duration, start date, demand multiplier (a scaling factor on the number of calls per day), master seed) in Streamlit's `st.session_state`.
+2. It writes **bulky parameters** (rotas, which are the shift patterns saying when each helicopter and car is staffed; servicing rules; school holidays and so on) over CSV files in the `actual_data/` folder, which is where the simulation reads them from.
+3. It passes the session-state values to the run functions on the model page, then builds the result objects.
+
+The simulation itself is the subject of later chapters. If you want the big picture of the model first, see the [project overview](../../readme.qmd) or the [site home page](../../index.qmd).
+
+::: {.column-margin}
+**Rota**: the shift pattern saying which helicopters and cars are staffed at which hours of the day (see [chapter 5](05_hems_resources_and_servicing.qmd)).
+:::
+
+::: {.column-margin}
+**actual_data folder**: the folder of CSV files that describe the scenario being modelled (rota, servicing, school holidays and so on). The simulation reads it; the app overwrites it.
+:::
+
+## The shape of the app {#sec-streamlit-app-and-scenario-parameters-shape}
+
+`app/app.py` is the entry point (run with `streamlit run app/app.py` from the repository root). It registers the pages, and each page is a plain Python script that Streamlit re-executes from the top on every interaction.
+
+@fig-streamlit-app-and-scenario-parameters-flow shows how the pieces connect.
+
+```{mermaid}
+%%| label: fig-streamlit-app-and-scenario-parameters-flow
+%%| fig-cap: "From a scenario file to a simulation run"
+flowchart LR
+    A[app.py] --> B[setup_state]
+    B --> S[(st.session_state)]
+    U[Excel template or scenario file] --> P[setup.py]
+    P --> S
+    P --> C[(actual_data CSVs)]
+    S --> M[model.py]
+    C --> M
+    M --> R[runSim or parallelProcessJoblib]
+```
+
+The two stores matter. Session state is per browser session and is lost when the tab closes, so it suits scalar settings. The CSVs in `actual_data/` are files on disk, which is what the model code expects to find.
+
+## Session state defaults {#sec-streamlit-app-and-scenario-parameters-state}
+
+::: {.column-margin}
+**Session state defaults**: the values in `DEFAULT_INPUTS` that `setup_state()` copies into `st.session_state` the first time a session starts.
+:::
+
+Streamlit pages cannot share ordinary Python variables, so anything that must travel between the setup page and the model page lives in `st.session_state`. The defaults are declared once, in `app/_state_control.py`.
+
+```{.python include="../../../app/_state_control.py" start-line=9 end-line=36 filename="app/_state_control.py:9-36" code-line-style="hi:12-14,24" include-hash="3a60e7a4cb36"}
+```
+
+The highlighted keys are the ones the run needs: duration in days (`sim_duration_input`), warm-up in hours (`warm_up_duration`), number of replications (`number_of_runs_input`) and `master_seed`. The demand multipliers are percentages, so 100 means "no change". The model page divides by 100 before handing the value to the simulation. The numbers in this block are placeholders, because several are overridden a few lines later (see the note below).
+
+::: {.callout-note}
+The file then updates `DEFAULT_INPUTS` with `ADDITIONAL_INPUTS`, so the `sim_duration_input` of 365 and `number_of_runs_input` of 10 above are never what the user sees. The final defaults are 730 days and either 5 runs or 12 runs, depending on `platform.processor()`.
+:::
+
+```{.python include="../../../app/_state_control.py" start-line=42 end-line=50 filename="app/_state_control.py:42-50" include-hash="2db3c88cd9e3"}
+```
+
+An empty `platform.processor()` is used as a guess that the app is on Streamlit Community Cloud, where parallel processing is not available (hence fewer runs). We will meet the other half of that check when the run starts.
+
+`app.py` calls `setup_state()` on every page load, and `setup_state()` only fills keys that are missing, so values the user has already changed are never clobbered.
+
+```{.python include="../../../app/_state_control.py" start-line=61 end-line=71 filename="app/_state_control.py:61-71" include-hash="4eb46cac8b17"}
+```
+
+There is one extra detail: the first time a session starts, the rota in `actual_data/` is reset from its `_DEFAULT` copy, so a previous user's edits cannot leak into a new session.
+
+`app.py` then does the same for every data file on first load, and registers the pages:
+
+```{.python include="../../../app/app.py" start-line=6 end-line=18 filename="app/app.py:6-18" code-line-style="hi:8-10" include-hash="4decf6bc59b0"}
+```
+
+The `first_load` flag guards the reset so it happens once per session rather than on every rerun.
+
+## Choosing how to set parameters {#sec-streamlit-app-and-scenario-parameters-setup}
+
+The setup page (`app/setup.py`) offers three routes, controlled by a radio button. Three constants name them.
+
+::: {.column-margin}
+**Parameter template**: an Excel workbook, downloadable from the setup page, with one sheet per input file plus a few extra sheets. See `app/inputs/README.md` for the sheet list.
+:::
+
+- `SETUP_EXCEL`: download `app/inputs/parameter_template.xlsx`, fill it in and upload it.
+- `SETUP_SCENARIO`: choose a **predefined scenario**, which is just a template-shaped workbook stored in the repository's `scenarios/` folder (for example `24 hour running.xlsx`).
+- `SETUP_MANUAL`: edit the rota and fleet using widgets on the page.
+
+Both of the first two routes end up with a single `uploaded_file` variable, which is either an uploaded file object or a path string. After that they share exactly the same code.
+
+```{.python include="../../../app/setup.py" start-line=122 end-line=136 filename="app/setup.py:122-136" include-hash="dbcfb378962b"}
+```
+
+The scenarios are discovered with `Path("scenarios").rglob("*.xlsx")`, so dropping a new workbook into that folder adds it to the list with no code changes. The leading `"None"` option keeps the page from loading anything until a choice is made.
+
+## From workbook to CSV files {#sec-streamlit-app-and-scenario-parameters-write}
+
+Once a file is chosen, `setup.py` reads each sheet with `pandas.read_excel`. School holidays are checked before anything is written, so a bad date range cannot leave `actual_data/` half-overwritten.
+
+```{.python include="../../../app/setup.py" start-line=184 end-line=189 filename="app/setup.py:184-189" include-hash="957f087d05a2"}
+```
+
+`parse_school_holidays` lives in `air_ambulance_des/school_holidays.py`. It converts the dates to timestamps and raises `ValueError` if a date cannot be read or a holiday ends before it starts. `st.stop()` halts the page script at that point. School holidays are used when servicing is scheduled; see [HEMS Resources and Servicing](05_hems_resources_and_servicing.qmd).
+
+The write itself is a dictionary mapping file names to data frames:
+
+```{.python include="../../../app/setup.py" start-line=198 end-line=214 filename="app/setup.py:198-214" code-line-style="hi:16-17" include-hash="75014a4a7f75"}
+```
+
+The keys are the CSV names, so each loop iteration overwrites `actual_data/<name>.csv`. The callsign lookup has its `vehicle_type` and `callsign_group` columns dropped, since the CSV has a slightly different structure from the sheet. The sheets `scenario_details`, `additional_parameters` and `allowable_values` are not written to CSV.
+
+The `additional_parameters` sheet follows the other route: its rows are copied into session state (`number_of_runs`, `simulation_duration_days`, `simulation_warm_up_duration_hours`, `simulation_start_date`, `simulation_start_time`, `master_random_seed` and `activity_duration_multiplier`). The setup page then displays everything it read, so the user can check it before running.
+
+::: {.callout-warning}
+There are two places where scenario data lives, and they are written by different mechanisms. Rota and servicing data goes to disk immediately on upload. Scalar values go to session state. If you inspect `actual_data/` after a session you will see the last scenario's rota, but the number of runs is gone. Anything that reads `actual_data/` directly (a test, or a command-line script) sees only the first kind.
+:::
+
+## Resetting to defaults {#sec-streamlit-app-and-scenario-parameters-reset}
+
+::: {.column-margin}
+**DEFAULT parameter files**: for each file in `actual_data/` there is a sibling named `<name>_DEFAULT.csv` holding the shipped values. Reset copies from the `_DEFAULT` file back over the working file.
+:::
+
+The "reset" button on the setup page calls `reset_to_defaults()`, which does two independent things.
+
+```{.python include="../../../app/_state_control.py" start-line=74 end-line=91 filename="app/_state_control.py:74-91" include-hash="a850b23006bd"}
+```
+
+It resets session state from `DEFAULT_INPUTS`, then reads each `_DEFAULT` CSV and writes it over its working copy. The function continues in the same style for the other files (rota start and end months, service schedules by model, school holidays, service history and upper allowable time bounds) and ends with a `st.toast` notification when `notify` is true. `app.py` calls it with `reset_session_state=False` on first load, which restores files only.
+
+The in-file TODO notes that this could loop over every CSV in the folder, since every file should have a `_DEFAULT` counterpart. Until then, a new input file needs adding to this function by hand, or it will not be reset.
+
+`setup.py` wraps the call in its own `reset_all_to_defaults()`, which also increments `uploader_key` and `radio_key`. Those keys are part of the widgets' identity in Streamlit, so changing them forces the file uploader and scenario radio to clear.
+
+## Running the simulation {#sec-streamlit-app-and-scenario-parameters-run}
+
+The model page (`app/model.py`) draws a button; when it is pressed, it converts session-state values into the arguments the run functions expect. Notice the unit conversions: the user thinks in days and hours, but the simulation clock is in minutes (see [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd)).
+
+```{.python include="../../../app/model.py" start-line=203 end-line=224 filename="app/model.py:203-224" code-line-style="hi:3-4,14-15,20" include-hash="bb3cb7be19b1"}
+```
+
+Days become minutes (`* 24 * 60`), warm-up hours become minutes (`* 60`), and the demand percentage becomes a multiplier (`/ 100.0`). The start date and start time are stored as separate strings and combined into one `datetime`. `parallelProcessJoblib` runs the replications across CPU cores and `collateRunResults` merges the per-run output files. See [parallelProcessJoblib](../../reference/des_parallel_process.parallelProcessJoblib.qmd) and [collateRunResults](../../reference/des_parallel_process.collateRunResults.qmd) in the API reference.
+
+When `platform.processor() == ""` (the cloud guess again) the page instead loops over [runSim](../../reference/des_parallel_process.runSim.qmd) sequentially and concatenates the returned data frames itself.
+
+::: {.callout-warning}
+The two branches pass seeds differently. The sequential branch uses `random_seed=st.session_state.master_seed + run`, whereas `parallelProcessJoblib` takes `master_seed` and derives its own per-run seeds (the mechanism is covered in the next chapter). The same master seed will therefore not give identical replications on the two platforms.
+:::
+
+After the run, `model.py` builds `SimulationInputs`, `HistoricResults` and `TrialResults` from the output files and renders them in tabs: a summary, key visualisations, comparison with historic data, additional outputs and a download tab. Those classes are the subject of [Trial Results and Historic Comparison](07_trial_results_and_historic_comparison.qmd). The download tab has a button that calls `generate_quarto_report()` from `app/_app_utils.py`, which shells out to `quarto render` on a report template and writes the HTML to `app/outputs`.
+
+## What happens end to end {#sec-streamlit-app-and-scenario-parameters-walkthrough}
+
+Putting the use case together, @fig-streamlit-app-and-scenario-parameters-sequence shows the sequence when the analyst uploads a scenario and runs it.
+
+```{mermaid}
+%%| label: fig-streamlit-app-and-scenario-parameters-sequence
+%%| fig-cap: "Uploading a scenario and running it"
+sequenceDiagram
+    actor User
+    participant Setup as setup.py
+    participant State as st.session_state
+    participant Disk as actual_data CSVs
+    participant Model as model.py
+    participant Sim as run functions
+    User->>Setup: upload workbook
+    Setup->>Setup: parse_school_holidays
+    Setup->>Disk: overwrite CSV per sheet
+    Setup->>State: set runs, duration, seed
+    User->>Model: click run button
+    Model->>State: read parameters
+    Model->>Sim: parallelProcessJoblib(...)
+    Sim->>Disk: read rota and servicing files
+    Sim-->>Model: list of DataFrames (ignored)
+    Model->>Disk: collateRunResults() writes data/run_results.csv
+```
+
+The model code never sees the Excel file. It sees only CSVs and function arguments, and this is why the command-line equivalent, `run_parallel_process.py`, can drive the same code without Streamlit.
+
+## Tests {#sec-streamlit-app-and-scenario-parameters-tests}
+
+`tests/test_scenario_importing.py` exercises the workbook import, and `app/inputs/parameter_template.xlsx` is also used there (per `app/inputs/README.md`). Note that `set_scenario_1_params()` and `set_scenario_2_params()` in `_state_control.py` are placeholders marked `TODO: Implement action`: they show a toast and set a flag, and nothing more.
+
+## Conclusion {#sec-streamlit-app-and-scenario-parameters-conclusion}
+
+The Streamlit app is a thin layer. Scalars live in `st.session_state`, seeded from `DEFAULT_INPUTS`. Bulky inputs come from an Excel template or a predefined scenario and are written over the CSVs in `actual_data/`, which `reset_to_defaults()` can restore from their `_DEFAULT` copies. The run button converts units and hands everything to the run functions.
+
+Next, in [Simulation Runs and Replications](02_simulation_runs_and_replications.qmd), we look inside `runSim` and `parallelProcessJoblib`: how seeded replications are created, run and collated.

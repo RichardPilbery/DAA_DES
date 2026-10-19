@@ -1,0 +1,80 @@
+---
+title: "Reading the results"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](reading-results.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [General public](../stakeholder-public/reading-results.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- Every headline figure is an average across many random runs of the same scenario. It is an estimate of a plausible year, not a forecast of a particular day.
+- "Missed job" has a narrower meaning in the model than in the real records. Compare the two with care.
+- Some comparison figures appear to come from the model run on the historic rota, not from real records or from your scenario. Check which is which before you quote a number.
+- Utilisation may be understated for serviced aircraft. Read the comparison tab first, to judge how well the baseline matches 2023-2024 before you trust differences between scenarios.
+:::
+
+This page explains how to read what the [web app](what-it-does.qmd) shows, and the misreadings most likely to catch an experienced reader. The rules behind the figures are on [how decisions are made](how-decisions-are-made.qmd). The wider limits are on [assumptions and limits](assumptions-limits.qmd).
+
+## Averages across runs
+
+The [run manager](how-it-works.qmd) plays the scenario out several times, each with different random chances. By default it does 12 runs on a local computer and 5 on the hosted site. The headline figures are the average across all of those runs.
+
+- Two runs of the same scenario will differ, as two real years would.
+- A small difference between two scenarios may sit within that run-to-run variation. The headline figures show only the average, and this guide has not found a display of the spread across runs for your scenario. To judge it yourself, run each scenario with more runs and with a few different master seeds. If the figures from different seeds overlap heavily between the two scenarios, treat the difference as unproven.
+- More runs give a steadier average. The code doesn't say how many runs are enough. That is a judgement for you and the developers.
+- The same seed and settings give the same numbers again. The hosted site and a local computer derive each run's seed differently, so the same settings can give slightly different numbers in the two places.
+
+## Missed jobs
+
+In the model, a missed job is a call for which no vehicle could be assigned at that moment. Nothing is queued, so a call that finds nothing suitable free is counted as missed straight away.
+
+In the real records, a missed job is a call where no Devon Air Ambulance resource was recorded as attending, for any reason. These are close in spirit but not identical. The records do not say why a call had no Devon Air Ambulance resource attending, so the real figure can include reasons the model does not represent.
+
+Yearly figures are the count of missed jobs, divided by the number of runs and by the run length in days, then multiplied by 365. So a short run length gives a rougher yearly figure.
+
+### Where the historical comparison comes from
+
+Real records only show a care category for jobs that were attended. This has two consequences:
+
+- The historical missed-job figures by care category come from the model run on the historic rotas, not from real records.
+- The same is true of the "suboptimal allocation" comparisons, such as a critical care job being sent an enhanced care resource.
+
+The "estimated range" printed beside each simulated missed-job figure (critical care, enhanced care and regular) appears to be taken from that historic-rota run as well, not from the scenario you are testing. Treat it as a reference band for the historic rota, not as an uncertainty range for your scenario.
+
+## Utilisation
+
+Utilisation for a vehicle is the time from being assigned to a job until clear, divided by its rostered hours from the summer and winter rota. Three points affect how you read it:
+
+- **Servicing is not subtracted.** Rostered hours are not reduced when an aircraft is being serviced, or for short-notice unavailability. The description of the calculation says servicing is taken into account, but the code appears not to do so. Utilisation for serviced aircraft may therefore be understated. For example, a helicopter serviced for 3 weeks of a 52-week year could show roughly 6% lower utilisation than reality.
+- **Paired vehicles.** When a vehicle is sent, the other vehicle in its crew group at the same care level is stood down with it. That stood-down vehicle is not counted as busy.
+- **Open problems.** The project's public list of reported problems (see [assumptions and limits](assumptions-limits.qmd)) records that the utilisation breakdown chart breaks when one helicopter and car pairing is removed. It also records that car utilisation figures behave badly when a car is removed from the pool. No automated check covers the utilisation calculation.
+
+## Call patterns and job times
+
+Calls are drawn from 2023-2024 patterns, so the call-pattern charts mostly show how well the model reproduces those years. They don't show any new insight into demand.
+
+Stage times (travel to scene, on scene, travel to hospital and so on) appear to be drawn from one HEMS result's pattern for every job, not matched to that job's own result. For example, most stages use the pattern for "landed but no patient contact". Expect job lengths to be right on average but not necessarily right for each type of outcome.
+
+Travel times come from past averages, because the model has no locations or distances. A scenario cannot show the effect of moving a base.
+
+## Common misreadings
+
+| If you see... | Do not conclude... | Better reading |
+|---|---|---|
+| A lower missed-job figure in a scenario | The scenario will certainly do better | It did better on average across the runs. Check the difference is larger than the run-to-run variation (see the first section). |
+| A simulated missed-job figure and a historical one side by side | The model's definition and the real one match | The definitions differ slightly. By care category, the historical figure comes from the model, not from real records. |
+| The "estimated range" beside a simulated figure | It describes the uncertainty of your scenario | It appears to come from the historic-rota run. |
+| Low utilisation for a serviced aircraft | The aircraft was under-used | The hours it is measured against ignore servicing, so it may be understated. |
+| A helicopter unavailable for one call and available for the next | A weather spell or crew shortage is modelled | Each call gets a fresh draw. Lasting spells are not represented. |
+| Different numbers on the hosted site | One of them is wrong | The seeds are derived differently, so small differences are expected. |
+
+## A sensible order for reading
+
+1. Open the comparison tab first. See how closely the default scenario reproduces 2023-2024 on the measures you care about.
+2. Note where the baseline is weak. The project's public list of reported problems mentions differences from history in some metrics, and a crew group 70 and 71 split slightly off history.
+3. Only then look at your scenario. Trust the direction and size of differences more than the absolute figures.
+4. Where a result matters to a decision, run it with more runs and compare against your own operational experience.
+
+The automated checks that compare the model with real data are described on [how decisions are made](how-decisions-are-made.qmd). Unfamiliar terms are in the [glossary](glossary.qmd).

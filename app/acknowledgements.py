@@ -1,11 +1,11 @@
 import streamlit as st
-from _app_utils import get_text, get_text_sheet, DAA_COLORSCHEME
+from _app_utils import get_text, get_text_sheet, COLORSCHEME
 from streamlit_extras.stylable_container import stylable_container
 
 st.set_page_config(layout="wide")
 
 with open("app/style.css") as css:
-    st.markdown(f'<style>{css.read()}</style>', unsafe_allow_html=True)
+    st.markdown(f"<style>{css.read()}</style>", unsafe_allow_html=True)
 
 st.markdown(
     '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">',
@@ -17,7 +17,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-text_df=get_text_sheet("welcome")
+text_df = get_text_sheet("welcome")
 
 col1, col2 = st.columns([0.7, 0.3])
 
@@ -56,7 +56,6 @@ with col_r:
 
     st.image("app/assets/rp.jpg", width=200)
 
-
     st.markdown("""
 #### Project Areas
 
@@ -68,18 +67,17 @@ with col_r:
 
     # st.image("assets/rp.png")
     st.markdown(
-"""
+        """
 Richard is a paramedic research fellow with over 20 years experience in the ambulance service.
 """
-
     )
 
     rp_col_1, rp_col_2, rp_col_3 = st.columns(3)
 
     with rp_col_1:
         with stylable_container(
-        key="container_orcid",
-        css_styles=r"""
+            key="container_orcid",
+            css_styles=r"""
             .stLinkButton p:before {
                 font-family: 'Font Awesome 6 Brands';
                 content: '\f8d2';
@@ -89,13 +87,13 @@ Richard is a paramedic research fellow with over 20 years experience in the ambu
                 font-weight: 200;
             }
             """,
-    ):
+        ):
             st.link_button("ORCiD", url="https://orcid.org/0000-0002-5797-9788")
 
     with rp_col_2:
         with stylable_container(
-    key="container_github",
-    css_styles=r"""
+            key="container_github",
+            css_styles=r"""
         .stLinkButton p:before {
             font-family: 'Font Awesome 6 Brands';
             content: '\f09b';
@@ -105,9 +103,8 @@ Richard is a paramedic research fellow with over 20 years experience in the ambu
             font-weight: 200;
         }
         """,
-):
+        ):
             st.link_button("GitHub", url="https://github.com/RichardPilbery")
-
 
 
 with col_s:
@@ -127,20 +124,19 @@ with col_s:
 """)
 
     st.markdown(
-"""
+        """
 Sammi works as part of the [Peninsula Collaborative for health Operational Research and Data Science (PenCHORD)](https://medicine.exeter.ac.uk/health-community/research/penchord/),
 specialising in computer simulation and web application development. Sammi has previously worked in the NHS and now teaches advanced data analysis and modelling techniques
 on the [Health Service Modelling Associates Programme](https://www.hsma.co.uk).
 """
-
     )
 
     sr_col_1, sr_col_2, sr_col_3 = st.columns(3)
 
     with sr_col_1:
         with stylable_container(
-        key="container_orcid",
-        css_styles=r"""
+            key="container_orcid",
+            css_styles=r"""
             .stLinkButton p:before {
                 font-family: 'Font Awesome 6 Brands';
                 content: '\f8d2';
@@ -150,13 +146,13 @@ on the [Health Service Modelling Associates Programme](https://www.hsma.co.uk).
                 font-weight: 200;
             }
             """,
-    ):
+        ):
             st.link_button("ORCiD", url="https://orcid.org/0000-0002-9552-8988")
 
     with sr_col_2:
         with stylable_container(
-        key="container_github",
-        css_styles=r"""
+            key="container_github",
+            css_styles=r"""
             .stLinkButton p:before {
                 font-family: 'Font Awesome 6 Brands';
                 content: '\f09b';
@@ -166,7 +162,7 @@ on the [Health Service Modelling Associates Programme](https://www.hsma.co.uk).
                 font-weight: 200;
             }
             """,
-    ):
+        ):
             st.link_button("GitHub", url="https://github.com/Bergam0t")
 
 

@@ -1,0 +1,233 @@
+---
+title: "How decisions are made"
+---
+
+<!-- audience-switcher:start -->
+::: {.audience-switcher .mb-4}
+[Written for:]{.text-muted .small} [Intermediate Coder](../intermediate/index.qmd){.btn .btn-sm .btn-outline-primary} [Confident Coder](../advanced-contributor/index.qmd){.btn .btn-sm .btn-outline-primary} [Decision-makers](../stakeholder-decision-maker/index.qmd){.btn .btn-sm .btn-outline-primary} [Domain experts](how-decisions-are-made.qmd){.btn .btn-sm .btn-primary .active aria-current="page"} [General public](../stakeholder-public/index.qmd){.btn .btn-sm .btn-outline-primary}
+:::
+<!-- audience-switcher:end -->
+
+::: {.callout-note title="In brief"}
+- This page lists the rules, chances and thresholds the model applies, with their real values, in the order a call meets them.
+- Most values are learned from Devon Air Ambulance's 2023 and 2024 job records. A few are fixed estimates, and the page says which.
+- Each section ends with a way to check it against your own knowledge. The last section describes the automated checks.
+- A few rules appear not to behave as intended. They are worded "appears to" here and covered in [assumptions and limits](assumptions-limits.qmd).
+:::
+
+For the overall picture of the parts, see [how it works](how-it-works.qmd). For reading the figures that come out, see [reading results](reading-results.qmd). Terms are explained in the [glossary](glossary.qmd).
+
+## 1. The scenario defaults
+
+If you change nothing, the model uses these settings.
+
+| Setting | Default |
+|---|---|
+| Run length | 730 days (two years) |
+| Start | 1 January 2023 at 08:00 |
+| Number of runs | 12 on a local computer, 5 on the hosted site |
+| Warm-up | None |
+| Demand percentage | 100% |
+| Job-duration multiplier | 1.0 |
+| Master random seed | 42 |
+
+## 2. Call demand
+
+Each simulated day, the call simulator draws a number of calls from a pool of real daily counts for the same quarter of the year. The pool holds days from 2023 and 2024. Each 2024 day appears 11 times and each 2023 day 10 times, so 2024 carries slightly more weight. The draw is multiplied by the demand percentage and rounded down, so at low demand percentages quiet days lose a call more often than a plain proportion would suggest.
+
+| Quarter | Average calls a day in the pool | Range |
+|---|---|---|
+| January–March | about 6.8 | 2–19 |
+| April–June | about 7.6 | 2–25 |
+| July–September | about 7.6 | 1–18 |
+| October–December | about 6.6 | 1–14 |
+
+The range is the quietest and busiest real day in the pool for that quarter, across 2023 and 2024. For example, in April–June the quietest day had 2 calls and the busiest had 25. These are not statistical limits or confidence intervals. The model can only draw a daily count that actually occurred in that quarter, so it never creates a day busier or quieter than the real extremes (before the demand percentage is applied).
+
+The day's calls are then shared across the hours using the real hourly pattern for that quarter. Within an hour, calls are placed one after another at random minutes. If the random gaps reach 59 minutes, the remaining calls for that hour are not created, so very busy hours may be slightly under-filled.
+
+A seasonal demand adjustment exists in the design but is switched off. Only the single overall percentage works.
+
+**Check it:** do the quarterly daily averages match your sense of a typical day? Does 100% reproduce your 2023–2024 volumes?
+
+## 3. The patient
+
+Each call is given the following, in this order. All draws use the real mix from the records.
+
+1. **Call type (AMPDS card)**, drawn from the real mix for that hour of the day.
+2. **Sex and age**, drawn from the real pattern for that card. Any age above 115 is redrawn.
+3. **Care category**, drawn from the real share for that card. For example, for card 09 about 7% are critical care, 17% enhanced care and 76% regular. In the real records, a job counts as critical care if a critical care benefit was recorded, otherwise as enhanced care if an enhanced care benefit was recorded, otherwise as regular.
+4. **Patient outcome**, drawn from the real mix for that care category and quarter, before any vehicle is chosen.
+5. **Helicopter benefit**, drawn from the real share for the care category: about 15% for regular jobs, 38% for critical care and 10% for enhanced care.
+
+Every call is treated as an air ambulance case. The branch for ordinary ambulance cases is only a placeholder. This is a reasonable simplification. The demand the model draws on is the demand recorded by the HEMS desk, including jobs that came in during hours when no HEMS vehicle was staffed and were reviewed afterwards. It is not an estimate of every emergency where a helicopter might have been sent, so there is no separate group of ordinary ambulance cases to model.
+
+One rule appears to have no effect. It was meant to mark every patient flown by helicopter as having a helicopter benefit. It checks whether the HEMS result is "conveyed by HEMS", but the HEMS result is only drawn after a vehicle has been sent, so at this point it is still empty and the rule appears never to apply.
+
+**Check it:** compare the care category shares for a card you know well, and the three benefit shares, with your experience.
+
+## 4. Preferred crew group and vehicle
+
+Before dispatch, each call is given the crew and vehicle type the model assumes would go if everything were free. The odds for crew group are the same for every call, whatever its type, category or time.
+
+| Crew group | Share of calls |
+|---|---|
+| 70 | about 73% |
+| 71 | about 15% |
+| 72 | about 12% |
+
+These odds were learned only from past jobs that did not overlap another job and when no aircraft was recorded offline. The vehicle type then depends on the group and the quarter.
+
+| Group | Jan–Mar | Apr–Jun | Jul–Sep | Oct–Dec |
+|---|---|---|---|---|
+| 70, chance of a helicopter | about 66% | 83% | 77% | 60% |
+| 71, chance of a helicopter | about 72% | 73% | 81% | 58% |
+| 72 | always a car | always a car | always a car | always a car |
+
+**Check it:** does about 73% of attended jobs going to group 70 match the real split in your records? Does the helicopter-or-car split for group 70 by season match what you see on the base? The model deliberately ignores call type here, so group 72 (cars) never gets extra weight for particular call types.
+
+## 5. Dispatch: choosing a vehicle
+
+### Who is eligible
+
+A vehicle can be sent only if it is on shift, not being serviced, not already busy, and its crew group is not out on another job. "On shift" means the call's clock hour is at or after the start hour and before the end hour. Overnight shifts wrap round midnight, so 19:00–02:00 covers calls from 19:00 to 01:59. This is checked once, when the call arrives.
+
+When a vehicle is sent, the other vehicle in the same crew group with the same care level, if on shift, is taken out of use until the job clears. One crew is never in two places.
+
+Example: at 10:00 H70 is sent. CC70 is on shift as critical care too, so it is stood down until H70 clears. At 22:00 both are enhanced care, so the same applies. CC72 is a different crew group and is not affected.
+
+### The order of choice
+
+The model works out whether the dispatcher knows the need in advance. Both knowledge chances are fixed estimates at 50%, not learned from data.
+
+| Call | Rule |
+|---|---|
+| Critical or enhanced care | 50% chance the need is known. If known, the order is: helicopter of the matching level, car of the matching level, helicopter of the other level, car of the other level. Otherwise the regular rules apply. |
+| Any call using the regular rules (regular jobs, and critical or enhanced care jobs whose need was not known), helicopter would help | 50% chance this is known. If known, only a helicopter can be sent, critical care helicopter first. If none is free, no car goes. |
+| Any call using the regular rules, no known helicopter need | Preferred crew group and vehicle type first, then any helicopter, then the preferred crew group, then any free vehicle. |
+
+A critical or enhanced care job that falls through to the regular rules is subject to the same helicopter-benefit draw.
+
+Calls are never queued. If nothing suitable is free at that moment, the call is recorded as missed.
+
+### Short-notice unavailability
+
+Each time a helicopter is considered for a call, the model draws afresh whether it is unavailable, for aircraft, crew or weather reasons. Cars are always assumed available. Rates come from the share of rostered time each aircraft was recorded offline between August 2022 and July 2024, by quarter and six-hour band (00:00–05:59, 06:00–11:59, 12:00–17:59, 18:00–23:59).
+
+Example for January–March, 06:00–11:59: G-DAAS is available about 90% of the time (crew 5%, weather 4%, aircraft 1%). G-DAAN is available about 82% (weather 17%). Where data are missing, averages from other bands or aircraft are used. If there are none, the helicopter counts as available.
+
+**Check it:** pick a quarter and band you know. Do the availability rates look right? A weather loss does not persist, so a helicopter grounded for one call can be available minutes later.
+
+## 6. Rota and seasons
+
+The default rota is:
+
+| Callsign | Hours |
+|---|---|
+| H70 and CC70 (group 70) | 07:00–19:00 as critical care, 19:00–02:00 as enhanced care |
+| H71 and CC71 | 07:00–19:00 in summer, 07:00–17:00 in winter |
+| CC72 | 08:00–18:00 |
+
+Summer hours apply from April to October. The unavailability rates were worked out with summer as April to September, a small mismatch. A job that starts near the end of a shift carries on to completion. There is no handover or early stand-down.
+
+**Check it:** compare this table with your actual rota.
+
+## 7. Servicing
+
+| Aircraft type | Interval | Length |
+|---|---|---|
+| H145 (G-DAAS) | every 8 months | 3 weeks |
+| EC135 (G-DAAN) | every 12 months | 3 weeks |
+
+The starting points are the last service dates: G-DAAS on 4 January 2022 and G-DAAN on 20 March 2022. Each next service is due one interval after the previous start. For each service the model works as follows.
+
+1. Work out the due date: one interval after the previous service started. For example, G-DAAS was last serviced on 4 January 2022, so its next service is due 4 September 2022.
+2. If the due date falls in January (from the 2nd onwards), try 2 January instead. This reflects a preference to service in the quiet start of the year. A due date in any other month is kept as it is.
+3. If the 3 weeks from that start overlap school holidays or another aircraft's service, try the day before, and keep going back a day at a time until they are clear.
+
+Other points:
+
+- A 4-week overrun buffer setting exists but does not appear to change the dates.
+- Cars are not serviced.
+- The default school holiday list runs to the end of 2027.
+- Vehicles move in and out of servicing once a day, at the start of each simulated day. A vehicle is out from its start date to its end date inclusive.
+- If no clear slot can be found, the run freezes and never produces results.
+
+While G-DAAS is serviced, G-DAAN takes over the H70 callsign. It appears to keep its own H71 hours and enhanced care level. In that period no helicopter is rostered as critical care or for 19:00–02:00.
+
+**Check it:** do the calculated service dates (saved with the results) look plausible against your plans?
+
+## 8. The job itself
+
+Once a vehicle is assigned, the HEMS result is drawn from the real mix for the patient outcome, quarter, vehicle type, crew group and time of day. Day is 07:00–18:59 and night is the rest. The result decides which stages happen.
+
+| Result | Stages |
+|---|---|
+| Stood down | Allocation, mobilising, clearing |
+| Landed but no patient contact; treated but not conveyed | No travel to hospital |
+| Conveyed by HEMS; conveyed by land with HEMS | Every stage |
+
+Each stage time is drawn by vehicle type and stage, redrawn until it falls within these limits, then multiplied by the job-duration multiplier.
+
+| Stage | Allowed range (minutes) |
+|---|---|
+| Allocation | 0–119 |
+| Mobilising | 0–29 |
+| Travel to scene | 1–59 |
+| On scene | 1–119 |
+| Travel to hospital | 1–139 |
+| Clearing | 1–89 |
+
+The stage-time patterns were fitted separately for each result, but the model looks them up by vehicle type and stage only. It appears to use one result's pattern for every job.
+
+**Check it:** are the limits wide enough for your longest realistic jobs, and narrow enough to exclude impossible ones?
+
+## 9. Checking it against 2023–2024
+
+Use the comparison tab in the web app. It sets the simulated figures beside the real ones. Judge how well the default rota matches history before trusting differences between scenarios.
+
+Look at yearly calls, missed jobs by care category, utilisation by callsign and the share of jobs going to crew groups 70 and 71. If a measure is further from history than you would accept, treat scenario differences in that measure with caution. The warn and fail levels in section 10 give a rough guide to what counts as a large gap.
+
+## 10. The automated checks
+
+Developers run these checks by hand. They do not run automatically on each change.
+
+**Comparison with reality.** The model is run on the historic rotas (10 runs of 4 years) and its output is compared with the real 2023–2024 records. Each comparison gives one of three results: pass, warn or fail.
+
+| What is compared | What the check asks |
+|---|---|
+| Monthly calls and average job durations | Is the model's typical figure close to the real one? |
+| The spread of daily calls and of total job durations | Does the model have the same mix of quiet, ordinary and busy days, and short and long jobs? |
+| The share of jobs going to each crew group and callsign | Does each crew group and callsign get about the right slice of the work? |
+
+- **Pass:** any gap is small enough to be ordinary variation.
+- **Warn:** there is a gap small enough to be modest but big enough to be worth a look.
+- **Fail:** there is a large gap that is unlikely to be down to the model's random chance.
+
+The crew group and callsign check is the easiest to picture. It warns if any share is 5 percentage points or more away from the real one (for example, 70% of jobs in the model against 65% or less in the records). It fails if any share is more than 10 points away.
+
+A model whose monthly call figures sit a small but steady distance from reality will raise a warning, not a failure. A failure needs a large gap. Warnings are the model reminding you that it is a simplification.
+
+::: {.callout-note collapse="true" title="The exact thresholds, if you want them"}
+Statistical terms are explained in the [glossary](glossary.qmd). Developers use these limits:
+
+| Comparison | Warns | Fails |
+|---|---|---|
+| Averages (monthly calls, job durations) | effect size above 0.2 | statistically significant (p below 0.05) and effect size above 0.5 |
+| Distributions (daily calls, total job durations) | KS statistic above 0.1 | significant and above 0.2 |
+| Job split by crew group and callsign | any share 5 percentage points or more off | any share more than 10 points off |
+
+The split check also fails when a chi-squared test is significant and Cramer's V is 0.3 or more.
+:::
+
+**Behaviour checks.**
+
+- Vehicles never respond off shift or while being serviced.
+- No vehicle or crew group is sent to two jobs at once.
+- A known helicopter benefit never gets a car.
+- Adding a helicopter or car, or lengthening hours, answers more calls in every one of 10 one-year runs. The reverse also holds.
+- More demand gives more calls, and days with no calls are handled.
+
+**Other checks.** School holidays are read as UK dates, none is longer than 7 weeks, and the average is 1–3 weeks. A fixed scenario (5 runs, 730 days, seed 42) must reproduce a stored baseline exactly.
+
+No check covers the utilisation calculation.
