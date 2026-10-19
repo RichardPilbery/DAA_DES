@@ -1,0 +1,195 @@
+/* code-line-style engine: line wrapper geometry + base transitions.
+   Presets layer their own decoration on top via additional classes. */
+
+div.sourceCode pre > code > span {
+  display: inline-block;
+  width: 100%;
+  position: relative;
+  border-left: 3px solid transparent;
+  padding-left: 0.35em;
+  margin-left: -0.35em;
+  --cs-duration: 200ms;
+  --cs-easing: ease;
+  /* Inline-blocks shrink to content height, leaving vertical gaps between
+     consecutive highlighted lines. Force each wrapper to fill the parent's
+     line-box; `1.3em` is the fallback for browsers without `lh` unit. */
+  min-height: 1.3em;
+  min-height: 1lh;
+  vertical-align: top;
+  transition:
+    background-color var(--cs-duration) var(--cs-easing),
+    border-color var(--cs-duration) var(--cs-easing),
+    opacity var(--cs-duration) var(--cs-easing);
+}
+
+/* Only constrain height when presence animations are active, so wrapped
+   long lines aren't clipped by default. `cs-presence-enter` is the steady
+   "open" state and provides the target value for transitions in both
+   directions; `cs-presence-exit` and `cs-presence-hidden` override it to 0. */
+div.sourceCode pre > code > span.cs-presence-enter,
+div.sourceCode pre > code > span.cs-presence-exit {
+  max-height: 3em;
+  overflow: hidden;
+}
+
+div.sourceCode pre > code > span::before {
+  content: var(--cs-marker, "");
+  position: absolute;
+  left: -0.9em;
+  width: 0.9em;
+  text-align: center;
+  opacity: 0.85;
+  font-weight: bold;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  div.sourceCode pre > code > span {
+    transition: none;
+  }
+}
+
+/* Presence */
+div.sourceCode pre > code > span.cs-presence-exit {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  transition:
+    max-height var(--cs-duration) var(--cs-easing),
+    opacity var(--cs-duration) var(--cs-easing),
+    padding var(--cs-duration) var(--cs-easing),
+    background-color var(--cs-duration) var(--cs-easing),
+    border-color var(--cs-duration) var(--cs-easing);
+}
+div.sourceCode pre > code > span.cs-presence-enter {
+  transition:
+    max-height var(--cs-duration) var(--cs-easing),
+    opacity var(--cs-duration) var(--cs-easing),
+    padding var(--cs-duration) var(--cs-easing),
+    background-color var(--cs-duration) var(--cs-easing),
+    border-color var(--cs-duration) var(--cs-easing);
+}
+div.sourceCode pre > code > span.cs-presence-enter.cs-presence-hidden {
+  max-height: 0;
+  opacity: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* Force nested syntax-highlight token spans to inherit the line's `fg` color.
+   Without this, token spans (which set their own `color`) would win against
+   the line wrapper's color and `fg` would only paint operators/whitespace. */
+div.sourceCode pre > code > span.cs-fg,
+div.sourceCode pre > code > span.cs-fg * {
+  color: inherit;
+}
+
+/* Labels */
+div.sourceCode {
+  position: relative;
+}
+.cs-label {
+  position: absolute;
+  font-family: var(--bs-font-sans-serif, sans-serif);
+  font-size: 0.7em;
+  background: #fff8c4;
+  border: 1px solid #f5b800;
+  border-radius: 4px;
+  padding: 2px 6px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 5;
+}
+.cs-label::before {
+  content: "";
+  position: absolute;
+  left: -1em;
+  top: 50%;
+  width: 1em;
+  height: 1px;
+  background: #f5b800;
+}
+.cs-live {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+/* Modes */
+div.sourceCode pre > code > span.cs-mode-none { transition: none; }
+div.sourceCode pre > code > span.cs-mode-fade {
+  transition:
+    background-color var(--cs-duration) var(--cs-easing),
+    border-color var(--cs-duration) var(--cs-easing),
+    opacity var(--cs-duration) var(--cs-easing);
+}
+div.sourceCode pre > code > span.cs-mode-slide {
+  transition:
+    background-color var(--cs-duration) var(--cs-easing),
+    border-color var(--cs-duration) var(--cs-easing),
+    opacity var(--cs-duration) var(--cs-easing),
+    transform var(--cs-duration) var(--cs-easing);
+}
+div.sourceCode pre > code > span.cs-mode-wipe {
+  clip-path: inset(0 0 0 0);
+  transition:
+    background-color var(--cs-duration) var(--cs-easing),
+    border-color var(--cs-duration) var(--cs-easing),
+    opacity var(--cs-duration) var(--cs-easing),
+    clip-path var(--cs-duration) var(--cs-easing);
+}
+div.sourceCode pre > code > span.cs-mode-wipe.cs-mode-enter {
+  clip-path: inset(0 100% 0 0);
+}
+div.sourceCode pre > code > span.cs-mode-morph {
+  transition:
+    background-color calc(var(--cs-duration) * 1.5) var(--cs-easing),
+    border-color calc(var(--cs-duration) * 1.5) var(--cs-easing),
+    opacity calc(var(--cs-duration) * 1.5) var(--cs-easing);
+}
+
+/* Preset: diff */
+div.sourceCode pre > code > span.cs-add {
+  background-color: rgba(46, 160, 67, 0.18);
+  border-left-color: #2ea043;
+  --cs-marker: "+";
+}
+div.sourceCode pre > code > span.cs-rem {
+  background-color: rgba(248, 81, 73, 0.18);
+  border-left-color: #f85149;
+  --cs-marker: "−";
+}
+div.sourceCode pre > code > span.cs-chg {
+  background-color: rgba(227, 152, 33, 0.22);
+  border-left-color: #e39821;
+  --cs-marker: "~";
+}
+div.sourceCode pre > code > span.cs-note {
+  background-color: rgba(120, 120, 120, 0.18);
+  border-left-color: #888;
+  opacity: 0.55;
+  --cs-marker: "#";
+}
+div.sourceCode pre > code > span.cs-hi {
+  background-color: rgba(217, 84, 165, 0.20);
+  border-left-color: #d954a5;
+  --cs-marker: "@";
+}
+
+/* Preset: emphasis */
+div.sourceCode pre > code > span.cs-focus {
+  background-color: rgba(255, 235, 130, 0.30);
+  border-left-color: #f5b800;
+}
+div.sourceCode pre > code > span.cs-dim { opacity: 0.35; }
+div.sourceCode pre > code > span.cs-strong {
+  font-weight: bold;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+/* `mark` — matches reveal.js's `code-line-numbers` look: soft yellow,
+   no border-left tint, no gutter marker. */
+div.sourceCode pre > code > span.cs-mark {
+  background-color: rgba(255, 230, 100, 0.45);
+}

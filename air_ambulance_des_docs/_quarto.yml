@@ -4,6 +4,11 @@ project:
   pre-render:
     - sync_docs.py
 
+filters:
+  - include-code-files
+  - code-window
+  - code-line-style
+  - value-box
 website:
   title: "Air Ambulance Simulation"
   description: "Documentation for the vidigi pathway animation package"

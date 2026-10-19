@@ -1,0 +1,45 @@
+{
+  "code-line-style:diff": {
+    "prefix": "code-line-style:diff",
+    "scope": "quarto",
+    "description": "Code block with diff marks (add/rem).",
+    "body": [
+      "```{.${1:r} code-line-style=\"add:${2:2-3}, rem:${3:5}\"}",
+      "$0",
+      "```"
+    ]
+  },
+  "code-line-style:emphasis": {
+    "prefix": "code-line-style:emphasis",
+    "scope": "quarto",
+    "description": "Code block with emphasis (focus/dim/strong).",
+    "body": [
+      "```{.${1:r} code-line-style=\"focus:${2:3}\" code-line-style-preset=\"emphasis\"}",
+      "$0",
+      "```"
+    ]
+  },
+  "code-line-style:steps": {
+    "prefix": "code-line-style:steps",
+    "scope": "quarto",
+    "description": "Progressive RevealJS fragments via pipe-separated segments.",
+    "body": [
+      "```{.${1:r} code-line-style=\"|hi:${2:2}|rem:${3:3},add:${4:4-7}|hi:${5:8}\"}",
+      "$0",
+      "```"
+    ]
+  },
+  "code-line-style:custom": {
+    "prefix": "code-line-style:custom",
+    "scope": "quarto",
+    "description": "Cell-level YAML option with an inline custom style.",
+    "body": [
+      "#| code-line-style:",
+      "#|   preset: emphasis",
+      "#|   styles:",
+      "#|     ${1:warn}: { bg: \"${2:#fff3bf}\", gutter: \"${3:#f08c00}\", marker: \"${4:!}\" }",
+      "#|   steps:",
+      "#|     - ${1:warn}: ${5:3}"
+    ]
+  }
+}
